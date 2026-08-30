@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#141a24">
+<title>Sinoky — Speak Chinese where it matters</title>
+<link rel="icon" href="icons/favicon-32.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --bg:#141a24; --bg2:#1b2330; --card:#1e2735; --line:#2b3648;
+  --red:#e63946; --teal:#7fb3b0; --txt:#eef2f7; --sub:#9aa7b8;
+  --t1:#e63946; --t2:#2a9d8f; --t3:#457b9d; --t4:#8d99ae;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 90px}
+header{display:flex;align-items:center;gap:10px;padding:18px 0 6px}
+header img{width:34px;height:34px;border-radius:9px}
+.brand{font-size:21px;font-weight:800;letter-spacing:.3px}
+.brand b{color:var(--red);font-weight:800}
+.tag{font-size:11px;color:var(--sub);margin-top:1px}
+.hero{margin:14px 0 6px}
+.hero h1{font-size:22px;line-height:1.3}
+.hero h1 em{color:var(--red);font-style:normal}
+.hero p{color:var(--sub);font-size:13px;margin-top:4px}
+.streakrow{display:flex;gap:8px;margin:14px 0}
+.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat .n{font-size:20px;font-weight:800}
+.stat .l{font-size:11px;color:var(--sub);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.card .top{display:flex;justify-content:space-between;align-items:center}
+.card h2{font-size:16px}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(230,57,70,.16);color:var(--red);letter-spacing:.4px}
+.badge.teal{background:rgba(127,179,176,.15);color:var(--teal)}
+.card p.desc{color:var(--sub);font-size:12.5px;margin-top:6px;line-height:1.5}
+.btn{display:block;width:100%;border:none;border-radius:13px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit}
+.btn.primary{background:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+.btn:active{transform:scale(.98)}
+.pbar{height:7px;background:var(--bg2);border-radius:99px;margin-top:12px;overflow:hidden}
+.pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),#ff6b6b);border-radius:99px;transition:width .3s}
+.phrase{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.phrase.done{border-color:rgba(42,157,143,.5)}
+.p-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.p-en{font-size:14.5px;font-weight:600;line-height:1.4}
+.p-zh{margin-top:8px;cursor:pointer}
+.p-hz{font-size:24px;font-weight:700;letter-spacing:1px}
+.p-py{font-size:14px;color:var(--teal);margin-top:3px}
+.p-zh.hidden .p-hz,.p-zh.hidden .p-py{filter:blur(7px);user-select:none}
+.p-hint{font-size:10.5px;color:var(--sub);margin-top:5px}
+.spk{flex-shrink:0;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--teal);font-size:17px;cursor:pointer}
+.spk.playing{background:rgba(127,179,176,.15);border-color:var(--teal)}
+.p-actions{display:flex;gap:8px;margin-top:11px}
+.p-actions .btn{margin-top:0;padding:9px;font-size:12.5px;border-radius:10px}
+.p-actions .done-btn{background:rgba(42,157,143,.15);color:var(--t2);border:1px solid rgba(42,157,143,.4);white-space:nowrap}
+.phrase.done .done-btn{opacity:.55}
+.speed{font-size:11px;color:var(--sub);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit}
+.tonebtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.tonebtn{border:1px solid var(--line);background:var(--bg2);border-radius:13px;padding:12px 4px;text-align:center;cursor:pointer;color:var(--txt);font-family:inherit}
+.tonebtn .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.tonebtn .tl{font-size:10px;color:var(--sub);margin-top:5px}
+.tonebtn.right{border-color:var(--t2);background:rgba(42,157,143,.15)}
+.tonebtn.wrong{border-color:var(--red);background:rgba(230,57,70,.13)}
+.tone-q{font-size:13px;color:var(--sub);text-align:center;margin-top:10px}
+.tone-big{font-size:15px;text-align:center;margin-top:12px;min-height:22px}
+.tone-big b{color:var(--teal)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.day{aspect-ratio:1;border-radius:9px;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:var(--sub)}
+.day.hit{background:rgba(230,57,70,.2);border-color:var(--red);color:var(--txt)}
+.views{display:none}
+.views.on{display:block}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,36,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:9}
+nav button{flex:1;background:none;border:none;color:var(--sub);font-size:10.5px;padding:9px 0 11px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:3px;align-items:center}
+nav button .ic{font-size:19px}
+nav button.on{color:var(--red)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:var(--red);color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+.foot{text-align:center;color:var(--sub);font-size:10.5px;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icons/icon-192.png" alt="Sinoky">
+    <div>
+      <div class="brand">Sino<b>k</b>y</div>
+      <div class="tag">Speak Chinese where it matters</div>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <section id="v-home" class="views on">
+    <div class="hero">
+      <h1>Stop memorizing characters.<br><em>Start answering people.</em></h1>
+      <p>Daily real-life phrases, tone training, and blind-speak practice. 5 minutes a day.</p>
+    </div>
+    <div class="streakrow">
+      <div class="stat"><div class="n" id="st-streak">0</div><div class="l">🔥 Day streak</div></div>
+      <div class="stat"><div class="n" id="st-phrases">0</div><div class="l">🗣️ Phrases said</div></div>
+      <div class="stat"><div class="n" id="st-tone">—</div><div class="l">🎯 Tone accuracy</div></div>
+    </div>
+    <div id="home-scenes"></div>
+    <div class="card">
+      <div class="top"><h2>Tone Gym</h2><span class="badge teal">LISTEN</span></div>
+      <p class="desc">Mā má mǎ mà — four tones, four meanings. Train your ear with minimal pairs. Miss a tone and you say a different word.</p>
+      <button class="btn ghost" onclick="startTone()">Open Tone Gym</button>
+    </div>
+    <div class="foot">Sinoky v<span class="v-txt"></span> · Speak Chinese where it matters</div>
+  </section>
+
+  <!-- SCENE -->
+  <section id="v-scene" class="views">
+    <div class="card">
+      <div class="top"><h2 id="sc-title"></h2><span class="badge">SAY IT</span></div>
+      <p class="desc" id="sc-desc"></p>
+      <div class="pbar"><i id="sc-bar" style="width:0%"></i></div>
+    </div>
+    <div id="sc-list"></div>
+    <button class="btn primary" id="sc-finish" style="display:none" onclick="finishScene()">I completed today's challenge 🎉</button>
+    <button class="btn ghost" onclick="go('home')">← Back</button>
+  </section>
+
+  <!-- TONE -->
+  <section id="v-tone" class="views">
+    <div class="card">
+      <div class="top"><h2>Tone Gym</h2><span class="badge teal" id="tone-score">0/0</span></div>
+      <p class="tone-q">Listen. Which tone do you hear?</p>
+      <div class="tone-big" id="tone-big"></div>
+      <button class="btn primary" id="tone-play" onclick="playToneQ()">▶ Play the sound</button>
+      <div class="tonebtns" id="tone-btns"></div>
+      <button class="btn ghost" onclick="go('home')">← Back</button>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section id="v-prog" class="views">
+    <div class="card">
+      <div class="top"><h2>Your progress</h2></div>
+      <p class="desc">Last 14 days — red means you completed a challenge.</p>
+      <div class="cal" id="cal"></div>
+    </div>
+    <div class="card">
+      <div class="top"><h2>Details</h2></div>
+      <p class="desc" id="prog-detail"></p>
+    </div>
+    <div class="foot">Sinoky v<span class="v-txt"></span></div>
+  </section>
+</div>
+
+<nav>
+  <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
+  <button id="nav-tone" onclick="go('tone')"><span class="ic">🎵</span>Tones</button>
+  <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
+var APP_VERSION = '0.1.1';
+
+/* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
+var SCENES = [
+  { id:'arrival', icon:'🛬', title:'Arrival · First hours', 
+    desc:'Your first 4 survival lines: greeting, price, destination, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
+    phrases:[
+      { en:'Hello! (greeting anyone)', py:'Nǐ hǎo', hz:'你好' },
+      { en:'How much is it?', py:'Duōshǎo qián?', hz:'多少钱？' },
+      { en:'I want to go here. (show address)', py:'Wǒ yào qù zhèlǐ.', hz:'我要去这里。' },
+      { en:'Thank you!', py:'Xièxie!', hz:'谢谢！' }
+    ]},
+  { id:'food', icon:'🍜', title:'Food · Order & pay',
+    desc:'Ordering made minimal: point, say "I want this one", ask for no spice, pay by scan.',
+    phrases:[
+      { en:'I want this one. (pointing)', py:'Wǒ yào zhège.', hz:'我要这个。' },
+      { en:'Not spicy, please.', py:'Bú yào là.', hz:'不要辣。' },
+      { en:'Delicious!', py:'Hǎo chī!', hz:'好吃！' },
+      { en:'The bill, please.', py:'Mǎidān, xièxie.', hz:'买单，谢谢。' }
+    ]}
+];
+
+/* tone gym: minimal pair "ma" — 4 tones, 4 meanings */
+var TONES = [
+  { hz:'妈', py:'mā', t:1, mean:'mother' },
+  { hz:'麻', py:'má', t:2, mean:'hemp / numb' },
+  { hz:'马', py:'mǎ', t:3, mean:'horse' },
+  { hz:'骂', py:'mà', t:4, mean:'scold' }
+];
+var TONE_COLOR = { 1:'var(--t1)', 2:'var(--t2)', 3:'var(--t3)', 4:'var(--t4)' };
+var TONE_LABEL = { 1:'1 flat', 2:'2 rising', 3:'3 dip', 4:'4 fall' };
+
+/* ---------- state (localStorage, sinoky_* keys only; uid is its own key) ---------- */
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem('sinoky_state')) || {}; }catch(e){ return {}; }
+}
+function saveState(){ localStorage.setItem('sinoky_state', JSON.stringify(S)); }
+var UID = localStorage.getItem('sinoky_uid');
+if(!UID){
+  UID = (crypto.randomUUID ? crypto.randomUUID() : 'u'+Date.now()+Math.random().toString(36).slice(2));
+  localStorage.setItem('sinoky_uid', UID);
+}
+var S = loadState();
+S.streak = S.streak || 0; S.lastDone = S.lastDone || null;
+S.phrases = S.phrases || {};   /* {sceneId: [idx,...]} */
+S.days = S.days || [];         /* ['2026-08-30',...] */
+S.tone = S.tone || { right:0, total:0 };
+saveState();
+
+/* ---------- tts: multi-source fallback (google zh -> baidu zh -> web speech)
+   v0.1.1 fix (P1-1): baidu anonymous tts 502s after cold start; overseas
+   users often lack zh-CN web voices, so google goes first, baidu second ---------- */
+var ttsRate = 1;
+function webSpeak(text, btn){
+  try{
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = 0.85 * ttsRate;
+    u.onend = function(){ if(btn) btn.classList.remove('playing'); };
+    u.onerror = function(){ if(btn) btn.classList.remove('playing'); toast('Audio not available'); };
+    speechSynthesis.speak(u);
+  }catch(e){ toast('Audio not available'); if(btn) btn.classList.remove('playing'); }
+}
+function speak(text, btn){
+  var urls = [
+    'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN' +
+      (ttsRate < 1 ? '&ttsspeed=0.6' : '') + '&q=' + encodeURIComponent(text),
+    'https://tts.baidu.com/text2audio?tex=' + encodeURIComponent(text) +
+      '&cuid=sinoky&lan=zh&ctp=1&pdt=301&vol=9&spd=' + (ttsRate < 1 ? 3 : 5)
+  ];
+  var i = 0, done = false, started = false, a = null;
+  function tryNext(){
+    if(done) return;
+    if(btn) btn.classList.remove('playing');
+    if(i >= urls.length){ webSpeak(text, btn); return; }
+    a = new Audio(urls[i++]);
+    a.onplay = function(){ started = true; if(btn) btn.classList.add('playing'); };
+    a.onended = function(){ if(done) return; done = true; if(btn) btn.classList.remove('playing'); };
+    a.onerror = function(){ if(!started) tryNext(); };
+    a.play().catch(function(){ if(!started) tryNext(); });
+    setTimeout(function(){ if(!done && !started && a){ a.src = ''; tryNext(); } }, 5000);
+  }
+  tryNext();
+}
+
+/* ---------- helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function toast(msg){
+  var t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+function today(){ return new Date().toISOString().slice(0,10); }
+function go(v){
+  ['home','scene','tone','prog'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  $('v-'+v).classList.add('on');
+  $('nav-'+v) && $('nav-'+v).classList.add('on');
+  if(v==='prog') renderProgress();
+  if(v==='home') renderHome();
+  window.scrollTo(0,0);
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  $('st-streak').textContent = S.streak;
+  var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
+  $('st-phrases').textContent = said;
+  $('st-tone').textContent = S.tone.total ? Math.round(100*S.tone.right/S.tone.total)+'%' : '—';
+  var html = '';
+  SCENES.forEach(function(sc){
+    var doneN = (S.phrases[sc.id]||[]).length;
+    var pct = Math.round(100*doneN/sc.phrases.length);
+    html += '<div class="card"><div class="top"><h2>'+sc.icon+' '+sc.title+'</h2>'+
+      (pct===100 ? '<span class="badge teal">DONE ✓</span>' : '<span class="badge">DAILY</span>')+
+      '</div><p class="desc">'+sc.desc+'</p>'+
+      '<div class="pbar"><i style="width:'+pct+'%"></i></div>'+
+      '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
+      (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
+  });
+  $('home-scenes').innerHTML = html;
+}
+
+/* ---------- scene flow ---------- */
+var curScene = null;
+function openScene(id){
+  curScene = SCENES.filter(function(s){ return s.id===id; })[0];
+  $('sc-title').textContent = curScene.icon+' '+curScene.title;
+  $('sc-desc').textContent = curScene.desc;
+  $('sc-finish').style.display = 'none';
+  renderSceneList();
+  go('scene');
+}
+function renderSceneList(){
+  var done = S.phrases[curScene.id] || [];
+  var html = '';
+  curScene.phrases.forEach(function(p,i){
+    var isDone = done.indexOf(i) > -1;
+    html += '<div class="phrase'+(isDone?' done':'')+'">'+
+      '<div class="p-row"><div><div class="p-en">'+p.en+'</div>'+
+      '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="this.classList.remove(\'hidden\')" id="zh-'+i+'">'+
+      '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div></div>'+
+      '<div class="p-hint">'+(isDone?'✓ said out loud':'Tap to reveal · cover &amp; say it 3×')+'</div></div>'+
+      '<button class="spk" onclick="speak(\''+p.hz.replace(/'/g,'')+'\',this)">▶</button></div>'+
+      '<div class="p-actions">'+
+      '<button class="btn ghost speed" onclick="slowSpeak(\''+p.hz.replace(/'/g,'')+'\',this)">🐢 slow</button>'+
+      '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
+      '</div></div>';
+  });
+  $('sc-list').innerHTML = html;
+  var pct = Math.round(100*done.length/curScene.phrases.length);
+  $('sc-bar').style.width = pct+'%';
+  $('sc-finish').style.display = done.length===curScene.phrases.length ? 'block' : 'none';
+}
+function slowSpeak(text, btn){
+  ttsRate = 0.7; speak(text, btn);
+  setTimeout(function(){ ttsRate = 1; }, 4000);
+}
+function markDone(i){
+  var arr = S.phrases[curScene.id] = S.phrases[curScene.id] || [];
+  if(arr.indexOf(i)===-1){ arr.push(i); saveState(); }
+  renderSceneList();
+}
+function finishScene(){
+  var d = today();
+  if(S.lastDone !== d){
+    var y = new Date(Date.now()-864e5).toISOString().slice(0,10);
+    S.streak = (S.lastDone === y) ? S.streak+1 : 1;
+    S.lastDone = d;
+  }
+  if(S.days.indexOf(d)===-1){ S.days.push(d); }
+  saveState();
+  toast('🔥 '+S.streak+'-day streak! Speak it out there.');
+  renderHome(); go('home');
+}
+
+/* ---------- tone gym ---------- */
+var toneQ = null, toneLocked = false, lastTone = -1;
+function startTone(){
+  go('tone'); nextTone();
+}
+function nextTone(){
+  /* v0.1.1 fix (P2): never repeat the same item twice in a row */
+  var n;
+  do { n = Math.floor(Math.random()*4); } while(n === lastTone);
+  lastTone = n;
+  toneQ = TONES[n];
+  toneLocked = false;
+  $('tone-big').innerHTML = '';
+  $('tone-play').textContent = '▶ Play the sound';
+  var html = '';
+  [1,2,3,4].forEach(function(n){
+    html += '<button class="tonebtn" id="tb-'+n+'" onclick="answerTone('+n+')">'+
+      '<span class="dot" style="background:'+TONE_COLOR[n]+'"></span>'+
+      '<div class="tl">'+TONE_LABEL[n]+'</div></button>';
+  });
+  $('tone-btns').innerHTML = html;
+  $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
+}
+function playToneQ(){ if(toneQ) speak(toneQ.hz); }
+function answerTone(n){
+  if(toneLocked || !toneQ) return;
+  toneLocked = true;
+  S.tone.total++;
+  var ok = n === toneQ.t;
+  if(ok){ S.tone.right++; }
+  saveState();
+  $('tb-'+toneQ.t).classList.add(ok?'right':'right'); /* reveal correct */
+  if(!ok){ $('tb-'+n).classList.add('wrong'); }
+  $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
+  $('tone-big').innerHTML = ok
+    ? '<b>✓ '+toneQ.hz+' ('+toneQ.py+')</b> = '+toneQ.mean
+    : '<b style="color:var(--red)">✗ That meant something else!</b> '+toneQ.hz+' ('+toneQ.py+') = '+toneQ.mean;
+  setTimeout(nextTone, ok ? 1400 : 2600);
+}
+
+/* ---------- progress ---------- */
+function renderProgress(){
+  var html = '';
+  for(var i=13;i>=0;i--){
+    var d = new Date(Date.now()-i*864e5).toISOString().slice(0,10);
+    var dd = new Date(Date.now()-i*864e5);
+    html += '<div class="day'+(S.days.indexOf(d)>-1?' hit':'')+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</div>';
+  }
+  $('cal').innerHTML = html;
+  var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
+  $('prog-detail').textContent = 'Streak: '+S.streak+' day(s) · Phrases said aloud: '+said+
+    ' · Tone Gym: '+S.tone.right+'/'+S.tone.total+' correct · Device ID: '+UID.slice(0,8)+'…';
+}
+
+/* ---------- pwa: sw register + version check ---------- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(function(j){
+  if(j.version && j.version !== APP_VERSION){ toast('New version available — refresh!'); }
+}).catch(function(){});
+
+document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
+renderHome();
+</script>
+</body>
+</html>
