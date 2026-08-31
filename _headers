@@ -1,6 +1,9 @@
 /*
-  Cache-Control: public, max-age=300, must-revalidate
   X-Content-Type-Options: nosniff
+
+# 页面（index.html）短缓存，便于内容快速生效
+/index.html
+  Cache-Control: public, max-age=300, must-revalidate
 
 # SW / 版本文件需即时生效，避免更新滞后
 /sw.js

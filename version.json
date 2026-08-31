@@ -1,4 +1,5 @@
 {
-  "version": "0.1.1",
-  "updated": "2026-08-30"
+  "version": "0.1.2",
+  "updated": "2026-08-31",
+  "note": "P0-2 第3场景 Work·Meetings（4句初稿）；修正 _headers 重复 Cache-Control（BUG-1）"
 }

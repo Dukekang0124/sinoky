@@ -37,6 +37,7 @@ header img{width:34px;height:34px;border-radius:9px}
 .card h2{font-size:16px}
 .badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(230,57,70,.16);color:var(--red);letter-spacing:.4px}
 .badge.teal{background:rgba(127,179,176,.15);color:var(--teal)}
+.noscore{color:var(--sub);font-size:11px;margin-top:8px;line-height:1.45;border-left:2px solid var(--teal);padding-left:8px}
 .card p.desc{color:var(--sub);font-size:12.5px;margin-top:6px;line-height:1.5}
 .btn{display:block;width:100%;border:none;border-radius:13px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit}
 .btn.primary{background:var(--red);color:#fff}
@@ -116,9 +117,10 @@ nav button.on{color:var(--red)}
   <!-- SCENE -->
   <section id="v-scene" class="views">
     <div class="card">
-      <div class="top"><h2 id="sc-title"></h2><span class="badge">SAY IT</span></div>
+      <div class="top"><h2 id="sc-title"></h2><span class="badge">SAY IT</span><span class="badge teal">NO SCORE YET</span></div>
       <p class="desc" id="sc-desc"></p>
       <div class="pbar"><i id="sc-bar" style="width:0%"></i></div>
+      <p class="noscore">🗣️ Blind-speak mode — we don't score your pronunciation yet. Just cover and say it 3×.</p>
     </div>
     <div id="sc-list"></div>
     <button class="btn primary" id="sc-finish" style="display:none" onclick="finishScene()">I completed today's challenge 🎉</button>
@@ -162,7 +164,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.1.1';
+var APP_VERSION = '0.1.2';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 var SCENES = [
@@ -181,6 +183,14 @@ var SCENES = [
       { en:'Not spicy, please.', py:'Bú yào là.', hz:'不要辣。' },
       { en:'Delicious!', py:'Hǎo chī!', hz:'好吃！' },
       { en:'The bill, please.', py:'Mǎidān, xièxie.', hz:'买单，谢谢。' }
+    ]},
+  { id:'meeting', icon:'💼', title:'Work · Meetings',
+    desc:'Survival lines for a Chinese workplace meeting: greet, ask to repeat, give a view, exit politely. (Draft v0.1.2 — pinyin pending textbook calibration + native-speaker spot check.)',
+    phrases:[
+      { en:'Hello, everyone.', py:'Dàjiā hǎo.', hz:'大家好。' },
+      { en:'Sorry, say that again, please.', py:'Bú hǎoyìsi, qǐng zài shuō yí biàn.', hz:'不好意思，请再说一遍。' },
+      { en:'I think it’s fine.', py:'Wǒ juéde méi wèntí.', hz:'我觉得没问题。' },
+      { en:'Thanks, I’ll head out first.', py:'Xièxie, wǒ xiān zǒu le.', hz:'谢谢，我先走了。' }
     ]}
 ];
 
