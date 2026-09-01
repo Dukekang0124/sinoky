@@ -25,7 +25,7 @@ const check = (n, ok, extra) => {
   await p.goto('https://sinoky.pages.dev/?nocache=' + Date.now(), { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(2500);
   const ver = await p.evaluate(() => ({ v: window.APP_VERSION || document.querySelector('.v-txt')?.textContent }));
-  check('T0 线上版本 = 0.3.11', JSON.stringify(ver).includes('0.3.11'), JSON.stringify(ver));
+  check('T0 线上版本 = 0.3.12', JSON.stringify(ver).includes('0.3.12'), JSON.stringify(ver));
   await p.evaluate(() => { const o = document.getElementById('onb'); if (o) o.classList.remove('on'); });
   await p.waitForTimeout(300);
 
