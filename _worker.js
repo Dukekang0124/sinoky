@@ -206,6 +206,65 @@ export default {
       }
     }
 
+    /* 读取反馈（康哥查看用）：/api/feedback?token=<FEEDBACK_TOKEN>
+       token 走环境变量，不硬编码进代码（仓库是公开的）。
+       未配置该环境变量时端点直接禁用 —— 安全默认，宁可看不到也不能被公开读。 */
+    if (url.pathname === '/api/feedback' && req.method === 'GET') {
+      const want = env.FEEDBACK_TOKEN;
+      if (!want) return json({ ok: false, error: 'read endpoint disabled (no FEEDBACK_TOKEN configured)' }, 404);
+      if (url.searchParams.get('token') !== want) return json({ ok: false, error: 'forbidden' }, 403);
+      if (!env.FEEDBACK) return json({ ok: false, error: 'no KV binding' }, 500);
+      try {
+        const list = await env.FEEDBACK.list({ limit: 200 });
+        const items = [];
+        for (const k of list.keys) {
+          const v = await env.FEEDBACK.get(k.name);
+          if (v) { try { items.push(JSON.parse(v)); } catch (e) { items.push({ raw: v }); } }
+        }
+        items.sort((a, b) => String(b.t || '').localeCompare(String(a.t || '')));
+        return json({ ok: true, count: items.length, items });
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) }, 500);
+      }
+    }
+
+    /* /api/feedback：真实用户反馈（v0.3.8，6 个老外在用了）。
+       老外遇到 bug 不会主动联系，只会默默关掉 —— 必须给一个零门槛入口。
+       存进 KV（binding=FEEDBACK）。
+       康哥查看：/api/feedback?token=<FEEDBACK_TOKEN>
+       或 Dashboard → Workers & Pages → KV → FEEDBACK namespace 浏览。
+       附带设备信息 + 最近 JS 错误，避免"不好用"这种无法行动的反馈。 */
+    if (url.pathname === '/api/feedback' && req.method === 'POST') {
+      try {
+        const body = await req.json();
+        const msg = String((body && body.message) || '').trim().slice(0, 2000);
+        if (!msg) return json({ ok: false, error: 'message required' }, 400);
+        const rec = {
+          t: new Date().toISOString(),
+          msg,
+          cat: String((body && body.cat) || 'other').slice(0, 40),
+          v: String((body && body.v) || '').slice(0, 20),
+          ua: String(req.headers.get('user-agent') || '').slice(0, 300),
+          lang: String(req.headers.get('accept-language') || '').slice(0, 100),
+          country: req.cf ? String(req.cf.country || '') : '',
+          errs: Array.isArray(body && body.errs) ? body.errs.slice(-10) : [],
+        };
+        const key = 'fb:' + Date.now() + ':' + Math.random().toString(36).slice(2, 8);
+        if (env.FEEDBACK) {
+          await env.FEEDBACK.put(key, JSON.stringify(rec));
+          /* 写完立刻读回来验证 —— put 可能静默失败，只有回读能证明真的存住了 */
+          const back = await env.FEEDBACK.get(key);
+          console.log('[FEEDBACK] saved', key, 'verified=' + !!back);
+          return json({ ok: true, verified: !!back, key: key });
+        }
+        /* KV 未绑（本地/预览环境）时兜底：只记日志，不阻塞用户 */
+        console.log('[FEEDBACK] no KV binding, payload =', JSON.stringify(rec));
+        return json({ ok: true, stored: false });
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) }, 500);
+      }
+    }
+
     // 健康检查（含 AI binding 自检）
     if (url.pathname === '/health') {
       let ai = 'missing';

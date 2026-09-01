@@ -169,6 +169,49 @@ nav button.on{color:var(--red)}
 .rd-pop-meta{font-size:11.5px;color:var(--sub);text-align:center;margin-top:5px;line-height:1.5}
 .rd-pop-actions{display:flex;gap:8px;margin-top:14px}
 .rd-pop-actions .btn{margin-top:0;padding:11px;font-size:13px;border-radius:11px}
+
+/* ---------- v0.3.8 真实用户保障：反馈入口 / 上手引导 / 隐私说明 ---------- */
+/* 反馈按钮固定左下角 —— 右下角留给 vConsole，避免遮挡 */
+#fb-open{position:fixed;left:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;
+  background:rgba(42,157,143,.92);color:#fff;border:none;border-radius:20px;
+  padding:9px 14px;font-size:12.5px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.35);
+  cursor:pointer}
+#fb-open:active{transform:scale(.96)}
+#fb-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:70;display:none}
+#fb-mask.on{display:block}
+#fb-panel{position:fixed;left:0;right:0;bottom:0;z-index:71;background:var(--card);
+  border-radius:18px 18px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .22s ease;max-height:82vh;overflow-y:auto}
+#fb-panel.on{transform:translateY(0)}
+#fb-panel h3{margin:0 0 4px;font-size:16px}
+#fb-panel .fb-sub{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5}
+#fb-text{width:100%;min-height:96px;background:var(--bg);color:var(--txt);
+  border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:11px;
+  font-size:14px;font-family:inherit;resize:vertical}
+#fb-text::placeholder{color:var(--sub)}
+.fb-cats{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0}
+.fb-cat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;padding:6px 11px;font-size:12px;color:var(--sub);cursor:pointer}
+.fb-cat.on{background:rgba(42,157,143,.2);border-color:rgba(42,157,143,.55);color:var(--t2)}
+.fb-privacy{font-size:11.5px;color:var(--sub);line-height:1.55;margin:10px 0;
+  padding:9px 11px;background:rgba(255,255,255,.03);border-radius:9px;border-left:2px solid rgba(42,157,143,.5)}
+.fb-row{display:flex;gap:8px;margin-top:12px}
+.fb-row .btn{margin-top:0;flex:1}
+
+/* 首次上手引导 */
+#onb{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:80;display:none;
+  align-items:center;justify-content:center;padding:22px}
+#onb.on{display:flex}
+#onb .card{background:var(--card);border-radius:16px;padding:20px 18px;max-width:340px}
+#onb h2{margin:0 0 10px;font-size:18px}
+#onb ol{margin:0 0 14px;padding-left:20px;font-size:13.5px;line-height:1.7;color:var(--txt)}
+#onb li{margin-bottom:7px}
+#onb .hint{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+
+/* 麦克风被拒后的恢复步骤 */
+.mic-help{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:7px;
+  padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px}
+.mic-help b{color:var(--t2)}
 </style>
 </head>
 <body>
@@ -208,6 +251,9 @@ nav button.on{color:var(--red)}
       <p class="desc" id="sc-desc"></p>
       <div class="pbar"><i id="sc-bar" style="width:0%"></i></div>
       <p class="noscore">🗣️ Blind-speak mode — we don't score your pronunciation yet. Just cover and say it 3×.</p>
+      <!-- v0.3.8 隐私说明：老外（尤其欧洲 GDPR 用户）对录音敏感，
+           不说明白就不敢点 Score，核心功能等于废掉。 -->
+      <p class="noscore">🔒 <b>Privacy:</b> your recording is used only to score that line. It is never saved, never shared, and never linked to you. Tap <b>Score</b> → say the line → tap <b>Stop</b>.</p>
     </div>
     <div id="sc-list"></div>
     <button class="btn primary" id="sc-finish" style="display:none" onclick="finishScene()">I completed today's challenge 🎉</button>
@@ -296,10 +342,57 @@ nav button.on{color:var(--red)}
 <div class="toast" id="toast"></div>
 <div class="rd-pop" id="rd-pop"></div>
 
+<!-- v0.3.8 真实用户保障（6 位外国朋友在用了） -->
+<button id="fb-open" onclick="openFB()">💬 Feedback</button>
+<div id="fb-mask" onclick="closeFB()"></div>
+<div id="fb-panel" role="dialog" aria-label="Send feedback">
+  <h3>Help us improve Sinoky</h3>
+  <div class="fb-sub">Found a bug? Something confusing? Tell us in English (or any language) — we read every message.</div>
+  <div class="fb-cats" id="fb-cats">
+    <span class="fb-cat on" data-cat="bug">🐛 Something broke</span>
+    <span class="fb-cat" data-cat="audio">🔇 No sound</span>
+    <span class="fb-cat" data-cat="mic">🎤 Mic issue</span>
+    <span class="fb-cat" data-cat="confusing">🤔 Confusing</span>
+    <span class="fb-cat" data-cat="idea">💡 Idea</span>
+    <span class="fb-cat" data-cat="other">✍️ Other</span>
+  </div>
+  <textarea id="fb-text" placeholder="e.g. The Score button stays on Listening… and never gives a result."></textarea>
+  <div class="fb-privacy">
+    🔒 <b>Privacy:</b> this sends only your message, app version, browser and country.
+    Your recordings are never uploaded — audio stays on your device and is deleted after scoring.
+  </div>
+  <div class="fb-row">
+    <button class="btn ghost" onclick="closeFB()">Cancel</button>
+    <button class="btn" onclick="sendFB()">Send feedback</button>
+  </div>
+</div>
+
+<div id="onb">
+  <div class="card">
+    <h2>Welcome to Sinoky 👋</h2>
+    <ol>
+      <li><b>Cards</b> — learn 193 HSK1 characters with pinyin, stroke order and audio</li>
+      <li><b>Read</b> — paste any Chinese text, tap a word for meaning</li>
+      <li><b>Sentences</b> — practise building real phrases</li>
+      <li><b>Score</b> — in a scene, tap <b>Score</b>, say the line, then tap <b>Stop</b></li>
+    </ol>
+    <div class="hint">
+      🔒 Your recordings are never saved — audio is scored on your device and discarded.
+      Tap <b>💬 Feedback</b> (bottom-left) any time to tell us what's broken.
+    </div>
+    <button class="btn" onclick="closeOnb()">Got it — let's start</button>
+  </div>
+</div>
+
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.2';
+var APP_VERSION = '0.3.8';
+/* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
+   index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
+   v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
+   `j.version !== APP_VERSION` 恒成立 → 用户每次打开都被提示"有新版本，
+   请刷新"，刷新后又回到旧版本号 → 无限循环提示，老外一脸懵。 */
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -617,11 +710,28 @@ async function scorePhrase(i){
   try{
     stream = await navigator.mediaDevices.getUserMedia({ audio:true });
   }catch(e){
+    /* v0.3.8：麦克风被拒是 Score 功能的头号杀手。老外点了"拒绝"之后浏览器
+       再也不弹权限框，且不知道怎么恢复 —— 必须给分浏览器的具体步骤，
+       否则核心功能直接废掉、用户只会默默走掉。 */
     box.style.display='block';
-    box.innerHTML='<div class="score-err">' +
-      (e && e.name === 'NotAllowedError'
-        ? 'Microphone blocked. Allow mic access in your browser, then try again.'
-        : 'Could not open the microphone: ' + (e && e.message || e)) + '</div>';
+    if(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')){
+      var ua = navigator.userAgent || '';
+      var isWeChat = /MicroMessenger/i.test(ua);
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
+      var steps;
+      if(isWeChat){
+        steps = 'WeChat blocks microphone access. Tap <b>···</b> (top-right) → <b>Open in Browser</b>, then allow the microphone.';
+      } else if(isIOS){
+        steps = 'iPhone: <b>Settings → Safari → Microphone → Allow</b>. Or in Safari tap <b>aA</b> (address bar) → <b>Website Settings → Microphone → Allow</b>.';
+      } else {
+        steps = 'Tap the <b>🔒 lock icon</b> in the address bar → <b>Site settings → Microphone → Allow</b>, then reload.';
+      }
+      box.innerHTML = '<div class="score-err">🎤 Microphone blocked.' +
+        '<div class="mic-help">' + steps + '</div></div>';
+    } else {
+      box.innerHTML = '<div class="score-err">Could not open the microphone: ' +
+        (e && e.message || e) + '</div>';
+    }
     return;
   }
   scChunks = [];
@@ -1184,6 +1294,78 @@ function rdStar(w){
   else { NW.push(w); toast('Saved — find it under Cards'); }
   saveNW(); renderNW(); rdClose();
 }
+
+/* ---------- v0.3.8 真实用户保障：错误捕获 / 反馈 / 上手引导 ---------- */
+/* 全局错误捕获：老外遇到 JS 崩溃我们看不到，只能靠这里存下来随反馈一起发 */
+var ERR_LOG = [];
+try{ ERR_LOG = JSON.parse(localStorage.getItem('sinoky-errs') || '[]'); }catch(e){ ERR_LOG = []; }
+function logErr(kind, msg){
+  try{
+    ERR_LOG.push({ t: Date.now(), kind: kind, msg: String(msg).slice(0, 300) });
+    if(ERR_LOG.length > 20) ERR_LOG = ERR_LOG.slice(-20);
+    localStorage.setItem('sinoky-errs', JSON.stringify(ERR_LOG));
+  }catch(e){}
+}
+window.addEventListener('error', function(e){ logErr('error', (e.message||'') + ' @' + (e.filename||'').split('/').pop() + ':' + (e.lineno||'')); });
+window.addEventListener('unhandledrejection', function(e){ logErr('promise', (e.reason && e.reason.message) || e.reason); });
+
+/* 反馈面板 */
+var FB_CAT = 'bug';
+function openFB(){
+  $('fb-mask').classList.add('on');
+  $('fb-panel').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function closeFB(){
+  $('fb-mask').classList.remove('on');
+  $('fb-panel').classList.remove('on');
+  document.body.style.overflow = '';
+}
+function sendFB(){
+  var txt = ($('fb-text').value || '').trim();
+  if(!txt){ toast('Please write a short message first'); return; }
+  var btn = event && event.target;
+  if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+  fetch('api/feedback', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ message: txt, cat: FB_CAT, v: APP_VERSION, errs: ERR_LOG })
+  }).then(function(r){ return r.json(); })
+    .then(function(j){
+      if(j && j.ok){
+        $('fb-text').value = '';
+        closeFB();
+        toast('Thanks! We read every message 🙏');
+      } else { toast('Send failed — please try again'); }
+    })
+    .catch(function(){ toast('Send failed — check your connection'); })
+    .then(function(){ if(btn){ btn.disabled = false; btn.textContent = 'Send feedback'; } });
+}
+document.querySelectorAll('#fb-cats .fb-cat').forEach(function(el){
+  el.onclick = function(){
+    document.querySelectorAll('#fb-cats .fb-cat').forEach(function(x){ x.classList.remove('on'); });
+    el.classList.add('on');
+    FB_CAT = el.getAttribute('data-cat');
+  };
+});
+
+/* 首次上手引导（localStorage 记住，只显示一次） */
+function closeOnb(){
+  $('onb').classList.remove('on');
+  document.body.style.overflow = '';
+  try{ localStorage.setItem('sinoky-onb', '1'); }catch(e){}
+}
+(function(){
+  var seen = null;
+  try{ seen = localStorage.getItem('sinoky-onb'); }catch(e){}
+  if(!seen){
+    /* 延迟一点，让首屏先渲染完，避免引导盖在空白页上 */
+    setTimeout(function(){
+      $('onb').classList.add('on');
+      document.body.style.overflow = 'hidden';
+    }, 700);
+  }
+})();
 
 /* ---------- pwa: sw register + version check ---------- */
 if('serviceWorker' in navigator){
