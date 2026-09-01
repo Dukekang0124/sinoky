@@ -1,5 +1,5 @@
 {
-  "version": "0.3.5",
+  "version": "0.3.6",
   "updated": "2026-09-01",
-  "note": "Score: added [SCORE] console logs so the silent 'Scoring...' hang can be diagnosed. Also redeployed the standalone sinoky-score worker (was likely unreachable). If it still hangs, the next step is to merge scoring into the Pages Worker (Pages doesn't support npm imports, so a simplified in-Worker scoring would be needed)."
+  "note": "Score now uses /api/score (Pages Worker) instead of sinoky-score.kang7108558.workers.dev. Standalone Worker hung on mobile networks (vConsole showed [SCORE] → with no http response). Pages Worker doesn't support npm imports, so scoring uses a simplified algorithm (character overlap + length ratio) - sufficient for the short scene sentences. If phonetic-level feedback is needed later, pinyin-pro can be bundled with esbuild."
 }

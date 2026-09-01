@@ -540,7 +540,7 @@ function markDone(i){
   renderSceneList();
 }
 // ---- M1 评分：前端耳朵(Web Speech) + Worker 大脑(pinyin-pro 比对) ----
-var SCORE_API = 'https://sinoky-score.kang7108558.workers.dev'; // M1 评分 Worker 真实地址
+var SCORE_API = ''; // v0.3.6 同源 /api/score（合并到 Pages Worker），消除跨域/跨网络依赖
 
 /* ---------- 录音 + 服务端 ASR（v0.3.1）----------
    替换依赖 Google 的 Web Speech：Chrome 的 webkitSpeechRecognition 要把音频发往
@@ -681,9 +681,9 @@ async function sendScore(p, transcript, i){
   var box = $('score-'+i);
   box.style.display='block';
   box.innerHTML='<div class="score-load">Scoring…</div>';
-  console.log('[SCORE] →', SCORE_API+'/score', JSON.stringify({target:p.hz, user:transcript}));
+  console.log('[SCORE] →', '/score', JSON.stringify({target:p.hz, user:transcript}));
   try{
-    var res = await fetch(SCORE_API+'/score', {
+    var res = await fetch('api/score', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({target:p.hz, user:transcript})
     });

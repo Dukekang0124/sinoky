@@ -124,6 +124,46 @@ export default {
       return json({ ok: true, service: 'sinoky-pages-worker', ai });
     }
 
+    /* /api/score：场景发音评分（v0.3.6 合并进 Pages Worker，替代 sinoky-score 独立 Worker）。
+       原独立 Worker 国内移动网络访问 *.workers.dev 卡死（vConsole 日志 [SCORE] → 后无响应），
+       改同源 api/score 走 Pages Worker，无跨域/跨网络问题。
+       Pages Worker 不支持 npm 依赖，故采用简化版评分（字符重合 + 长度比例）。
+       场景句子都是 2-5 字，简化版够用；如需音节级精细反馈需 esbuild 打包 pinyin-pro（未来）。 */
+    if (url.pathname === '/api/score' && req.method === 'POST') {
+      try {
+        const { target, user } = await req.json();
+        if (!target || !user) return json({ error: 'need target and user' }, 400);
+        const t = String(target).replace(/[\s\u3002\uff0c\uff01\uff1f.,!?]/g, '');
+        const u = String(user).replace(/[\s\u3002\uff0c\uff01\uff1f.,!?]/g, '');
+        if (!t) return json({ error: 'empty target' }, 400);
+
+        let overall, verdict, errs = [];
+        if (t === u) {
+          overall = 100; verdict = 'Great ✅';
+        } else if (u.includes(t) || t.includes(u)) {
+          overall = 90; verdict = 'Great ✅';
+          errs.push('extra characters');
+        } else {
+          // 字符重合率（target 每个字是否在 user 里）
+          const tChars = new Set(t), uChars = new Set(u);
+          const hit = [...tChars].filter(c => uChars.has(c)).length;
+          const charScore = hit / tChars.size;
+          // 长度比例（user 太短或太长都扣分）
+          const lenRatio = Math.min(u.length, t.length) / Math.max(u.length, t.length);
+          overall = Math.round(charScore * lenRatio * 100);
+          verdict = overall >= 80 ? 'Great ✅' : overall >= 60 ? 'Pass ⚠️' : 'Retry ❌';
+          if (charScore < 1) errs.push('missing characters');
+        }
+        return json({
+          overall, verdict,
+          perSyll: [{ target: String(target), user: String(user), score: overall / 100, errs }],
+          n: 1,
+        });
+      } catch (e) {
+        return json({ error: String((e && e.message) || e) }, 500);
+      }
+    }
+
     // 静态资源透传 + 附加 CORS 头（APK 壳内 https://localhost 跨域拉 version.json 需要）
     const res = await env.ASSETS.fetch(req);
     const h = new Headers(res.headers);
