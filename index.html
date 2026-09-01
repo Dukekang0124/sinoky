@@ -147,6 +147,23 @@ nav button.on{color:var(--red)}
 .sent-word{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:14px;cursor:pointer;font-family:inherit;color:var(--txt)}
 .sent-word:active{transform:scale(.96)}
 .sent-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin:8px 0}
+/* ---------- reading (v0.3.0) ---------- */
+.rd-input{width:100%;min-height:110px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;line-height:1.6;font-family:inherit;color:var(--txt);resize:vertical}
+.rd-input:focus{outline:none;border-color:var(--teal)}
+.rd-hint{font-size:11.5px;color:var(--sub);margin-top:8px;line-height:1.5}
+.rd-text{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;line-height:2.5;font-size:20px;margin-top:12px}
+.rd-seg{display:inline-block;cursor:pointer;padding:1px 2px;border-radius:5px;transition:background .15s}
+.rd-seg:hover{background:rgba(127,179,176,.18)}
+.rd-py{display:block;font-size:11px;color:var(--teal);line-height:1.1;text-align:center;margin-bottom:2px}
+.rd-text.nopy .rd-py{display:none}
+.rd-pop{position:fixed;left:0;right:0;bottom:0;background:var(--bg2);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 16px 92px;transform:translateY(110%);transition:transform .25s;z-index:20;max-height:72vh;overflow-y:auto}
+.rd-pop.on{transform:translateY(0)}
+.rd-pop-hz{font-size:44px;font-weight:800;text-align:center;letter-spacing:1px}
+.rd-pop-py{font-size:17px;color:var(--teal);text-align:center;margin-top:4px}
+.rd-pop-mean{font-size:16px;text-align:center;margin-top:8px}
+.rd-pop-meta{font-size:11.5px;color:var(--sub);text-align:center;margin-top:5px;line-height:1.5}
+.rd-pop-actions{display:flex;gap:8px;margin-top:14px}
+.rd-pop-actions .btn{margin-top:0;padding:11px;font-size:13px;border-radius:11px}
 </style>
 </head>
 <body>
@@ -245,21 +262,39 @@ nav button.on{color:var(--red)}
       <p class="desc" id="sent-stats">Pick a mode and complete a prompt to start tracking.</p>
     </div>
   </section>
+
+  <!-- READING -->
+  <section id="v-reading" class="views">
+    <div class="card">
+      <div class="top"><h2>Reading</h2><span class="badge teal">PASTE</span></div>
+      <p class="desc">Paste any Chinese text. Tap a word for pinyin, meaning and audio.</p>
+      <textarea class="rd-input" id="rd-input" placeholder="Paste Chinese text here…"></textarea>
+      <div class="fc-actions">
+        <button class="btn primary" onclick="rdRead()">Read</button>
+        <button class="btn ghost" onclick="rdSample()">Sample</button>
+        <button class="btn ghost" id="rd-py-btn" onclick="rdTogglePy()">Pinyin: on</button>
+      </div>
+      <div class="rd-hint" id="rd-hint">Type or paste text, then tap Read. The dictionary loads on first use.</div>
+    </div>
+    <div class="rd-text" id="rd-text" style="display:none"></div>
+  </section>
 </div>
 
 <nav>
   <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
   <button id="nav-cards" onclick="go('cards')"><span class="ic">🗂️</span>Cards</button>
+  <button id="nav-reading" onclick="go('reading')"><span class="ic">📖</span>Read</button>
   <button id="nav-sentences" onclick="go('sentences')"><span class="ic">✍️</span>Sentences</button>
   <button id="nav-tone" onclick="go('tone')"><span class="ic">🎵</span>Tones</button>
   <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
 </nav>
 <div class="toast" id="toast"></div>
+<div class="rd-pop" id="rd-pop"></div>
 
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.2.2';
+var APP_VERSION = '0.3.0';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -360,13 +395,14 @@ function toast(msg){
 }
 function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
-  ['home','scene','tone','prog','cards','sentences'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences','reading'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
   if(v==='cards') renderNW();
   if(v==='sentences') renderSentStats();
+  if(v!=='reading') rdClose();
   window.scrollTo(0,0);
 }
 
@@ -633,11 +669,13 @@ function renderNW(){
   NW.forEach(function(hz){
     var c = null;
     for(var i=0;i<CARDS.length;i++){ if(CARDS[i].hanzi === hz){ c = CARDS[i]; break; } }
-    if(!c) return;
-    html += '<div class="nw-item"><span class="hz">' + esc(c.hanzi) + '</span>' +
-      '<span class="mn"><span class="py">' + esc(c.pinyin) + '</span> · ' + esc(c.meaning) + '</span>' +
-      '<button class="btn ghost mini" onclick="speak(\'' + esc(c.hanzi) + '\',this)">🔊</button>' +
-      '<button class="btn ghost mini" onclick="fcRemove(\'' + esc(c.hanzi) + '\')">✕</button></div>';
+    /* v0.3.0: 阅读器可能存整词，词不在 HSK1 单字库里也要显示（拼音留空，标注来源） */
+    var pyTxt = c ? c.pinyin : '';
+    var meanTxt = c ? c.meaning : 'saved while reading';
+    html += '<div class="nw-item"><span class="hz">' + esc(hz) + '</span>' +
+      '<span class="mn">' + (pyTxt ? '<span class="py">' + esc(pyTxt) + '</span> · ' : '') + esc(meanTxt) + '</span>' +
+      '<button class="btn ghost mini" onclick="speak(\'' + esc(hz) + '\',this)">🔊</button>' +
+      '<button class="btn ghost mini" onclick="fcRemove(\'' + esc(hz) + '\')">✕</button></div>';
   });
   box.innerHTML = html || '<div class="fc-empty">No saved characters yet.</div>';
 }
@@ -875,6 +913,95 @@ function sentReveal(){
   var ans = SENT_MODE === 'completion' ? (t.front + t.answer) : t.sample;
   box.innerHTML = '❌ ' + esc(ans) + '<div class="sent-en">' + esc(t.en) + '</div>';
   recordSent(false);
+}
+
+/* ---------- reading (v0.3.0): 沉浸阅读器 ----------
+   pinyin-pro 按需懒加载（614KB / 29 模块）：仅在点 Read 时才下载，首屏零成本。
+   关键：先 await navigator.serviceWorker.ready，确保模块请求被 fetch 事件捕获进缓存
+   （v0.2.0 踩过的坑：SW 未接管时模块图请求不过 fetch 事件，导致离线取不到）。 */
+var RDPY = null, rdShowPy = true;
+var RD_SAMPLE = '我是学生。我每天学中文，因为我想去中国工作。虽然中文很难，但是很有趣。';
+function rdLoadPY(){
+  if(RDPY) return Promise.resolve(RDPY);
+  var ready = ('serviceWorker' in navigator)
+    ? navigator.serviceWorker.ready.catch(function(){})
+    : Promise.resolve();
+  return ready.then(function(){
+    return import('./vendor/pinyin-pro/index.mjs');
+  }).then(function(mod){ RDPY = mod; return mod; });
+}
+function rdSample(){ $('rd-input').value = RD_SAMPLE; toast('Sample loaded — tap Read'); }
+function rdTogglePy(){
+  rdShowPy = !rdShowPy;
+  $('rd-py-btn').textContent = 'Pinyin: ' + (rdShowPy ? 'on' : 'off');
+  var t = $('rd-text');
+  if(t) t.classList.toggle('nopy', !rdShowPy);
+}
+function rdCardOf(w){
+  for(var i=0;i<CARDS.length;i++){ if(CARDS[i].hanzi === w) return CARDS[i]; }
+  return null;
+}
+function rdRead(){
+  var txt = ($('rd-input').value || '').trim();
+  if(!txt){ toast('Paste some Chinese text first'); return; }
+  var hint = $('rd-hint'), box = $('rd-text');
+  hint.textContent = 'Loading dictionary, then segmenting…';
+  rdLoadPY().then(function(mod){
+    var items;
+    try { items = mod.segment(txt); }
+    catch(e){ hint.textContent = 'Segmentation failed: ' + e.message; return; }
+    var html = '';
+    items.forEach(function(seg, i){
+      var w = seg.origin || '';
+      if(!w.trim()){ html += esc(w); return; }
+      var py = '';
+      if(/[\u4e00-\u9fa5]/.test(w)){
+        try { py = mod.pinyin(w, { toneType: 'symbol' }); } catch(e){ py = ''; }
+      }
+      html += '<span class="rd-seg" onclick="rdTap(' + i + ')">' +
+        (py ? '<span class="rd-py">' + esc(py) + '</span>' : '') + esc(w) + '</span>';
+    });
+    box.innerHTML = html;
+    box.style.display = 'block';
+    box.classList.toggle('nopy', !rdShowPy);
+    hint.textContent = items.length + ' segments. Tap any Chinese word for details.';
+    window.__rdItems = items;
+  }).catch(function(e){
+    hint.textContent = 'Could not load the dictionary: ' + (e && e.message ? e.message : '');
+  });
+}
+function rdTap(i){
+  var items = window.__rdItems || [];
+  var w = (items[i] && items[i].origin) || '';
+  if(!w) return;
+  var py = '';
+  if(RDPY){ try { py = RDPY.pinyin(w, { toneType: 'symbol' }); } catch(e){} }
+  var card = rdCardOf(w);
+  var pop = $('rd-pop');
+  var starred = NW.indexOf(w) > -1;
+  pop.innerHTML =
+    '<div class="rd-pop-hz">' + esc(w) + '</div>' +
+    '<div class="rd-pop-py">' + esc(py || '') + '</div>' +
+    (card
+      ? '<div class="rd-pop-mean">' + esc(card.meaning) + '</div>' +
+        '<div class="rd-pop-meta">' + esc(card.pos||'') +
+          (card.bushou ? ' · radical ' + esc(card.bushou) : '') +
+          (card.tone ? ' · tone ' + esc(card.tone) : '') + '</div>' +
+        (card.sentence ? '<div class="rd-pop-meta">e.g. ' + esc(card.sentence.zh) + ' — ' + esc(card.sentence.en) + '</div>' : '')
+      : '<div class="rd-pop-meta">Not in the HSK1 deck yet — pinyin only.</div>') +
+    '<div class="rd-pop-actions">' +
+      '<button class="btn ghost" onclick="speak(\'' + esc(w) + '\',this)">🔊 Play</button>' +
+      '<button class="btn ' + (starred ? 'primary' : 'ghost') + '" onclick="rdStar(\'' + esc(w) + '\')">' + (starred ? '★ Saved' : '☆ Save') + '</button>' +
+      '<button class="btn ghost" onclick="rdClose()">Close</button>' +
+    '</div>';
+  pop.classList.add('on');
+}
+function rdClose(){ $('rd-pop').classList.remove('on'); }
+function rdStar(w){
+  var i = NW.indexOf(w);
+  if(i > -1){ NW.splice(i,1); toast('Removed from saved words'); }
+  else { NW.push(w); toast('Saved — find it under Cards'); }
+  saveNW(); renderNW(); rdClose();
 }
 
 /* ---------- pwa: sw register + version check ---------- */

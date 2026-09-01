@@ -1,5 +1,5 @@
 {
-  "version": "0.2.2",
+  "version": "0.3.0",
   "updated": "2026-09-01",
-  "note": "Added Sentences trainer (3 modes: complete / pick connector / arrange words; 24 prompts, English UI, offline data). Cards + Tones + Progress unchanged from v0.1.4."
+  "note": "Added Reading view (immersive reader): paste Chinese text, tap a word for pinyin + English meaning + audio + save. pinyin-pro loads on demand (614KB) only when Reading is used, so first paint stays light. Vocabulary list now accepts multi-character words saved from reading."
 }
