@@ -1,0 +1,4850 @@
+{
+  "meta": {
+    "name": "Sinoky 分级字卡库 · HSK1 核心",
+    "version": "0.1.0",
+    "source": "人工策展语义 + pinyin-pro 生成拼音/声调/声母/韵母",
+    "count": 193,
+    "hsk": 1,
+    "strokeDataNote": "笔顺不入库；前端用 hanzi-writer 按 hanzi 现场拉 https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/{hanzi}.json",
+    "generatedAt": "2026-09-01T01:25:51.435Z",
+    "fields": [
+      "id",
+      "hanzi",
+      "pinyin",
+      "tone",
+      "initial",
+      "final",
+      "pos",
+      "bushou",
+      "meaning",
+      "hsk",
+      "freq",
+      "words",
+      "sentence",
+      "strokeData",
+      "alt?"
+    ],
+    "consumers": [
+      "G 沉浸阅读器",
+      "E 形音义调联动记忆卡",
+      "B 最小对立对发音",
+      "C 声调记忆辅助"
+    ]
+  },
+  "cards": [
+    {
+      "id": "hsk1-001",
+      "hanzi": "我",
+      "pinyin": "wǒ",
+      "tone": 3,
+      "initial": "w",
+      "final": "ǒ",
+      "pos": "pron.",
+      "bushou": "戈",
+      "meaning": "I / me",
+      "hsk": 1,
+      "freq": 1,
+      "words": [
+        "我们",
+        "我的",
+        "自我"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我是学生。",
+        "pinyin": "wǒ shì xué shēng",
+        "en": "I am a student."
+      }
+    },
+    {
+      "id": "hsk1-002",
+      "hanzi": "你",
+      "pinyin": "nǐ",
+      "tone": 3,
+      "initial": "n",
+      "final": "ǐ",
+      "pos": "pron.",
+      "bushou": "亻",
+      "meaning": "you (singular)",
+      "hsk": 1,
+      "freq": 2,
+      "words": [
+        "你们",
+        "你好",
+        "你的"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "你好吗？",
+        "pinyin": "nǐ hǎo ma",
+        "en": "How are you?"
+      }
+    },
+    {
+      "id": "hsk1-003",
+      "hanzi": "他",
+      "pinyin": "tā",
+      "tone": 1,
+      "initial": "t",
+      "final": "ā",
+      "pos": "pron.",
+      "bushou": "亻",
+      "meaning": "he / him",
+      "hsk": 1,
+      "freq": 3,
+      "words": [
+        "他们",
+        "他的",
+        "他人"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "他是老师。",
+        "pinyin": "tā shì lǎo shī",
+        "en": "He is a teacher."
+      }
+    },
+    {
+      "id": "hsk1-004",
+      "hanzi": "她",
+      "pinyin": "tā",
+      "tone": 1,
+      "initial": "t",
+      "final": "ā",
+      "pos": "pron.",
+      "bushou": "女",
+      "meaning": "she / her",
+      "hsk": 1,
+      "freq": 4,
+      "words": [
+        "她们",
+        "她的",
+        "她人"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "jiě"
+      ],
+      "sentence": {
+        "zh": "她是医生。",
+        "pinyin": "tā shì yī shēng",
+        "en": "She is a doctor."
+      }
+    },
+    {
+      "id": "hsk1-005",
+      "hanzi": "的",
+      "pinyin": "de",
+      "tone": 0,
+      "initial": "d",
+      "final": "e",
+      "pos": "part.",
+      "bushou": "白",
+      "meaning": "(possessive / descriptive particle)",
+      "hsk": 1,
+      "freq": 5,
+      "words": [
+        "我的",
+        "你的",
+        "好的"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "dì",
+        "dí",
+        "dī"
+      ],
+      "sentence": {
+        "zh": "这是我的书。",
+        "pinyin": "zhè shì wǒ de shū",
+        "en": "This is my book."
+      }
+    },
+    {
+      "id": "hsk1-006",
+      "hanzi": "是",
+      "pinyin": "shì",
+      "tone": 4,
+      "initial": "sh",
+      "final": "ì",
+      "pos": "v.",
+      "bushou": "日",
+      "meaning": "be / am / is / are",
+      "hsk": 1,
+      "freq": 6,
+      "words": [
+        "也是",
+        "都是",
+        "不是"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我是中国人。",
+        "pinyin": "wǒ shì zhōng guó rén",
+        "en": "I am Chinese."
+      }
+    },
+    {
+      "id": "hsk1-007",
+      "hanzi": "不",
+      "pinyin": "bù",
+      "tone": 4,
+      "initial": "b",
+      "final": "ù",
+      "pos": "adv.",
+      "bushou": "一",
+      "meaning": "not / no",
+      "hsk": 1,
+      "freq": 7,
+      "words": [
+        "不是",
+        "不好",
+        "不想"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "fǒu"
+      ],
+      "sentence": {
+        "zh": "我不喝咖啡。",
+        "pinyin": "wǒ bù hē kā fēi",
+        "en": "I don't drink coffee."
+      }
+    },
+    {
+      "id": "hsk1-008",
+      "hanzi": "有",
+      "pinyin": "yǒu",
+      "tone": 3,
+      "initial": "y",
+      "final": "ǒu",
+      "pos": "v.",
+      "bushou": "月",
+      "meaning": "have / there is",
+      "hsk": 1,
+      "freq": 8,
+      "words": [
+        "没有",
+        "有用",
+        "有人"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "yòu"
+      ],
+      "sentence": {
+        "zh": "我有一个哥哥。",
+        "pinyin": "wǒ yǒu yí gè gē ge",
+        "en": "I have an older brother."
+      }
+    },
+    {
+      "id": "hsk1-009",
+      "hanzi": "人",
+      "pinyin": "rén",
+      "tone": 2,
+      "initial": "r",
+      "final": "én",
+      "pos": "n.",
+      "bushou": "人",
+      "meaning": "person / people",
+      "hsk": 1,
+      "freq": 9,
+      "words": [
+        "女人",
+        "男人",
+        "大人",
+        "好人"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "他是好人。",
+        "pinyin": "tā shì hǎo rén",
+        "en": "He is a good person."
+      }
+    },
+    {
+      "id": "hsk1-010",
+      "hanzi": "大",
+      "pinyin": "dà",
+      "tone": 4,
+      "initial": "d",
+      "final": "à",
+      "pos": "adj.",
+      "bushou": "大",
+      "meaning": "big / large",
+      "hsk": 1,
+      "freq": 10,
+      "words": [
+        "大小",
+        "大家",
+        "很大"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "dài"
+      ],
+      "sentence": {
+        "zh": "这个很大。",
+        "pinyin": "zhè ge hěn dà",
+        "en": "This is very big."
+      }
+    },
+    {
+      "id": "hsk1-011",
+      "hanzi": "小",
+      "pinyin": "xiǎo",
+      "tone": 3,
+      "initial": "x",
+      "final": "iǎo",
+      "pos": "adj.",
+      "bushou": "小",
+      "meaning": "small / little",
+      "hsk": 1,
+      "freq": 11,
+      "words": [
+        "小姐",
+        "小弟",
+        "很小"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "这个很小。",
+        "pinyin": "zhè ge hěn xiǎo",
+        "en": "This is very small."
+      }
+    },
+    {
+      "id": "hsk1-012",
+      "hanzi": "上",
+      "pinyin": "shàng",
+      "tone": 4,
+      "initial": "sh",
+      "final": "àng",
+      "pos": "n.",
+      "bushou": "一",
+      "meaning": "up / on / above",
+      "hsk": 1,
+      "freq": 12,
+      "words": [
+        "上面",
+        "上午",
+        "上车"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "shǎng",
+        "shang"
+      ],
+      "sentence": {
+        "zh": "我在上面。",
+        "pinyin": "wǒ zài shàng miàn",
+        "en": "I am on top."
+      }
+    },
+    {
+      "id": "hsk1-013",
+      "hanzi": "下",
+      "pinyin": "xià",
+      "tone": 4,
+      "initial": "x",
+      "final": "ià",
+      "pos": "n.",
+      "bushou": "一",
+      "meaning": "down / below",
+      "hsk": 1,
+      "freq": 13,
+      "words": [
+        "下面",
+        "下午",
+        "下车"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "在下面。",
+        "pinyin": "zài xià miàn",
+        "en": "Below."
+      }
+    },
+    {
+      "id": "hsk1-014",
+      "hanzi": "中",
+      "pinyin": "zhōng",
+      "tone": 1,
+      "initial": "zh",
+      "final": "ōng",
+      "pos": "n.",
+      "bushou": "丨",
+      "meaning": "middle / center",
+      "hsk": 1,
+      "freq": 14,
+      "words": [
+        "中国",
+        "中文",
+        "中间"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "zhòng"
+      ],
+      "sentence": {
+        "zh": "我在中国。",
+        "pinyin": "wǒ zài zhōng guó",
+        "en": "I am in China."
+      }
+    },
+    {
+      "id": "hsk1-015",
+      "hanzi": "国",
+      "pinyin": "guó",
+      "tone": 2,
+      "initial": "g",
+      "final": "uó",
+      "pos": "n.",
+      "bushou": "囗",
+      "meaning": "country / nation",
+      "hsk": 1,
+      "freq": 15,
+      "words": [
+        "中国",
+        "国家",
+        "国人"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "中国很大。",
+        "pinyin": "zhōng guó hěn dà",
+        "en": "China is big."
+      }
+    },
+    {
+      "id": "hsk1-016",
+      "hanzi": "家",
+      "pinyin": "jiā",
+      "tone": 1,
+      "initial": "j",
+      "final": "iā",
+      "pos": "n.",
+      "bushou": "宀",
+      "meaning": "home / family",
+      "hsk": 1,
+      "freq": 16,
+      "words": [
+        "大家",
+        "家人",
+        "回家"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "jia",
+        "jie"
+      ],
+      "sentence": {
+        "zh": "我的家在南昌。",
+        "pinyin": "wǒ de jiā zài nán chāng",
+        "en": "My home is in Nanchang."
+      }
+    },
+    {
+      "id": "hsk1-017",
+      "hanzi": "学",
+      "pinyin": "xué",
+      "tone": 2,
+      "initial": "x",
+      "final": "üé",
+      "pos": "v.",
+      "bushou": "子",
+      "meaning": "study / learn",
+      "hsk": 1,
+      "freq": 17,
+      "words": [
+        "学生",
+        "学习",
+        "学校"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我学中文。",
+        "pinyin": "wǒ xué zhōng wén",
+        "en": "I study Chinese."
+      }
+    },
+    {
+      "id": "hsk1-018",
+      "hanzi": "生",
+      "pinyin": "shēng",
+      "tone": 1,
+      "initial": "sh",
+      "final": "ēng",
+      "pos": "n.",
+      "bushou": "生",
+      "meaning": "student / be born / life",
+      "hsk": 1,
+      "freq": 18,
+      "words": [
+        "学生",
+        "先生",
+        "生日"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "他是学生。",
+        "pinyin": "tā shì xué shēng",
+        "en": "He is a student."
+      }
+    },
+    {
+      "id": "hsk1-019",
+      "hanzi": "先",
+      "pinyin": "xiān",
+      "tone": 1,
+      "initial": "x",
+      "final": "iān",
+      "pos": "adj.",
+      "bushou": "儿",
+      "meaning": "first / before",
+      "hsk": 1,
+      "freq": 19,
+      "words": [
+        "先生",
+        "先后",
+        "先走"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "先生好。",
+        "pinyin": "xiān shēng hǎo",
+        "en": "Hello sir."
+      }
+    },
+    {
+      "id": "hsk1-020",
+      "hanzi": "们",
+      "pinyin": "men",
+      "tone": 0,
+      "initial": "m",
+      "final": "en",
+      "pos": "suffix.",
+      "bushou": "亻",
+      "meaning": "(plural suffix for pronouns)",
+      "hsk": 1,
+      "freq": 20,
+      "words": [
+        "我们",
+        "你们",
+        "他们"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "mén"
+      ],
+      "sentence": {
+        "zh": "我们去。",
+        "pinyin": "wǒ men qù",
+        "en": "We go."
+      }
+    },
+    {
+      "id": "hsk1-021",
+      "hanzi": "好",
+      "pinyin": "hǎo",
+      "tone": 3,
+      "initial": "h",
+      "final": "ǎo",
+      "pos": "adj.",
+      "bushou": "女",
+      "meaning": "good / well",
+      "hsk": 1,
+      "freq": 21,
+      "words": [
+        "好人",
+        "好朋友",
+        "很好"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "hào"
+      ],
+      "sentence": {
+        "zh": "你好吗？",
+        "pinyin": "nǐ hǎo ma",
+        "en": "How are you?"
+      }
+    },
+    {
+      "id": "hsk1-022",
+      "hanzi": "很",
+      "pinyin": "hěn",
+      "tone": 3,
+      "initial": "h",
+      "final": "ěn",
+      "pos": "adv.",
+      "bushou": "彳",
+      "meaning": "very",
+      "hsk": 1,
+      "freq": 22,
+      "words": [
+        "很好",
+        "很小",
+        "很多"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我很好。",
+        "pinyin": "wǒ hěn hǎo",
+        "en": "I am very well."
+      }
+    },
+    {
+      "id": "hsk1-023",
+      "hanzi": "在",
+      "pinyin": "zài",
+      "tone": 4,
+      "initial": "z",
+      "final": "ài",
+      "pos": "v.",
+      "bushou": "土",
+      "meaning": "at / in / be located",
+      "hsk": 1,
+      "freq": 23,
+      "words": [
+        "不在",
+        "在家",
+        "现在"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我在家。",
+        "pinyin": "wǒ zài jiā",
+        "en": "I am at home."
+      }
+    },
+    {
+      "id": "hsk1-024",
+      "hanzi": "也",
+      "pinyin": "yě",
+      "tone": 3,
+      "initial": "y",
+      "final": "ě",
+      "pos": "adv.",
+      "bushou": "乙",
+      "meaning": "also / too",
+      "hsk": 1,
+      "freq": 24,
+      "words": [
+        "也是",
+        "也好",
+        "也不"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我也去。",
+        "pinyin": "wǒ yě qù",
+        "en": "I also go."
+      }
+    },
+    {
+      "id": "hsk1-025",
+      "hanzi": "都",
+      "pinyin": "dōu",
+      "tone": 1,
+      "initial": "d",
+      "final": "ōu",
+      "pos": "adv.",
+      "bushou": "阝",
+      "meaning": "all / both",
+      "hsk": 1,
+      "freq": 25,
+      "words": [
+        "都是",
+        "都好",
+        "都来"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "dū"
+      ],
+      "sentence": {
+        "zh": "我们都好。",
+        "pinyin": "wǒ men dōu hǎo",
+        "en": "We are all well."
+      }
+    },
+    {
+      "id": "hsk1-026",
+      "hanzi": "多",
+      "pinyin": "duō",
+      "tone": 1,
+      "initial": "d",
+      "final": "uō",
+      "pos": "adj.",
+      "bushou": "夕",
+      "meaning": "many / much",
+      "hsk": 1,
+      "freq": 26,
+      "words": [
+        "多少",
+        "很多",
+        "多谢"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很多人。",
+        "pinyin": "hěn duō rén",
+        "en": "Many people."
+      }
+    },
+    {
+      "id": "hsk1-027",
+      "hanzi": "少",
+      "pinyin": "shǎo",
+      "tone": 3,
+      "initial": "sh",
+      "final": "ǎo",
+      "pos": "adj.",
+      "bushou": "小",
+      "meaning": "few / little",
+      "hsk": 1,
+      "freq": 27,
+      "words": [
+        "多少",
+        "很少",
+        "少年"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "shào"
+      ],
+      "sentence": {
+        "zh": "很少。",
+        "pinyin": "hěn shǎo",
+        "en": "Very few."
+      }
+    },
+    {
+      "id": "hsk1-028",
+      "hanzi": "来",
+      "pinyin": "lái",
+      "tone": 2,
+      "initial": "l",
+      "final": "ái",
+      "pos": "v.",
+      "bushou": "木",
+      "meaning": "come",
+      "hsk": 1,
+      "freq": 28,
+      "words": [
+        "回来",
+        "来吧",
+        "过来"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "你来吗？",
+        "pinyin": "nǐ lái ma",
+        "en": "Do you come?"
+      }
+    },
+    {
+      "id": "hsk1-029",
+      "hanzi": "去",
+      "pinyin": "qù",
+      "tone": 4,
+      "initial": "q",
+      "final": "ǜ",
+      "pos": "v.",
+      "bushou": "厶",
+      "meaning": "go",
+      "hsk": 1,
+      "freq": 29,
+      "words": [
+        "回去",
+        "去吧",
+        "去学校"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我去学校。",
+        "pinyin": "wǒ qù xué xiào",
+        "en": "I go to school."
+      }
+    },
+    {
+      "id": "hsk1-030",
+      "hanzi": "看",
+      "pinyin": "kàn",
+      "tone": 4,
+      "initial": "k",
+      "final": "àn",
+      "pos": "v.",
+      "bushou": "目",
+      "meaning": "look / see / watch",
+      "hsk": 1,
+      "freq": 30,
+      "words": [
+        "看见",
+        "好看",
+        "看书"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "kān"
+      ],
+      "sentence": {
+        "zh": "我看书。",
+        "pinyin": "wǒ kàn shū",
+        "en": "I read a book."
+      }
+    },
+    {
+      "id": "hsk1-031",
+      "hanzi": "见",
+      "pinyin": "jiàn",
+      "tone": 4,
+      "initial": "j",
+      "final": "iàn",
+      "pos": "v.",
+      "bushou": "见",
+      "meaning": "see / meet",
+      "hsk": 1,
+      "freq": 31,
+      "words": [
+        "看见",
+        "见面",
+        "再见"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "xiàn"
+      ],
+      "sentence": {
+        "zh": "再见！",
+        "pinyin": "zài jiàn",
+        "en": "Goodbye!"
+      }
+    },
+    {
+      "id": "hsk1-032",
+      "hanzi": "说",
+      "pinyin": "shuō",
+      "tone": 1,
+      "initial": "sh",
+      "final": "uō",
+      "pos": "v.",
+      "bushou": "讠",
+      "meaning": "speak / say",
+      "hsk": 1,
+      "freq": 32,
+      "words": [
+        "说话",
+        "小说",
+        "说明"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "shuì",
+        "yuè"
+      ],
+      "sentence": {
+        "zh": "你说中文。",
+        "pinyin": "nǐ shuō zhōng wén",
+        "en": "You speak Chinese."
+      }
+    },
+    {
+      "id": "hsk1-033",
+      "hanzi": "话",
+      "pinyin": "huà",
+      "tone": 4,
+      "initial": "h",
+      "final": "uà",
+      "pos": "n.",
+      "bushou": "讠",
+      "meaning": "word / speech",
+      "hsk": 1,
+      "freq": 33,
+      "words": [
+        "说话",
+        "电话",
+        "对话"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "电话。",
+        "pinyin": "diàn huà",
+        "en": "Telephone."
+      }
+    },
+    {
+      "id": "hsk1-034",
+      "hanzi": "读",
+      "pinyin": "dú",
+      "tone": 2,
+      "initial": "d",
+      "final": "ú",
+      "pos": "v.",
+      "bushou": "讠",
+      "meaning": "read",
+      "hsk": 1,
+      "freq": 34,
+      "words": [
+        "读书",
+        "读报",
+        "读音"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "dòu"
+      ],
+      "sentence": {
+        "zh": "我读书。",
+        "pinyin": "wǒ dú shū",
+        "en": "I read books."
+      }
+    },
+    {
+      "id": "hsk1-035",
+      "hanzi": "书",
+      "pinyin": "shū",
+      "tone": 1,
+      "initial": "sh",
+      "final": "ū",
+      "pos": "n.",
+      "bushou": "乛",
+      "meaning": "book",
+      "hsk": 1,
+      "freq": 35,
+      "words": [
+        "看书",
+        "书店",
+        "书包"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "这是书。",
+        "pinyin": "zhè shì shū",
+        "en": "This is a book."
+      }
+    },
+    {
+      "id": "hsk1-036",
+      "hanzi": "写",
+      "pinyin": "xiě",
+      "tone": 3,
+      "initial": "x",
+      "final": "iě",
+      "pos": "v.",
+      "bushou": "冖",
+      "meaning": "write",
+      "hsk": 1,
+      "freq": 36,
+      "words": [
+        "写字",
+        "写书",
+        "写信"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我写汉字。",
+        "pinyin": "wǒ xiě hàn zì",
+        "en": "I write Chinese characters."
+      }
+    },
+    {
+      "id": "hsk1-037",
+      "hanzi": "字",
+      "pinyin": "zì",
+      "tone": 4,
+      "initial": "z",
+      "final": "ì",
+      "pos": "n.",
+      "bushou": "宀",
+      "meaning": "character / word",
+      "hsk": 1,
+      "freq": 37,
+      "words": [
+        "汉字",
+        "写字",
+        "字母"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "汉字很难。",
+        "pinyin": "hàn zì hěn nán",
+        "en": "Chinese characters are hard."
+      }
+    },
+    {
+      "id": "hsk1-038",
+      "hanzi": "名",
+      "pinyin": "míng",
+      "tone": 2,
+      "initial": "m",
+      "final": "íng",
+      "pos": "n.",
+      "bushou": "口",
+      "meaning": "name",
+      "hsk": 1,
+      "freq": 38,
+      "words": [
+        "名字",
+        "姓名",
+        "名人"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "你的名字？",
+        "pinyin": "nǐ de míng zì",
+        "en": "Your name?"
+      }
+    },
+    {
+      "id": "hsk1-039",
+      "hanzi": "姓",
+      "pinyin": "xìng",
+      "tone": 4,
+      "initial": "x",
+      "final": "ìng",
+      "pos": "n.",
+      "bushou": "女",
+      "meaning": "surname / family name",
+      "hsk": 1,
+      "freq": 39,
+      "words": [
+        "姓名",
+        "姓王",
+        "贵姓"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我姓康。",
+        "pinyin": "wǒ xìng kāng",
+        "en": "My surname is Kang."
+      }
+    },
+    {
+      "id": "hsk1-040",
+      "hanzi": "叫",
+      "pinyin": "jiào",
+      "tone": 4,
+      "initial": "j",
+      "final": "iào",
+      "pos": "v.",
+      "bushou": "口",
+      "meaning": "be called / call",
+      "hsk": 1,
+      "freq": 40,
+      "words": [
+        "叫什么",
+        "叫人",
+        "叫作"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我叫康。",
+        "pinyin": "wǒ jiào kāng",
+        "en": "I am called Kang."
+      }
+    },
+    {
+      "id": "hsk1-041",
+      "hanzi": "什",
+      "pinyin": "shén",
+      "tone": 2,
+      "initial": "sh",
+      "final": "én",
+      "pos": "pron.",
+      "bushou": "亻",
+      "meaning": "(what, in 什么)",
+      "hsk": 1,
+      "freq": 41,
+      "words": [
+        "什么"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "shí"
+      ],
+      "sentence": {
+        "zh": "你是什么？",
+        "pinyin": "nǐ shì shén me",
+        "en": "What are you?"
+      }
+    },
+    {
+      "id": "hsk1-042",
+      "hanzi": "谁",
+      "pinyin": "shuí",
+      "tone": 2,
+      "initial": "sh",
+      "final": "uí",
+      "pos": "pron.",
+      "bushou": "讠",
+      "meaning": "who",
+      "hsk": 1,
+      "freq": 42,
+      "words": [
+        "是谁",
+        "谁人"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "shéi"
+      ],
+      "sentence": {
+        "zh": "这是谁？",
+        "pinyin": "zhè shì shuí",
+        "en": "Who is this?"
+      }
+    },
+    {
+      "id": "hsk1-043",
+      "hanzi": "哪",
+      "pinyin": "nǎ",
+      "tone": 3,
+      "initial": "n",
+      "final": "ǎ",
+      "pos": "pron.",
+      "bushou": "口",
+      "meaning": "which / where",
+      "hsk": 1,
+      "freq": 43,
+      "words": [
+        "哪里",
+        "哪个",
+        "哪儿"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "na",
+        "nǎi",
+        "né",
+        "něi"
+      ],
+      "sentence": {
+        "zh": "你在哪里？",
+        "pinyin": "nǐ zài nǎ lǐ",
+        "en": "Where are you?"
+      }
+    },
+    {
+      "id": "hsk1-044",
+      "hanzi": "里",
+      "pinyin": "lǐ",
+      "tone": 3,
+      "initial": "l",
+      "final": "ǐ",
+      "pos": "n.",
+      "bushou": "里",
+      "meaning": "inside / in",
+      "hsk": 1,
+      "freq": 44,
+      "words": [
+        "哪里",
+        "家里",
+        "里面"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "li"
+      ],
+      "sentence": {
+        "zh": "在家里。",
+        "pinyin": "zài jiā lǐ",
+        "en": "Inside the home."
+      }
+    },
+    {
+      "id": "hsk1-045",
+      "hanzi": "这",
+      "pinyin": "zhè",
+      "tone": 4,
+      "initial": "zh",
+      "final": "è",
+      "pos": "pron.",
+      "bushou": "辶",
+      "meaning": "this",
+      "hsk": 1,
+      "freq": 45,
+      "words": [
+        "这里",
+        "这个",
+        "这么"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "zhèi"
+      ],
+      "sentence": {
+        "zh": "这是什么？",
+        "pinyin": "zhè shì shén me",
+        "en": "What is this?"
+      }
+    },
+    {
+      "id": "hsk1-046",
+      "hanzi": "那",
+      "pinyin": "nà",
+      "tone": 4,
+      "initial": "n",
+      "final": "à",
+      "pos": "pron.",
+      "bushou": "阝",
+      "meaning": "that",
+      "hsk": 1,
+      "freq": 46,
+      "words": [
+        "那里",
+        "那个",
+        "那么"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "nèi",
+        "nā"
+      ],
+      "sentence": {
+        "zh": "那是书。",
+        "pinyin": "nà shì shū",
+        "en": "That is a book."
+      }
+    },
+    {
+      "id": "hsk1-047",
+      "hanzi": "个",
+      "pinyin": "gè",
+      "tone": 4,
+      "initial": "g",
+      "final": "è",
+      "pos": "cls.",
+      "bushou": "人",
+      "meaning": "(general measure word)",
+      "hsk": 1,
+      "freq": 47,
+      "words": [
+        "一个",
+        "三个",
+        "个人"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "gě"
+      ],
+      "sentence": {
+        "zh": "一个人。",
+        "pinyin": "yí gè rén",
+        "en": "One person."
+      }
+    },
+    {
+      "id": "hsk1-048",
+      "hanzi": "和",
+      "pinyin": "hé",
+      "tone": 2,
+      "initial": "h",
+      "final": "é",
+      "pos": "conj.",
+      "bushou": "禾",
+      "meaning": "and / with",
+      "hsk": 1,
+      "freq": 48,
+      "words": [
+        "我和你",
+        "和平",
+        "和好"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "hè",
+        "huó",
+        "huò",
+        "hú"
+      ],
+      "sentence": {
+        "zh": "我和你。",
+        "pinyin": "wǒ hé nǐ",
+        "en": "You and I."
+      }
+    },
+    {
+      "id": "hsk1-049",
+      "hanzi": "跟",
+      "pinyin": "gēn",
+      "tone": 1,
+      "initial": "g",
+      "final": "ēn",
+      "pos": "prep.",
+      "bushou": "足",
+      "meaning": "with / follow",
+      "hsk": 1,
+      "freq": 49,
+      "words": [
+        "跟着",
+        "跟你",
+        "跟前"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "跟我来。",
+        "pinyin": "gēn wǒ lái",
+        "en": "Come with me."
+      }
+    },
+    {
+      "id": "hsk1-050",
+      "hanzi": "对",
+      "pinyin": "duì",
+      "tone": 4,
+      "initial": "d",
+      "final": "uì",
+      "pos": "adj.",
+      "bushou": "寸",
+      "meaning": "correct / to / pair",
+      "hsk": 1,
+      "freq": 50,
+      "words": [
+        "不对",
+        "对你",
+        "对的"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "对，很好。",
+        "pinyin": "duì hěn hǎo",
+        "en": "Right, very good."
+      }
+    },
+    {
+      "id": "hsk1-051",
+      "hanzi": "错",
+      "pinyin": "cuò",
+      "tone": 4,
+      "initial": "c",
+      "final": "uò",
+      "pos": "adj.",
+      "bushou": "钅",
+      "meaning": "wrong / mistake",
+      "hsk": 1,
+      "freq": 51,
+      "words": [
+        "不错",
+        "错了",
+        "错误"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "你错了。",
+        "pinyin": "nǐ cuò le",
+        "en": "You are wrong."
+      }
+    },
+    {
+      "id": "hsk1-052",
+      "hanzi": "会",
+      "pinyin": "huì",
+      "tone": 4,
+      "initial": "h",
+      "final": "uì",
+      "pos": "v.",
+      "bushou": "人",
+      "meaning": "can / be able to",
+      "hsk": 1,
+      "freq": 52,
+      "words": [
+        "不会",
+        "会写",
+        "会议"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "kuài"
+      ],
+      "sentence": {
+        "zh": "我会说。",
+        "pinyin": "wǒ huì shuō",
+        "en": "I can speak."
+      }
+    },
+    {
+      "id": "hsk1-053",
+      "hanzi": "能",
+      "pinyin": "néng",
+      "tone": 2,
+      "initial": "n",
+      "final": "éng",
+      "pos": "v.",
+      "bushou": "厶",
+      "meaning": "can / be able",
+      "hsk": 1,
+      "freq": 53,
+      "words": [
+        "不能",
+        "能来",
+        "能力"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "nài"
+      ],
+      "sentence": {
+        "zh": "我能去。",
+        "pinyin": "wǒ néng qù",
+        "en": "I can go."
+      }
+    },
+    {
+      "id": "hsk1-054",
+      "hanzi": "要",
+      "pinyin": "yào",
+      "tone": 4,
+      "initial": "y",
+      "final": "ào",
+      "pos": "v.",
+      "bushou": "覀",
+      "meaning": "want / need",
+      "hsk": 1,
+      "freq": 54,
+      "words": [
+        "要去",
+        "不要",
+        "要钱"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "yāo"
+      ],
+      "sentence": {
+        "zh": "我要咖啡。",
+        "pinyin": "wǒ yào kā fēi",
+        "en": "I want coffee."
+      }
+    },
+    {
+      "id": "hsk1-055",
+      "hanzi": "想",
+      "pinyin": "xiǎng",
+      "tone": 3,
+      "initial": "x",
+      "final": "iǎng",
+      "pos": "v.",
+      "bushou": "心",
+      "meaning": "want / think",
+      "hsk": 1,
+      "freq": 55,
+      "words": [
+        "想学",
+        "不想",
+        "想法"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我想去。",
+        "pinyin": "wǒ xiǎng qù",
+        "en": "I want to go."
+      }
+    },
+    {
+      "id": "hsk1-056",
+      "hanzi": "知",
+      "pinyin": "zhī",
+      "tone": 1,
+      "initial": "zh",
+      "final": "ī",
+      "pos": "v.",
+      "bushou": "矢",
+      "meaning": "know",
+      "hsk": 1,
+      "freq": 56,
+      "words": [
+        "知道",
+        "知不知道",
+        "知识"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "zhì"
+      ],
+      "sentence": {
+        "zh": "我知道。",
+        "pinyin": "wǒ zhī dào",
+        "en": "I know."
+      }
+    },
+    {
+      "id": "hsk1-057",
+      "hanzi": "道",
+      "pinyin": "dào",
+      "tone": 4,
+      "initial": "d",
+      "final": "ào",
+      "pos": "n.",
+      "bushou": "辶",
+      "meaning": "way / road / say",
+      "hsk": 1,
+      "freq": 57,
+      "words": [
+        "知道",
+        "道路",
+        "道理"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我知道。",
+        "pinyin": "wǒ zhī dào",
+        "en": "I know."
+      }
+    },
+    {
+      "id": "hsk1-058",
+      "hanzi": "懂",
+      "pinyin": "dǒng",
+      "tone": 3,
+      "initial": "d",
+      "final": "ǒng",
+      "pos": "v.",
+      "bushou": "忄",
+      "meaning": "understand",
+      "hsk": 1,
+      "freq": 58,
+      "words": [
+        "不懂",
+        "懂了",
+        "懂得"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我懂了。",
+        "pinyin": "wǒ dǒng le",
+        "en": "I understand."
+      }
+    },
+    {
+      "id": "hsk1-059",
+      "hanzi": "爱",
+      "pinyin": "ài",
+      "tone": 4,
+      "initial": null,
+      "final": "ài",
+      "pos": "v.",
+      "bushou": "爫",
+      "meaning": "love",
+      "hsk": 1,
+      "freq": 59,
+      "words": [
+        "爱人",
+        "爱学",
+        "可爱"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我爱中文。",
+        "pinyin": "wǒ ài zhōng wén",
+        "en": "I love Chinese."
+      }
+    },
+    {
+      "id": "hsk1-060",
+      "hanzi": "喜",
+      "pinyin": "xǐ",
+      "tone": 3,
+      "initial": "x",
+      "final": "ǐ",
+      "pos": "v.",
+      "bushou": "士",
+      "meaning": "(like, in 喜欢)",
+      "hsk": 1,
+      "freq": 60,
+      "words": [
+        "喜欢"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我喜欢你。",
+        "pinyin": "wǒ xǐ huan nǐ",
+        "en": "I like you."
+      }
+    },
+    {
+      "id": "hsk1-061",
+      "hanzi": "欢",
+      "pinyin": "huān",
+      "tone": 1,
+      "initial": "h",
+      "final": "uān",
+      "pos": "v.",
+      "bushou": "欠",
+      "meaning": "(joy, in 喜欢)",
+      "hsk": 1,
+      "freq": 61,
+      "words": [
+        "喜欢",
+        "欢迎",
+        "欢乐"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "他喜欢学习。",
+        "pinyin": "tā xǐ huan xué xí",
+        "en": "He likes studying."
+      }
+    },
+    {
+      "id": "hsk1-062",
+      "hanzi": "谢",
+      "pinyin": "xiè",
+      "tone": 4,
+      "initial": "x",
+      "final": "iè",
+      "pos": "v.",
+      "bushou": "讠",
+      "meaning": "thank",
+      "hsk": 1,
+      "freq": 62,
+      "words": [
+        "谢谢",
+        "感谢",
+        "谢礼"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "谢谢你。",
+        "pinyin": "xiè xiè nǐ",
+        "en": "Thank you."
+      }
+    },
+    {
+      "id": "hsk1-063",
+      "hanzi": "请",
+      "pinyin": "qǐng",
+      "tone": 3,
+      "initial": "q",
+      "final": "ǐng",
+      "pos": "v.",
+      "bushou": "讠",
+      "meaning": "please / invite",
+      "hsk": 1,
+      "freq": 63,
+      "words": [
+        "请问",
+        "请坐",
+        "请假"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "请坐。",
+        "pinyin": "qǐng zuò",
+        "en": "Please sit."
+      }
+    },
+    {
+      "id": "hsk1-064",
+      "hanzi": "问",
+      "pinyin": "wèn",
+      "tone": 4,
+      "initial": "w",
+      "final": "èn",
+      "pos": "v.",
+      "bushou": "门",
+      "meaning": "ask",
+      "hsk": 1,
+      "freq": 64,
+      "words": [
+        "请问",
+        "问题",
+        "问答"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我问你。",
+        "pinyin": "wǒ wèn nǐ",
+        "en": "I ask you."
+      }
+    },
+    {
+      "id": "hsk1-065",
+      "hanzi": "答",
+      "pinyin": "dá",
+      "tone": 2,
+      "initial": "d",
+      "final": "á",
+      "pos": "v.",
+      "bushou": "竹",
+      "meaning": "answer",
+      "hsk": 1,
+      "freq": 65,
+      "words": [
+        "回答",
+        "答案",
+        "答对"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "dā"
+      ],
+      "sentence": {
+        "zh": "请回答。",
+        "pinyin": "qǐng huí dá",
+        "en": "Please answer."
+      }
+    },
+    {
+      "id": "hsk1-066",
+      "hanzi": "吃",
+      "pinyin": "chī",
+      "tone": 1,
+      "initial": "ch",
+      "final": "ī",
+      "pos": "v.",
+      "bushou": "口",
+      "meaning": "eat",
+      "hsk": 1,
+      "freq": 66,
+      "words": [
+        "吃饭",
+        "好吃",
+        "吃肉"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我吃饭。",
+        "pinyin": "wǒ chī fàn",
+        "en": "I eat a meal."
+      }
+    },
+    {
+      "id": "hsk1-067",
+      "hanzi": "饭",
+      "pinyin": "fàn",
+      "tone": 4,
+      "initial": "f",
+      "final": "àn",
+      "pos": "n.",
+      "bushou": "饣",
+      "meaning": "rice / meal",
+      "hsk": 1,
+      "freq": 67,
+      "words": [
+        "吃饭",
+        "米饭",
+        "饭店"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我吃饭。",
+        "pinyin": "wǒ chī fàn",
+        "en": "I eat a meal."
+      }
+    },
+    {
+      "id": "hsk1-068",
+      "hanzi": "喝",
+      "pinyin": "hē",
+      "tone": 1,
+      "initial": "h",
+      "final": "ē",
+      "pos": "v.",
+      "bushou": "口",
+      "meaning": "drink",
+      "hsk": 1,
+      "freq": 68,
+      "words": [
+        "喝水",
+        "喝酒",
+        "喝茶"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "hè",
+        "yè"
+      ],
+      "sentence": {
+        "zh": "我喝水。",
+        "pinyin": "wǒ hē shuǐ",
+        "en": "I drink water."
+      }
+    },
+    {
+      "id": "hsk1-069",
+      "hanzi": "水",
+      "pinyin": "shuǐ",
+      "tone": 3,
+      "initial": "sh",
+      "final": "uǐ",
+      "pos": "n.",
+      "bushou": "水",
+      "meaning": "water",
+      "hsk": 1,
+      "freq": 69,
+      "words": [
+        "喝水",
+        "水果",
+        "开水"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我喝水。",
+        "pinyin": "wǒ hē shuǐ",
+        "en": "I drink water."
+      }
+    },
+    {
+      "id": "hsk1-070",
+      "hanzi": "茶",
+      "pinyin": "chá",
+      "tone": 2,
+      "initial": "ch",
+      "final": "á",
+      "pos": "n.",
+      "bushou": "艹",
+      "meaning": "tea",
+      "hsk": 1,
+      "freq": 70,
+      "words": [
+        "喝茶",
+        "绿茶",
+        "茶馆"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "喝茶。",
+        "pinyin": "hē chá",
+        "en": "Drink tea."
+      }
+    },
+    {
+      "id": "hsk1-071",
+      "hanzi": "果",
+      "pinyin": "guǒ",
+      "tone": 3,
+      "initial": "g",
+      "final": "uǒ",
+      "pos": "n.",
+      "bushou": "木",
+      "meaning": "fruit / result",
+      "hsk": 1,
+      "freq": 71,
+      "words": [
+        "水果",
+        "苹果",
+        "结果"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "水果好。",
+        "pinyin": "shuǐ guǒ hǎo",
+        "en": "Fruit is good."
+      }
+    },
+    {
+      "id": "hsk1-072",
+      "hanzi": "菜",
+      "pinyin": "cài",
+      "tone": 4,
+      "initial": "c",
+      "final": "ài",
+      "pos": "n.",
+      "bushou": "艹",
+      "meaning": "vegetable / dish",
+      "hsk": 1,
+      "freq": 72,
+      "words": [
+        "蔬菜",
+        "中国菜",
+        "菜单"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "中国菜好吃。",
+        "pinyin": "zhōng guó cài hǎo chī",
+        "en": "Chinese food is tasty."
+      }
+    },
+    {
+      "id": "hsk1-073",
+      "hanzi": "肉",
+      "pinyin": "ròu",
+      "tone": 4,
+      "initial": "r",
+      "final": "òu",
+      "pos": "n.",
+      "bushou": "肉",
+      "meaning": "meat",
+      "hsk": 1,
+      "freq": 73,
+      "words": [
+        "吃肉",
+        "牛肉",
+        "羊肉"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我吃肉。",
+        "pinyin": "wǒ chī ròu",
+        "en": "I eat meat."
+      }
+    },
+    {
+      "id": "hsk1-074",
+      "hanzi": "蛋",
+      "pinyin": "dàn",
+      "tone": 4,
+      "initial": "d",
+      "final": "àn",
+      "pos": "n.",
+      "bushou": "虫",
+      "meaning": "egg",
+      "hsk": 1,
+      "freq": 74,
+      "words": [
+        "鸡蛋",
+        "蛋糕",
+        "蛋黄"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "鸡蛋。",
+        "pinyin": "jī dàn",
+        "en": "Chicken egg."
+      }
+    },
+    {
+      "id": "hsk1-075",
+      "hanzi": "米",
+      "pinyin": "mǐ",
+      "tone": 3,
+      "initial": "m",
+      "final": "ǐ",
+      "pos": "n.",
+      "bushou": "米",
+      "meaning": "rice (grain)",
+      "hsk": 1,
+      "freq": 75,
+      "words": [
+        "大米",
+        "米饭",
+        "米粒"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "米饭。",
+        "pinyin": "mǐ fàn",
+        "en": "Rice."
+      }
+    },
+    {
+      "id": "hsk1-076",
+      "hanzi": "面",
+      "pinyin": "miàn",
+      "tone": 4,
+      "initial": "m",
+      "final": "iàn",
+      "pos": "n.",
+      "bushou": "面",
+      "meaning": "noodle / face",
+      "hsk": 1,
+      "freq": 76,
+      "words": [
+        "面条",
+        "面包",
+        "见面"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "面条。",
+        "pinyin": "miàn tiáo",
+        "en": "Noodles."
+      }
+    },
+    {
+      "id": "hsk1-077",
+      "hanzi": "包",
+      "pinyin": "bāo",
+      "tone": 1,
+      "initial": "b",
+      "final": "āo",
+      "pos": "n.",
+      "bushou": "勹",
+      "meaning": "bun / package / wrap",
+      "hsk": 1,
+      "freq": 77,
+      "words": [
+        "面包",
+        "包子",
+        "书包"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "面包。",
+        "pinyin": "miàn bāo",
+        "en": "Bread."
+      }
+    },
+    {
+      "id": "hsk1-078",
+      "hanzi": "牛",
+      "pinyin": "niú",
+      "tone": 2,
+      "initial": "n",
+      "final": "iú",
+      "pos": "n.",
+      "bushou": "牛",
+      "meaning": "cow / beef / ox",
+      "hsk": 1,
+      "freq": 78,
+      "words": [
+        "牛肉",
+        "牛奶",
+        "水牛"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "牛肉。",
+        "pinyin": "niú ròu",
+        "en": "Beef."
+      }
+    },
+    {
+      "id": "hsk1-079",
+      "hanzi": "羊",
+      "pinyin": "yáng",
+      "tone": 2,
+      "initial": "y",
+      "final": "áng",
+      "pos": "n.",
+      "bushou": "羊",
+      "meaning": "sheep / goat",
+      "hsk": 1,
+      "freq": 79,
+      "words": [
+        "羊肉",
+        "绵羊",
+        "羊毛"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "xiáng"
+      ],
+      "sentence": {
+        "zh": "羊肉。",
+        "pinyin": "yáng ròu",
+        "en": "Mutton."
+      }
+    },
+    {
+      "id": "hsk1-080",
+      "hanzi": "鱼",
+      "pinyin": "yú",
+      "tone": 2,
+      "initial": "y",
+      "final": "ú",
+      "pos": "n.",
+      "bushou": "鱼",
+      "meaning": "fish",
+      "hsk": 1,
+      "freq": 80,
+      "words": [
+        "吃鱼",
+        "小鱼",
+        "金鱼"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我吃鱼。",
+        "pinyin": "wǒ chī yú",
+        "en": "I eat fish."
+      }
+    },
+    {
+      "id": "hsk1-081",
+      "hanzi": "狗",
+      "pinyin": "gǒu",
+      "tone": 3,
+      "initial": "g",
+      "final": "ǒu",
+      "pos": "n.",
+      "bushou": "犭",
+      "meaning": "dog",
+      "hsk": 1,
+      "freq": 81,
+      "words": [
+        "小狗",
+        "狗叫",
+        "热狗"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "小狗。",
+        "pinyin": "xiǎo gǒu",
+        "en": "Small dog."
+      }
+    },
+    {
+      "id": "hsk1-082",
+      "hanzi": "猫",
+      "pinyin": "māo",
+      "tone": 1,
+      "initial": "m",
+      "final": "āo",
+      "pos": "n.",
+      "bushou": "犭",
+      "meaning": "cat",
+      "hsk": 1,
+      "freq": 82,
+      "words": [
+        "小猫",
+        "猫叫",
+        "熊猫"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "máo"
+      ],
+      "sentence": {
+        "zh": "小猫。",
+        "pinyin": "xiǎo māo",
+        "en": "Small cat."
+      }
+    },
+    {
+      "id": "hsk1-083",
+      "hanzi": "鸟",
+      "pinyin": "niǎo",
+      "tone": 3,
+      "initial": "n",
+      "final": "iǎo",
+      "pos": "n.",
+      "bushou": "鸟",
+      "meaning": "bird",
+      "hsk": 1,
+      "freq": 83,
+      "words": [
+        "小鸟",
+        "飞鸟",
+        "花鸟"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "小鸟。",
+        "pinyin": "xiǎo niǎo",
+        "en": "Small bird."
+      }
+    },
+    {
+      "id": "hsk1-084",
+      "hanzi": "花",
+      "pinyin": "huā",
+      "tone": 1,
+      "initial": "h",
+      "final": "uā",
+      "pos": "n.",
+      "bushou": "艹",
+      "meaning": "flower",
+      "hsk": 1,
+      "freq": 84,
+      "words": [
+        "红花",
+        "开花",
+        "花草"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "红花。",
+        "pinyin": "hóng huā",
+        "en": "Red flower."
+      }
+    },
+    {
+      "id": "hsk1-085",
+      "hanzi": "草",
+      "pinyin": "cǎo",
+      "tone": 3,
+      "initial": "c",
+      "final": "ǎo",
+      "pos": "n.",
+      "bushou": "艹",
+      "meaning": "grass",
+      "hsk": 1,
+      "freq": 85,
+      "words": [
+        "小草",
+        "草地",
+        "青草"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "青草。",
+        "pinyin": "qīng cǎo",
+        "en": "Green grass."
+      }
+    },
+    {
+      "id": "hsk1-086",
+      "hanzi": "树",
+      "pinyin": "shù",
+      "tone": 4,
+      "initial": "sh",
+      "final": "ù",
+      "pos": "n.",
+      "bushou": "木",
+      "meaning": "tree",
+      "hsk": 1,
+      "freq": 86,
+      "words": [
+        "大树",
+        "树叶",
+        "树木"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "大树。",
+        "pinyin": "dà shù",
+        "en": "Big tree."
+      }
+    },
+    {
+      "id": "hsk1-087",
+      "hanzi": "木",
+      "pinyin": "mù",
+      "tone": 4,
+      "initial": "m",
+      "final": "ù",
+      "pos": "n.",
+      "bushou": "木",
+      "meaning": "wood / tree",
+      "hsk": 1,
+      "freq": 87,
+      "words": [
+        "树木",
+        "木头",
+        "木马"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "木头。",
+        "pinyin": "mù tou",
+        "en": "Wood."
+      }
+    },
+    {
+      "id": "hsk1-088",
+      "hanzi": "林",
+      "pinyin": "lín",
+      "tone": 2,
+      "initial": "l",
+      "final": "ín",
+      "pos": "n.",
+      "bushou": "木",
+      "meaning": "forest / woods",
+      "hsk": 1,
+      "freq": 88,
+      "words": [
+        "树林",
+        "森林",
+        "竹林"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "树林。",
+        "pinyin": "shù lín",
+        "en": "Forest."
+      }
+    },
+    {
+      "id": "hsk1-089",
+      "hanzi": "天",
+      "pinyin": "tiān",
+      "tone": 1,
+      "initial": "t",
+      "final": "iān",
+      "pos": "n.",
+      "bushou": "大",
+      "meaning": "day / sky / heaven",
+      "hsk": 1,
+      "freq": 89,
+      "words": [
+        "今天",
+        "天气",
+        "天天"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "天气好。",
+        "pinyin": "tiān qì hǎo",
+        "en": "The weather is good."
+      }
+    },
+    {
+      "id": "hsk1-090",
+      "hanzi": "气",
+      "pinyin": "qì",
+      "tone": 4,
+      "initial": "q",
+      "final": "ì",
+      "pos": "n.",
+      "bushou": "气",
+      "meaning": "air / gas / weather",
+      "hsk": 1,
+      "freq": 90,
+      "words": [
+        "天气",
+        "生气",
+        "空气"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "天气。",
+        "pinyin": "tiān qì",
+        "en": "Weather."
+      }
+    },
+    {
+      "id": "hsk1-091",
+      "hanzi": "今",
+      "pinyin": "jīn",
+      "tone": 1,
+      "initial": "j",
+      "final": "īn",
+      "pos": "n.",
+      "bushou": "人",
+      "meaning": "today / now",
+      "hsk": 1,
+      "freq": 91,
+      "words": [
+        "今天",
+        "今年",
+        "如今"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "今天好。",
+        "pinyin": "jīn tiān hǎo",
+        "en": "Today is good."
+      }
+    },
+    {
+      "id": "hsk1-092",
+      "hanzi": "年",
+      "pinyin": "nián",
+      "tone": 2,
+      "initial": "n",
+      "final": "ián",
+      "pos": "n.",
+      "bushou": "干",
+      "meaning": "year",
+      "hsk": 1,
+      "freq": 92,
+      "words": [
+        "今年",
+        "去年",
+        "明年"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "今年。",
+        "pinyin": "jīn nián",
+        "en": "This year."
+      }
+    },
+    {
+      "id": "hsk1-093",
+      "hanzi": "时",
+      "pinyin": "shí",
+      "tone": 2,
+      "initial": "sh",
+      "final": "í",
+      "pos": "n.",
+      "bushou": "日",
+      "meaning": "time / hour",
+      "hsk": 1,
+      "freq": 93,
+      "words": [
+        "时间",
+        "时候",
+        "小时"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "时间。",
+        "pinyin": "shí jiān",
+        "en": "Time."
+      }
+    },
+    {
+      "id": "hsk1-094",
+      "hanzi": "间",
+      "pinyin": "jiān",
+      "tone": 1,
+      "initial": "j",
+      "final": "iān",
+      "pos": "n.",
+      "bushou": "门",
+      "meaning": "between / room",
+      "hsk": 1,
+      "freq": 94,
+      "words": [
+        "时间",
+        "中间",
+        "房间"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "jiàn"
+      ],
+      "sentence": {
+        "zh": "中间。",
+        "pinyin": "zhōng jiān",
+        "en": "Middle."
+      }
+    },
+    {
+      "id": "hsk1-095",
+      "hanzi": "分",
+      "pinyin": "fēn",
+      "tone": 1,
+      "initial": "f",
+      "final": "ēn",
+      "pos": "v.",
+      "bushou": "刀",
+      "meaning": "minute / divide",
+      "hsk": 1,
+      "freq": 95,
+      "words": [
+        "分钟",
+        "十分",
+        "分手"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "fèn"
+      ],
+      "sentence": {
+        "zh": "十分钟。",
+        "pinyin": "shí fēn zhōng",
+        "en": "Ten minutes."
+      }
+    },
+    {
+      "id": "hsk1-096",
+      "hanzi": "点",
+      "pinyin": "diǎn",
+      "tone": 3,
+      "initial": "d",
+      "final": "iǎn",
+      "pos": "n.",
+      "bushou": "灬",
+      "meaning": "o'clock / point / dot",
+      "hsk": 1,
+      "freq": 96,
+      "words": [
+        "点菜",
+        "三点",
+        "优点"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "三点。",
+        "pinyin": "sān diǎn",
+        "en": "Three o'clock."
+      }
+    },
+    {
+      "id": "hsk1-097",
+      "hanzi": "钟",
+      "pinyin": "zhōng",
+      "tone": 1,
+      "initial": "zh",
+      "final": "ōng",
+      "pos": "n.",
+      "bushou": "钅",
+      "meaning": "clock / bell",
+      "hsk": 1,
+      "freq": 97,
+      "words": [
+        "分钟",
+        "闹钟",
+        "钟表"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "小钟。",
+        "pinyin": "xiǎo zhōng",
+        "en": "Clock."
+      }
+    },
+    {
+      "id": "hsk1-098",
+      "hanzi": "早",
+      "pinyin": "zǎo",
+      "tone": 3,
+      "initial": "z",
+      "final": "ǎo",
+      "pos": "adj.",
+      "bushou": "日",
+      "meaning": "early / morning",
+      "hsk": 1,
+      "freq": 98,
+      "words": [
+        "早上",
+        "早饭",
+        "很早"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "早上好。",
+        "pinyin": "zǎo shàng hǎo",
+        "en": "Good morning."
+      }
+    },
+    {
+      "id": "hsk1-099",
+      "hanzi": "晚",
+      "pinyin": "wǎn",
+      "tone": 3,
+      "initial": "w",
+      "final": "ǎn",
+      "pos": "adj.",
+      "bushou": "日",
+      "meaning": "late / evening",
+      "hsk": 1,
+      "freq": 99,
+      "words": [
+        "晚上",
+        "晚饭",
+        "很晚"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "晚上。",
+        "pinyin": "wǎn shàng",
+        "en": "Evening."
+      }
+    },
+    {
+      "id": "hsk1-100",
+      "hanzi": "午",
+      "pinyin": "wǔ",
+      "tone": 3,
+      "initial": "w",
+      "final": "ǔ",
+      "pos": "n.",
+      "bushou": "十",
+      "meaning": "noon",
+      "hsk": 1,
+      "freq": 100,
+      "words": [
+        "中午",
+        "下午",
+        "上午"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "中午。",
+        "pinyin": "zhōng wǔ",
+        "en": "Noon."
+      }
+    },
+    {
+      "id": "hsk1-101",
+      "hanzi": "月",
+      "pinyin": "yuè",
+      "tone": 4,
+      "initial": "y",
+      "final": "uè",
+      "pos": "n.",
+      "bushou": "月",
+      "meaning": "month / moon",
+      "hsk": 1,
+      "freq": 101,
+      "words": [
+        "本月",
+        "一个月",
+        "月光"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "一个月。",
+        "pinyin": "yí gè yuè",
+        "en": "One month."
+      }
+    },
+    {
+      "id": "hsk1-102",
+      "hanzi": "日",
+      "pinyin": "rì",
+      "tone": 4,
+      "initial": "r",
+      "final": "ì",
+      "pos": "n.",
+      "bushou": "日",
+      "meaning": "day / sun",
+      "hsk": 1,
+      "freq": 102,
+      "words": [
+        "日子",
+        "今日",
+        "日记"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "今日。",
+        "pinyin": "jīn rì",
+        "en": "Today."
+      }
+    },
+    {
+      "id": "hsk1-103",
+      "hanzi": "星",
+      "pinyin": "xīng",
+      "tone": 1,
+      "initial": "x",
+      "final": "īng",
+      "pos": "n.",
+      "bushou": "日",
+      "meaning": "star",
+      "hsk": 1,
+      "freq": 103,
+      "words": [
+        "星星",
+        "星期",
+        "星空"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "星期。",
+        "pinyin": "xīng qī",
+        "en": "Week."
+      }
+    },
+    {
+      "id": "hsk1-104",
+      "hanzi": "期",
+      "pinyin": "qī",
+      "tone": 1,
+      "initial": "q",
+      "final": "ī",
+      "pos": "n.",
+      "bushou": "月",
+      "meaning": "period / scheduled",
+      "hsk": 1,
+      "freq": 104,
+      "words": [
+        "星期",
+        "日期",
+        "假期"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "jī"
+      ],
+      "sentence": {
+        "zh": "星期天。",
+        "pinyin": "xīng qī tiān",
+        "en": "Sunday."
+      }
+    },
+    {
+      "id": "hsk1-105",
+      "hanzi": "春",
+      "pinyin": "chūn",
+      "tone": 1,
+      "initial": "ch",
+      "final": "ūn",
+      "pos": "n.",
+      "bushou": "日",
+      "meaning": "spring (season)",
+      "hsk": 1,
+      "freq": 105,
+      "words": [
+        "春天",
+        "春节",
+        "青春"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "春天。",
+        "pinyin": "chūn tiān",
+        "en": "Spring."
+      }
+    },
+    {
+      "id": "hsk1-106",
+      "hanzi": "夏",
+      "pinyin": "xià",
+      "tone": 4,
+      "initial": "x",
+      "final": "ià",
+      "pos": "n.",
+      "bushou": "夂",
+      "meaning": "summer",
+      "hsk": 1,
+      "freq": 106,
+      "words": [
+        "夏天",
+        "夏季",
+        "华夏"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "夏天。",
+        "pinyin": "xià tiān",
+        "en": "Summer."
+      }
+    },
+    {
+      "id": "hsk1-107",
+      "hanzi": "秋",
+      "pinyin": "qiū",
+      "tone": 1,
+      "initial": "q",
+      "final": "iū",
+      "pos": "n.",
+      "bushou": "禾",
+      "meaning": "autumn",
+      "hsk": 1,
+      "freq": 107,
+      "words": [
+        "秋天",
+        "秋季",
+        "中秋"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "秋天。",
+        "pinyin": "qiū tiān",
+        "en": "Autumn."
+      }
+    },
+    {
+      "id": "hsk1-108",
+      "hanzi": "冬",
+      "pinyin": "dōng",
+      "tone": 1,
+      "initial": "d",
+      "final": "ōng",
+      "pos": "n.",
+      "bushou": "夂",
+      "meaning": "winter",
+      "hsk": 1,
+      "freq": 108,
+      "words": [
+        "冬天",
+        "冬季",
+        "寒冬"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "冬天。",
+        "pinyin": "dōng tiān",
+        "en": "Winter."
+      }
+    },
+    {
+      "id": "hsk1-109",
+      "hanzi": "冷",
+      "pinyin": "lěng",
+      "tone": 3,
+      "initial": "l",
+      "final": "ěng",
+      "pos": "adj.",
+      "bushou": "冫",
+      "meaning": "cold",
+      "hsk": 1,
+      "freq": 109,
+      "words": [
+        "天冷",
+        "冷水",
+        "冷气"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很冷。",
+        "pinyin": "hěn lěng",
+        "en": "Very cold."
+      }
+    },
+    {
+      "id": "hsk1-110",
+      "hanzi": "热",
+      "pinyin": "rè",
+      "tone": 4,
+      "initial": "r",
+      "final": "è",
+      "pos": "adj.",
+      "bushou": "灬",
+      "meaning": "hot",
+      "hsk": 1,
+      "freq": 110,
+      "words": [
+        "天热",
+        "热水",
+        "热情"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很热。",
+        "pinyin": "hěn rè",
+        "en": "Very hot."
+      }
+    },
+    {
+      "id": "hsk1-111",
+      "hanzi": "雨",
+      "pinyin": "yǔ",
+      "tone": 3,
+      "initial": "y",
+      "final": "ǔ",
+      "pos": "n.",
+      "bushou": "雨",
+      "meaning": "rain",
+      "hsk": 1,
+      "freq": 111,
+      "words": [
+        "下雨",
+        "大雨",
+        "雨衣"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "yù"
+      ],
+      "sentence": {
+        "zh": "下雨。",
+        "pinyin": "xià yǔ",
+        "en": "It rains."
+      }
+    },
+    {
+      "id": "hsk1-112",
+      "hanzi": "风",
+      "pinyin": "fēng",
+      "tone": 1,
+      "initial": "f",
+      "final": "ēng",
+      "pos": "n.",
+      "bushou": "风",
+      "meaning": "wind",
+      "hsk": 1,
+      "freq": 112,
+      "words": [
+        "大风",
+        "风筝",
+        "风景"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "fěng"
+      ],
+      "sentence": {
+        "zh": "大风。",
+        "pinyin": "dà fēng",
+        "en": "Strong wind."
+      }
+    },
+    {
+      "id": "hsk1-113",
+      "hanzi": "雪",
+      "pinyin": "xuě",
+      "tone": 3,
+      "initial": "x",
+      "final": "üě",
+      "pos": "n.",
+      "bushou": "雨",
+      "meaning": "snow",
+      "hsk": 1,
+      "freq": 113,
+      "words": [
+        "下雪",
+        "白雪",
+        "雪花"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "下雪。",
+        "pinyin": "xià xuě",
+        "en": "It snows."
+      }
+    },
+    {
+      "id": "hsk1-114",
+      "hanzi": "火",
+      "pinyin": "huǒ",
+      "tone": 3,
+      "initial": "h",
+      "final": "uǒ",
+      "pos": "n.",
+      "bushou": "火",
+      "meaning": "fire",
+      "hsk": 1,
+      "freq": 114,
+      "words": [
+        "大火",
+        "火车",
+        "火山"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "火车。",
+        "pinyin": "huǒ chē",
+        "en": "Train."
+      }
+    },
+    {
+      "id": "hsk1-115",
+      "hanzi": "车",
+      "pinyin": "chē",
+      "tone": 1,
+      "initial": "ch",
+      "final": "ē",
+      "pos": "n.",
+      "bushou": "车",
+      "meaning": "vehicle / car",
+      "hsk": 1,
+      "freq": 115,
+      "words": [
+        "火车",
+        "汽车",
+        "车站"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "jū"
+      ],
+      "sentence": {
+        "zh": "汽车。",
+        "pinyin": "qì chē",
+        "en": "Car."
+      }
+    },
+    {
+      "id": "hsk1-116",
+      "hanzi": "山",
+      "pinyin": "shān",
+      "tone": 1,
+      "initial": "sh",
+      "final": "ān",
+      "pos": "n.",
+      "bushou": "山",
+      "meaning": "mountain",
+      "hsk": 1,
+      "freq": 116,
+      "words": [
+        "大山",
+        "上山",
+        "山水"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "大山。",
+        "pinyin": "dà shān",
+        "en": "Big mountain."
+      }
+    },
+    {
+      "id": "hsk1-117",
+      "hanzi": "石",
+      "pinyin": "shí",
+      "tone": 2,
+      "initial": "sh",
+      "final": "í",
+      "pos": "n.",
+      "bushou": "石",
+      "meaning": "stone / rock",
+      "hsk": 1,
+      "freq": 117,
+      "words": [
+        "石头",
+        "玉石",
+        "宝石"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "dàn"
+      ],
+      "sentence": {
+        "zh": "石头。",
+        "pinyin": "shí tou",
+        "en": "Stone."
+      }
+    },
+    {
+      "id": "hsk1-118",
+      "hanzi": "田",
+      "pinyin": "tián",
+      "tone": 2,
+      "initial": "t",
+      "final": "ián",
+      "pos": "n.",
+      "bushou": "田",
+      "meaning": "field (farmland)",
+      "hsk": 1,
+      "freq": 118,
+      "words": [
+        "田地",
+        "水田",
+        "种田"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "田地。",
+        "pinyin": "tián dì",
+        "en": "Field."
+      }
+    },
+    {
+      "id": "hsk1-119",
+      "hanzi": "土",
+      "pinyin": "tǔ",
+      "tone": 3,
+      "initial": "t",
+      "final": "ǔ",
+      "pos": "n.",
+      "bushou": "土",
+      "meaning": "earth / soil",
+      "hsk": 1,
+      "freq": 119,
+      "words": [
+        "土地",
+        "土豆",
+        "泥土"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "土地。",
+        "pinyin": "tǔ dì",
+        "en": "Land."
+      }
+    },
+    {
+      "id": "hsk1-120",
+      "hanzi": "地",
+      "pinyin": "dì",
+      "tone": 4,
+      "initial": "d",
+      "final": "ì",
+      "pos": "n.",
+      "bushou": "土",
+      "meaning": "ground / place / earth",
+      "hsk": 1,
+      "freq": 120,
+      "words": [
+        "地方",
+        "土地",
+        "地上"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "de"
+      ],
+      "sentence": {
+        "zh": "地方。",
+        "pinyin": "dì fāng",
+        "en": "Place."
+      }
+    },
+    {
+      "id": "hsk1-121",
+      "hanzi": "东",
+      "pinyin": "dōng",
+      "tone": 1,
+      "initial": "d",
+      "final": "ōng",
+      "pos": "n.",
+      "bushou": "一",
+      "meaning": "east",
+      "hsk": 1,
+      "freq": 121,
+      "words": [
+        "东西",
+        "东方",
+        "房东"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "东边。",
+        "pinyin": "dōng biān",
+        "en": "East side."
+      }
+    },
+    {
+      "id": "hsk1-122",
+      "hanzi": "西",
+      "pinyin": "xī",
+      "tone": 1,
+      "initial": "x",
+      "final": "ī",
+      "pos": "n.",
+      "bushou": "覀",
+      "meaning": "west",
+      "hsk": 1,
+      "freq": 122,
+      "words": [
+        "东西",
+        "西方",
+        "西瓜"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "西边。",
+        "pinyin": "xī biān",
+        "en": "West side."
+      }
+    },
+    {
+      "id": "hsk1-123",
+      "hanzi": "南",
+      "pinyin": "nán",
+      "tone": 2,
+      "initial": "n",
+      "final": "án",
+      "pos": "n.",
+      "bushou": "十",
+      "meaning": "south",
+      "hsk": 1,
+      "freq": 123,
+      "words": [
+        "南方",
+        "南边",
+        "河南"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "nā"
+      ],
+      "sentence": {
+        "zh": "南边。",
+        "pinyin": "nán biān",
+        "en": "South side."
+      }
+    },
+    {
+      "id": "hsk1-124",
+      "hanzi": "北",
+      "pinyin": "běi",
+      "tone": 3,
+      "initial": "b",
+      "final": "ěi",
+      "pos": "n.",
+      "bushou": "匕",
+      "meaning": "north",
+      "hsk": 1,
+      "freq": 124,
+      "words": [
+        "北方",
+        "北边",
+        "河北"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "bèi"
+      ],
+      "sentence": {
+        "zh": "北边。",
+        "pinyin": "běi biān",
+        "en": "North side."
+      }
+    },
+    {
+      "id": "hsk1-125",
+      "hanzi": "前",
+      "pinyin": "qián",
+      "tone": 2,
+      "initial": "q",
+      "final": "ián",
+      "pos": "adj.",
+      "bushou": "刂",
+      "meaning": "front / before",
+      "hsk": 1,
+      "freq": 125,
+      "words": [
+        "前面",
+        "饭前",
+        "从前"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "前面。",
+        "pinyin": "qián miàn",
+        "en": "Front."
+      }
+    },
+    {
+      "id": "hsk1-126",
+      "hanzi": "后",
+      "pinyin": "hòu",
+      "tone": 4,
+      "initial": "h",
+      "final": "òu",
+      "pos": "adj.",
+      "bushou": "口",
+      "meaning": "back / after",
+      "hsk": 1,
+      "freq": 126,
+      "words": [
+        "后面",
+        "饭后",
+        "以后"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "后面。",
+        "pinyin": "hòu miàn",
+        "en": "Back."
+      }
+    },
+    {
+      "id": "hsk1-127",
+      "hanzi": "左",
+      "pinyin": "zuǒ",
+      "tone": 3,
+      "initial": "z",
+      "final": "uǒ",
+      "pos": "n.",
+      "bushou": "工",
+      "meaning": "left",
+      "hsk": 1,
+      "freq": 127,
+      "words": [
+        "左边",
+        "左手",
+        "左右"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "左边。",
+        "pinyin": "zuǒ biān",
+        "en": "Left side."
+      }
+    },
+    {
+      "id": "hsk1-128",
+      "hanzi": "右",
+      "pinyin": "yòu",
+      "tone": 4,
+      "initial": "y",
+      "final": "òu",
+      "pos": "n.",
+      "bushou": "口",
+      "meaning": "right",
+      "hsk": 1,
+      "freq": 128,
+      "words": [
+        "右边",
+        "右手",
+        "左右"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "右边。",
+        "pinyin": "yòu biān",
+        "en": "Right side."
+      }
+    },
+    {
+      "id": "hsk1-129",
+      "hanzi": "口",
+      "pinyin": "kǒu",
+      "tone": 3,
+      "initial": "k",
+      "final": "ǒu",
+      "pos": "n.",
+      "bushou": "口",
+      "meaning": "mouth",
+      "hsk": 1,
+      "freq": 129,
+      "words": [
+        "门口",
+        "开口",
+        "口水"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "口。",
+        "pinyin": "kǒu",
+        "en": "Mouth."
+      }
+    },
+    {
+      "id": "hsk1-130",
+      "hanzi": "手",
+      "pinyin": "shǒu",
+      "tone": 3,
+      "initial": "sh",
+      "final": "ǒu",
+      "pos": "n.",
+      "bushou": "手",
+      "meaning": "hand",
+      "hsk": 1,
+      "freq": 130,
+      "words": [
+        "手机",
+        "分手",
+        "左手"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "手。",
+        "pinyin": "shǒu",
+        "en": "Hand."
+      }
+    },
+    {
+      "id": "hsk1-131",
+      "hanzi": "足",
+      "pinyin": "zú",
+      "tone": 2,
+      "initial": "z",
+      "final": "ú",
+      "pos": "n.",
+      "bushou": "足",
+      "meaning": "foot",
+      "hsk": 1,
+      "freq": 131,
+      "words": [
+        "足球",
+        "手足",
+        "满足"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "足球。",
+        "pinyin": "zú qiú",
+        "en": "Football."
+      }
+    },
+    {
+      "id": "hsk1-132",
+      "hanzi": "目",
+      "pinyin": "mù",
+      "tone": 4,
+      "initial": "m",
+      "final": "ù",
+      "pos": "n.",
+      "bushou": "目",
+      "meaning": "eye",
+      "hsk": 1,
+      "freq": 132,
+      "words": [
+        "目光",
+        "节目",
+        "目标"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "目。",
+        "pinyin": "mù",
+        "en": "Eye."
+      }
+    },
+    {
+      "id": "hsk1-133",
+      "hanzi": "耳",
+      "pinyin": "ěr",
+      "tone": 3,
+      "initial": null,
+      "final": "ěr",
+      "pos": "n.",
+      "bushou": "耳",
+      "meaning": "ear",
+      "hsk": 1,
+      "freq": 133,
+      "words": [
+        "耳朵",
+        "耳机",
+        "耳目"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "耳朵。",
+        "pinyin": "ěr duo",
+        "en": "Ear."
+      }
+    },
+    {
+      "id": "hsk1-134",
+      "hanzi": "头",
+      "pinyin": "tóu",
+      "tone": 2,
+      "initial": "t",
+      "final": "óu",
+      "pos": "n.",
+      "bushou": "大",
+      "meaning": "head",
+      "hsk": 1,
+      "freq": 134,
+      "words": [
+        "头疼",
+        "大头",
+        "头发"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "tou"
+      ],
+      "sentence": {
+        "zh": "头。",
+        "pinyin": "tóu",
+        "en": "Head."
+      }
+    },
+    {
+      "id": "hsk1-135",
+      "hanzi": "心",
+      "pinyin": "xīn",
+      "tone": 1,
+      "initial": "x",
+      "final": "īn",
+      "pos": "n.",
+      "bushou": "心",
+      "meaning": "heart / mind",
+      "hsk": 1,
+      "freq": 135,
+      "words": [
+        "开心",
+        "小心",
+        "关心"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "心。",
+        "pinyin": "xīn",
+        "en": "Heart."
+      }
+    },
+    {
+      "id": "hsk1-136",
+      "hanzi": "身",
+      "pinyin": "shēn",
+      "tone": 1,
+      "initial": "sh",
+      "final": "ēn",
+      "pos": "n.",
+      "bushou": "身",
+      "meaning": "body",
+      "hsk": 1,
+      "freq": 136,
+      "words": [
+        "身体",
+        "全身",
+        "本身"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "身体。",
+        "pinyin": "shēn tǐ",
+        "en": "Body."
+      }
+    },
+    {
+      "id": "hsk1-137",
+      "hanzi": "男",
+      "pinyin": "nán",
+      "tone": 2,
+      "initial": "n",
+      "final": "án",
+      "pos": "adj.",
+      "bushou": "田",
+      "meaning": "male",
+      "hsk": 1,
+      "freq": 137,
+      "words": [
+        "男人",
+        "男生",
+        "男孩"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "男人。",
+        "pinyin": "nán rén",
+        "en": "Man."
+      }
+    },
+    {
+      "id": "hsk1-138",
+      "hanzi": "女",
+      "pinyin": "nǚ",
+      "tone": 3,
+      "initial": "n",
+      "final": "ǚ",
+      "pos": "adj.",
+      "bushou": "女",
+      "meaning": "female",
+      "hsk": 1,
+      "freq": 138,
+      "words": [
+        "女人",
+        "女生",
+        "女孩"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "rǔ"
+      ],
+      "sentence": {
+        "zh": "女人。",
+        "pinyin": "nǚ rén",
+        "en": "Woman."
+      }
+    },
+    {
+      "id": "hsk1-139",
+      "hanzi": "子",
+      "pinyin": "zǐ",
+      "tone": 3,
+      "initial": "z",
+      "final": "ǐ",
+      "pos": "n.",
+      "bushou": "子",
+      "meaning": "child / son",
+      "hsk": 1,
+      "freq": 139,
+      "words": [
+        "儿子",
+        "孩子",
+        "桌子"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "儿子。",
+        "pinyin": "ér zi",
+        "en": "Son."
+      }
+    },
+    {
+      "id": "hsk1-140",
+      "hanzi": "儿",
+      "pinyin": "ér",
+      "tone": 2,
+      "initial": null,
+      "final": "ér",
+      "pos": "n.",
+      "bushou": "儿",
+      "meaning": "son / child",
+      "hsk": 1,
+      "freq": 140,
+      "words": [
+        "儿子",
+        "女儿",
+        "儿歌"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "儿子。",
+        "pinyin": "ér zi",
+        "en": "Son."
+      }
+    },
+    {
+      "id": "hsk1-141",
+      "hanzi": "父",
+      "pinyin": "fù",
+      "tone": 4,
+      "initial": "f",
+      "final": "ù",
+      "pos": "n.",
+      "bushou": "父",
+      "meaning": "father",
+      "hsk": 1,
+      "freq": 141,
+      "words": [
+        "父亲",
+        "父母",
+        "父子"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "fǔ"
+      ],
+      "sentence": {
+        "zh": "父亲。",
+        "pinyin": "fù qīn",
+        "en": "Father."
+      }
+    },
+    {
+      "id": "hsk1-142",
+      "hanzi": "母",
+      "pinyin": "mǔ",
+      "tone": 3,
+      "initial": "m",
+      "final": "ǔ",
+      "pos": "n.",
+      "bushou": "母",
+      "meaning": "mother",
+      "hsk": 1,
+      "freq": 142,
+      "words": [
+        "母亲",
+        "父母",
+        "母鸡"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "母亲。",
+        "pinyin": "mǔ qīn",
+        "en": "Mother."
+      }
+    },
+    {
+      "id": "hsk1-143",
+      "hanzi": "兄",
+      "pinyin": "xiōng",
+      "tone": 1,
+      "initial": "x",
+      "final": "iōng",
+      "pos": "n.",
+      "bushou": "儿",
+      "meaning": "elder brother",
+      "hsk": 1,
+      "freq": 143,
+      "words": [
+        "兄弟",
+        "兄长",
+        "表兄"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "兄弟。",
+        "pinyin": "xiōng dì",
+        "en": "Brothers."
+      }
+    },
+    {
+      "id": "hsk1-144",
+      "hanzi": "弟",
+      "pinyin": "dì",
+      "tone": 4,
+      "initial": "d",
+      "final": "ì",
+      "pos": "n.",
+      "bushou": "弓",
+      "meaning": "younger brother",
+      "hsk": 1,
+      "freq": 144,
+      "words": [
+        "兄弟",
+        "弟弟",
+        "弟妹"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "tì",
+        "tuí"
+      ],
+      "sentence": {
+        "zh": "弟弟。",
+        "pinyin": "dì di",
+        "en": "Younger brother."
+      }
+    },
+    {
+      "id": "hsk1-145",
+      "hanzi": "姐",
+      "pinyin": "jiě",
+      "tone": 3,
+      "initial": "j",
+      "final": "iě",
+      "pos": "n.",
+      "bushou": "女",
+      "meaning": "elder sister",
+      "hsk": 1,
+      "freq": 145,
+      "words": [
+        "姐妹",
+        "姐姐",
+        "大姐"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "姐姐。",
+        "pinyin": "jiě jie",
+        "en": "Elder sister."
+      }
+    },
+    {
+      "id": "hsk1-146",
+      "hanzi": "妹",
+      "pinyin": "mèi",
+      "tone": 4,
+      "initial": "m",
+      "final": "èi",
+      "pos": "n.",
+      "bushou": "女",
+      "meaning": "younger sister",
+      "hsk": 1,
+      "freq": 146,
+      "words": [
+        "姐妹",
+        "妹妹",
+        "妹夫"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "妹妹。",
+        "pinyin": "mèi mei",
+        "en": "Younger sister."
+      }
+    },
+    {
+      "id": "hsk1-147",
+      "hanzi": "友",
+      "pinyin": "yǒu",
+      "tone": 3,
+      "initial": "y",
+      "final": "ǒu",
+      "pos": "n.",
+      "bushou": "又",
+      "meaning": "friend",
+      "hsk": 1,
+      "freq": 147,
+      "words": [
+        "朋友",
+        "友好",
+        "友谊"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "朋友。",
+        "pinyin": "péng yǒu",
+        "en": "Friend."
+      }
+    },
+    {
+      "id": "hsk1-148",
+      "hanzi": "朋",
+      "pinyin": "péng",
+      "tone": 2,
+      "initial": "p",
+      "final": "éng",
+      "pos": "n.",
+      "bushou": "月",
+      "meaning": "friend",
+      "hsk": 1,
+      "freq": 148,
+      "words": [
+        "朋友",
+        "亲朋",
+        "朋党"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我的朋友。",
+        "pinyin": "wǒ de péng yǒu",
+        "en": "My friend."
+      }
+    },
+    {
+      "id": "hsk1-149",
+      "hanzi": "师",
+      "pinyin": "shī",
+      "tone": 1,
+      "initial": "sh",
+      "final": "ī",
+      "pos": "n.",
+      "bushou": "巾",
+      "meaning": "teacher / master",
+      "hsk": 1,
+      "freq": 149,
+      "words": [
+        "老师",
+        "师父",
+        "师徒"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "老师。",
+        "pinyin": "lǎo shī",
+        "en": "Teacher."
+      }
+    },
+    {
+      "id": "hsk1-150",
+      "hanzi": "老",
+      "pinyin": "lǎo",
+      "tone": 3,
+      "initial": "l",
+      "final": "ǎo",
+      "pos": "adj.",
+      "bushou": "老",
+      "meaning": "old",
+      "hsk": 1,
+      "freq": 150,
+      "words": [
+        "老师",
+        "老人",
+        "老大"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "老师。",
+        "pinyin": "lǎo shī",
+        "en": "Teacher."
+      }
+    },
+    {
+      "id": "hsk1-151",
+      "hanzi": "医",
+      "pinyin": "yī",
+      "tone": 1,
+      "initial": "y",
+      "final": "ī",
+      "pos": "n.",
+      "bushou": "匚",
+      "meaning": "doctor / medicine",
+      "hsk": 1,
+      "freq": 151,
+      "words": [
+        "医生",
+        "医院",
+        "医疗"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "医生。",
+        "pinyin": "yī shēng",
+        "en": "Doctor."
+      }
+    },
+    {
+      "id": "hsk1-152",
+      "hanzi": "院",
+      "pinyin": "yuàn",
+      "tone": 4,
+      "initial": "y",
+      "final": "uàn",
+      "pos": "n.",
+      "bushou": "阝",
+      "meaning": "courtyard / hospital / institute",
+      "hsk": 1,
+      "freq": 152,
+      "words": [
+        "医院",
+        "学院",
+        "院子"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "医院。",
+        "pinyin": "yī yuàn",
+        "en": "Hospital."
+      }
+    },
+    {
+      "id": "hsk1-153",
+      "hanzi": "工",
+      "pinyin": "gōng",
+      "tone": 1,
+      "initial": "g",
+      "final": "ōng",
+      "pos": "n.",
+      "bushou": "工",
+      "meaning": "work / labor",
+      "hsk": 1,
+      "freq": 153,
+      "words": [
+        "工作",
+        "工人",
+        "手工"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "工作。",
+        "pinyin": "gōng zuò",
+        "en": "Work."
+      }
+    },
+    {
+      "id": "hsk1-154",
+      "hanzi": "作",
+      "pinyin": "zuò",
+      "tone": 4,
+      "initial": "z",
+      "final": "uò",
+      "pos": "v.",
+      "bushou": "亻",
+      "meaning": "do / make / work",
+      "hsk": 1,
+      "freq": 154,
+      "words": [
+        "工作",
+        "作业",
+        "作用"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "zuō"
+      ],
+      "sentence": {
+        "zh": "工作。",
+        "pinyin": "gōng zuò",
+        "en": "Work."
+      }
+    },
+    {
+      "id": "hsk1-155",
+      "hanzi": "公",
+      "pinyin": "gōng",
+      "tone": 1,
+      "initial": "g",
+      "final": "ōng",
+      "pos": "adj.",
+      "bushou": "八",
+      "meaning": "public / fair",
+      "hsk": 1,
+      "freq": 155,
+      "words": [
+        "公司",
+        "公共",
+        "公平"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "公司。",
+        "pinyin": "gōng sī",
+        "en": "Company."
+      }
+    },
+    {
+      "id": "hsk1-156",
+      "hanzi": "司",
+      "pinyin": "sī",
+      "tone": 1,
+      "initial": "s",
+      "final": "ī",
+      "pos": "n.",
+      "bushou": "口",
+      "meaning": "manage / office",
+      "hsk": 1,
+      "freq": 156,
+      "words": [
+        "公司",
+        "司机",
+        "官司"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "公司。",
+        "pinyin": "gōng sī",
+        "en": "Company."
+      }
+    },
+    {
+      "id": "hsk1-157",
+      "hanzi": "钱",
+      "pinyin": "qián",
+      "tone": 2,
+      "initial": "q",
+      "final": "ián",
+      "pos": "n.",
+      "bushou": "钅",
+      "meaning": "money",
+      "hsk": 1,
+      "freq": 157,
+      "words": [
+        "多少钱",
+        "有钱",
+        "价钱"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "多少钱？",
+        "pinyin": "duō shǎo qián",
+        "en": "How much money?"
+      }
+    },
+    {
+      "id": "hsk1-158",
+      "hanzi": "银",
+      "pinyin": "yín",
+      "tone": 2,
+      "initial": "y",
+      "final": "ín",
+      "pos": "n.",
+      "bushou": "钅",
+      "meaning": "silver / silver-related",
+      "hsk": 1,
+      "freq": 158,
+      "words": [
+        "银行",
+        "银子",
+        "银色"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "银行。",
+        "pinyin": "yín háng",
+        "en": "Bank."
+      }
+    },
+    {
+      "id": "hsk1-159",
+      "hanzi": "行",
+      "pinyin": "xíng",
+      "tone": 2,
+      "initial": "x",
+      "final": "íng",
+      "pos": "v.",
+      "bushou": "行",
+      "meaning": "bank / do / OK",
+      "hsk": 1,
+      "freq": 159,
+      "words": [
+        "银行",
+        "不行",
+        "行走"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "háng",
+        "hàng",
+        "héng"
+      ],
+      "sentence": {
+        "zh": "银行。",
+        "pinyin": "yín háng",
+        "en": "Bank."
+      }
+    },
+    {
+      "id": "hsk1-160",
+      "hanzi": "买",
+      "pinyin": "mǎi",
+      "tone": 3,
+      "initial": "m",
+      "final": "ǎi",
+      "pos": "v.",
+      "bushou": "乛",
+      "meaning": "buy",
+      "hsk": 1,
+      "freq": 160,
+      "words": [
+        "买东西",
+        "买房",
+        "买书"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我买书。",
+        "pinyin": "wǒ mǎi shū",
+        "en": "I buy books."
+      }
+    },
+    {
+      "id": "hsk1-161",
+      "hanzi": "卖",
+      "pinyin": "mài",
+      "tone": 4,
+      "initial": "m",
+      "final": "ài",
+      "pos": "v.",
+      "bushou": "十",
+      "meaning": "sell",
+      "hsk": 1,
+      "freq": 161,
+      "words": [
+        "卖东西",
+        "卖书",
+        "买卖"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "他卖书。",
+        "pinyin": "tā mài shū",
+        "en": "He sells books."
+      }
+    },
+    {
+      "id": "hsk1-162",
+      "hanzi": "市",
+      "pinyin": "shì",
+      "tone": 4,
+      "initial": "sh",
+      "final": "ì",
+      "pos": "n.",
+      "bushou": "巾",
+      "meaning": "city / market",
+      "hsk": 1,
+      "freq": 162,
+      "words": [
+        "城市",
+        "市场",
+        "市区"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "市场。",
+        "pinyin": "shì chǎng",
+        "en": "Market."
+      }
+    },
+    {
+      "id": "hsk1-163",
+      "hanzi": "场",
+      "pinyin": "chǎng",
+      "tone": 3,
+      "initial": "ch",
+      "final": "ǎng",
+      "pos": "n.",
+      "bushou": "土",
+      "meaning": "place / field / scene",
+      "hsk": 1,
+      "freq": 163,
+      "words": [
+        "市场",
+        "操场",
+        "场面"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "cháng"
+      ],
+      "sentence": {
+        "zh": "市场。",
+        "pinyin": "shì chǎng",
+        "en": "Market."
+      }
+    },
+    {
+      "id": "hsk1-164",
+      "hanzi": "店",
+      "pinyin": "diàn",
+      "tone": 4,
+      "initial": "d",
+      "final": "iàn",
+      "pos": "n.",
+      "bushou": "广",
+      "meaning": "shop / store",
+      "hsk": 1,
+      "freq": 164,
+      "words": [
+        "商店",
+        "书店",
+        "饭店"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "商店。",
+        "pinyin": "shāng diàn",
+        "en": "Shop."
+      }
+    },
+    {
+      "id": "hsk1-165",
+      "hanzi": "商",
+      "pinyin": "shāng",
+      "tone": 1,
+      "initial": "sh",
+      "final": "āng",
+      "pos": "n.",
+      "bushou": "口",
+      "meaning": "commerce / discuss",
+      "hsk": 1,
+      "freq": 165,
+      "words": [
+        "商店",
+        "商量",
+        "商品"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "商店。",
+        "pinyin": "shāng diàn",
+        "en": "Shop."
+      }
+    },
+    {
+      "id": "hsk1-166",
+      "hanzi": "红",
+      "pinyin": "hóng",
+      "tone": 2,
+      "initial": "h",
+      "final": "óng",
+      "pos": "adj.",
+      "bushou": "纟",
+      "meaning": "red",
+      "hsk": 1,
+      "freq": 166,
+      "words": [
+        "红色",
+        "红花",
+        "红人"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "gōng"
+      ],
+      "sentence": {
+        "zh": "红色。",
+        "pinyin": "hóng sè",
+        "en": "Red color."
+      }
+    },
+    {
+      "id": "hsk1-167",
+      "hanzi": "白",
+      "pinyin": "bái",
+      "tone": 2,
+      "initial": "b",
+      "final": "ái",
+      "pos": "adj.",
+      "bushou": "白",
+      "meaning": "white",
+      "hsk": 1,
+      "freq": 167,
+      "words": [
+        "白色",
+        "白天",
+        "明白"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "白色。",
+        "pinyin": "bái sè",
+        "en": "White."
+      }
+    },
+    {
+      "id": "hsk1-168",
+      "hanzi": "黑",
+      "pinyin": "hēi",
+      "tone": 1,
+      "initial": "h",
+      "final": "ēi",
+      "pos": "adj.",
+      "bushou": "黑",
+      "meaning": "black",
+      "hsk": 1,
+      "freq": 168,
+      "words": [
+        "黑色",
+        "黑板",
+        "黑白"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "黑色。",
+        "pinyin": "hēi sè",
+        "en": "Black."
+      }
+    },
+    {
+      "id": "hsk1-169",
+      "hanzi": "黄",
+      "pinyin": "huáng",
+      "tone": 2,
+      "initial": "h",
+      "final": "uáng",
+      "pos": "adj.",
+      "bushou": "黄",
+      "meaning": "yellow",
+      "hsk": 1,
+      "freq": 169,
+      "words": [
+        "黄色",
+        "黄河",
+        "黄金"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "黄色。",
+        "pinyin": "huáng sè",
+        "en": "Yellow."
+      }
+    },
+    {
+      "id": "hsk1-170",
+      "hanzi": "绿",
+      "pinyin": "lǜ",
+      "tone": 4,
+      "initial": "l",
+      "final": "ǜ",
+      "pos": "adj.",
+      "bushou": "纟",
+      "meaning": "green",
+      "hsk": 1,
+      "freq": 170,
+      "words": [
+        "绿色",
+        "绿叶",
+        "绿草"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "lù"
+      ],
+      "sentence": {
+        "zh": "绿色。",
+        "pinyin": "lǜ sè",
+        "en": "Green."
+      }
+    },
+    {
+      "id": "hsk1-171",
+      "hanzi": "蓝",
+      "pinyin": "lán",
+      "tone": 2,
+      "initial": "l",
+      "final": "án",
+      "pos": "adj.",
+      "bushou": "艹",
+      "meaning": "blue",
+      "hsk": 1,
+      "freq": 171,
+      "words": [
+        "蓝色",
+        "蓝天",
+        "蓝本"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "蓝色。",
+        "pinyin": "lán sè",
+        "en": "Blue."
+      }
+    },
+    {
+      "id": "hsk1-172",
+      "hanzi": "色",
+      "pinyin": "sè",
+      "tone": 4,
+      "initial": "s",
+      "final": "è",
+      "pos": "n.",
+      "bushou": "色",
+      "meaning": "color",
+      "hsk": 1,
+      "freq": 172,
+      "words": [
+        "颜色",
+        "红色",
+        "出色"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "shǎi"
+      ],
+      "sentence": {
+        "zh": "颜色。",
+        "pinyin": "yán sè",
+        "en": "Color."
+      }
+    },
+    {
+      "id": "hsk1-173",
+      "hanzi": "新",
+      "pinyin": "xīn",
+      "tone": 1,
+      "initial": "x",
+      "final": "īn",
+      "pos": "adj.",
+      "bushou": "斤",
+      "meaning": "new",
+      "hsk": 1,
+      "freq": 173,
+      "words": [
+        "新年",
+        "新衣",
+        "新闻"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "新。",
+        "pinyin": "xīn",
+        "en": "New."
+      }
+    },
+    {
+      "id": "hsk1-174",
+      "hanzi": "旧",
+      "pinyin": "jiù",
+      "tone": 4,
+      "initial": "j",
+      "final": "iù",
+      "pos": "adj.",
+      "bushou": "丨",
+      "meaning": "old (not new)",
+      "hsk": 1,
+      "freq": 174,
+      "words": [
+        "旧书",
+        "新旧",
+        "仍旧"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "旧。",
+        "pinyin": "jiù",
+        "en": "Old."
+      }
+    },
+    {
+      "id": "hsk1-175",
+      "hanzi": "高",
+      "pinyin": "gāo",
+      "tone": 1,
+      "initial": "g",
+      "final": "āo",
+      "pos": "adj.",
+      "bushou": "高",
+      "meaning": "tall / high",
+      "hsk": 1,
+      "freq": 175,
+      "words": [
+        "高兴",
+        "身高",
+        "高手"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很高。",
+        "pinyin": "hěn gāo",
+        "en": "Very tall."
+      }
+    },
+    {
+      "id": "hsk1-176",
+      "hanzi": "低",
+      "pinyin": "dī",
+      "tone": 1,
+      "initial": "d",
+      "final": "ī",
+      "pos": "adj.",
+      "bushou": "亻",
+      "meaning": "low / short",
+      "hsk": 1,
+      "freq": 176,
+      "words": [
+        "高低",
+        "低价",
+        "低头"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很低。",
+        "pinyin": "hěn dī",
+        "en": "Very low."
+      }
+    },
+    {
+      "id": "hsk1-177",
+      "hanzi": "长",
+      "pinyin": "cháng",
+      "tone": 2,
+      "initial": "ch",
+      "final": "áng",
+      "pos": "adj.",
+      "bushou": "长",
+      "meaning": "long",
+      "hsk": 1,
+      "freq": 177,
+      "words": [
+        "长短",
+        "很长",
+        "长处"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "zhǎng"
+      ],
+      "sentence": {
+        "zh": "很长。",
+        "pinyin": "hěn cháng",
+        "en": "Very long."
+      }
+    },
+    {
+      "id": "hsk1-178",
+      "hanzi": "短",
+      "pinyin": "duǎn",
+      "tone": 3,
+      "initial": "d",
+      "final": "uǎn",
+      "pos": "adj.",
+      "bushou": "矢",
+      "meaning": "short",
+      "hsk": 1,
+      "freq": 178,
+      "words": [
+        "长短",
+        "短发",
+        "短暂"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很短。",
+        "pinyin": "hěn duǎn",
+        "en": "Very short."
+      }
+    },
+    {
+      "id": "hsk1-179",
+      "hanzi": "开",
+      "pinyin": "kāi",
+      "tone": 1,
+      "initial": "k",
+      "final": "āi",
+      "pos": "v.",
+      "bushou": "一",
+      "meaning": "open / start",
+      "hsk": 1,
+      "freq": 179,
+      "words": [
+        "开门",
+        "开学",
+        "开会"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "开门。",
+        "pinyin": "kāi mén",
+        "en": "Open the door."
+      }
+    },
+    {
+      "id": "hsk1-180",
+      "hanzi": "关",
+      "pinyin": "guān",
+      "tone": 1,
+      "initial": "g",
+      "final": "uān",
+      "pos": "v.",
+      "bushou": "丷",
+      "meaning": "close / shut",
+      "hsk": 1,
+      "freq": 180,
+      "words": [
+        "关门",
+        "关心",
+        "开关"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "关门。",
+        "pinyin": "guān mén",
+        "en": "Close the door."
+      }
+    },
+    {
+      "id": "hsk1-181",
+      "hanzi": "进",
+      "pinyin": "jìn",
+      "tone": 4,
+      "initial": "j",
+      "final": "ìn",
+      "pos": "v.",
+      "bushou": "辶",
+      "meaning": "enter / go in",
+      "hsk": 1,
+      "freq": 181,
+      "words": [
+        "进去",
+        "进步",
+        "进来"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "进来。",
+        "pinyin": "jìn lái",
+        "en": "Come in."
+      }
+    },
+    {
+      "id": "hsk1-182",
+      "hanzi": "出",
+      "pinyin": "chū",
+      "tone": 1,
+      "initial": "ch",
+      "final": "ū",
+      "pos": "v.",
+      "bushou": "凵",
+      "meaning": "exit / go out",
+      "hsk": 1,
+      "freq": 182,
+      "words": [
+        "出去",
+        "出来",
+        "出发"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "出去。",
+        "pinyin": "chū qù",
+        "en": "Go out."
+      }
+    },
+    {
+      "id": "hsk1-183",
+      "hanzi": "回",
+      "pinyin": "huí",
+      "tone": 2,
+      "initial": "h",
+      "final": "uí",
+      "pos": "v.",
+      "bushou": "囗",
+      "meaning": "return / go back",
+      "hsk": 1,
+      "freq": 183,
+      "words": [
+        "回去",
+        "回家",
+        "回来"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "回家。",
+        "pinyin": "huí jiā",
+        "en": "Return home."
+      }
+    },
+    {
+      "id": "hsk1-184",
+      "hanzi": "走",
+      "pinyin": "zǒu",
+      "tone": 3,
+      "initial": "z",
+      "final": "ǒu",
+      "pos": "v.",
+      "bushou": "走",
+      "meaning": "walk / go",
+      "hsk": 1,
+      "freq": 184,
+      "words": [
+        "走路",
+        "走开",
+        "行走"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "我走。",
+        "pinyin": "wǒ zǒu",
+        "en": "I walk."
+      }
+    },
+    {
+      "id": "hsk1-185",
+      "hanzi": "跑",
+      "pinyin": "pǎo",
+      "tone": 3,
+      "initial": "p",
+      "final": "ǎo",
+      "pos": "v.",
+      "bushou": "足",
+      "meaning": "run",
+      "hsk": 1,
+      "freq": 185,
+      "words": [
+        "跑步",
+        "快跑",
+        "跑道"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "páo"
+      ],
+      "sentence": {
+        "zh": "跑步。",
+        "pinyin": "pǎo bù",
+        "en": "Running."
+      }
+    },
+    {
+      "id": "hsk1-186",
+      "hanzi": "飞",
+      "pinyin": "fēi",
+      "tone": 1,
+      "initial": "f",
+      "final": "ēi",
+      "pos": "v.",
+      "bushou": "飞",
+      "meaning": "fly",
+      "hsk": 1,
+      "freq": 186,
+      "words": [
+        "飞机",
+        "飞走",
+        "飞行"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "飞机。",
+        "pinyin": "fēi jī",
+        "en": "Airplane."
+      }
+    },
+    {
+      "id": "hsk1-187",
+      "hanzi": "坐",
+      "pinyin": "zuò",
+      "tone": 4,
+      "initial": "z",
+      "final": "uò",
+      "pos": "v.",
+      "bushou": "土",
+      "meaning": "sit",
+      "hsk": 1,
+      "freq": 187,
+      "words": [
+        "坐下",
+        "坐车",
+        "坐船"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "坐下。",
+        "pinyin": "zuò xià",
+        "en": "Sit down."
+      }
+    },
+    {
+      "id": "hsk1-188",
+      "hanzi": "站",
+      "pinyin": "zhàn",
+      "tone": 4,
+      "initial": "zh",
+      "final": "àn",
+      "pos": "v.",
+      "bushou": "立",
+      "meaning": "stand",
+      "hsk": 1,
+      "freq": 188,
+      "words": [
+        "站起来",
+        "站长",
+        "站住"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "站起来。",
+        "pinyin": "zhàn qǐ lái",
+        "en": "Stand up."
+      }
+    },
+    {
+      "id": "hsk1-189",
+      "hanzi": "真",
+      "pinyin": "zhēn",
+      "tone": 1,
+      "initial": "zh",
+      "final": "ēn",
+      "pos": "adj.",
+      "bushou": "十",
+      "meaning": "real / true",
+      "hsk": 1,
+      "freq": 189,
+      "words": [
+        "真的",
+        "真好看",
+        "认真"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "真好。",
+        "pinyin": "zhēn hǎo",
+        "en": "Really good."
+      }
+    },
+    {
+      "id": "hsk1-190",
+      "hanzi": "假",
+      "pinyin": "jiǎ",
+      "tone": 3,
+      "initial": "j",
+      "final": "iǎ",
+      "pos": "adj.",
+      "bushou": "亻",
+      "meaning": "false / fake",
+      "hsk": 1,
+      "freq": 190,
+      "words": [
+        "真的假的",
+        "假期",
+        "假话"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "jià"
+      ],
+      "sentence": {
+        "zh": "假。",
+        "pinyin": "jiǎ",
+        "en": "Fake."
+      }
+    },
+    {
+      "id": "hsk1-191",
+      "hanzi": "快",
+      "pinyin": "kuài",
+      "tone": 4,
+      "initial": "k",
+      "final": "uài",
+      "pos": "adj.",
+      "bushou": "忄",
+      "meaning": "fast / quick",
+      "hsk": 1,
+      "freq": 191,
+      "words": [
+        "快乐",
+        "很快",
+        "快递"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很快。",
+        "pinyin": "hěn kuài",
+        "en": "Very fast."
+      }
+    },
+    {
+      "id": "hsk1-192",
+      "hanzi": "慢",
+      "pinyin": "màn",
+      "tone": 4,
+      "initial": "m",
+      "final": "àn",
+      "pos": "adj.",
+      "bushou": "忄",
+      "meaning": "slow",
+      "hsk": 1,
+      "freq": 192,
+      "words": [
+        "慢慢",
+        "慢车",
+        "慢走"
+      ],
+      "strokeData": "hanzi-writer",
+      "sentence": {
+        "zh": "很慢。",
+        "pinyin": "hěn màn",
+        "en": "Very slow."
+      }
+    },
+    {
+      "id": "hsk1-193",
+      "hanzi": "乐",
+      "pinyin": "lè",
+      "tone": 4,
+      "initial": "l",
+      "final": "è",
+      "pos": "adj.",
+      "bushou": "丿",
+      "meaning": "happy / joy",
+      "hsk": 1,
+      "freq": 193,
+      "words": [
+        "快乐",
+        "乐观",
+        "乐趣"
+      ],
+      "strokeData": "hanzi-writer",
+      "alt": [
+        "yuè",
+        "yào",
+        "lào"
+      ],
+      "sentence": {
+        "zh": "快乐。",
+        "pinyin": "kuài lè",
+        "en": "Happy."
+      }
+    }
+  ]
+}
