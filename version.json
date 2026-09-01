@@ -1,5 +1,5 @@
 {
-  "version": "0.3.2",
+  "version": "0.3.3",
   "updated": "2026-09-01",
-  "note": "Fixed unstable/wrong pronunciation. Audio now goes through the Pages Worker, which proxies Google translate_tts from outside mainland China (the browser cannot reach Google directly, but the Worker can) with melotts and Youdao as fallbacks - measured 7/7 success. Responses under 1KB are now rejected instead of being played as noise, which was the cause of the non-Chinese sounds. Requests use GET so repeated playback is served from browser cache (instant, always works)."
+  "note": "Score: surfaced real ASR errors (previously swallowed) and added vConsole for mobile debugging. 'Did not catch that' now shows the actual whisper reason. MediaRecorder errors (common on WeChat WebView) are reported instead of silent fail. Recording <500B is detected and prompted as 'no sound captured'."
 }

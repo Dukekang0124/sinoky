@@ -10,6 +10,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<!-- vConsole: 让康哥在手机/微信 WebView 里也能看到 console.log，
+     排查录音/识别等无 UI 反馈的运行时问题。点击右下角绿色按钮打开。
+     vConsole 是腾讯自家项目，国内稳定。3KB gzipped，加载几乎无感。 -->
+<script src="vendor/vconsole.min.js"></script>
+<script>try{ window.vConsole = new window.VConsole({theme:'dark'}); }catch(e){console.warn('vConsole init failed',e)}</script>
 <style>
 :root{
   --bg:#141a24; --bg2:#1b2330; --card:#1e2735; --line:#2b3648;
@@ -575,16 +580,23 @@ async function blobToWav(blob){
   return encodeWAV(rendered.getChannelData(0), 16000);
 }
 async function asrText(buf, target){
+  /* 返回 {ok, text, status, err} —— 不再静默吞错，方便上层给出具体原因 */
   try{
+    console.log('[ASR] sending', buf.byteLength, 'bytes, target=', target);
     var r = await fetch('api/asr', {
       method:'POST',
       headers:{ 'x-target': target, 'Content-Type':'audio/wav' },
       body: buf
     });
-    if(!r.ok) return null;
+    console.log('[ASR] http', r.status);
+    if(!r.ok) return { ok:false, status:r.status, err:'http ' + r.status };
     var j = await r.json();
-    return (j && j.ok && j.text) ? j.text : null;
-  }catch(e){ return null; }
+    console.log('[ASR] body', JSON.stringify(j));
+    return j && j.ok ? { ok:true, text:j.text || '', status:200 } : { ok:false, status:200, err:(j && j.error) || 'asr returned not-ok' };
+  }catch(e){
+    console.log('[ASR] fetch error', e && e.message);
+    return { ok:false, status:0, err:(e && e.message) || 'network error' };
+  }
 }
 async function scorePhrase(i){
   var p = curScene.phrases[i];
@@ -615,25 +627,44 @@ async function scorePhrase(i){
   var rec = new MediaRecorder(stream);
   scRec = rec;
   rec.ondataavailable = function(e){ if(e.data && e.data.size) scChunks.push(e.data); };
+  rec.onerror = function(e){
+    /* 录音过程中出错（手机端/微信 WebView 常见） */
+    console.log('[REC] MediaRecorder error', e && e.error && e.error.message);
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
+    box.style.display='block';
+    box.innerHTML='<div class="score-err">Recording error: ' +
+      ((e && e.error && e.error.name) || 'unknown') + '. Try again in a different browser.</div>';
+  };
   rec.onstop = async function(){
     scRec = null;
     btn.classList.remove('listening'); btn.textContent='🎤 Score';
     stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} });
     box.style.display='block';
     box.innerHTML='<div class="score-load">Recognising…</div>';
-    var blob = new Blob(scChunks), text = null;
-    try{
-      var wav = await blobToWav(blob);
-      text = await asrText(wav, p.hz);
-    }catch(e){
-      /* iOS Safari 转码失败兜底：直接发原始音频（Whisper 支持 mp4/aac） */
-      try { text = await asrText(await blob.arrayBuffer(), p.hz); } catch(e2){ /* 统一报错 */ }
-    }
-    if(!text){
-      box.innerHTML='<div class="score-err">Did not catch that. Speak a bit louder, then stop.</div>';
+    var blob = new Blob(scChunks);
+    console.log('[REC] stopped, chunks=', scChunks.length, 'total bytes=', blob.size);
+    /* 录音字节数过小（<500 字节）说明基本是空的，可能是没真的录到声音 */
+    if(blob.size < 500){
+      box.innerHTML='<div class="score-err">No sound captured. Hold the phone closer to your mouth and try again.</div>';
       return;
     }
-    await sendScore(p, text, i);
+    var result = null;
+    try{
+      var wav = await blobToWav(blob);
+      result = await asrText(wav, p.hz);
+    }catch(e){
+      console.log('[REC] WAV 转码失败，尝试原始音频兜底', e.message);
+      /* iOS Safari 转码失败兜底：直接发原始音频（Whisper 支持 mp4/aac） */
+      result = await asrText(await blob.arrayBuffer(), p.hz);
+    }
+    if(!result || !result.ok || !result.text){
+      /* 透出真实原因，避免再让用户看到没信息量的「Did not catch that」 */
+      var reason = (result && result.err) || 'whisper returned no text';
+      console.log('[REC] ASR failed:', reason);
+      box.innerHTML='<div class="score-err">Did not catch that. (' + reason + ')<br><small>Tap Score and hold the phone closer to your mouth, then tap Stop when you finish.</small></div>';
+      return;
+    }
+    await sendScore(p, result.text, i);
   };
   btn.classList.add('listening');
   btn.textContent='⏹ Stop';
