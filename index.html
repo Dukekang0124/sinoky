@@ -56,9 +56,9 @@ header img{width:34px;height:34px;border-radius:9px}
 .p-hint{font-size:10.5px;color:var(--sub);margin-top:5px}
 .spk{flex-shrink:0;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--teal);font-size:17px;cursor:pointer}
 .spk.playing{background:rgba(127,179,176,.15);border-color:var(--teal)}
-.p-actions{display:flex;gap:8px;margin-top:11px}
-.p-actions .btn{margin-top:0;padding:9px;font-size:12.5px;border-radius:10px}
-.p-actions .done-btn{background:rgba(42,157,143,.15);color:var(--t2);border:1px solid rgba(42,157,143,.4);white-space:nowrap}
+.p-actions{display:flex;gap:8px;margin-top:11px;flex-wrap:nowrap}
+.p-actions .btn{margin-top:0;padding:9px 10px;font-size:12.5px;border-radius:10px;width:auto;flex:0 0 auto;min-width:0}
+.p-actions .done-btn{background:rgba(42,157,143,.15);color:var(--t2);border:1px solid rgba(42,157,143,.4);white-space:nowrap;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .phrase.done .done-btn{opacity:.55}
 .speed{font-size:11px;color:var(--sub);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit}
 .tonebtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
@@ -294,7 +294,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.0';
+var APP_VERSION = '0.3.1';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -356,16 +356,62 @@ saveState();
    v0.1.1 fix (P1-1): baidu anonymous tts 502s after cold start; overseas
    users often lack zh-CN web voices, so google goes first, baidu second ---------- */
 var ttsRate = 1;
-function webSpeak(text, btn){
+/* v0.3.1 音源重构：原顺序 Google → Baidu → WebSpeech 在国内三级全断
+   （Google 直连超时 / Baidu 匿名接口频控 502 / 系统常无 zh-CN 语音包）。
+   新顺序：①同源服务端 melotts（Cloudflare，国内外均可达）②本地 WebSpeech
+   ③Google ④Baidu（后两级主要服务海外用户）。每级失败才降级。 */
+/* melotts 免费层会间歇返回 3043 Internal server error（实测约半数请求），
+   故失败先重试最多 2 次再降级；播放阶段失败则直接降级（重试音频无意义）。 */
+function playBlob(b, btn, onFail){
+  var url = URL.createObjectURL(b);
+  var a = new Audio(url);
+  if(ttsRate < 1) a.playbackRate = ttsRate;   /* melotts 无 speed 参数，用播放速率实现慢放 */
+  if(btn) btn.classList.add('playing');
+  a.onended = function(){ if(btn) btn.classList.remove('playing'); URL.revokeObjectURL(url); };
+  a.onerror = function(){ if(btn) btn.classList.remove('playing'); URL.revokeObjectURL(url); onFail && onFail(); };
+  a.play().catch(function(){ if(btn) btn.classList.remove('playing'); onFail && onFail(); });
+}
+function serverSpeak(text, btn, onFail, attempt){
+  attempt = attempt || 0;
+  var aborted = false;
+  var timer = setTimeout(function(){ aborted = true; retryOrFail(); }, 9000);
+  function retryOrFail(){
+    clearTimeout(timer);
+    if(attempt < 2){ setTimeout(function(){ serverSpeak(text, btn, onFail, attempt + 1); }, 400); return; }
+    onFail && onFail();
+  }
+  fetch('api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text })
+  }).then(function(r){
+    if(aborted) return null;
+    if(!r.ok) throw new Error('tts ' + r.status);
+    return r.blob();
+  }).then(function(b){
+    if(aborted) return;
+    if(!b || !b.size) throw new Error('empty audio');
+    clearTimeout(timer);
+    playBlob(b, btn, onFail);
+  }).catch(function(){
+    if(aborted) return;
+    retryOrFail();
+  });
+}
+function webSpeak(text, btn, onFail){
   try{
     var u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-CN'; u.rate = 0.85 * ttsRate;
+    var started = false;
+    u.onstart = function(){ started = true; if(btn) btn.classList.add('playing'); };
     u.onend = function(){ if(btn) btn.classList.remove('playing'); };
-    u.onerror = function(){ if(btn) btn.classList.remove('playing'); toast('Audio not available'); };
+    u.onerror = function(){ if(btn) btn.classList.remove('playing'); if(!started && onFail) onFail(); };
     speechSynthesis.speak(u);
-  }catch(e){ toast('Audio not available'); if(btn) btn.classList.remove('playing'); }
+    /* 系统无 zh-CN 语音时 onerror 可能根本不触发，用超时兜底降级 */
+    setTimeout(function(){ if(!started && onFail) onFail(); }, 1500);
+  }catch(e){ if(btn) btn.classList.remove('playing'); if(onFail) onFail(); }
 }
-function speak(text, btn){
+function urlSpeak(text, btn){
   var urls = [
     'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN' +
       (ttsRate < 1 ? '&ttsspeed=0.6' : '') + '&q=' + encodeURIComponent(text),
@@ -376,8 +422,9 @@ function speak(text, btn){
   function tryNext(){
     if(done) return;
     if(btn) btn.classList.remove('playing');
-    if(i >= urls.length){ webSpeak(text, btn); return; }
+    if(i >= urls.length){ toast('Audio unavailable — check your connection'); return; }
     a = new Audio(urls[i++]);
+    if(ttsRate < 1) a.playbackRate = ttsRate;
     a.onplay = function(){ started = true; if(btn) btn.classList.add('playing'); };
     a.onended = function(){ if(done) return; done = true; if(btn) btn.classList.remove('playing'); };
     a.onerror = function(){ if(!started) tryNext(); };
@@ -385,6 +432,13 @@ function speak(text, btn){
     setTimeout(function(){ if(!done && !started && a){ a.src = ''; tryNext(); } }, 5000);
   }
   tryNext();
+}
+function speak(text, btn){
+  serverSpeak(text, btn, function(){
+    webSpeak(text, btn, function(){
+      urlSpeak(text, btn);
+    });
+  });
 }
 
 /* ---------- helpers ---------- */
@@ -469,35 +523,113 @@ function markDone(i){
 }
 // ---- M1 评分：前端耳朵(Web Speech) + Worker 大脑(pinyin-pro 比对) ----
 var SCORE_API = 'https://sinoky-score.kang7108558.workers.dev'; // M1 评分 Worker 真实地址
-function scorePhrase(i){
+
+/* ---------- 录音 + 服务端 ASR（v0.3.1）----------
+   替换依赖 Google 的 Web Speech：Chrome 的 webkitSpeechRecognition 要把音频发往
+   Google 服务器，国内不可达 → 一直卡在 listening。
+   新链路：MediaRecorder 本地录音 → 重采样 16kHz 单声道 → WAV
+   → 同源 api/asr（Cloudflare whisper，国内外均可达）→ 拿到文本
+   → 交给 score-worker 做音节级评分（保留详细反馈）。 */
+var scRec = null, scChunks = null;
+function encodeWAV(samples, sampleRate){
+  var n = samples.length;
+  var buf = new ArrayBuffer(44 + n * 2);
+  var v = new DataView(buf);
+  function wstr(o, s){ for(var i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); }
+  wstr(0,'RIFF'); v.setUint32(4, 36+n*2, true); wstr(8,'WAVEfmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sampleRate,true); v.setUint32(28,sampleRate*2,true);
+  v.setUint16(32,2,true); v.setUint16(34,16,true);
+  wstr(36,'data'); v.setUint32(40,n*2,true);
+  for(var i=0;i<n;i++){
+    var s = Math.max(-1, Math.min(1, samples[i]));
+    v.setInt16(44+i*2, s<0 ? s*0x8000 : s*0x7fff, true);
+  }
+  return buf;
+}
+async function blobToWav(blob){
+  var ab = await blob.arrayBuffer();
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var ac = new AC();
+  var decoded;
+  try { decoded = await ac.decodeAudioData(ab); } finally { try{ ac.close(); }catch(e){} }
+  var len = Math.max(1, Math.ceil(decoded.duration * 16000));
+  var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  var off = new OC(1, len, 16000);
+  var src = off.createBufferSource();
+  src.buffer = decoded; src.connect(off.destination); src.start();
+  var rendered = await off.startRendering();
+  return encodeWAV(rendered.getChannelData(0), 16000);
+}
+async function asrText(buf, target){
+  try{
+    var r = await fetch('api/asr', {
+      method:'POST',
+      headers:{ 'x-target': target, 'Content-Type':'audio/wav' },
+      body: buf
+    });
+    if(!r.ok) return null;
+    var j = await r.json();
+    return (j && j.ok && j.text) ? j.text : null;
+  }catch(e){ return null; }
+}
+async function scorePhrase(i){
   var p = curScene.phrases[i];
   var btn = $('sc-btn-'+i), box = $('score-'+i);
   if(!btn || !box) return;
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){
-    box.style.display='block';
-    box.innerHTML='<div class="score-err">⚠️ Speech recognition is not supported in this browser. Use desktop Chrome or Edge to practise with scoring.</div>';
+  /* 正在录音 → 停止并把音频送去识别 */
+  if(btn.classList.contains('listening')){
+    try{ if(scRec && scRec.state !== 'inactive') scRec.stop(); }catch(e){}
     return;
   }
-  if(btn.classList.contains('listening')){ try{ window.__rec && window.__rec.stop(); }catch(e){} return; }
-  var rec = new SR(); window.__rec = rec;
-  rec.lang = 'zh-CN'; rec.interimResults = false; rec.maxAlternatives = 1;
-  btn.classList.add('listening'); btn.textContent='🎙️ Listening…';
-  rec.onresult = async function(e){
-    var transcript = e.results[0][0].transcript;
-    await sendScore(p, transcript, i);
-    btn.classList.remove('listening'); btn.textContent='🎤 Score';
-  };
-  rec.onerror = function(e){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined'){
     box.style.display='block';
-    box.innerHTML='<div class="score-err">Recognition failed: '+(e.error||'unknown')+'. Please allow microphone access and try again.</div>';
-    btn.classList.remove('listening'); btn.textContent='🎤 Score';
-  };
-  rec.onend = function(){ btn.classList.remove('listening'); btn.textContent='🎤 Score'; };
-  try{ rec.start(); }catch(e){
+    box.innerHTML='<div class="score-err">Recording is not supported in this browser. Use Chrome or Edge to practise with scoring.</div>';
+    return;
+  }
+  var stream;
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+  }catch(e){
     box.style.display='block';
-    box.innerHTML='<div class="score-err">Could not start the microphone: '+e.message+'</div>';
+    box.innerHTML='<div class="score-err">' +
+      (e && e.name === 'NotAllowedError'
+        ? 'Microphone blocked. Allow mic access in your browser, then try again.'
+        : 'Could not open the microphone: ' + (e && e.message || e)) + '</div>';
+    return;
+  }
+  scChunks = [];
+  var rec = new MediaRecorder(stream);
+  scRec = rec;
+  rec.ondataavailable = function(e){ if(e.data && e.data.size) scChunks.push(e.data); };
+  rec.onstop = async function(){
+    scRec = null;
     btn.classList.remove('listening'); btn.textContent='🎤 Score';
+    stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} });
+    box.style.display='block';
+    box.innerHTML='<div class="score-load">Recognising…</div>';
+    var blob = new Blob(scChunks), text = null;
+    try{
+      var wav = await blobToWav(blob);
+      text = await asrText(wav, p.hz);
+    }catch(e){
+      /* iOS Safari 转码失败兜底：直接发原始音频（Whisper 支持 mp4/aac） */
+      try { text = await asrText(await blob.arrayBuffer(), p.hz); } catch(e2){ /* 统一报错 */ }
+    }
+    if(!text){
+      box.innerHTML='<div class="score-err">Did not catch that. Speak a bit louder, then stop.</div>';
+      return;
+    }
+    await sendScore(p, text, i);
+  };
+  btn.classList.add('listening');
+  btn.textContent='⏹ Stop';
+  box.style.display='block';
+  box.innerHTML='<div class="score-load">Listening… tap stop when you finish.</div>';
+  try{ rec.start(); }
+  catch(e){
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
+    box.innerHTML='<div class="score-err">Could not start recording: '+e.message+'</div>';
   }
 }
 async function sendScore(p, transcript, i){
