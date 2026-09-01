@@ -1,11 +1,12 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.2.1';
+var CACHE = 'sinoky-v0.2.2';
 var ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './version.json',
   './data/flashcards.hsk1.json',
+  './data/connect-templates.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/favicon-32.png'

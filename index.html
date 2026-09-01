@@ -126,6 +126,27 @@ nav button.on{color:var(--red)}
 .fc-strokes .hw-stage{width:100%;max-width:260px;margin:0 auto;background:var(--bg2);border:1px solid var(--line);border-radius:14px}
 .fc-hwmsg{text-align:center;font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5}
 .fc-hwmsg.ok{color:var(--teal)}
+/* ---------- sentences (v0.2.2) ---------- */
+.sent-modes{display:flex;gap:6px;margin:14px 0 12px}
+.sent-mode-btn{flex:1;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 6px;color:var(--sub);font-size:12px;font-weight:600;text-align:center;cursor:pointer;font-family:inherit;line-height:1.3}
+.sent-mode-btn.on{background:var(--red);color:#fff;border-color:var(--red)}
+.sent-prompt{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px;font-size:17px;line-height:1.5}
+.sent-prompt .quiz{color:var(--teal);font-weight:700;padding:0 6px;border-bottom:2px dashed var(--teal);font-size:19px}
+.sent-hint{font-size:12px;color:var(--sub);margin-top:4px}
+.sent-en{font-size:13px;color:var(--sub);margin-top:10px;font-style:italic;line-height:1.5;opacity:.85}
+.sent-input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:12px;font-size:16px;font-family:inherit;color:var(--txt);margin-top:6px}
+.sent-input:focus{outline:none;border-color:var(--teal)}
+.sent-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.sent-option{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:11px 8px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
+.sent-option.right{background:rgba(42,157,143,.15);border-color:var(--t2);color:var(--t2)}
+.sent-option.wrong{background:rgba(230,57,70,.13);border-color:var(--red);color:var(--red)}
+.sent-result{margin-top:10px;padding:11px 13px;border-radius:11px;font-size:13.5px;line-height:1.55}
+.sent-result.ok{background:rgba(42,157,143,.12);color:var(--t2);border:1px solid rgba(42,157,143,.35)}
+.sent-result.bad{background:rgba(230,57,70,.12);color:var(--red);border:1px solid rgba(230,57,70,.35)}
+.sent-wordbank{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.sent-word{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:14px;cursor:pointer;font-family:inherit;color:var(--txt)}
+.sent-word:active{transform:scale(.96)}
+.sent-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin:8px 0}
 </style>
 </head>
 <body>
@@ -210,11 +231,26 @@ nav button.on{color:var(--red)}
       <div id="nw-list"></div>
     </div>
   </section>
+
+  <!-- SENTENCES -->
+  <section id="v-sentences" class="views">
+    <div class="sent-modes">
+      <button class="sent-mode-btn on" id="sent-mode-completion" onclick="sentMode('completion')">Complete</button>
+      <button class="sent-mode-btn" id="sent-mode-connectors" onclick="sentMode('connectors')">Connector</button>
+      <button class="sent-mode-btn" id="sent-mode-keywords" onclick="sentMode('keywords')">Arrange</button>
+    </div>
+    <div id="sent-area"></div>
+    <div class="card" style="margin-top:14px">
+      <div class="top"><h2>Your score</h2></div>
+      <p class="desc" id="sent-stats">Pick a mode and complete a prompt to start tracking.</p>
+    </div>
+  </section>
 </div>
 
 <nav>
   <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
   <button id="nav-cards" onclick="go('cards')"><span class="ic">🗂️</span>Cards</button>
+  <button id="nav-sentences" onclick="go('sentences')"><span class="ic">✍️</span>Sentences</button>
   <button id="nav-tone" onclick="go('tone')"><span class="ic">🎵</span>Tones</button>
   <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
 </nav>
@@ -223,7 +259,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.2.1';
+var APP_VERSION = '0.2.2';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -324,12 +360,13 @@ function toast(msg){
 }
 function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
-  ['home','scene','tone','prog','cards'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
   if(v==='cards') renderNW();
+  if(v==='sentences') renderSentStats();
   window.scrollTo(0,0);
 }
 
@@ -679,6 +716,167 @@ function hwQuiz(){
   });
 }
 
+/* ---------- sentences (v0.2.2): 3-mode sentence trainer ----------
+   Complete / Connector / Arrange. Zero runtime deps.
+   Pinyin & translations live in the template's English annotation; front-end just renders & judges. */
+var SENT_TEMPLATES = null;
+var SENT_MODE = 'completion';
+var SENT_IDX = 0;
+var SENT_STATS;
+try { SENT_STATS = JSON.parse(localStorage.getItem('sinoky-connect-stats')) || {attempts:0,passes:0}; }
+catch(e){ SENT_STATS = {attempts:0,passes:0}; }
+function saveSentStats(){ localStorage.setItem('sinoky-connect-stats', JSON.stringify(SENT_STATS)); }
+
+function loadSentences(){
+  if(SENT_TEMPLATES) return Promise.resolve();
+  return fetch('data/connect-templates.json')
+    .then(function(r){ return r.json(); })
+    .then(function(j){ SENT_TEMPLATES = j; renderSentence(); renderSentStats(); })
+    .catch(function(){
+      $('sent-area').innerHTML = '<div class="fc-empty">Could not load sentence templates.</div>';
+    });
+}
+function renderSentStats(){
+  if(!SENT_STATS.attempts){ $('sent-stats').textContent = 'Pick a mode and complete a prompt to start tracking.'; return; }
+  var pct = Math.round(100 * SENT_STATS.passes / SENT_STATS.attempts);
+  $('sent-stats').textContent = 'Attempts: ' + SENT_STATS.attempts + ' · Passed: ' + SENT_STATS.passes + ' · Accuracy: ' + pct + '%';
+}
+function sentMode(m){
+  SENT_MODE = m; SENT_IDX = 0;
+  ['completion','connectors','keywords'].forEach(function(x){
+    var b = $('sent-mode-' + x);
+    if(b) b.classList.toggle('on', x === m);
+  });
+  renderSentence();
+}
+function recordSent(passed){
+  SENT_STATS.attempts++;
+  if(passed) SENT_STATS.passes++;
+  saveSentStats(); renderSentStats();
+}
+function sentNext(){
+  var list = (SENT_TEMPLATES && SENT_TEMPLATES[SENT_MODE]) || [];
+  if(!list.length) return;
+  SENT_IDX = (SENT_IDX + 1) % list.length;
+  renderSentence();
+}
+function renderSentence(){
+  if(!SENT_TEMPLATES){ $('sent-area').innerHTML = '<div class="fc-empty">Loading sentence templates…</div>'; return; }
+  var list = SENT_TEMPLATES[SENT_MODE] || [];
+  if(!list.length){ $('sent-area').innerHTML = '<div class="fc-empty">No templates for this mode.</div>'; return; }
+  var t = list[SENT_IDX];
+  var modeLabel = SENT_MODE === 'completion' ? 'Complete' : SENT_MODE === 'connectors' ? 'Connector' : 'Arrange';
+  if(SENT_MODE === 'completion'){
+    $('sent-area').innerHTML =
+      '<div class="sent-meta"><span>' + (SENT_IDX+1) + ' / ' + list.length + '</span><span>' + modeLabel + '</span></div>' +
+      '<div class="sent-prompt">' + esc(t.front) + '<span class="quiz">？</span></div>' +
+      '<input class="sent-input" id="sent-input" placeholder="Type the rest of the sentence…" autocomplete="off" autocapitalize="none">' +
+      '<div class="sent-hint">Hint: ' + esc(t.hint) + ' · Must include at least <b>1 keyword</b>.</div>' +
+      '<div class="fc-actions" style="margin-top:10px">' +
+        '<button class="btn primary" onclick="sentCheck()">Check</button>' +
+        '<button class="btn ghost" onclick="sentReveal()">Show answer</button>' +
+        '<button class="btn ghost" onclick="sentNext()">Next →</button>' +
+      '</div>' +
+      '<div class="sent-result" id="sent-result" style="display:none"></div>' +
+      '<div class="sent-en">' + esc(t.en) + '</div>';
+    setTimeout(function(){ var i = $('sent-input'); if(i) i.focus(); }, 60);
+  } else if(SENT_MODE === 'connectors'){
+    $('sent-area').innerHTML =
+      '<div class="sent-meta"><span>' + (SENT_IDX+1) + ' / ' + list.length + '</span><span>' + modeLabel + '</span></div>' +
+      '<div class="sent-prompt">' + esc(t.before) + '<span class="quiz">？</span>' + esc(t.after) + '</div>' +
+      '<div class="sent-options">' + t.options.map(function(o,i){
+        return '<button class="sent-option" id="sent-opt-' + i + '" onclick="sentPick(' + i + ',this)">' + esc(o) + '</button>';
+      }).join('') + '</div>' +
+      '<div class="sent-result" id="sent-result" style="display:none"></div>' +
+      '<div class="sent-en">' + esc(t.en) + '</div>';
+  } else if(SENT_MODE === 'keywords'){
+    $('sent-area').innerHTML =
+      '<div class="sent-meta"><span>' + (SENT_IDX+1) + ' / ' + list.length + '</span><span>' + modeLabel + '</span></div>' +
+      '<div class="sent-prompt">Build a sentence using all the words below.</div>' +
+      '<div class="sent-wordbank">' + t.words.map(function(w){
+        return '<button class="sent-word" onclick="sentWord(this)">' + esc(w) + '</button>';
+      }).join('') + '</div>' +
+      '<input class="sent-input" id="sent-input" placeholder="Click words or type…" autocomplete="off">' +
+      '<div class="sent-hint">Must include: ' + esc((t.mustInclude || []).join(' · ')) + '</div>' +
+      '<div class="fc-actions" style="margin-top:10px">' +
+        '<button class="btn primary" onclick="sentCheck()">Check</button>' +
+        '<button class="btn ghost" onclick="sentReveal()">Show sample</button>' +
+        '<button class="btn ghost" onclick="sentNext()">Next →</button>' +
+      '</div>' +
+      '<div class="sent-result" id="sent-result" style="display:none"></div>' +
+      '<div class="sent-en">' + esc(t.en) + '</div>';
+    setTimeout(function(){ var i = $('sent-input'); if(i) i.focus(); }, 60);
+  }
+}
+function sentCheck(){
+  if(!SENT_TEMPLATES) return;
+  if(SENT_MODE === 'connectors') return; // connectors use sentPick
+  var list = SENT_TEMPLATES[SENT_MODE] || [];
+  var t = list[SENT_IDX];
+  var input = $('sent-input');
+  if(!input || !input.value.trim()){ toast('Type something first'); return; }
+  var user = input.value.trim();
+  var passed = false, msg = '';
+  if(SENT_MODE === 'completion'){
+    var hits = (t.keywords || []).filter(function(k){ return user.indexOf(k) >= 0; }).length;
+    var total = (t.keywords || []).length;
+    var ratio = total ? hits / total : 0;
+    passed = ratio >= 0.8;
+    var missing = (t.keywords || []).filter(function(k){ return user.indexOf(k) < 0; });
+    msg = passed ? ('Great! You used ' + hits + '/' + total + ' keywords.')
+                  : ('Missing keywords: ' + missing.join(' · '));
+  } else if(SENT_MODE === 'keywords'){
+    var must = t.mustInclude || [];
+    var ok = must.every(function(k){ return user.indexOf(k) >= 0; });
+    passed = ok;
+    var missing = must.filter(function(k){ return user.indexOf(k) < 0; });
+    msg = passed ? 'Great! All required words are present.'
+                  : ('Missing required words: ' + missing.join(' · '));
+  }
+  var box = $('sent-result');
+  box.style.display = 'block';
+  box.className = 'sent-result ' + (passed ? 'ok' : 'bad');
+  box.innerHTML = (passed ? '✅ ' : '❌ ') + esc(msg) + '<div class="sent-en">' + esc(t.en) + '</div>';
+  recordSent(passed);
+}
+function sentPick(i, btn){
+  if(!SENT_TEMPLATES) return;
+  var list = SENT_TEMPLATES.connectors;
+  var t = list[SENT_IDX];
+  var correct = t.options[i] === t.answer;
+  var opts = document.querySelectorAll('.sent-option');
+  for(var k=0;k<opts.length;k++){ opts[k].classList.remove('right','wrong'); opts[k].disabled = true; }
+  btn.classList.add(correct ? 'right' : 'wrong');
+  if(!correct){
+    var correctIdx = t.options.indexOf(t.answer);
+    var btn2 = $('sent-opt-' + correctIdx);
+    if(btn2) btn2.classList.add('right');
+  }
+  var box = $('sent-result');
+  box.style.display = 'block';
+  box.className = 'sent-result ' + (correct ? 'ok' : 'bad');
+  box.innerHTML = (correct ? '✅ ' : '❌ ') + esc('Full: ' + t.full) + '<div class="sent-en">' + esc(t.en) + '</div>';
+  recordSent(correct);
+}
+function sentWord(btn){
+  var i = $('sent-input');
+  if(!i) return;
+  i.value = (i.value ? i.value + (i.value.endsWith(' ') ? '' : ' ') : '') + btn.textContent.trim();
+  i.focus();
+}
+function sentReveal(){
+  if(!SENT_TEMPLATES) return;
+  var list = SENT_TEMPLATES[SENT_MODE];
+  var t = list[SENT_IDX];
+  if(SENT_MODE === 'connectors'){ toast('Answer: ' + t.answer); return; }
+  var box = $('sent-result');
+  box.style.display = 'block';
+  box.className = 'sent-result bad';
+  var ans = SENT_MODE === 'completion' ? (t.front + t.answer) : t.sample;
+  box.innerHTML = '❌ ' + esc(ans) + '<div class="sent-en">' + esc(t.en) + '</div>';
+  recordSent(false);
+}
+
 /* ---------- pwa: sw register + version check ---------- */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(function(){});
@@ -690,6 +888,7 @@ fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(f
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
 renderHome();
 loadCards();
+loadSentences();
 </script>
 </body>
 </html>

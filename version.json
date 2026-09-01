@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
   "updated": "2026-09-01",
-  "note": "Added stroke-order animation to flashcards. Loaded on demand (36KB library + ~2KB per character), served from local data so it works offline without a CDN."
+  "note": "Added Sentences trainer (3 modes: complete / pick connector / arrange words; 24 prompts, English UI, offline data). Cards + Tones + Progress unchanged from v0.1.4."
 }

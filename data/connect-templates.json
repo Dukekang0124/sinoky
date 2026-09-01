@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "name": "Sinoky 连句模板库 · 初版",
+    "version": "0.1.0",
+    "note": "模式1=半句补全(completion) 模式3=连接词选择(connectors) 模式2=关键词连词(keywords)。拼音由前端 pinyin-pro 运行时生成，不入库。",
+    "builtAt": "2026-09-01"
+  },
+  "completion": [
+    { "front": "因为我起晚了，", "answer": "所以迟到了", "keywords": ["所以", "迟到"], "en": "I got up late, so I was late.", "hint": "用「所以」说结果" },
+    { "front": "虽然今天很累，", "answer": "但是我很开心", "keywords": ["但是", "开心"], "en": "Although I'm tired today, I'm very happy.", "hint": "用「但是」转折" },
+    { "front": "要是我会中文，", "answer": "我就去中国旅行", "keywords": ["就", "旅行"], "en": "If I could speak Chinese, I would travel to China.", "hint": "用「就」说结果" },
+    { "front": "天气太热了，", "answer": "我想喝冰水", "keywords": ["喝"], "en": "It's too hot, I want to drink ice water.", "hint": "说你想做什么" },
+    { "front": "他一边吃饭，", "answer": "一边看电视", "keywords": ["一边", "看"], "en": "He eats while watching TV.", "hint": "用「一边…一边…」" },
+    { "front": "先洗手，", "answer": "再吃饭", "keywords": ["再", "吃"], "en": "Wash hands first, then eat.", "hint": "用「再」说下一步" },
+    { "front": "因为这个电影很有意思，", "answer": "所以我看了一遍", "keywords": ["所以", "看"], "en": "Because the movie is interesting, I watched it once more.", "hint": "用「所以」说结果" },
+    { "front": "要是明天不下雨，", "answer": "我们就去公园", "keywords": ["就", "公园"], "en": "If it doesn't rain tomorrow, we'll go to the park.", "hint": "用「就」说计划" },
+    { "front": "我每天学中文，", "answer": "因为我想去中国工作", "keywords": ["因为", "工作"], "en": "I study Chinese every day, because I want to work in China.", "hint": "用「因为」说原因" },
+    { "front": "你越练得多，", "answer": "就说得越好", "keywords": ["越", "好"], "en": "The more you practice, the better you speak.", "hint": "用「越…越…」" }
+  ],
+  "connectors": [
+    { "before": "他迟到了，", "after": "没赶上火车。", "options": ["因为", "但是", "所以"], "answer": "所以", "full": "他迟到了，所以没赶上火车。", "en": "He was late, so he missed the train." },
+    { "before": "下雨了，", "after": "我们还是去爬山了。", "options": ["因为", "但是", "所以"], "answer": "但是", "full": "下雨了，但是我们还是去爬山了。", "en": "It rained, but we still went hiking." },
+    { "before": "我很想学中文，", "after": "我没有时间。", "options": ["虽然", "但是", "还是"], "answer": "但是", "full": "我很想学中文，但是我没有时间。", "en": "I really want to learn Chinese, but I have no time." },
+    { "before": "今天很冷，", "after": "我穿了三件衣服。", "options": ["所以", "要是", "一边"], "answer": "所以", "full": "今天很冷，所以我穿了三件衣服。", "en": "It's cold today, so I wore three layers." },
+    { "before": "你要多听，", "after": "要多说。", "options": ["一边", "还是", "也"], "answer": "也", "full": "你要多听，也要多说。", "en": "You should listen more, and also speak more." },
+    { "before": "你早点睡觉，", "after": "明天不会累。", "options": ["要是", "就", "虽然"], "answer": "就", "full": "你要是早点睡觉，明天就不会累。", "en": "If you sleep earlier, you won't be tired tomorrow." },
+    { "before": "他走了，", "after": "忘带手机了。", "options": ["但是", "还", "一边"], "answer": "还", "full": "他走了，还忘带手机了。", "en": "He left, and he even forgot his phone." },
+    { "before": "我不去公园了，", "after": "外面在下雨。", "options": ["因为", "所以", "还是"], "answer": "因为", "full": "我不去公园了，因为外面在下雨。", "en": "I'm not going to the park, because it's raining." }
+  ],
+  "keywords": [
+    { "words": ["因为", "下雨", "取消", "比赛"], "mustInclude": ["因为", "下雨", "比赛"], "sample": "因为下雨，比赛取消了。", "en": "The game was cancelled because of rain." },
+    { "words": ["虽然", "难", "但是", "有趣"], "mustInclude": ["虽然", "但是"], "sample": "虽然中文很难，但是很有趣。", "en": "Although Chinese is hard, it's interesting." },
+    { "words": ["先", "回家", "再", "吃饭"], "mustInclude": ["先", "再", "吃"], "sample": "我先回家，再吃饭。", "en": "I go home first, then eat." },
+    { "words": ["一边", "走路", "一边", "听歌"], "mustInclude": ["一边", "走路"], "sample": "我一边走路，一边听歌。", "en": "I walk while listening to music." },
+    { "words": ["要是", "明天", "天晴", "就", "打球"], "mustInclude": ["要是", "就"], "sample": "要是明天天晴，我们就去打球。", "en": "If it's sunny tomorrow, we'll play ball." },
+    { "words": ["越", "练习", "越", "好"], "mustInclude": ["越", "练习"], "sample": "你越练习，说得越好。", "en": "The more you practice, the better you get." }
+  ]
+}
