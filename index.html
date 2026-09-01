@@ -171,12 +171,18 @@ nav button.on{color:var(--red)}
 .rd-pop-actions .btn{margin-top:0;padding:11px;font-size:13px;border-radius:11px}
 
 /* ---------- v0.3.8 真实用户保障：反馈入口 / 上手引导 / 隐私说明 ---------- */
-/* 反馈按钮固定左下角 —— 右下角留给 vConsole，避免遮挡 */
-#fb-open{position:fixed;left:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;
+/* 反馈按钮固定左下角 —— 右下角留给 vConsole，避免遮挡。
+   v0.3.10：默认位置从 bottom:14px 上移到导航栏（约 60px 高）上方，
+   之前正好压在底部导航的 Home / Cards 上（康哥发现）。
+   可拖拽：touch-action:none 防止移动端拖动时页面跟着滚，
+   位置存 localStorage（sinoky-fb-pos），双击可复位。 */
+#fb-open{position:fixed;left:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:60;
   background:rgba(42,157,143,.92);color:#fff;border:none;border-radius:20px;
   padding:9px 14px;font-size:12.5px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.35);
-  cursor:pointer}
-#fb-open:active{transform:scale(.96)}
+  cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent}
+#fb-open:active{cursor:grabbing}
+#fb-open.dragging{opacity:.88;box-shadow:0 8px 22px rgba(0,0,0,.5)}
 #fb-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:70;display:none}
 #fb-mask.on{display:block}
 #fb-panel{position:fixed;left:0;right:0;bottom:0;z-index:71;background:var(--card);
@@ -363,7 +369,7 @@ nav button.on{color:var(--red)}
 <div class="rd-pop" id="rd-pop"></div>
 
 <!-- v0.3.8 真实用户保障（6 位外国朋友在用了） -->
-<button id="fb-open" onclick="openFB()">💬 Feedback</button>
+<button id="fb-open">💬 Feedback</button>
 <div id="fb-mask" onclick="closeFB()"></div>
 <div id="fb-panel" role="dialog" aria-label="Send feedback">
   <h3>Help us improve Sinoky</h3>
@@ -398,7 +404,8 @@ nav button.on{color:var(--red)}
     </ol>
     <div class="hint">
       🔒 Your recordings are never saved — audio is scored on your device and discarded.
-      Tap <b>💬 Feedback</b> (bottom-left) any time to tell us what's broken.
+      Tap <b>💬 Feedback</b> (bottom-left) any time to tell us what's broken —
+      <b>drag it</b> if it's in the way, or double-tap to reset it.
     </div>
     <button class="btn" onclick="closeOnb()">Got it — let's start</button>
   </div>
@@ -407,7 +414,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.9';
+var APP_VERSION = '0.3.10';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -1467,6 +1474,102 @@ function sendFB(){
     .catch(function(){ toast('Send failed — check your connection'); })
     .then(function(){ if(btn){ btn.disabled = false; btn.textContent = 'Send feedback'; } });
 }
+/* 反馈按钮可拖拽（v0.3.10）
+   为什么不直接用 onclick：HTML onclick 在解析时注册，早于 addEventListener，
+   无法阻止"拖拽结束时误触发打开面板"。改为完全由 JS 管理 click。
+   关键细节：
+   - pointer events 统一鼠标/触摸；touch-action:none 防止移动端拖时页面滚动
+   - 移动超过 6px 才算拖拽，否则算点击（手指难免抖动）
+   - 位置存 localStorage，下次打开还在原地
+   - 双击复位到默认位置（拖到角落找不回来时的逃生舱） */
+(function(){
+  var btn = document.getElementById('fb-open');
+  if(!btn) return;
+  var dragging = false, moved = false, ox = 0, oy = 0, startX = 0, startY = 0;
+  var DEFAULT = { bottom: 'calc(72px + env(safe-area-inset-bottom))', left: '12px', top: 'auto' };
+
+  function applyDefault(){
+    btn.style.top = DEFAULT.top;
+    btn.style.left = DEFAULT.left;
+    btn.style.bottom = DEFAULT.bottom;
+    try{ localStorage.removeItem('sinoky-fb-pos'); }catch(e){}
+  }
+
+  /* 恢复上次位置 */
+  var saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('sinoky-fb-pos') || 'null'); }catch(e){}
+  if(saved && typeof saved.x === 'number' && typeof saved.y === 'number'){
+    btn.style.bottom = 'auto';
+    btn.style.left = saved.x + 'px';
+    btn.style.top = saved.y + 'px';
+  }
+
+  function pt(e){
+    if(e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if(e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function onDown(e){
+    var p = pt(e), r = btn.getBoundingClientRect();
+    ox = p.x - r.left; oy = p.y - r.top;
+    startX = p.x; startY = p.y;
+    dragging = true; moved = false;
+    /* 从 bottom 定位切到 top 定位，避免 bottom/top 打架 */
+    btn.style.bottom = 'auto';
+    btn.style.left = r.left + 'px';
+    btn.style.top = r.top + 'px';
+    btn.classList.add('dragging');
+    if(e.cancelable) e.preventDefault();
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    var p = pt(e);
+    if(Math.abs(p.x - startX) > 6 || Math.abs(p.y - startY) > 6) moved = true;
+    if(!moved) return;
+    var w = btn.offsetWidth, h = btn.offsetHeight;
+    var nx = Math.max(4, Math.min(p.x - ox, window.innerWidth - w - 4));
+    var ny = Math.max(4, Math.min(p.y - oy, window.innerHeight - h - 4));
+    btn.style.left = nx + 'px';
+    btn.style.top = ny + 'px';
+    if(e.cancelable) e.preventDefault();
+  }
+
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    btn.classList.remove('dragging');
+    if(moved){
+      try{
+        localStorage.setItem('sinoky-fb-pos', JSON.stringify({
+          x: Math.round(parseFloat(btn.style.left) || 0),
+          y: Math.round(parseFloat(btn.style.top) || 0)
+        }));
+      }catch(e){}
+    }
+  }
+
+  btn.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove, { passive:false });
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  /* 兜底：老浏览器无 pointer events */
+  btn.addEventListener('touchstart', onDown, { passive:false });
+  btn.addEventListener('touchmove', onMove, { passive:false });
+  btn.addEventListener('touchend', onUp);
+  btn.addEventListener('mousedown', onDown);
+
+  /* 点击打开面板 —— 刚拖过就不打开 */
+  btn.addEventListener('click', function(e){
+    if(moved){ moved = false; e.preventDefault(); return; }
+    openFB();
+  });
+  /* 双击复位 */
+  btn.addEventListener('dblclick', function(e){ e.preventDefault(); applyDefault(); toast('Feedback button reset'); });
+})();
+
+/* 反馈分类标签切换 */
 document.querySelectorAll('#fb-cats .fb-cat').forEach(function(el){
   el.onclick = function(){
     document.querySelectorAll('#fb-cats .fb-cat').forEach(function(x){ x.classList.remove('on'); });
