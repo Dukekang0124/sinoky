@@ -414,7 +414,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.10';
+var APP_VERSION = '0.3.11';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -1474,18 +1474,22 @@ function sendFB(){
     .catch(function(){ toast('Send failed — check your connection'); })
     .then(function(){ if(btn){ btn.disabled = false; btn.textContent = 'Send feedback'; } });
 }
-/* 反馈按钮可拖拽（v0.3.10）
-   为什么不直接用 onclick：HTML onclick 在解析时注册，早于 addEventListener，
-   无法阻止"拖拽结束时误触发打开面板"。改为完全由 JS 管理 click。
-   关键细节：
-   - pointer events 统一鼠标/触摸；touch-action:none 防止移动端拖时页面滚动
-   - 移动超过 6px 才算拖拽，否则算点击（手指难免抖动）
-   - 位置存 localStorage，下次打开还在原地
-   - 双击复位到默认位置（拖到角落找不回来时的逃生舱） */
+/* 反馈按钮可拖拽（v0.3.10 → v0.3.11 重写点击判定）
+   v0.3.10 的坑（康哥真机反馈"很难点开"）：
+   onDown 在 touchstart 里 preventDefault() → 移动端规范会杀掉整条
+   合成鼠标事件链，click 根本不触发 → 面板永远打不开。
+   Playwright 无头走桌面鼠标路径所以 10/10 通过，真机全灭。
+   v0.3.11 修法：
+   - 彻底不依赖 click：手指抬起（pointerup/touchend）时没拖动就直接 openFB()
+   - preventDefault 只在拖动超过阈值后才调（touch-action:none 已兜住滚动）
+   - pointer / touch+mouse 二选一绑定，不再三套同绑（一次点击跑三遍 onDown）
+   - 双击复位改成【长按 700ms 复位】：双击会误触打开面板
+   - 位置存 localStorage，长按后仍回默认位置（左下导航栏上方） */
 (function(){
   var btn = document.getElementById('fb-open');
   if(!btn) return;
-  var dragging = false, moved = false, ox = 0, oy = 0, startX = 0, startY = 0;
+  var dragging = false, moved = false, suppressed = false;
+  var ox = 0, oy = 0, startX = 0, startY = 0, pressTimer = null;
   var DEFAULT = { bottom: 'calc(72px + env(safe-area-inset-bottom))', left: '12px', top: 'auto' };
 
   function applyDefault(){
@@ -1514,31 +1518,41 @@ function sendFB(){
     var p = pt(e), r = btn.getBoundingClientRect();
     ox = p.x - r.left; oy = p.y - r.top;
     startX = p.x; startY = p.y;
-    dragging = true; moved = false;
+    dragging = true; moved = false; suppressed = false;
     /* 从 bottom 定位切到 top 定位，避免 bottom/top 打架 */
     btn.style.bottom = 'auto';
     btn.style.left = r.left + 'px';
     btn.style.top = r.top + 'px';
     btn.classList.add('dragging');
-    if(e.cancelable) e.preventDefault();
+    /* 长按 700ms 复位（逃生舱）：期间没拖动才触发 */
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(function(){
+      suppressed = true;
+      applyDefault();
+      btn.classList.remove('dragging');
+      toast('Feedback button reset');
+    }, 700);
+    /* ⚠️ 这里绝不 preventDefault —— 会杀掉移动端后续事件链 */
   }
 
   function onMove(e){
     if(!dragging) return;
     var p = pt(e);
-    if(Math.abs(p.x - startX) > 6 || Math.abs(p.y - startY) > 6) moved = true;
-    if(!moved) return;
-    var w = btn.offsetWidth, h = btn.offsetHeight;
-    var nx = Math.max(4, Math.min(p.x - ox, window.innerWidth - w - 4));
-    var ny = Math.max(4, Math.min(p.y - oy, window.innerHeight - h - 4));
-    btn.style.left = nx + 'px';
-    btn.style.top = ny + 'px';
-    if(e.cancelable) e.preventDefault();
+    if(Math.abs(p.x - startX) > 6 || Math.abs(p.y - startY) > 6){
+      if(!moved){ moved = true; clearTimeout(pressTimer); }
+      var w = btn.offsetWidth, h = btn.offsetHeight;
+      var nx = Math.max(4, Math.min(p.x - ox, window.innerWidth - w - 4));
+      var ny = Math.max(4, Math.min(p.y - oy, window.innerHeight - h - 4));
+      btn.style.left = nx + 'px';
+      btn.style.top = ny + 'px';
+      if(e.cancelable) e.preventDefault();
+    }
   }
 
   function onUp(){
     if(!dragging) return;
     dragging = false;
+    clearTimeout(pressTimer);
     btn.classList.remove('dragging');
     if(moved){
       try{
@@ -1547,26 +1561,29 @@ function sendFB(){
           y: Math.round(parseFloat(btn.style.top) || 0)
         }));
       }catch(e){}
+    } else if(!suppressed){
+      /* 核心修复：不依赖 click，抬起即开面板 */
+      openFB();
     }
   }
 
-  btn.addEventListener('pointerdown', onDown);
-  window.addEventListener('pointermove', onMove, { passive:false });
-  window.addEventListener('pointerup', onUp);
-  window.addEventListener('pointercancel', onUp);
-  /* 兜底：老浏览器无 pointer events */
-  btn.addEventListener('touchstart', onDown, { passive:false });
-  btn.addEventListener('touchmove', onMove, { passive:false });
-  btn.addEventListener('touchend', onUp);
-  btn.addEventListener('mousedown', onDown);
-
-  /* 点击打开面板 —— 刚拖过就不打开 */
-  btn.addEventListener('click', function(e){
-    if(moved){ moved = false; e.preventDefault(); return; }
-    openFB();
-  });
-  /* 双击复位 */
-  btn.addEventListener('dblclick', function(e){ e.preventDefault(); applyDefault(); toast('Feedback button reset'); });
+  /* pointer / touch+mouse 二选一，避免重复绑定 */
+  if(window.PointerEvent){
+    btn.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove, { passive:false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  } else {
+    btn.addEventListener('touchstart', onDown, { passive:true });
+    btn.addEventListener('touchmove', onMove, { passive:false });
+    btn.addEventListener('touchend', onUp);
+    btn.addEventListener('touchcancel', onUp);
+    btn.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove, { passive:false });
+    window.addEventListener('mouseup', onUp);
+  }
+  /* 长按复位时防弹出系统菜单/选择 */
+  btn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 })();
 
 /* 反馈分类标签切换 */
