@@ -1,5 +1,5 @@
 {
-  "version": "0.3.3",
+  "version": "0.3.4",
   "updated": "2026-09-01",
-  "note": "Score: surfaced real ASR errors (previously swallowed) and added vConsole for mobile debugging. 'Did not catch that' now shows the actual whisper reason. MediaRecorder errors (common on WeChat WebView) are reported instead of silent fail. Recording <500B is detected and prompted as 'no sound captured'."
+  "note": "Score fix: target moved from fetch header to URL query string. Headers must be ISO-8859-1 (ASCII); sending '你好' as header value was throwing 'non ISO-8859-1 code point', caught and silently shown as 'Did not catch that' since v0.3.1. Worker now reads from query (header kept for compatibility)."
 }

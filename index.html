@@ -583,9 +583,10 @@ async function asrText(buf, target){
   /* 返回 {ok, text, status, err} —— 不再静默吞错，方便上层给出具体原因 */
   try{
     console.log('[ASR] sending', buf.byteLength, 'bytes, target=', target);
-    var r = await fetch('api/asr', {
+    var url = 'api/asr?target=' + encodeURIComponent(target);
+    var r = await fetch(url, {
       method:'POST',
-      headers:{ 'x-target': target, 'Content-Type':'audio/wav' },
+      headers:{ 'Content-Type':'audio/wav' },
       body: buf
     });
     console.log('[ASR] http', r.status);

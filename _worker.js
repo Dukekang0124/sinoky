@@ -93,7 +93,14 @@ export default {
 
     if (url.pathname === '/api/asr' && req.method === 'POST') {
       try {
-        const target = decodeURIComponent(req.headers.get('x-target') || '');
+        /* target 从 query string 读 —— fetch headers 必须是 ISO-8859-1（纯 ASCII），
+           之前用 header 传中文 target 会直接抛 "non ISO-8859-1 code point"，
+           客户端 catch 吞错显示"Did not catch that"，bug 隐藏了几个月。
+           同时保留 header 兼容旧调用方式（decodeURIComponent 安全）。 */
+        const target = decodeURIComponent(
+          url.searchParams.get('target') ||
+          req.headers.get('x-target') || ''
+        );
         const buf = await req.arrayBuffer();
         if (!buf || buf.byteLength < 100) return json({ ok: false, error: 'no audio' }, 400);
         // whisper-large-v3-turbo：audio = base64 字符串（官方教程用法，比旧版 whisper 更快更准）
