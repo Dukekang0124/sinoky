@@ -1,5 +1,5 @@
 {
-  "version": "0.3.4",
+  "version": "0.3.5",
   "updated": "2026-09-01",
-  "note": "Score fix: target moved from fetch header to URL query string. Headers must be ISO-8859-1 (ASCII); sending '你好' as header value was throwing 'non ISO-8859-1 code point', caught and silently shown as 'Did not catch that' since v0.3.1. Worker now reads from query (header kept for compatibility)."
+  "note": "Score: added [SCORE] console logs so the silent 'Scoring...' hang can be diagnosed. Also redeployed the standalone sinoky-score worker (was likely unreachable). If it still hangs, the next step is to merge scoring into the Pages Worker (Pages doesn't support npm imports, so a simplified in-Worker scoring would be needed)."
 }

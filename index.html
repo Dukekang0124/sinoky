@@ -681,12 +681,15 @@ async function sendScore(p, transcript, i){
   var box = $('score-'+i);
   box.style.display='block';
   box.innerHTML='<div class="score-load">Scoring…</div>';
+  console.log('[SCORE] →', SCORE_API+'/score', JSON.stringify({target:p.hz, user:transcript}));
   try{
     var res = await fetch(SCORE_API+'/score', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({target:p.hz, user:transcript})
     });
+    console.log('[SCORE] http', res.status);
     var data = await res.json();
+    console.log('[SCORE] body', JSON.stringify(data).slice(0, 300));
     if(data.error){ box.innerHTML='<div class="score-err">'+data.error+'</div>'; return; }
     box.innerHTML = renderScore(data);
     var badge = document.querySelector('#v-scene .badge.teal');
@@ -694,6 +697,7 @@ async function sendScore(p, transcript, i){
     var ns = document.querySelector('#v-scene .noscore');
     if(ns) ns.style.display='none';
   }catch(err){
+    console.log('[SCORE] error', err.message);
     box.innerHTML='<div class="score-err">Scoring service unreachable (needs an internet connection): '+err.message+'</div>';
   }
 }
