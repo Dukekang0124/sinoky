@@ -414,7 +414,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.12';
+var APP_VERSION = '0.3.13';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -455,6 +455,50 @@ var SCENES = [
         real:[
           { hz:'谢啦！', py:'Xiè la!', note:'light, casual thanks', style:'casual' },
           { hz:'太感谢了！', py:'Tài gǎnxiè le!', note:'when someone really helped', style:'polite' }
+        ]}
+    ]},
+  { id:'emergency', icon:'🚨', title:'Emergency · Survival',
+    desc:'Life-saving lines for when something goes wrong: ask for help, find a hospital, say you are sick, call the police, get unlost. Slow it down, then say it like your life depends on it — because sometimes it does.',
+    phrases:[
+      { en:'Help!', py:'Bāngmáng!', hz:'帮忙！',
+        real:[
+          { hz:'帮帮我！', py:'Bāngbang wǒ!', note:'raw cry for help', style:'casual' },
+          { hz:'救命啊！', py:'Jiùmìng a!', note:'emergency — someone is in danger', style:'casual' }
+        ]},
+      { en:'I need help.', py:'Wǒ xūyào bāngzhù.', hz:'我需要帮助。',
+        real:[
+          { hz:'我需要帮忙。', py:'Wǒ xūyào bāngmáng.', note:'everyday way to say it', style:'casual' },
+          { hz:'能帮个忙吗？', py:'Néng bāng ge máng ma?', note:'polite ask', style:'polite' }
+        ]},
+      { en:'Where is the hospital?', py:'Yīyuàn zài nǎlǐ?', hz:'医院在哪里？',
+        real:[
+          { hz:'医院在哪儿？', py:'Yīyuàn zài nǎr?', note:'哪儿 not 哪里 — spoken', style:'casual' },
+          { hz:'请问医院怎么走？', py:'Qǐngwèn yīyuàn zěnme zǒu?', note:'asking for directions, polite', style:'polite' }
+        ]},
+      { en:"I'm sick.", py:'Wǒ bìng le.', hz:'我病了。',
+        real:[
+          { hz:'我不舒服。', py:'Wǒ bù shūfu.', note:'softer — not feeling well', style:'casual' },
+          { hz:'我难受。', py:'Wǒ nánshòu.', note:'stronger — feel awful', style:'casual' }
+        ]},
+      { en:'Call the police, please.', py:'Qǐng dǎ jǐngchá.', hz:'请打警察。',
+        real:[
+          { hz:'快报警！', py:'Kuài bàojǐng!', note:'urgent — call the police now', style:'casual' },
+          { hz:'请帮我叫警察。', py:'Qǐng bāng wǒ jiào jǐngchá.', note:'ask someone to call', style:'polite' }
+        ]},
+      { en:"I'm lost.", py:'Wǒ mí lù le.', hz:'我迷路了。',
+        real:[
+          { hz:'我找不到路了。', py:'Wǒ zhǎo bú dào lù le.', note:'can not find the way', style:'casual' },
+          { hz:'请问这地方怎么走？', py:'Qǐngwèn zhè dìfang zěnme zǒu?', note:'asking a passer-by', style:'polite' }
+        ]},
+      { en:'My phone / wallet is lost.', py:'Wǒ de shǒujī / qiánbāo diū le.', hz:'我的手机 / 钱包丢了。',
+        real:[
+          { hz:'我手机丢了！', py:'Wǒ shǒujī diū le!', note:'panic — phone gone', style:'casual' },
+          { hz:'我钱包不见了。', py:'Wǒ qiánbāo bú jiàn le.', note:'wallet missing', style:'casual' }
+        ]},
+      { en:"I don't speak Chinese.", py:'Wǒ bú huì shuō Zhōngwén.', hz:'我不会说中文。',
+        real:[
+          { hz:'我不会中文。', py:'Wǒ bú huì Zhōngwén.', note:'short and clear', style:'casual' },
+          { hz:'对不起，我听不懂。', py:'Duìbuqǐ, wǒ tīng bù dǒng.', note:'sorry, I don’t understand', style:'polite' }
         ]}
     ]},
   { id:'food', icon:'🍜', title:'Food · Order & pay',
