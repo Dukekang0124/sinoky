@@ -1,5 +1,5 @@
 {
-  "version": "0.3.6",
+  "version": "0.3.7",
   "updated": "2026-09-01",
-  "note": "Score now uses /api/score (Pages Worker) instead of sinoky-score.kang7108558.workers.dev. Standalone Worker hung on mobile networks (vConsole showed [SCORE] → with no http response). Pages Worker doesn't support npm imports, so scoring uses a simplified algorithm (character overlap + length ratio) - sufficient for the short scene sentences. If phonetic-level feedback is needed later, pinyin-pro can be bundled with esbuild."
+  "note": "Scoring is now syllable-level again. pinyin-pro is bundled with esbuild into a single ESM file (457KB / 150KB gzipped) so the Pages Worker can load it, restoring separate initial / final / tone scoring (weights: tone 0.5, final 0.3, initial 0.2). Key gotcha: pinyin-pro calls setTimeout at module top level, which Cloudflare Workers forbid in global scope - so it must be loaded with dynamic import() inside the fetch handler, not a static import."
 }
