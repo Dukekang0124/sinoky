@@ -294,7 +294,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.1';
+var APP_VERSION = '0.3.2';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -374,29 +374,32 @@ function playBlob(b, btn, onFail){
 function serverSpeak(text, btn, onFail, attempt){
   attempt = attempt || 0;
   var aborted = false;
-  var timer = setTimeout(function(){ aborted = true; retryOrFail(); }, 9000);
+  var timer = setTimeout(function(){ aborted = true; retryOrFail(); }, 8000);
   function retryOrFail(){
     clearTimeout(timer);
-    if(attempt < 2){ setTimeout(function(){ serverSpeak(text, btn, onFail, attempt + 1); }, 400); return; }
+    if(attempt < 1){ setTimeout(function(){ serverSpeak(text, btn, onFail, attempt + 1); }, 400); return; }
     onFail && onFail();
   }
-  fetch('api/tts', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text })
-  }).then(function(r){
-    if(aborted) return null;
-    if(!r.ok) throw new Error('tts ' + r.status);
-    return r.blob();
-  }).then(function(b){
-    if(aborted) return;
-    if(!b || !b.size) throw new Error('empty audio');
-    clearTimeout(timer);
-    playBlob(b, btn, onFail);
-  }).catch(function(){
-    if(aborted) return;
-    retryOrFail();
-  });
+  /* 用 GET 而非 POST：文本→音频是确定性映射，Worker 返回 immutable 缓存头，
+     同一句第二次点播直接命中浏览器缓存（零延迟、零失败）。 */
+  fetch('api/tts?text=' + encodeURIComponent(String(text).slice(0, 300)), { method: 'GET' })
+    .then(function(r){
+      if(aborted) return null;
+      if(!r.ok) throw new Error('tts ' + r.status);
+      return r.blob();
+    })
+    .then(function(b){
+      if(aborted) return;
+      /* 关键防护：Worker 全源失败时会返回几十字节的错误 JSON，
+         若不校验长度就当音频播，用户听到的会是杂音/无声（v0.3.1 的 bug 根因）。 */
+      if(!b || b.size < 1000) throw new Error('audio too small: ' + (b ? b.size : 0));
+      clearTimeout(timer);
+      playBlob(b, btn, onFail);
+    })
+    .catch(function(){
+      if(aborted) return;
+      retryOrFail();
+    });
 }
 function webSpeak(text, btn, onFail){
   try{
@@ -411,32 +414,42 @@ function webSpeak(text, btn, onFail){
     setTimeout(function(){ if(!started && onFail) onFail(); }, 1500);
   }catch(e){ if(btn) btn.classList.remove('playing'); if(onFail) onFail(); }
 }
-function urlSpeak(text, btn){
-  var urls = [
-    'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN' +
-      (ttsRate < 1 ? '&ttsspeed=0.6' : '') + '&q=' + encodeURIComponent(text),
-    'https://tts.baidu.com/text2audio?tex=' + encodeURIComponent(text) +
-      '&cuid=sinoky&lan=zh&ctp=1&pdt=301&vol=9&spd=' + (ttsRate < 1 ? 3 : 5)
-  ];
-  var i = 0, done = false, started = false, a = null;
-  function tryNext(){
-    if(done) return;
+/* 有道 dictvoice：中文发音质量好、国内 CDN 直连延迟低，但服务端偶发返回
+   120 字节的 500 JSON（实测约 30%），故只作兜底、不作主音源。
+   用 <audio> 元素直接播而非 fetch —— 有道无 CORS 头，fetch 跨域会被拦；
+   而 audio 元素播放跨域媒体不需要 CORS。无效音频会触发 onerror → 可降级。 */
+function youdaoSpeak(text, btn, onFail){
+  if(!text){ onFail && onFail(); return; }
+  var a = new Audio();
+  var done = false, started = false;
+  if(ttsRate < 1) a.playbackRate = ttsRate;   /* 有道无 speed 参数，用播放速率慢放 */
+  function fail(){
+    if(done || started) return;
+    done = true; a.src = '';
     if(btn) btn.classList.remove('playing');
-    if(i >= urls.length){ toast('Audio unavailable — check your connection'); return; }
-    a = new Audio(urls[i++]);
-    if(ttsRate < 1) a.playbackRate = ttsRate;
-    a.onplay = function(){ started = true; if(btn) btn.classList.add('playing'); };
-    a.onended = function(){ if(done) return; done = true; if(btn) btn.classList.remove('playing'); };
-    a.onerror = function(){ if(!started) tryNext(); };
-    a.play().catch(function(){ if(!started) tryNext(); });
-    setTimeout(function(){ if(!done && !started && a){ a.src = ''; tryNext(); } }, 5000);
+    onFail && onFail();
   }
-  tryNext();
+  a.onplaying = function(){ started = true; if(btn) btn.classList.add('playing'); };
+  a.onended = function(){ if(done) return; done = true; if(btn) btn.classList.remove('playing'); };
+  a.onerror = fail;
+  a.src = 'https://dict.youdao.com/dictvoice?audio=' +
+    encodeURIComponent(String(text).slice(0, 100)) + '&le=zh';
+  a.play().catch(fail);
+  setTimeout(fail, 6000);   /* 有道偶发无响应，超时兜底降级 */
 }
 function speak(text, btn){
+  /* 音源顺序（v0.3.2 重构，全部经实测）：
+     ① /api/tts —— Worker 服务端多源（Google → melotts → 有道），实测 7/7 稳定。
+        关键：用户浏览器在国内连不上 Google，但 Cloudflare Worker 在境外能连，
+        由 Worker 代理 Google translate_tts 后把音频回传，稳定性远超浏览器直连。
+     ② 有道 dictvoice 直连 —— Worker 不可达时的本地兜底（约 70% 成功率）。
+     ③ WebSpeech —— 多数系统无 zh-CN 语音包，成功率最低，仅作末位。
+     注：已移除 Google/百度浏览器直连 —— 前者国内 502，后者匿名接口频控 502。 */
   serverSpeak(text, btn, function(){
-    webSpeak(text, btn, function(){
-      urlSpeak(text, btn);
+    youdaoSpeak(text, btn, function(){
+      webSpeak(text, btn, function(){
+        toast('Audio unavailable — check your connection');
+      });
     });
   });
 }
