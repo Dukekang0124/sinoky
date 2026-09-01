@@ -1,5 +1,5 @@
 {
-  "version": "0.3.8",
+  "version": "0.3.9",
   "updated": "2026-09-01",
-  "note": "Real-user readiness for the 6 foreign testers: (1) Feedback button (bottom-left) storing to Cloudflare KV with device info and recent JS errors - foreign users never email you, so they need a zero-friction way to report problems; (2) first-run onboarding explaining what each tab does and how Score works (tap Score, speak, tap Stop); (3) privacy note on the scene view - Europeans are GDPR-sensitive and will not grant mic access without knowing recordings are not stored; (4) microphone-blocked help with per-browser recovery steps (WeChat / iOS Safari / Chrome), since a denied mic silently kills the core feature; (5) global error capture so crashes are reported with feedback. Also fixed: APP_VERSION was stuck at 0.3.2 while version.json was 0.3.7, which made the 'new version available' toast fire on every single load."
+  "note": "Addresses insight I-012 (learners understand textbook audio but go deaf in real conversation). Two changes: (1) the speed button now cycles through three speeds - Slow 0.7x, Normal 1.0x, Real 1.3x - so tapping three times compares the same line at three speeds and trains the ear toward real-life tempo; (2) every scene line now has a 'Real speech' section with two authentic spoken variants (with pinyin, a note on when to use it, and a casual / polite / formal / slang label) because learners asked for real-life Chinese, not book Chinese."
 }

@@ -212,6 +212,26 @@ nav button.on{color:var(--red)}
 .mic-help{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:7px;
   padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px}
 .mic-help b{color:var(--t2)}
+
+/* ---------- v0.3.9 真实口语变体（I-012：老外要 real life 不要 book Chinese）---------- */
+.p-real{margin-top:9px}
+.real-toggle{font-size:11.5px;color:var(--t2);background:rgba(42,157,143,.1);
+  border:1px solid rgba(42,157,143,.32);border-radius:9px;padding:6px 10px;
+  cursor:pointer;font-family:inherit}
+.real-toggle.on{background:rgba(42,157,143,.24)}
+.real-list{margin-top:8px;display:flex;flex-direction:column;gap:7px}
+.real-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+  border-radius:9px;padding:9px 10px;cursor:pointer}
+.real-item:active{background:rgba(255,255,255,.07)}
+.real-main{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.real-hz{font-size:15px;color:var(--txt)}
+.real-py{font-size:11.5px;color:var(--sub)}
+.real-style{font-size:9.5px;padding:2px 6px;border-radius:6px;letter-spacing:.4px}
+.s-casual{background:rgba(61,154,165,.18);color:#5DCAA5}
+.s-polite{background:rgba(99,153,34,.18);color:#97C459}
+.s-formal{background:rgba(83,74,183,.22);color:#AFA9EC}
+.s-slang{background:rgba(216,90,48,.18);color:#F0997B}
+.real-note{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -387,7 +407,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.8';
+var APP_VERSION = '0.3.9';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -396,30 +416,87 @@ var APP_VERSION = '0.3.8';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
+/* pharases 字段说明：
+   en   = 英文意思
+   py   = 拼音（构建期生成，勿手改）
+   hz   = 教科书标准说法（入门必需，但不等于真实生活）
+   real = 真实生活说法（v0.3.9 新增，I-012 洞察驱动）
+          老外明确说"我要 real life，不要 book Chinese"，
+          真实对话大量使用语气词、儿化、省略，课本几乎不教。
+          style: casual 随意 / polite 礼貌 / formal 正式 / slang 俚语
+          —— 标注语体是关键，老外最怕用错场合。 */
 var SCENES = [
   { id:'arrival', icon:'🛬', title:'Arrival · First hours', 
     desc:'Your first 4 survival lines: greeting, price, destination, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
     phrases:[
-      { en:'Hello! (greeting anyone)', py:'Nǐ hǎo', hz:'你好' },
-      { en:'How much is it?', py:'Duōshǎo qián?', hz:'多少钱？' },
-      { en:'I want to go here. (show address)', py:'Wǒ yào qù zhèlǐ.', hz:'我要去这里。' },
-      { en:'Thank you!', py:'Xièxie!', hz:'谢谢！' }
+      { en:'Hello! (greeting anyone)', py:'Nǐ hǎo', hz:'你好',
+        real:[
+          { hz:'你好啊', py:'Nǐ hǎo a', note:'softer — what you actually hear every day', style:'casual' },
+          { hz:'嗨', py:'Hāi', note:'like "hi" — friends and young people', style:'casual' }
+        ]},
+      { en:'How much is it?', py:'Duōshǎo qián?', hz:'多少钱？',
+        real:[
+          { hz:'这多少钱？', py:'Zhè duōshǎo qián?', note:'pointing at the item', style:'casual' },
+          { hz:'怎么卖？', py:'Zěnme mài?', note:'at a market stall', style:'casual' }
+        ]},
+      { en:'I want to go here. (show address)', py:'Wǒ yào qù zhèlǐ.', hz:'我要去这里。',
+        real:[
+          { hz:'我去这儿。', py:'Wǒ qù zhèr.', note:'这儿 not 这里 — everyday speech', style:'casual' },
+          { hz:'麻烦到这儿。', py:'Máfan dào zhèr.', note:'to a taxi driver', style:'polite' }
+        ]},
+      { en:'Thank you!', py:'Xièxie!', hz:'谢谢！',
+        real:[
+          { hz:'谢啦！', py:'Xiè la!', note:'light, casual thanks', style:'casual' },
+          { hz:'太感谢了！', py:'Tài gǎnxiè le!', note:'when someone really helped', style:'polite' }
+        ]}
     ]},
   { id:'food', icon:'🍜', title:'Food · Order & pay',
     desc:'Ordering made minimal: point, say "I want this one", ask for no spice, pay by scan.',
     phrases:[
-      { en:'I want this one. (pointing)', py:'Wǒ yào zhège.', hz:'我要这个。' },
-      { en:'Not spicy, please.', py:'Bú yào là.', hz:'不要辣。' },
-      { en:'Delicious!', py:'Hǎo chī!', hz:'好吃！' },
-      { en:'The bill, please.', py:'Mǎidān, xièxie.', hz:'买单，谢谢。' }
+      { en:'I want this one. (pointing)', py:'Wǒ yào zhège.', hz:'我要这个。',
+        real:[
+          { hz:'来这个。', py:'Lái zhège.', note:'how people actually order', style:'casual' },
+          { hz:'给我来这个。', py:'Gěi wǒ lái zhège.', note:'also very common', style:'casual' }
+        ]},
+      { en:'Not spicy, please.', py:'Bú yào là.', hz:'不要辣。',
+        real:[
+          { hz:'别放辣。', py:'Bié fàng là.', note:'said to the cook', style:'casual' },
+          { hz:'不要辣，谢谢。', py:'Bú yào là, xièxie.', note:'adding 谢谢 softens it', style:'polite' }
+        ]},
+      { en:'Delicious!', py:'Hǎo chī!', hz:'好吃！',
+        real:[
+          { hz:'太好吃了！', py:'Tài hǎochī le!', note:'what people really say', style:'casual' },
+          { hz:'嗯，不错！', py:'Ń, búcuò!', note:'understated praise', style:'casual' }
+        ]},
+      { en:'The bill, please.', py:'Mǎidān, xièxie.', hz:'买单，谢谢。',
+        real:[
+          { hz:'结账。', py:'Jiézhàng.', note:'short and direct', style:'casual' },
+          { hz:'老板，买单！', py:'Lǎobǎn, mǎidān!', note:'calling the owner in a small place', style:'casual' }
+        ]}
     ]},
   { id:'meeting', icon:'💼', title:'Work · Meetings',
     desc:'Survival lines for a Chinese workplace meeting: greet, ask to repeat, give a view, exit politely. (Calibrated v0.1.3 via content-spec self-check; native-speaker spot check pending.)',
     phrases:[
-      { en:'Hello, everyone.', py:'Dàjiā hǎo.', hz:'大家好。' },
-      { en:'Sorry, say that again, please.', py:'Bù hǎo yìsi, qǐng zài shuō yí biàn.', hz:'不好意思，请再说一遍。' },
-      { en:'I think it’s fine.', py:'Wǒ juéde méi wèntí.', hz:'我觉得没问题。' },
-      { en:'Thanks, I’ll head out first.', py:'Xièxie, wǒ xiān zǒu le.', hz:'谢谢，我先走了。' }
+      { en:'Hello, everyone.', py:'Dàjiā hǎo.', hz:'大家好。',
+        real:[
+          { hz:'各位好。', py:'Gèwèi hǎo.', note:'more formal — to a group', style:'formal' },
+          { hz:'大家好啊。', py:'Dàjiā hǎo a.', note:'relaxed — with a team you know', style:'casual' }
+        ]},
+      { en:'Sorry, say that again, please.', py:'Bù hǎo yìsi, qǐng zài shuō yí biàn.', hz:'不好意思，请再说一遍。',
+        real:[
+          { hz:'抱歉，能再说一次吗？', py:'Bàoqiàn, néng zài shuō yí cì ma?', note:'softer, polite', style:'polite' },
+          { hz:'啊？你说什么？', py:'Á? Nǐ shuō shénme?', note:'only with close colleagues', style:'casual' }
+        ]},
+      { en:'I think it’s fine.', py:'Wǒ juéde méi wèntí.', hz:'我觉得没问题。',
+        real:[
+          { hz:'我觉得行。', py:'Wǒ juéde xíng.', note:'行 = fine/OK, very common', style:'casual' },
+          { hz:'没问题。', py:'Méi wèntí.', note:'short and confident', style:'casual' }
+        ]},
+      { en:'Thanks, I’ll head out first.', py:'Xièxie, wǒ xiān zǒu le.', hz:'谢谢，我先走了。',
+        real:[
+          { hz:'那我先走了。', py:'Nà wǒ xiān zǒu le.', note:'那 adds natural flow', style:'casual' },
+          { hz:'先撤了啊。', py:'Xiān chè le a.', note:'撤 = slang for leaving — friends only', style:'slang' }
+        ]}
     ]}
 ];
 
@@ -613,19 +690,68 @@ function renderSceneList(){
       '<div class="p-hint">'+(isDone?'✓ said out loud':'Tap to reveal · cover &amp; say it 3×')+'</div></div>'+
       '<button class="spk" onclick="speak(\''+p.hz.replace(/'/g,'')+'\',this)">▶</button></div>'+
       '<div class="p-actions">'+
-      '<button class="btn ghost speed" onclick="slowSpeak(\''+p.hz.replace(/'/g,'')+'\',this)">🐢 slow</button>'+
+      '<button class="btn ghost speed" onclick="speedSpeak(\''+p.hz.replace(/'/g,'')+'\',this)" title="Tap again for a faster speed">'+SPEEDS[speedIdx].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
-      '</div><div class="score-result" id="score-'+i+'"></div></div>';
+      '</div>' + realHtml(i, p) + '<div class="score-result" id="score-'+i+'"></div></div>';
   });
   $('sc-list').innerHTML = html;
   var pct = Math.round(100*done.length/curScene.phrases.length);
   $('sc-bar').style.width = pct+'%';
   $('sc-finish').style.display = done.length===curScene.phrases.length ? 'block' : 'none';
 }
-function slowSpeak(text, btn){
-  ttsRate = 0.7; speak(text, btn);
-  setTimeout(function(){ ttsRate = 1; }, 4000);
+/* v0.3.9 三档语速（I-012 洞察：老外"go deaf" —— 课本慢速听得懂，真实速听不懂）
+   连点按钮循环：Slow 0.7x → Normal 1.0x → Real 1.3x。
+   设计意图：用户连点三次就能听到同一句的三档速度对比，
+   让耳朵从"课本耳"逐步过渡到"真实耳"，而不是只练标准慢速。 */
+var SPEEDS = [
+  { rate: 0.7, label: '🐢 Slow',   tip: 'learning speed' },
+  { rate: 1.0, label: '▶ Normal',  tip: 'textbook speed' },
+  { rate: 1.3, label: '🚀 Real',   tip: 'real-life speed' }
+];
+var speedIdx = 0;
+function speedSpeak(text, btn){
+  var s = SPEEDS[speedIdx];
+  ttsRate = s.rate;
+  speak(text, btn);
+  speedIdx = (speedIdx + 1) % SPEEDS.length;
+  var nxt = SPEEDS[speedIdx];
+  setTimeout(function(){
+    ttsRate = 1;
+    if(btn && btn.parentNode){
+      btn.textContent = nxt.label;
+      btn.title = 'Next tap: ' + nxt.tip;
+    }
+  }, 4000);
+}
+
+/* 真实口语变体（v0.3.9 / I-012）：课本句下面给出真实生活说法。
+   默认折叠，避免首屏信息过载；点开后每条可直接播放。
+   语体标签（casual/polite/formal/slang）是关键 —— 老外最怕用错场合。 */
+function realHtml(i, p){
+  if(!p.real || !p.real.length) return '';
+  var items = p.real.map(function(r){
+    return '<div class="real-item" onclick="speak(\'' + r.hz.replace(/'/g,'') + '\',this)">' +
+      '<div class="real-main">' +
+        '<span class="real-hz">' + r.hz + '</span>' +
+        '<span class="real-py">' + r.py + '</span>' +
+        '<span class="real-style s-' + r.style + '">' + r.style + '</span>' +
+      '</div>' +
+      '<div class="real-note">' + r.note + '</div>' +
+    '</div>';
+  }).join('');
+  return '<div class="p-real">' +
+    '<button class="real-toggle" onclick="toggleReal(' + i + ')">💬 Real speech · ' + p.real.length + ' ways</button>' +
+    '<div class="real-list" id="real-' + i + '" style="display:none">' + items + '</div>' +
+  '</div>';
+}
+function toggleReal(i){
+  var el = $('real-' + i);
+  if(!el) return;
+  var willOpen = el.style.display === 'none';
+  el.style.display = willOpen ? 'block' : 'none';
+  var btn = el.parentNode.querySelector('.real-toggle');
+  if(btn) btn.classList.toggle('on', willOpen);
 }
 function markDone(i){
   var arr = S.phrases[curScene.id] = S.phrases[curScene.id] || [];
