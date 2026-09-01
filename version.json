@@ -1,5 +1,5 @@
 {
-  "version": "0.3.11",
+  "version": "0.3.12",
   "updated": "2026-09-01",
   "note": "The Feedback button was sitting on top of the bottom navigation (Home / Cards). Its default position now clears the nav bar, and it is draggable: move it anywhere, the position is remembered, and double-tap resets it to the default spot."
 }

@@ -370,7 +370,7 @@ nav button.on{color:var(--red)}
 
 <!-- v0.3.8 真实用户保障（6 位外国朋友在用了） -->
 <button id="fb-open">💬 Feedback</button>
-<div id="fb-mask" onclick="closeFB()"></div>
+<div id="fb-mask" onclick="onMaskTap()"></div>
 <div id="fb-panel" role="dialog" aria-label="Send feedback">
   <h3>Help us improve Sinoky</h3>
   <div class="fb-sub">Found a bug? Something confusing? Tell us in English (or any language) — we read every message.</div>
@@ -414,7 +414,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.11';
+var APP_VERSION = '0.3.12';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -1444,10 +1444,20 @@ window.addEventListener('unhandledrejection', function(e){ logErr('promise', (e.
 
 /* 反馈面板 */
 var FB_CAT = 'bug';
+/* v0.3.12 遮罩开启保护：触摸点按 → pointerup 开面板 → 遮罩瞬间铺满，
+   同一手势补发的合成 click 落点重新计算会砸在遮罩上 → closeFB 把面板
+   秒关（这就是"点了没反应"的第二层根因）。记录开启时刻，350ms 内的
+   遮罩点击视为手势残波直接忽略；真实想关闭时点遮罩距开启已远超 350ms。 */
+var FB_OPENED_AT = 0;
 function openFB(){
+  FB_OPENED_AT = Date.now();
   $('fb-mask').classList.add('on');
   $('fb-panel').classList.add('on');
   document.body.style.overflow = 'hidden';
+}
+function onMaskTap(){
+  if(Date.now() - FB_OPENED_AT < 350) return;
+  closeFB();
 }
 function closeFB(){
   $('fb-mask').classList.remove('on');
