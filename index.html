@@ -95,6 +95,31 @@ nav button.on{color:var(--red)}
 .ss.bad{color:var(--red);border-color:rgba(230,57,70,.4);background:rgba(230,57,70,.12);text-decoration:line-through}
 .score-err{color:var(--red);font-size:12px;margin-top:10px;line-height:1.5}
 .score-load{color:var(--sub);font-size:12px;margin-top:10px}
+/* ---------- flashcards (v0.2.0) ---------- */
+.fc-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 10px}
+.fc-prog{font-size:12px;color:var(--sub)}
+.fc-wrap{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 16px 18px;text-align:center}
+.fc-hz{font-size:78px;font-weight:800;line-height:1.1;letter-spacing:2px}
+.fc-py{font-size:20px;color:var(--teal);margin-top:8px;min-height:28px}
+.fc-py.hidden{filter:blur(7px);user-select:none}
+.fc-meta{font-size:11.5px;color:var(--sub);margin-top:10px}
+.fc-back{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);text-align:left;display:none}
+.fc-back.on{display:block}
+.fc-mean{font-size:18px;font-weight:600}
+.fc-row{font-size:12.5px;color:var(--sub);margin-top:7px;line-height:1.5}
+.fc-row b{color:var(--txt);font-weight:600}
+.fc-sent{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:11px}
+.fc-sent .zh{font-size:15px}
+.fc-sent .py{font-size:12px;color:var(--teal);margin-top:3px}
+.fc-sent .en{font-size:12.5px;color:var(--sub);margin-top:4px}
+.fc-actions{display:flex;gap:8px;margin-top:14px}
+.fc-actions .btn{margin-top:0;padding:11px;font-size:13px;border-radius:11px}
+.fc-empty{color:var(--sub);font-size:12.5px;text-align:center;padding:18px;line-height:1.6}
+.nw-item{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:8px}
+.nw-item .hz{font-size:20px;font-weight:700;flex-shrink:0}
+.nw-item .mn{font-size:12px;color:var(--sub);flex:1;line-height:1.4}
+.nw-item .py{color:var(--teal)}
+.nw-item .mini{width:auto;padding:6px 10px;margin:0;font-size:12px;border-radius:9px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -165,10 +190,25 @@ nav button.on{color:var(--red)}
     </div>
     <div class="foot">Sinoky v<span class="v-txt"></span></div>
   </section>
+
+  <!-- CARDS -->
+  <section id="v-cards" class="views">
+    <div class="fc-nav">
+      <span class="fc-prog" id="fc-prog">Loading…</span>
+      <span class="fc-prog" id="fc-saved">★ 0 saved</span>
+    </div>
+    <div class="fc-wrap" id="fc-wrap"><div class="fc-empty">Loading the HSK1 deck…</div></div>
+    <div class="card" style="margin-top:14px">
+      <div class="top"><h2>Saved words</h2><span class="badge teal" id="nw-count">0</span></div>
+      <p class="desc">Characters you starred for later review. Tap the speaker to hear one again.</p>
+      <div id="nw-list"></div>
+    </div>
+  </section>
 </div>
 
 <nav>
   <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
+  <button id="nav-cards" onclick="go('cards')"><span class="ic">🗂️</span>Cards</button>
   <button id="nav-tone" onclick="go('tone')"><span class="ic">🎵</span>Tones</button>
   <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
 </nav>
@@ -177,7 +217,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.1.4';
+var APP_VERSION = '0.2.0';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -278,11 +318,12 @@ function toast(msg){
 }
 function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
-  ['home','scene','tone','prog'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
+  if(v==='cards') renderNW();
   window.scrollTo(0,0);
 }
 
@@ -329,7 +370,7 @@ function renderSceneList(){
       '<button class="spk" onclick="speak(\''+p.hz.replace(/'/g,'')+'\',this)">▶</button></div>'+
       '<div class="p-actions">'+
       '<button class="btn ghost speed" onclick="slowSpeak(\''+p.hz.replace(/'/g,'')+'\',this)">🐢 slow</button>'+
-      '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 评分</button>'+
+      '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
       '</div><div class="score-result" id="score-'+i+'"></div></div>';
   });
@@ -356,34 +397,34 @@ function scorePhrase(i){
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR){
     box.style.display='block';
-    box.innerHTML='<div class="score-err">⚠️ 浏览器不支持语音识别，请用桌面版 Chrome / Edge 练习评分。</div>';
+    box.innerHTML='<div class="score-err">⚠️ Speech recognition is not supported in this browser. Use desktop Chrome or Edge to practise with scoring.</div>';
     return;
   }
   if(btn.classList.contains('listening')){ try{ window.__rec && window.__rec.stop(); }catch(e){} return; }
   var rec = new SR(); window.__rec = rec;
   rec.lang = 'zh-CN'; rec.interimResults = false; rec.maxAlternatives = 1;
-  btn.classList.add('listening'); btn.textContent='🎙️ 听…';
+  btn.classList.add('listening'); btn.textContent='🎙️ Listening…';
   rec.onresult = async function(e){
     var transcript = e.results[0][0].transcript;
     await sendScore(p, transcript, i);
-    btn.classList.remove('listening'); btn.textContent='🎤 评分';
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
   };
   rec.onerror = function(e){
     box.style.display='block';
-    box.innerHTML='<div class="score-err">识别失败：'+(e.error||'unknown')+'。请允许麦克风权限后重试。</div>';
-    btn.classList.remove('listening'); btn.textContent='🎤 评分';
+    box.innerHTML='<div class="score-err">Recognition failed: '+(e.error||'unknown')+'. Please allow microphone access and try again.</div>';
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
   };
-  rec.onend = function(){ btn.classList.remove('listening'); btn.textContent='🎤 评分'; };
+  rec.onend = function(){ btn.classList.remove('listening'); btn.textContent='🎤 Score'; };
   try{ rec.start(); }catch(e){
     box.style.display='block';
-    box.innerHTML='<div class="score-err">无法启动麦克风：'+e.message+'</div>';
-    btn.classList.remove('listening'); btn.textContent='🎤 评分';
+    box.innerHTML='<div class="score-err">Could not start the microphone: '+e.message+'</div>';
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
   }
 }
 async function sendScore(p, transcript, i){
   var box = $('score-'+i);
   box.style.display='block';
-  box.innerHTML='<div class="score-load">评分中…</div>';
+  box.innerHTML='<div class="score-load">Scoring…</div>';
   try{
     var res = await fetch(SCORE_API+'/score', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -397,7 +438,7 @@ async function sendScore(p, transcript, i){
     var ns = document.querySelector('#v-scene .noscore');
     if(ns) ns.style.display='none';
   }catch(err){
-    box.innerHTML='<div class="score-err">评分服务连接失败（需联网）：'+err.message+'</div>';
+    box.innerHTML='<div class="score-err">Scoring service unreachable (needs an internet connection): '+err.message+'</div>';
   }
 }
 function renderScore(d){
@@ -476,6 +517,90 @@ function renderProgress(){
     ' · Tone Gym: '+S.tone.right+'/'+S.tone.total+' correct · Device ID: '+UID.slice(0,8)+'…';
 }
 
+/* ---------- flashcards (v0.2.0): HSK1 deck, zero runtime deps ----------
+   拼音由构建期工具生成并随数据下发，前端不做分词 —— 守住「前端零依赖」红线。
+   数据离线可用：sw.js 预缓存 data/flashcards.hsk1.json。 */
+var CARDS = [], fcIdx = 0, fcRevealed = false, NW = [];
+try { NW = JSON.parse(localStorage.getItem('sinoky_newwords')) || []; } catch(e){ NW = []; }
+function saveNW(){ localStorage.setItem('sinoky_newwords', JSON.stringify(NW)); }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function loadCards(){
+  fetch('data/flashcards.hsk1.json')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      CARDS = (j.cards || []).slice().sort(function(a,b){ return (a.freq||999) - (b.freq||999); });
+      var saved = (S.cards && typeof S.cards.idx === 'number') ? S.cards.idx : 0;
+      fcIdx = Math.max(0, Math.min(saved, CARDS.length - 1));
+      renderCard(); renderNW();
+    })
+    .catch(function(){
+      $('fc-prog').textContent = '';
+      $('fc-wrap').innerHTML = '<div class="fc-empty">Could not load the card deck.<br>Reconnect and reopen the app to try again.</div>';
+    });
+}
+function renderCard(){
+  if(!CARDS.length) return;
+  var c = CARDS[fcIdx];
+  $('fc-prog').textContent = 'Card ' + (fcIdx + 1) + ' / ' + CARDS.length;
+  $('fc-saved').textContent = '★ ' + NW.length + ' saved';
+  var starred = NW.indexOf(c.hanzi) > -1;
+  $('fc-wrap').innerHTML =
+    '<div class="fc-hz">' + esc(c.hanzi) + '</div>' +
+    '<div class="fc-py' + (fcRevealed ? '' : ' hidden') + '">' + esc(c.pinyin) + '</div>' +
+    '<div class="fc-meta">' + esc(c.pos||'') + (c.bushou ? ' · radical ' + esc(c.bushou) : '') + ' · tone ' + esc(c.tone) + '</div>' +
+    '<div class="fc-back' + (fcRevealed ? ' on' : '') + '">' +
+      '<div class="fc-mean">' + esc(c.meaning) + '</div>' +
+      (c.words && c.words.length ? '<div class="fc-row"><b>Appears in:</b> ' + esc(c.words.join(' · ')) + '</div>' : '') +
+      (c.sentence ? '<div class="fc-sent"><div class="zh">' + esc(c.sentence.zh) + '</div>' +
+        '<div class="py">' + esc(c.sentence.pinyin) + '</div>' +
+        '<div class="en">' + esc(c.sentence.en) + '</div></div>' : '') +
+    '</div>' +
+    '<div class="fc-actions">' +
+      '<button class="btn ghost" onclick="speak(\'' + esc(c.hanzi) + '\',this)">🔊 Play</button>' +
+      '<button class="btn ghost" onclick="fcToggle()">' + (fcRevealed ? 'Cover' : 'Reveal') + '</button>' +
+      '<button class="btn ' + (starred ? 'primary' : 'ghost') + '" onclick="fcStar()">' + (starred ? '★ Saved' : '☆ Save') + '</button>' +
+    '</div>' +
+    '<div class="fc-actions" style="margin-top:8px">' +
+      '<button class="btn ghost" onclick="fcMove(-1)">← Previous</button>' +
+      '<button class="btn ghost" onclick="fcMove(1)">Next →</button>' +
+    '</div>';
+  S.cards = S.cards || {}; S.cards.idx = fcIdx; saveState();
+}
+function fcToggle(){ fcRevealed = !fcRevealed; renderCard(); }
+function fcMove(d){
+  if(!CARDS.length) return;
+  fcIdx = (fcIdx + d + CARDS.length) % CARDS.length;
+  fcRevealed = false;
+  renderCard();
+}
+function fcStar(){
+  if(!CARDS.length) return;
+  var hz = CARDS[fcIdx].hanzi, i = NW.indexOf(hz);
+  if(i > -1){ NW.splice(i,1); } else { NW.push(hz); }
+  saveNW(); renderCard(); renderNW();
+}
+function renderNW(){
+  var box = $('nw-list'); if(!box) return;
+  $('nw-count').textContent = NW.length;
+  if(!NW.length){ box.innerHTML = '<div class="fc-empty">No saved characters yet.<br>Tap “☆ Save” on a card to keep it here.</div>'; return; }
+  var html = '';
+  NW.forEach(function(hz){
+    var c = null;
+    for(var i=0;i<CARDS.length;i++){ if(CARDS[i].hanzi === hz){ c = CARDS[i]; break; } }
+    if(!c) return;
+    html += '<div class="nw-item"><span class="hz">' + esc(c.hanzi) + '</span>' +
+      '<span class="mn"><span class="py">' + esc(c.pinyin) + '</span> · ' + esc(c.meaning) + '</span>' +
+      '<button class="btn ghost mini" onclick="speak(\'' + esc(c.hanzi) + '\',this)">🔊</button>' +
+      '<button class="btn ghost mini" onclick="fcRemove(\'' + esc(c.hanzi) + '\')">✕</button></div>';
+  });
+  box.innerHTML = html || '<div class="fc-empty">No saved characters yet.</div>';
+}
+function fcRemove(hz){
+  var i = NW.indexOf(hz);
+  if(i > -1){ NW.splice(i,1); saveNW(); renderCard(); renderNW(); }
+}
+
 /* ---------- pwa: sw register + version check ---------- */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(function(){});
@@ -486,6 +611,7 @@ fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(f
 
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
 renderHome();
+loadCards();
 </script>
 </body>
 </html>

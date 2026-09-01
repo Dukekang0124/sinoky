@@ -1,5 +1,5 @@
 {
-  "version": "0.1.4",
-  "updated": "2026-08-31",
-  "note": "v0.1.3 内容规范库自检校准 meeting #2 变调（不+好→Bù hǎo）；升 SW 缓存名"
+  "version": "0.2.0",
+  "updated": "2026-09-01",
+  "note": "Added Flashcards view (HSK1 deck, 193 characters, English glosses + example sentences). Score worker verdict and error labels are now English."
 }
