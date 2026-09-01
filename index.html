@@ -120,6 +120,12 @@ nav button.on{color:var(--red)}
 .nw-item .mn{font-size:12px;color:var(--sub);flex:1;line-height:1.4}
 .nw-item .py{color:var(--teal)}
 .nw-item .mini{width:auto;padding:6px 10px;margin:0;font-size:12px;border-radius:9px;flex-shrink:0}
+/* ---------- stroke order (v0.2.1) ---------- */
+.fc-strokes{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:none}
+.fc-strokes.on{display:block}
+.fc-strokes .hw-stage{width:100%;max-width:260px;margin:0 auto;background:var(--bg2);border:1px solid var(--line);border-radius:14px}
+.fc-hwmsg{text-align:center;font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5}
+.fc-hwmsg.ok{color:var(--teal)}
 </style>
 </head>
 <body>
@@ -217,7 +223,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.2.0';
+var APP_VERSION = '0.2.1';
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -562,9 +568,11 @@ function renderCard(){
       '<button class="btn ' + (starred ? 'primary' : 'ghost') + '" onclick="fcStar()">' + (starred ? '★ Saved' : '☆ Save') + '</button>' +
     '</div>' +
     '<div class="fc-actions" style="margin-top:8px">' +
-      '<button class="btn ghost" onclick="fcMove(-1)">← Previous</button>' +
+      '<button class="btn ghost" onclick="fcMove(-1)">← Prev</button>' +
+      '<button class="btn ghost" onclick="fcStrokes()">✍️ Strokes</button>' +
       '<button class="btn ghost" onclick="fcMove(1)">Next →</button>' +
-    '</div>';
+    '</div>' +
+    '<div class="fc-strokes" id="fc-strokes"></div>';
   S.cards = S.cards || {}; S.cards.idx = fcIdx; saveState();
 }
 function fcToggle(){ fcRevealed = !fcRevealed; renderCard(); }
@@ -599,6 +607,76 @@ function renderNW(){
 function fcRemove(hz){
   var i = NW.indexOf(hz);
   if(i > -1){ NW.splice(i,1); saveNW(); renderCard(); renderNW(); }
+}
+
+/* ---------- stroke order (v0.2.1) ----------
+   按需加载：笔顺库 36KB + 单字数据约 2KB，都在使用时才拉取，首屏零成本。
+   数据走本地 data/strokes/<codepoint>.json，不依赖 CDN，因此离线也能看笔顺。
+   文件名用 Unicode 码点（如「我」= 6211.json），避开中文文件名在 CDN 上的编码问题。 */
+var HW = null;
+function loadHW(){
+  if(HW) return Promise.resolve(HW);
+  return new Promise(function(res, rej){
+    var s = document.createElement('script');
+    s.src = 'vendor/hanzi-writer.min.js';
+    s.onload = function(){
+      HW = window.HanziWriter || null;
+      HW ? res(HW) : rej(new Error('the stroke library loaded but HanziWriter is missing'));
+    };
+    s.onerror = function(){ rej(new Error('could not load the stroke library')); };
+    document.head.appendChild(s);
+  });
+}
+function fcStrokes(){
+  if(!CARDS.length) return;
+  var c = CARDS[fcIdx], box = $('fc-strokes');
+  if(!box) return;
+  if(box.classList.contains('on')){ box.classList.remove('on'); box.innerHTML = ''; return; }
+  box.classList.add('on');
+  box.innerHTML = '<div class="fc-hwmsg">Loading stroke order…</div>';
+  var cp = c.hanzi.codePointAt(0).toString(16);
+  Promise.all([
+    loadHW(),
+    fetch('data/strokes/' + cp + '.json').then(function(r){
+      if(!r.ok) throw new Error('no stroke data for this character');
+      return r.json();
+    })
+  ]).then(function(res){
+    var Writer = res[0], data = res[1];
+    box.innerHTML =
+      '<div class="hw-stage" id="hw-stage"></div>' +
+      '<div class="fc-actions">' +
+        '<button class="btn ghost" onclick="hwPlay()">▶ Play</button>' +
+        '<button class="btn ghost" onclick="hwQuiz()">✍️ Practise</button>' +
+      '</div>' +
+      '<div class="fc-hwmsg" id="hw-msg">Watch the order, then try writing it yourself.</div>';
+    window.__hw = Writer.create('hw-stage', c.hanzi, {
+      width: 260, height: 260, padding: 10,
+      showOutline: true,
+      strokeColor: '#e63946', outlineColor: '#2b3648',
+      strokeAnimationSpeed: 1, delayBetweenStrokes: 300,
+      charDataLoader: function(ch, onComplete){ onComplete(data); }
+    });
+    window.__hw.animateCharacter();
+  }).catch(function(e){
+    box.innerHTML = '<div class="fc-hwmsg">Stroke animation is unavailable right now.<br>' +
+      esc(e && e.message ? e.message : '') + '</div>';
+  });
+}
+function hwPlay(){
+  if(window.__hw) window.__hw.animateCharacter();
+  var m = $('hw-msg');
+  if(m){ m.className = 'fc-hwmsg'; m.textContent = 'Watch the order, then try writing it yourself.'; }
+}
+function hwQuiz(){
+  if(!window.__hw) return;
+  var m = $('hw-msg');
+  if(m){ m.className = 'fc-hwmsg'; m.textContent = 'Now write it — trace each stroke in order.'; }
+  window.__hw.quiz({
+    onComplete: function(){
+      if(m){ m.className = 'fc-hwmsg ok'; m.textContent = 'Correct stroke order.'; }
+    }
+  });
 }
 
 /* ---------- pwa: sw register + version check ---------- */
