@@ -193,6 +193,23 @@ export default {
       status, headers: { 'Content-Type': 'application/json', ...cors },
     });
 
+    // [DIAG] 速率限制探针 v2：验证后删除。检查 env.RL DO 绑定是否真实可用
+    if (url.pathname === '/api/_rlprobe') {
+      const ip = clientIp(req);
+      const hasDO = !!(env && env.RL);
+      const hasKV = !!(env && env.FEEDBACK);
+      let doHit = 'n/a';
+      if (hasDO) {
+        try {
+          const id = env.RL.idFromName('ip:' + ip);
+          const stub = env.RL.get(id);
+          const res = await stub.fetch('https://do/hit?max=40&window=60000');
+          doHit = res.ok ? JSON.stringify(await res.json()) : 'HTTP ' + res.status;
+        } catch (e) { doHit = 'err:' + ((e && e.message) || e); }
+      }
+      return json({ ip, hasDO, hasKV, doHit });
+    }
+
     // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
     const blocked = await guardApi(req, url, json, env);
     if (blocked) return blocked;
