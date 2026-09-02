@@ -297,7 +297,8 @@ export default {
         return new Response(out.body, {
           headers: {
             'Content-Type': out.type,
-            'Cache-Control': 'public, max-age=31536000, immutable',
+            // 音源会随兜底链切换（edge/google/melo/youdao），禁止长缓存，否则用户听不到切换
+            'Cache-Control': 'no-store',
             'X-TTS-Source': out.src,
             ...cors,
           },
