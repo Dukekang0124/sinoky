@@ -30,7 +30,7 @@ ok('速率上限常量 RATE_MAX', /RATE_MAX\s*=\s*40/.test(src));
 
 // 3) handler 入口调用了 guard（OPTIONS 预检之后、路由分发之前）
 const handler = src.slice(src.indexOf('async fetch(req, env)'));
-const callIdx = handler.indexOf('await guardApi(req, url, json)');
+const callIdx = handler.indexOf('await guardApi(req, url, json');
 const ttsIdx = handler.indexOf("/api/tts");
 ok('handler 入口调用 guardApi', callIdx > 0);
 ok('guard 调用在 /api/tts 路由之前（即对所有 api 兜底）', callIdx > 0 && callIdx < ttsIdx);

@@ -105,11 +105,29 @@ const ALLOWED_ORIGINS = ['https://sinoky.pages.dev'];
 // 此数组仅用于放行「非同源但合法的第三方站」（一般留空）。
 const RATE_WINDOW = 60_000;   // 滑动窗口 60 秒
 const RATE_MAX = 40;          // 每 IP 窗口内最多 40 次（正常用户连练 10 句也远不到）
-const RATE_MAP = new Map();   // ip -> { ts, count }
+const RATE_MAP = new Map();   // 兜底：无 KV 绑定时（本地/预览）用 in-isolate 近似计数
 
-function rateOk(ip) {
+async function rateOk(ip, env) {
   const now = Date.now();
-  if (RATE_MAP.size > 2000) {  // 简易防内存泄漏：超阈值时清理过期项
+  // 首选 KV 计数（全局一致）：复用已绑定的 FEEDBACK 命名空间，键前缀 rl: 隔离，
+  // 避免为限流再建一个 KV 绑定（wrangler pages deploy 会忽略 wrangler.toml 的 binding 配置，
+  // 新绑定只能去 Dashboard/API 配，故复用最省事）。计数器带 expirationTtl 自动过期。
+  if (env && env.FEEDBACK) {
+    const key = 'rl:' + ip;
+    let d = { ts: now, count: 0 };
+    try {
+      const raw = await env.FEEDBACK.get(key);
+      if (raw) { const p = JSON.parse(raw); if (now - p.ts <= RATE_WINDOW) d = p; }
+    } catch (e) { /* 忽略读取异常，按新窗口计 */ }
+    d.count++;
+    const allowed = d.count <= RATE_MAX;
+    try {
+      await env.FEEDBACK.put(key, JSON.stringify(d), { expirationTtl: Math.ceil(RATE_WINDOW / 1000) + 5 });
+    } catch (e) { /* 写入失败不阻塞用户，仅失去本次计数 */ }
+    return allowed;
+  }
+  // 无 KV 绑定时兜底（本地 dev）：in-isolate 近似，跨 isolate 不精确
+  if (RATE_MAP.size > 2000) {
     for (const [k, v] of RATE_MAP) if (now - v.ts > RATE_WINDOW) RATE_MAP.delete(k);
   }
   const e = RATE_MAP.get(ip);
@@ -125,7 +143,7 @@ function clientIp(req) {
     || 'unknown';
 }
 
-function guardApi(req, url, json) {
+async function guardApi(req, url, json, env) {
   if (url.pathname === '/health') return null;                                   // 健康检查跳过
   if (url.pathname === '/api/feedback' && req.method === 'GET') return null;     // 读端点已有 token 鉴权
   const origin = req.headers.get('origin');
@@ -135,7 +153,7 @@ function guardApi(req, url, json) {
       return json({ ok: false, error: 'origin not allowed' }, 403);
     }
   }
-  if (!rateOk(clientIp(req))) {
+  if (!rateOk(clientIp(req), env)) {
     return json({ ok: false, error: 'rate limited', retry_after: Math.ceil(RATE_WINDOW / 1000) }, 429);
   }
   return null;
@@ -155,7 +173,7 @@ export default {
     });
 
     // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
-    const blocked = await guardApi(req, url, json);
+    const blocked = await guardApi(req, url, json, env);
     if (blocked) return blocked;
 
     /* /api/tts：中文语音合成，服务端多源串行兜底。
@@ -271,6 +289,7 @@ export default {
         const list = await env.FEEDBACK.list({ limit: 200 });
         const items = [];
         for (const k of list.keys) {
+          if (k.name.startsWith('rl:')) continue; // 跳过速率限制计数器，不污染反馈视图
           const v = await env.FEEDBACK.get(k.name);
           if (v) { try { items.push(JSON.parse(v)); } catch (e) { items.push({ raw: v }); } }
         }
