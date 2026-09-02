@@ -428,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.15';
+var APP_VERSION = '0.3.16';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -538,7 +538,7 @@ var SCENES = [
           { hz:'我不舒服。', py:'Wǒ bù shūfu.', note:'softer — not feeling well', style:'casual' },
           { hz:'我难受。', py:'Wǒ nánshòu.', note:'stronger — feel awful', style:'casual' }
         ]},
-      { en:'Call the police, please.', py:'Kuài bāng wǒ dǎ yāo yāo líng!', hz:'快帮我打110！',
+      { en:'Call the police, please.', py:'Kuài bāng wǒ dǎ yāo yāo líng!', hz:'快帮我打110！', tts:'快帮我打幺幺零！',
         real:[
           { hz:'快报警！', py:'Kuài bàojǐng!', note:'urgent — call the police now', style:'casual' },
           { hz:'请帮我叫警察。', py:'Qǐng bāng wǒ jiào jǐngchá.', note:'ask someone to call', style:'polite' }
@@ -813,9 +813,9 @@ function renderSceneList(){
       '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="this.classList.remove(\'hidden\')" id="zh-'+i+'">'+
       '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div></div>'+
       '<div class="p-hint">'+(isDone?'✓ said out loud':'Tap to reveal · cover &amp; say it 3×')+'</div></div>'+
-      '<button class="spk" onclick="speak(\''+p.hz.replace(/'/g,'')+'\',this)">▶</button></div>'+
+      '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)">▶</button></div>'+
       '<div class="p-actions">'+
-      '<button class="btn ghost speed" onclick="speedSpeak(\''+p.hz.replace(/'/g,'')+'\',this)" title="Tap again for a faster speed">'+SPEEDS[speedIdx].label+'</button>'+
+      '<button class="btn ghost speed" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Tap again for a faster speed">'+SPEEDS[speedIdx].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
       '</div>' + realHtml(i, p) + '<div class="score-result" id="score-'+i+'"></div></div>';
