@@ -111,7 +111,7 @@ async function rateOk(ip, env) {
   const now = Date.now();
   // 首选 KV 计数（全局一致）：复用已绑定的 FEEDBACK 命名空间，键前缀 rl: 隔离，
   // 避免为限流再建一个 KV 绑定（wrangler pages deploy 会忽略 wrangler.toml 的 binding 配置，
-  // 新绑定只能去 Dashboard/API 配，故复用最省事）。计数器带 expirationTtl 自动过期。
+  // 新绑定只能去 Dashboard/API 配，故复用最省事）。过期由读取侧 ts 窗口判定。
   if (env && env.FEEDBACK) {
     const key = 'rl:' + ip;
     let d = { ts: now, count: 0 };
@@ -122,7 +122,9 @@ async function rateOk(ip, env) {
     d.count++;
     const allowed = d.count <= RATE_MAX;
     try {
-      await env.FEEDBACK.put(key, JSON.stringify(d), { expirationTtl: Math.ceil(RATE_WINDOW / 1000) + 5 });
+      // 注意：此处不放 expirationTtl（与 feedback 写保持一致，避免 options 触发异常被吞）。
+      // 过期由读取侧的 now - p.ts <= RATE_WINDOW 判定；rl: 键已被 feedback 读端点跳过。
+      await env.FEEDBACK.put(key, JSON.stringify(d));
     } catch (e) { /* 写入失败不阻塞用户，仅失去本次计数 */ }
     return allowed;
   }
