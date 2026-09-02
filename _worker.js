@@ -92,6 +92,55 @@ function scoreSyllables(targetHz, userHz, py) {
   return { overall, verdict, perSyll, n };
 }
 
+/* ===== v0.3.23 安全加固：公开 API 滥用防护 =====
+   背景：/api/tts、/api/asr 走 CF Workers AI（按调用计费），/api/feedback POST 写 KV，
+   三者此前完全公开、无鉴权、无限流。上线后被脚本/爬虫直接打会刷爆额度产生费用、污染 KV。
+   两层防护（不改前端调用逻辑，刷新即生效）：
+   1) Origin 校验：同源（浏览器通常不发 Origin 头）或同 host → 放行；跨站浏览器调用 → 403。
+      挡掉绝大多数跨站盗用（恶意站点嵌脚本调你的端点）。
+   2) 每 IP 60s 滑动窗口速率限制（in-isolate Map，零额外 KV 成本）：挡脚本直刷突发。
+   注：/health 与带 FEEDBACK_TOKEN 的 feedback 读端点已有独立鉴权，此处跳过。 */
+const ALLOWED_ORIGINS = ['https://sinoky.pages.dev'];
+// 自定义域名（如 https://sinoky.com）上线后，同源访问会由 sameHost 自动放行，无需加进此白名单；
+// 此数组仅用于放行「非同源但合法的第三方站」（一般留空）。
+const RATE_WINDOW = 60_000;   // 滑动窗口 60 秒
+const RATE_MAX = 40;          // 每 IP 窗口内最多 40 次（正常用户连练 10 句也远不到）
+const RATE_MAP = new Map();   // ip -> { ts, count }
+
+function rateOk(ip) {
+  const now = Date.now();
+  if (RATE_MAP.size > 2000) {  // 简易防内存泄漏：超阈值时清理过期项
+    for (const [k, v] of RATE_MAP) if (now - v.ts > RATE_WINDOW) RATE_MAP.delete(k);
+  }
+  const e = RATE_MAP.get(ip);
+  if (!e || now - e.ts > RATE_WINDOW) { RATE_MAP.set(ip, { ts: now, count: 1 }); return true; }
+  e.count++;
+  return e.count <= RATE_MAX;
+}
+
+function clientIp(req) {
+  return (req.cf && req.cf.connecting_ip)
+    || req.headers.get('cf-connecting-ip')
+    || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+    || 'unknown';
+}
+
+function guardApi(req, url, json) {
+  if (url.pathname === '/health') return null;                                   // 健康检查跳过
+  if (url.pathname === '/api/feedback' && req.method === 'GET') return null;     // 读端点已有 token 鉴权
+  const origin = req.headers.get('origin');
+  if (origin) {
+    const sameHost = origin === url.origin;
+    if (!sameHost && !ALLOWED_ORIGINS.includes(origin)) {
+      return json({ ok: false, error: 'origin not allowed' }, 403);
+    }
+  }
+  if (!rateOk(clientIp(req))) {
+    return json({ ok: false, error: 'rate limited', retry_after: Math.ceil(RATE_WINDOW / 1000) }, 429);
+  }
+  return null;
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -104,6 +153,10 @@ export default {
     const json = (obj, status = 200) => new Response(JSON.stringify(obj), {
       status, headers: { 'Content-Type': 'application/json', ...cors },
     });
+
+    // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
+    const blocked = await guardApi(req, url, json);
+    if (blocked) return blocked;
 
     /* /api/tts：中文语音合成，服务端多源串行兜底。
        为什么必须服务端多源：
