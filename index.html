@@ -428,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.18';
+var APP_VERSION = '0.3.19';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -474,12 +474,12 @@ var SCENES = [
   { id:'self-intro', icon:'🙋', title:'Self-intro · Who am I', day1:true,
     desc:'Introduce yourself the Chinese way: your name, where you are from, what you do, and that you are learning. Small talk that turns strangers into people who help you.',
     phrases:[
-      { en:'My name is ___ .', py:'Wǒ jiào ___ .', hz:'我叫____。',
+      { en:'My name is (your name).', py:'Wǒ jiào (nǐ de míngzi).', hz:'我叫（你的名字）。',
         real:[
           { hz:'我叫（你的名字）。', py:'Wǒ jiào (nǐ de míngzi).', note:'fill in your name', style:'casual' },
           { hz:'大家叫我（昵称）。', py:'Dàjiā jiào wǒ (nǐchēng).', note:'what friends call you', style:'casual' }
         ]},
-      { en:"I'm from ___ . (e.g. America)", py:'Wǒ lái zì ___ .', hz:'我来自____。',
+      { en:"I'm from (your country, e.g. America).", py:'Wǒ lái zì (nǐ de guójiā).', hz:'我来自（你的国家）。',
         real:[
           { hz:'我是美国人。', py:'Wǒ shì Měiguó rén.', note:'state your country', style:'casual' },
           { hz:'我老家在美国。', py:'Wǒ lǎojiā zài Měiguó.', note:'where home is', style:'casual' }
