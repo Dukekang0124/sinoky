@@ -51,8 +51,16 @@ ok('rateOk 首选 DO 强一致计数', /env\.RL[\s\S]{0,200}idFromName/.test(src
 // 6) version.json 已升 0.3.25
 const v = JSON.parse(fs.readFileSync('D:/写作工具/知识管理/01-Projects-项目/求职与作品集/03-作品集/Sinoky/sinoky-app/version.json', 'utf8'));
 ok('version.json = 0.3.25', v.version === '0.3.25', 'got ' + v.version);
-// 7) Edge TTS 拟人化主音源已集成（v0.3.25）
-ok('Edge TTS 主音源已集成（TTS.synth 优先于 google/melo/youdao）', /const TTS = \(\(\) =>/.test(src) && /await TTS\.synth\(text, voiceParam\)/.test(src));
+// 7) Edge TTS 拟人化主音源已集成（v0.3.25）：edgeTts 转发到独立 Worker，且位于兜底链最前
+const hasEdge = /async function edgeTts/.test(src);
+const edgeCalledFirst = (() => {
+  const ci = src.indexOf('await edgeTts(text, voiceParam)');
+  const gi = src.indexOf('await google()');
+  const mi = src.indexOf('await melo(');
+  const yi = src.indexOf('await youdao()');
+  return ci > 0 && ci < gi && gi < mi && mi < yi;
+})();
+ok('Edge TTS 主音源已集成（edgeTts 转发独立 Worker，且位于 google/melo/youdao 之前）', hasEdge && edgeCalledFirst);
 
 console.log('\n结果：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

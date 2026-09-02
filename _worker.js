@@ -183,115 +183,27 @@ async function guardApi(req, url, json, env) {
   return null;
 }
 
-/* ===== Edge TTS 模块（微软神经网络语音，拟人化中文主音源，零成本）=====
-   实现依据已验证项目 sx5qn/cloudflare-edge-tts（2026-04 真实 CF 账户跑通）。
-   微软网关要求 Sec-MS-GEC 等鉴权参数，放在 URL query 里、用
-   fetch(url,{headers:Upgrade}) 做 websocket 升级（new WebSocket 无法自定义头）。
-   采用收集完整 buffer 再返回（非流式），失败时整段回退 google/melo/youdao。
-   默认中文女声 XiaoxiaoNeural（最自然）；?voice=zh-CN-YunxiNeural 切男声。 */
-const TTS = (() => {
-  const READALOUD = 'speech.platform.bing.com/consumer/speech/synthesize/readaloud';
-  const TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-  const SYN_URL = 'https://' + READALOUD + '/edge/v1';
-  const CHROME = '143.0.3650.75';
-  const CHROME_MAJ = CHROME.split('.')[0];
-  const GEC_VER = '1-' + CHROME;
-  const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/' + CHROME_MAJ + '.0.0.0 Safari/537.36 Edg/' + CHROME_MAJ + '.0.0.0';
-  const BASE_H = { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9' };
-  const UP_H = Object.assign({}, BASE_H, {
-    'Accept-Encoding': 'gzip, deflate, br, zstd', 'Pragma': 'no-cache',
-    'Cache-Control': 'no-cache', 'Sec-WebSocket-Version': '13', 'Upgrade': 'websocket',
-  });
-  // 协议分隔符必须是 CRLF；用 fromCharCode 避免源码里写控制字符
-  const CRLF = String.fromCharCode(13, 10);
-  const ts = () => new Date().toISOString().replace(/[-:.]/g, '').slice(0, -1);
-  const connId = () => crypto.randomUUID().replace(/-/g, '');
-  const muid = () => {
-    const b = new Uint8Array(16); crypto.getRandomValues(b);
-    return Array.from(b).map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
-  };
-  const secMsGec = async () => {
-    let ticks = Date.now() / 1000 + 11644473600;
-    ticks -= ticks % 300;
-    ticks *= 1e9 / 100;
-    const payload = ticks.toFixed(0) + TOKEN;
-    const dg = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
-    return Array.from(new Uint8Array(dg)).map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
-  };
-  const synthUrl = (g) => {
-    const u = new URL(SYN_URL);
-    u.searchParams.set('TrustedClientToken', TOKEN);
-    u.searchParams.set('Sec-MS-GEC', g);
-    u.searchParams.set('Sec-MS-GEC-Version', GEC_VER);
-    u.searchParams.set('ConnectionId', connId());
-    return u.toString();
-  };
-  const normVoice = (v) => {
-    const t = String(v).trim();
-    const m = /^([a-z]{2,})-([A-Z]{2,})-(.+Neural)$/.exec(t);
-    return m ? 'Microsoft Server Speech Text to Speech Voice (' + m[1] + '-' + m[2] + ', ' + m[3] + ')' : t;
-  };
-  const esc = (sx) => sx.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-  const clean = (sx) => sx.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ');
-  const speechConfig = () =>
-    'X-Timestamp:' + ts() + CRLF + 'Content-Type:application/json; charset=utf-8' + CRLF + 'Path:speech.config' + CRLF + CRLF +
-    '{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"true"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}' + CRLF;
-  const ssml = (rid, voice, text) => {
-    const sp = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>" +
-      "<voice name='" + voice + "'><prosody pitch='+0Hz' rate='+0%' volume='+0%'>" + esc(clean(text)) + '</prosody></voice></speak>';
-    return 'X-RequestId:' + rid + CRLF + 'Content-Type:application/ssml+xml' + CRLF + 'X-Timestamp:' + ts() + 'Z' + CRLF + 'Path:ssml' + CRLF + CRLF + sp;
-  };
-  const parseBinary = (data) => {
-    if (data.length < 2) throw new Error('ws frame short');
-    const hl = (data[0] << 8) | data[1];
-    if (data.length < 2 + hl) throw new Error('ws frame trunc');
-    const headers = {};
-    for (const line of new TextDecoder().decode(data.slice(2, 2 + hl)).split(CRLF)) {
-      const i = line.indexOf(':'); if (i <= 0) continue;
-      headers[line.slice(0, i)] = line.slice(i + 1).trim();
-    }
-    return { headers, body: data.slice(2 + hl) };
-  };
-  return {
-    async synth(text, voiceShort) {
-      const voice = normVoice(voiceShort || 'zh-CN-XiaoxiaoNeural');
-      const g = await secMsGec();
-      const resp = await fetch(synthUrl(g), { headers: Object.assign({}, UP_H, { Cookie: 'muid=' + muid() + ';' }) });
-      if (resp.status !== 101 || !resp.webSocket) throw new Error('edge upgrade ' + resp.status);
-      const ws = resp.webSocket;
-      ws.accept();
-      const chunks = []; let seen = false; let settled = false;
-      await new Promise((resolve, reject) => {
-        const fail = (e) => { if (settled) return; settled = true; try { ws.close(); } catch (_) {} reject(e); };
-        ws.addEventListener('message', (ev) => {
-          if (settled) return;
-          const d = ev.data;
-          if (typeof d === 'string') {
-            const p = (d.split(CRLF).find((l) => l.indexOf('Path:') === 0) || '').slice(5).trim();
-            if (p === 'turn.end') { settled = true; try { ws.close(); } catch (_) {} resolve(); }
-            return;
-          }
-          if (!(d instanceof Uint8Array) && !(d instanceof ArrayBuffer)) return;
-          const bin = d instanceof Uint8Array ? d : new Uint8Array(d);
-          try {
-            const { headers, body } = parseBinary(bin);
-            if (headers.Path === 'audio' && headers['Content-Type'] === 'audio/mpeg' && body.length) {
-              chunks.push(body); seen = true;
-            }
-          } catch (e) { fail(e); }
-        });
-        ws.addEventListener('close', () => { if (settled) return; settled = true; seen ? resolve() : reject(new Error('edge no audio')); });
-        ws.addEventListener('error', () => fail(new Error('edge ws err')));
-      });
-      if (!chunks.length) throw new Error('edge empty');
-      const total = chunks.reduce((a, c) => a + c.length, 0);
-      const out = new Uint8Array(total); let off = 0;
-      for (const c of chunks) { out.set(c, off); off += c.length; }
-      return { body: out, type: 'audio/mpeg', src: 'edge' };
-    },
-  };
-})();
 
+
+/* Edge TTS 拟人化主音源：经独立 Worker sinoky-edge-tts 转发。
+   Pages Functions 不支持出站 websocket 升级（请求会挂死），故把微软 ws 握手封进独立
+   Worker（已部署 kang7108558 账号，仅接受 x-edge-key）。此处仅做普通 HTTPS 转发，
+   失败返回 null 由上层回退 google/melo/youdao。默认 XiaoxiaoNeural 女声，?voice= 切男声。 */
+const EDGE_TTS_URL = 'https://sinoky-edge-tts.kang7108558.workers.dev/tts';
+const EDGE_KEY = 'sk_sinoky_edge_x9K2';
+async function edgeTts(text, voiceShort) {
+  try {
+    const r = await fetch(EDGE_TTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-edge-key': EDGE_KEY },
+      body: JSON.stringify({ text, voice: voiceShort || 'zh-CN-XiaoxiaoNeural' }),
+    });
+    if (!r.ok) return null;
+    const buf = await r.arrayBuffer();
+    if (buf.byteLength < 1000) return null;
+    return { body: new Uint8Array(buf), type: 'audio/mpeg', src: 'edge' };
+  } catch (e) { return null; }
+}
 
 export default {
   async fetch(req, env) {
@@ -309,20 +221,6 @@ export default {
     // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
     const blocked = await guardApi(req, url, json, env);
     if (blocked) return blocked;
-
-    /* [DIAG] 微软网关可达性探针（验证后删除）：普通 HTTPS GET，不碰 websocket。
-       目的：区分「Pages Functions 出站 websocket 升级卡死」与「微软网关从 CF 不可达」。 */
-    if (url.pathname === '/api/_msreach') {
-      const t0 = Date.now();
-      try {
-        const u = 'https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken=6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-        const r = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } });
-        const txt = await r.text();
-        return json({ ok: true, status: r.status, len: txt.length, ms: Date.now() - t0 });
-      } catch (e) {
-        return json({ ok: false, error: String((e && e.message) || e), ms: Date.now() - t0 });
-      }
-    }
 
     /* /api/tts：中文语音合成，服务端多源串行兜底。
        为什么必须服务端多源：
@@ -390,7 +288,7 @@ export default {
 
         // 拟人化主音源：Edge TTS（微软神经网络，零成本）。失败整段回退 google/melo/youdao
         let out = null;
-        try { out = await TTS.synth(text, voiceParam); } catch (e) { out = null; }
+        try { out = await edgeTts(text, voiceParam); } catch (e) { out = null; }
         if (!out) out = await google();
         if (!out) out = await melo(3);
         if (!out) out = await youdao();
