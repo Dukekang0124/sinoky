@@ -237,6 +237,21 @@ export default {
       }
     }
 
+    /* [DIAG] 转发达 Worker 的 /tts-debug，采集微软 WS 真实返回（验证后删除）。 */
+    if (url.pathname === '/api/_edgedebug') {
+      try {
+        const r = await fetch(EDGE_TTS_URL.replace(/\/tts$/, '/tts-debug'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-edge-key': EDGE_KEY },
+          body: JSON.stringify({ text: '你好', voice: 'zh-CN-XiaoxiaoNeural' }),
+        });
+        const j = await r.json();
+        return json(j);
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) });
+      }
+    }
+
     /* /api/tts：中文语音合成，服务端多源串行兜底。
        为什么必须服务端多源：
        - 用户浏览器在国内，Google translate_tts 直连不可达（502）；
