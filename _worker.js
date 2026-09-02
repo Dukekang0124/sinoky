@@ -308,6 +308,17 @@ export default {
     const blocked = await guardApi(req, url, json, env);
     if (blocked) return blocked;
 
+    /* [DIAG] Edge TTS 诊断探针（验证后删除） */
+    if (url.pathname === '/api/_edgetest') {
+      const t0 = Date.now();
+      try {
+        const out = await TTS.synth('你好，世界', 'zh-CN-XiaoxiaoNeural');
+        return json({ ok: true, bytes: out.body.length, ms: Date.now() - t0 });
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e), ms: Date.now() - t0 });
+      }
+    }
+
     /* /api/tts：中文语音合成，服务端多源串行兜底。
        为什么必须服务端多源：
        - 用户浏览器在国内，Google translate_tts 直连不可达（502）；
