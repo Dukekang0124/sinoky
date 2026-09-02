@@ -428,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.16';
+var APP_VERSION = '0.3.17';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -537,6 +537,21 @@ var SCENES = [
         real:[
           { hz:'我不舒服。', py:'Wǒ bù shūfu.', note:'softer — not feeling well', style:'casual' },
           { hz:'我难受。', py:'Wǒ nánshòu.', note:'stronger — feel awful', style:'casual' }
+        ]},
+      { en:'Call an ambulance, please.', py:'Kuài jiào jiùhùchē!', hz:'快叫救护车！',
+        real:[
+          { hz:'叫救护车！', py:'Jiào jiùhùchē!', note:'urgent — now', style:'casual' },
+          { hz:'请帮我叫救护车。', py:'Qǐng bāng wǒ jiào jiùhùchē.', note:'ask someone', style:'polite' }
+        ]},
+      { en:'The emergency number is 120.', py:'Jíjiù diànhuà shì yāo èr líng!', hz:'急救电话是120。', tts:'急救电话是幺二零。',
+        real:[
+          { hz:'打120！', py:'Dǎ yāo èr líng!', tts:'打幺二零！', note:'shortest', style:'casual' },
+          { hz:'请打急救电话120。', py:'Qǐng dǎ jíjiù diànhuà yāo èr líng.', tts:'请打急救电话幺二零。', note:'polite', style:'polite' }
+        ]},
+      { en:'I need to see a doctor.', py:'Wǒ yào kàn yīshēng.', hz:'我要看医生。',
+        real:[
+          { hz:'我得看大夫。', py:'Wǒ děi kàn dàifu.', note:'colloquial', style:'casual' },
+          { hz:'请带我去看医生。', py:'Qǐng dài wǒ qù kàn yīshēng.', note:'ask for help', style:'polite' }
         ]},
       { en:'Call the police, please.', py:'Kuài bāng wǒ dǎ yāo yāo líng!', hz:'快帮我打110！', tts:'快帮我打幺幺零！',
         real:[
@@ -856,7 +871,7 @@ function speedSpeak(text, btn){
 function realHtml(i, p){
   if(!p.real || !p.real.length) return '';
   var items = p.real.map(function(r){
-    return '<div class="real-item" onclick="speak(\'' + r.hz.replace(/'/g,'') + '\',this)">' +
+    return '<div class="real-item" onclick="speak(\'' + (r.tts||r.hz).replace(/'/g,'') + '\',this)">' +
       '<div class="real-main">' +
         '<span class="real-hz">' + r.hz + '</span>' +
         '<span class="real-py">' + r.py + '</span>' +
