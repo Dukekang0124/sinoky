@@ -222,6 +222,21 @@ export default {
     const blocked = await guardApi(req, url, json, env);
     if (blocked) return blocked;
 
+    /* [DIAG] edge-tts Worker 连通性自检（验证后删除）：直接复现 edgeTts 的调用，回报状态/错误。 */
+    if (url.pathname === '/api/_edgecheck') {
+      try {
+        const r = await fetch(EDGE_TTS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-edge-key': EDGE_KEY },
+          body: JSON.stringify({ text: 'hi', voice: 'zh-CN-XiaoxiaoNeural' }),
+        });
+        const buf = await r.arrayBuffer();
+        return json({ ok: r.ok, status: r.status, len: buf.byteLength, ct: r.headers.get('content-type'), url: EDGE_TTS_URL });
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e), url: EDGE_TTS_URL });
+      }
+    }
+
     /* /api/tts：中文语音合成，服务端多源串行兜底。
        为什么必须服务端多源：
        - 用户浏览器在国内，Google translate_tts 直连不可达（502）；
