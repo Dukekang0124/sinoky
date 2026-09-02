@@ -48,9 +48,11 @@ ok('rateOk 调用带 await（防 !Promise 恒真坑）', /await\s+rateOk\s*\(/.t
 // 限流首选 Durable Object（KV 读缓存导致计数失准，勿回退 KV-only）
 ok('rateOk 首选 DO 强一致计数', /env\.RL[\s\S]{0,200}idFromName/.test(src));
 
-// 6) version.json 已升 0.3.23
+// 6) version.json 已升 0.3.25
 const v = JSON.parse(fs.readFileSync('D:/写作工具/知识管理/01-Projects-项目/求职与作品集/03-作品集/Sinoky/sinoky-app/version.json', 'utf8'));
-ok('version.json = 0.3.23', v.version === '0.3.23', 'got ' + v.version);
+ok('version.json = 0.3.25', v.version === '0.3.25', 'got ' + v.version);
+// 7) Edge TTS 拟人化主音源已集成（v0.3.25）
+ok('Edge TTS 主音源已集成（TTS.synth 优先于 google/melo/youdao）', /const TTS = \(\(\) =>/.test(src) && /await TTS\.synth\(text, voiceParam\)/.test(src));
 
 console.log('\n结果：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

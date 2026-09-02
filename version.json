@@ -1,5 +1,5 @@
 {
-  "version": "0.3.24",
+  "version": "0.3.25",
   "updated": "2026-09-02",
-  "note": "v0.3.24 (infra, no app-code change): added robots.txt disallowing AI crawlers/training bots + /api/* for all bots, plus minimal sitemap.xml. Follows v0.3.23 endpoint hardening (Origin allowlist + DO rate limit)."
+  "note": "v0.3.25 (tts, no frontend change): Edge TTS (微软神经网络 XiaoxiaoNeural 女声 / YunxiNeural 男声) 作为中文拟人化主音源，零成本，失败自动回退 google/melo/youdao。配合 v0.3.23 端点防护（Origin+DO 限流），前端无感。"
 }
