@@ -252,7 +252,7 @@ nav button.on{color:var(--red)}
 .day1-step.done .num{background:var(--teal)}
 .day1-step.done .st{color:var(--teal)}
 .day1-cta{margin-top:13px;font-size:13px;font-weight:600;color:var(--teal);text-align:center;display:none}
-/* ---------- voice bar: 音色(女/男) + 引擎(标准/情感) 切换 (v0.3.26) ---------- */
+/* ---------- voice bar: 音色(女/男) + 风格(标准/开心/严肃/温柔) 切换 (v0.3.27) ---------- */
 .voicebar{display:flex;align-items:center;gap:10px;margin:6px 0 2px;flex-wrap:wrap}
 .vb-label{font-size:12px;color:var(--sub)}
 .vb-group{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -290,7 +290,9 @@ nav button.on{color:var(--red)}
       </div>
       <div class="vb-group" id="vb-engine">
         <button type="button" data-e="edge" class="on" onclick="setEngine('edge',this)">标准</button>
-        <button type="button" data-e="cosy" onclick="setEngine('cosy',this)">情感</button>
+        <button type="button" data-e="cosy" data-emotion="happy" onclick="setEmotion('happy',this)">开心</button>
+        <button type="button" data-e="cosy" data-emotion="neutral" onclick="setEmotion('neutral',this)">严肃</button>
+        <button type="button" data-e="cosy" data-emotion="neutral" onclick="setEmotion('neutral',this)">温柔</button>
       </div>
     </div>
     <div id="home-scenes"></div>
@@ -718,16 +720,30 @@ saveState();
    v0.1.1 fix (P1-1): baidu anonymous tts 502s after cold start; overseas
    users often lack zh-CN web voices, so google goes first, baidu second ---------- */
 var ttsRate = 1;
-/* v0.3.26 语音设置：音色(女/男) + 引擎(标准 Edge / 情感 CosyVoice2)，localStorage 持久化 */
+/* v0.3.27 语音设置：音色(女/男) + 风格(标准 Edge / 情感 CosyVoice2 v3-plus 带情绪)。
+   instruct 取值限百炼七情感：neutral/happy/surprised/fearful/angry/sad/disgusted。
+   localStorage 持久化。 */
 var ttsVoice = localStorage.getItem('sinoky_voice') || 'zh-CN-XiaoxiaoNeural';
 var ttsEngine = localStorage.getItem('sinoky_engine') || 'edge';
+var ttsInstruct = localStorage.getItem('sinoky_instruct') || '';
 function setVoice(v, btn){ ttsVoice = v; localStorage.setItem('sinoky_voice', v);
   document.querySelectorAll('#vb-voice button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
-function setEngine(e, btn){ ttsEngine = e; localStorage.setItem('sinoky_engine', e);
+function setEngine(e, btn){ ttsEngine = e; ttsInstruct = '';
+  localStorage.setItem('sinoky_engine', e); localStorage.removeItem('sinoky_instruct');
+  document.querySelectorAll('#vb-engine button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
+function setEmotion(em, btn){ ttsEngine = 'cosy'; ttsInstruct = em;
+  localStorage.setItem('sinoky_engine', 'cosy'); localStorage.setItem('sinoky_instruct', em);
   document.querySelectorAll('#vb-engine button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
 (function initVoiceUI(){
   document.querySelectorAll('#vb-voice button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===ttsVoice); });
-  document.querySelectorAll('#vb-engine button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-e')===ttsEngine); });
+  var engBtns = document.querySelectorAll('#vb-engine button');
+  if(ttsEngine==='cosy'){
+    if(!ttsInstruct){ ttsInstruct='happy'; localStorage.setItem('sinoky_instruct','happy'); }  // 旧状态兼容：默认开心
+    var hit = document.querySelector('#vb-engine button[data-emotion="'+ttsInstruct+'"]');
+    engBtns.forEach(function(b){ b.classList.toggle('on', b===hit); });
+  } else {
+    engBtns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-e')==='edge'); });
+  }
 })();
 /* v0.3.1 音源重构：原顺序 Google → Baidu → WebSpeech 在国内三级全断
    （Google 直连超时 / Baidu 匿名接口频控 502 / 系统常无 zh-CN 语音包）。
@@ -748,6 +764,7 @@ function serverSpeak(text, btn, onFail, opts, attempt){
   opts = opts || {};
   var vVoice = opts.voice || 'zh-CN-XiaoxiaoNeural';
   var vEngine = opts.engine || 'edge';
+  var vInstruct = opts.instruct || '';
   attempt = attempt || 0;
   var aborted = false;
   var timer = setTimeout(function(){ aborted = true; retryOrFail(); }, 8000);
@@ -761,7 +778,8 @@ function serverSpeak(text, btn, onFail, opts, attempt){
   /* 用 GET 而非 POST：文本→音频是确定性映射，Worker 返回 immutable 缓存头，
      同一句第二次点播直接命中浏览器缓存（零延迟、零失败）。 */
   fetch('api/tts?text=' + encodeURIComponent(String(text).slice(0, 300)) +
-    '&voice=' + encodeURIComponent(vVoice) + '&engine=' + encodeURIComponent(vEngine), { method: 'GET' })
+    '&voice=' + encodeURIComponent(vVoice) + '&engine=' + encodeURIComponent(vEngine) +
+    (vInstruct ? '&instruct=' + encodeURIComponent(vInstruct) : ''), { method: 'GET' })
     .then(function(r){
       if(aborted) return null;
       if(!r.ok) throw new Error('tts ' + r.status);
@@ -817,15 +835,16 @@ function youdaoSpeak(text, btn, onFail){
   setTimeout(fail, 6000);   /* 有道偶发无响应，超时兜底降级 */
 }
 function speak(text, btn){
-  /* v0.3.26：把当前音色(voice)与引擎(engine)透传给服务端 /api/tts，
-     engine=edge → 微软神经网络(晓晓女/云希男)；engine=cosy → CosyVoice2 情感语音(待 key)。 */
+  /* v0.3.27：把当前音色(voice)、引擎(engine)、情绪(instruct)透传给服务端 /api/tts。
+     engine=edge → 微软神经网络(晓晓女/云希男)；engine=cosy → CosyVoice2 v3-plus 情感语音
+     （instruct=happy/neutral/... 走百炼情绪指令；缺 key 自动回退标准）。 */
   serverSpeak(text, btn, function(){
     youdaoSpeak(text, btn, function(){
       webSpeak(text, btn, function(){
         toast('Audio unavailable — check your connection');
       });
     });
-  }, { voice: ttsVoice, engine: ttsEngine });
+  }, { voice: ttsVoice, engine: ttsEngine, instruct: ttsInstruct });
 }
 
 /* ---------- helpers ---------- */

@@ -205,9 +205,9 @@ async function edgeTts(text, voiceShort) {
   } catch (e) { return null; }
 }
 
-/* 阶段二 CosyVoice2 情感语音：转发到同一独立 Worker 的 /cosy 路由（百炼 WS 合成）。
-   缺 key 时 /cosy 返回 501 → 收 null；上层兜底链自动回退 Edge，不让用户静音。
-   instruct 透传情绪指令，由前端 ?instruct= 传入（开心/严肃/温柔等）。 */
+/* 阶段二 CosyVoice2 情感语音：转发到独立 Worker 的 /cosy 路由（百炼 cosyvoice-v3-plus HTTP，
+   支持 instruct 情绪指令）。缺 key 时 /cosy 返回 501 → 收 null；上层兜底链自动回退 Edge，
+   不让用户静音。instruct 透传情感值（happy/neutral/...），由前端 ?instruct= 传入。 */
 const COSY_TTS_URL = 'https://sinoky-edge-tts.kang7108558.workers.dev/cosy';
 async function cosyTts(text, voiceShort, instruct) {
   try {
@@ -310,7 +310,7 @@ export default {
           return b.byteLength > 1000 ? { body: b, type: 'audio/mpeg', src: 'youdao' } : null;
         };
 
-        // 音源顺序（v0.3.26）：engine=cosy 先走 CosyVoice2 情感语音，失败回退 Edge；
+        // 音源顺序（v0.3.27）：engine=cosy 先走 CosyVoice2 v3-plus 情感语音（带 instruct 情绪），失败回退 Edge；
         // 否则默认 Edge 主音源（微软神经网络，零成本），再整段回退 google/melo/youdao
         let out = null;
         if (engineParam === 'cosy') {

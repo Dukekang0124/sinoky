@@ -1,5 +1,5 @@
 {
-  "version": "0.3.26",
+  "version": "0.3.27",
   "updated": "2026-09-02",
-  "note": "v0.3.26 (tts + 前端): ①前端加语音切换条——音色(女晓晓/男云希)+引擎(标准Edge/情感CosyVoice2)；②修复 SW/HTTP 长缓存导致切音色后仍播旧音频；③阶段二 CosyVoice2 链路就位（缺百炼 key 时自动回退 Edge）。"
+  "note": "v0.3.27 (tts): CosyVoice2 升级 cosyvoice-v3-plus 支持 instruct 情绪控制——前端四档风格(标准/开心/严肃/温柔→happy/neutral)；严肃与温柔在百炼七情感中均无精确项，暂都映射 neutral。Edge 仍为零成本默认源，cosy 缺 key 自动回退。"
 }
