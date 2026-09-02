@@ -42,6 +42,11 @@ ok('guard 跳过 feedback GET（保留原 token 鉴权）', /url\.pathname\s*===
 // 5) 跨站拦截逻辑：origin 存在且非同host非白名单 → 403
 ok('跨站 origin 返回 403', /origin not allowed['"]?\s*},\s*403/.test(src) || /error:\s*'origin not allowed'.*403/s.test(src));
 ok('速率超限返回 429', /rate limited['"]?.*429/s.test(src));
+// 关键坑（v0.3.23 实录）：rateOk 是 async，guard 里漏 await 的话 !Promise 恒为 false，
+// 429 分支永远不触发。此断言防止回归。
+ok('rateOk 调用带 await（防 !Promise 恒真坑）', /\(\s*await\s+rateOk\s*\(/.test(src));
+// 限流首选 Durable Object（KV 读缓存导致计数失准，勿回退 KV-only）
+ok('rateOk 首选 DO 强一致计数', /env\.RL[\s\S]{0,200}idFromName/.test(src));
 
 // 6) version.json 已升 0.3.23
 const v = JSON.parse(fs.readFileSync('D:/写作工具/知识管理/01-Projects-项目/求职与作品集/03-作品集/Sinoky/sinoky-app/version.json', 'utf8'));

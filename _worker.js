@@ -174,7 +174,9 @@ async function guardApi(req, url, json, env) {
       return json({ ok: false, error: 'origin not allowed' }, 403);
     }
   }
-  if (!rateOk(clientIp(req), env)) {
+  // ⚠️ 必须 await：rateOk 是 async 函数，漏 await 的话拿到的是 Promise（恒真值），
+  // !Promise === false → 429 分支永远不触发（v0.3.23 排查数轮的真实根因，勿改回）。
+  if (!(await rateOk(clientIp(req), env))) {
     return json({ ok: false, error: 'rate limited', retry_after: Math.ceil(RATE_WINDOW / 1000) }, 429);
   }
   return null;
@@ -192,23 +194,6 @@ export default {
     const json = (obj, status = 200) => new Response(JSON.stringify(obj), {
       status, headers: { 'Content-Type': 'application/json', ...cors },
     });
-
-    // [DIAG] 速率限制探针 v2：验证后删除。检查 env.RL DO 绑定是否真实可用
-    if (url.pathname === '/api/_rlprobe') {
-      const ip = clientIp(req);
-      const hasDO = !!(env && env.RL);
-      const hasKV = !!(env && env.FEEDBACK);
-      let doHit = 'n/a';
-      if (hasDO) {
-        try {
-          const id = env.RL.idFromName('ip:' + ip);
-          const stub = env.RL.get(id);
-          const res = await stub.fetch('https://do/hit?max=40&window=60000');
-          doHit = res.ok ? JSON.stringify(await res.json()) : 'HTTP ' + res.status;
-        } catch (e) { doHit = 'err:' + ((e && e.message) || e); }
-      }
-      return json({ ip, hasDO, hasKV, doHit });
-    }
 
     // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
     const blocked = await guardApi(req, url, json, env);
