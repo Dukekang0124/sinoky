@@ -98,20 +98,39 @@ function scoreSyllables(targetHz, userHz, py) {
    两层防护（不改前端调用逻辑，刷新即生效）：
    1) Origin 校验：同源（浏览器通常不发 Origin 头）或同 host → 放行；跨站浏览器调用 → 403。
       挡掉绝大多数跨站盗用（恶意站点嵌脚本调你的端点）。
-   2) 每 IP 60s 滑动窗口速率限制（in-isolate Map，零额外 KV 成本）：挡脚本直刷突发。
-   注：/health 与带 FEEDBACK_TOKEN 的 feedback 读端点已有独立鉴权，此处跳过。 */
+   2) 每 IP 60s 窗口限 40 次：首选 Durable Object 强一致计数（见下），兜底 KV / in-isolate。
+   注：/health 与 feedback 读端点已有独立鉴权，此处跳过。
+
+   ⚠️ 为什么计数必须用 Durable Object（踩坑实录）：
+   - 方案一 in-isolate Map：CF 把请求随机分发到大量 isolate，单 isolate 计数永远到不了阈值。废。
+   - 方案二 KV read-modify-write：KV 读有边缘缓存（~60s）+ 最终一致，突发请求下
+     45 连发实测只累到 10 —— 计数器永远数不准。CF 文档明确不推荐 KV 做限流。废。
+   - 方案三 Durable Object（最终方案）：同一 IP 的请求经 idFromName(ip) 路由到同一
+     DO 实例，SQLite storage 强一致，计数原子准确。Worker sinoky-rl 部署在
+     kang7108558 账号，namespace sinoky-rl_Counter，通过 API 绑到 Pages 项目（binding=RL）。
+     免费额度 100k 请求/天，Sinoky 体量零成本。 */
 const ALLOWED_ORIGINS = ['https://sinoky.pages.dev'];
 // 自定义域名（如 https://sinoky.com）上线后，同源访问会由 sameHost 自动放行，无需加进此白名单；
 // 此数组仅用于放行「非同源但合法的第三方站」（一般留空）。
 const RATE_WINDOW = 60_000;   // 滑动窗口 60 秒
 const RATE_MAX = 40;          // 每 IP 窗口内最多 40 次（正常用户连练 10 句也远不到）
-const RATE_MAP = new Map();   // 兜底：无 KV 绑定时（本地/预览）用 in-isolate 近似计数
+const RATE_MAP = new Map();   // 兜底：无 DO/KV 绑定时（本地 dev）用 in-isolate 近似计数
 
 async function rateOk(ip, env) {
   const now = Date.now();
-  // 首选 KV 计数（全局一致）：复用已绑定的 FEEDBACK 命名空间，键前缀 rl: 隔离，
-  // 避免为限流再建一个 KV 绑定（wrangler pages deploy 会忽略 wrangler.toml 的 binding 配置，
-  // 新绑定只能去 Dashboard/API 配，故复用最省事）。过期由读取侧 ts 窗口判定。
+  // 首选 Durable Object 计数（强一致、全局准确）：binding=RL，namespace sinoky-rl_Counter
+  if (env && env.RL) {
+    try {
+      const id = env.RL.idFromName('ip:' + ip);
+      const stub = env.RL.get(id);
+      const res = await stub.fetch('https://do/hit?max=' + RATE_MAX + '&window=' + RATE_WINDOW);
+      if (res.ok) {
+        const r = await res.json();
+        return !!r.allowed;
+      }
+    } catch (e) { /* DO 调用失败 → 落到 KV/Map 兜底，不阻塞用户 */ }
+  }
+  // 兜底一：KV 计数（读有边缘缓存，突发下计数偏少 —— 仅当 DO 不可用时降级用）
   if (env && env.FEEDBACK) {
     const key = 'rl:' + ip;
     let d = { ts: now, count: 0 };
@@ -128,7 +147,7 @@ async function rateOk(ip, env) {
     } catch (e) { /* 写入失败不阻塞用户，仅失去本次计数 */ }
     return allowed;
   }
-  // 无 KV 绑定时兜底（本地 dev）：in-isolate 近似，跨 isolate 不精确
+  // 兜底二（本地 dev）：in-isolate 近似，跨 isolate 不精确
   if (RATE_MAP.size > 2000) {
     for (const [k, v] of RATE_MAP) if (now - v.ts > RATE_WINDOW) RATE_MAP.delete(k);
   }
@@ -173,15 +192,6 @@ export default {
     const json = (obj, status = 200) => new Response(JSON.stringify(obj), {
       status, headers: { 'Content-Type': 'application/json', ...cors },
     });
-
-    // [DIAG] 速率限制探针：验证后删除。读 rl:<ip> 当前计数 + 客户端 IP + KV 是否绑定
-    if (url.pathname === '/api/_rlprobe') {
-      const ip = clientIp(req);
-      const hasKV = !!(env && env.FEEDBACK);
-      let rl = 'n/a';
-      if (hasKV) { try { const raw = await env.FEEDBACK.get('rl:' + ip); rl = raw || 'null'; } catch (e) { rl = 'err:' + (e && e.message); } }
-      return json({ ip, hasKV, rl });
-    }
 
     // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
     const blocked = await guardApi(req, url, json, env);
