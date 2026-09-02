@@ -1,5 +1,5 @@
 {
-  "version": "0.3.23",
+  "version": "0.3.24",
   "updated": "2026-09-02",
-  "note": "v0.3.23 (backend security patch, no frontend change): _worker.js /api/* now guarded by Origin allowlist (same-host auto-pass) + per-IP 60s/40req sliding-window rate limit. Closes abuse vector on /api/tts /api/asr (billable CF Workers AI) and /api/feedback POST (KV write)."
+  "note": "v0.3.24 (infra, no app-code change): added robots.txt disallowing AI crawlers/training bots + /api/* for all bots, plus minimal sitemap.xml. Follows v0.3.23 endpoint hardening (Origin allowlist + DO rate limit)."
 }
