@@ -179,6 +179,10 @@ async function guardApi(req, url, json, env) {
   if (!(await rateOk(clientIp(req), env))) {
     return json({ ok: false, error: 'rate limited', retry_after: Math.ceil(RATE_WINDOW / 1000) }, 429);
   }
+
+  return null;
+}
+
 /* ===== Edge TTS 模块（微软神经网络语音，拟人化中文主音源，零成本）=====
    实现依据已验证项目 sx5qn/cloudflare-edge-tts（2026-04 真实 CF 账户跑通）。
    微软网关要求 Sec-MS-GEC 等鉴权参数，放在 URL query 里、用
@@ -288,8 +292,6 @@ const TTS = (() => {
   };
 })();
 
-  return null;
-}
 
 export default {
   async fetch(req, env) {
@@ -308,12 +310,15 @@ export default {
     const blocked = await guardApi(req, url, json, env);
     if (blocked) return blocked;
 
-    /* [DIAG] Edge TTS 诊断探针（验证后删除） */
-    if (url.pathname === '/api/_edgetest') {
+    /* [DIAG] 微软网关可达性探针（验证后删除）：普通 HTTPS GET，不碰 websocket。
+       目的：区分「Pages Functions 出站 websocket 升级卡死」与「微软网关从 CF 不可达」。 */
+    if (url.pathname === '/api/_msreach') {
       const t0 = Date.now();
       try {
-        const out = await TTS.synth('你好，世界', 'zh-CN-XiaoxiaoNeural');
-        return json({ ok: true, bytes: out.body.length, ms: Date.now() - t0 });
+        const u = 'https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken=6A5AA1D4EAFF4E9FB37E23D68491D6F4';
+        const r = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } });
+        const txt = await r.text();
+        return json({ ok: true, status: r.status, len: txt.length, ms: Date.now() - t0 });
       } catch (e) {
         return json({ ok: false, error: String((e && e.message) || e), ms: Date.now() - t0 });
       }
