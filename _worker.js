@@ -116,7 +116,7 @@ const RATE_WINDOW = 60_000;   // 滑动窗口 60 秒
 const RATE_MAX = 40;          // 每 IP 窗口内最多 40 次（正常用户连练 10 句也远不到）
 const RATE_MAP = new Map();   // 兜底：无 DO/KV 绑定时（本地 dev）用 in-isolate 近似计数
 
-async function rateOk(ip, env) {
+async function rateOk(ip, env, dbg) {
   const now = Date.now();
   // 首选 Durable Object 计数（强一致、全局准确）：binding=RL，namespace sinoky-rl_Counter
   if (env && env.RL) {
@@ -126,10 +126,12 @@ async function rateOk(ip, env) {
       const res = await stub.fetch('https://do/hit?max=' + RATE_MAX + '&window=' + RATE_WINDOW);
       if (res.ok) {
         const r = await res.json();
+        if (dbg) { dbg.via = 'do'; dbg.count = r.count; dbg.allowed = r.allowed; }
         return !!r.allowed;
       }
-    } catch (e) { /* DO 调用失败 → 落到 KV/Map 兜底，不阻塞用户 */ }
-  }
+      if (dbg) { dbg.via = 'do_http_' + res.status; }
+    } catch (e) { if (dbg) { dbg.via = 'do_err'; dbg.err = String((e && e.message) || e).slice(0, 120); } }
+  } else if (dbg) { dbg.via = 'no_RL'; }
   // 兜底一：KV 计数（读有边缘缓存，突发下计数偏少 —— 仅当 DO 不可用时降级用）
   if (env && env.FEEDBACK) {
     const key = 'rl:' + ip;
@@ -145,6 +147,7 @@ async function rateOk(ip, env) {
       // 过期由读取侧的 now - p.ts <= RATE_WINDOW 判定；rl: 键已被 feedback 读端点跳过。
       await env.FEEDBACK.put(key, JSON.stringify(d));
     } catch (e) { /* 写入失败不阻塞用户，仅失去本次计数 */ }
+    if (dbg) { dbg.kvCount = d.count; dbg.kvAllowed = allowed; }
     return allowed;
   }
   // 兜底二（本地 dev）：in-isolate 近似，跨 isolate 不精确
@@ -176,7 +179,12 @@ async function guardApi(req, url, json, env) {
   }
   // ⚠️ 必须 await：rateOk 是 async 函数，漏 await 的话拿到的是 Promise（恒真值），
   // !Promise === false → 429 分支永远不触发（v0.3.23 排查数轮的真实根因，勿改回）。
-  if (!(await rateOk(clientIp(req), env))) {
+  const dbg = {};
+  const rr = await rateOk(clientIp(req), env, dbg);
+  if (Object.keys(dbg).length) {
+    json.__rlDbg = encodeURIComponent(JSON.stringify(dbg));
+  }
+  if (!rr) {
     return json({ ok: false, error: 'rate limited', retry_after: Math.ceil(RATE_WINDOW / 1000) }, 429);
   }
   return null;
@@ -192,7 +200,9 @@ export default {
     };
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     const json = (obj, status = 200) => new Response(JSON.stringify(obj), {
-      status, headers: { 'Content-Type': 'application/json', ...cors },
+      status, headers: { 'Content-Type': 'application/json', ...cors,
+        // [DIAG] guard 限流调试头（验证后删除）
+        ...(json.__rlDbg ? { 'x-rl-debug': json.__rlDbg } : {}) },
     });
 
     // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
