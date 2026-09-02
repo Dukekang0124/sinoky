@@ -428,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.21';
+var APP_VERSION = '0.3.22';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -448,7 +448,7 @@ var APP_VERSION = '0.3.21';
           —— 标注语体是关键，老外最怕用错场合。 */
 var SCENES = [
   { id:'arrival', icon:'🛬', title:'Arrival · First hours', day1:true,
-    desc:'Your first 4 survival lines: greeting, price, destination, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
+    desc:'Your first few survival lines: greeting, price, destination, restroom, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
     phrases:[
       { en:'Hello! (greeting anyone)', py:'Nǐ hǎo', hz:'你好',
         real:[
@@ -469,6 +469,11 @@ var SCENES = [
         real:[
           { hz:'谢啦！', py:'Xiè la!', note:'light, casual thanks', style:'casual' },
           { hz:'太感谢了！', py:'Tài gǎnxiè le!', note:'when someone really helped', style:'polite' }
+        ]},
+      { en:'Where is the restroom?', py:'Xǐshǒujiān zài nǎlǐ?', hz:'洗手间在哪里？',
+        real:[
+          { hz:'洗手间在哪儿？', py:'Xǐshǒujiān zài nǎr?', note:'哪儿 not 哪里 — spoken', style:'casual' },
+          { hz:'请问厕所在哪？', py:'Qǐngwèn cèsuǒ zài nǎ?', note:'厕所 = toilet, very common', style:'casual' }
         ]}
     ]},
   { id:'self-intro', icon:'🙋', title:'Self-intro · Who am I', day1:true,
@@ -583,10 +588,20 @@ var SCENES = [
           { hz:'我找不到路了。', py:'Wǒ zhǎo bú dào lù le.', note:'can not find the way', style:'casual' },
           { hz:'请问这地方怎么走？', py:'Qǐngwèn zhè dìfang zěnme zǒu?', note:'asking a passer-by', style:'polite' }
         ]},
-      { en:'My phone / wallet is lost.', py:'Wǒ de shǒujī / qiánbāo diū le.', hz:'我的手机 / 钱包丢了。',
+      { en:'My phone is lost.', py:'Wǒ de shǒujī diū le.', hz:'我的手机丢了。',
         real:[
           { hz:'我手机丢了！', py:'Wǒ shǒujī diū le!', note:'panic — phone gone', style:'casual' },
+          { hz:'我手机不见了。', py:'Wǒ shǒujī bú jiàn le.', note:'phone missing', style:'casual' }
+        ]},
+      { en:'My wallet is lost.', py:'Wǒ de qiánbāo diū le.', hz:'我的钱包丢了。',
+        real:[
+          { hz:'我钱包丢了！', py:'Wǒ qiánbāo diū le!', note:'panic — wallet gone', style:'casual' },
           { hz:'我钱包不见了。', py:'Wǒ qiánbāo bú jiàn le.', note:'wallet missing', style:'casual' }
+        ]},
+      { en:"I'm allergic to (peanuts).", py:'Wǒ duì (huāshēng) guòmǐn.', hz:'我对（花生）过敏。',
+        real:[
+          { hz:'我花生过敏！', py:'Wǒ huāshēng guòmǐn!', note:'urgent — state your allergen', style:'casual' },
+          { hz:'我对（海鲜）过敏。', py:'Wǒ duì (hǎixiān) guòmǐn.', note:'swap in your allergen', style:'casual' }
         ]},
       { en:"I don't speak Chinese.", py:'Wǒ bú huì shuō Zhōngwén.', hz:'我不会说中文。',
         real:[
@@ -616,6 +631,16 @@ var SCENES = [
         real:[
           { hz:'结账。', py:'Jiézhàng.', note:'short and direct', style:'casual' },
           { hz:'老板，买单！', py:'Lǎobǎn, mǎidān!', note:'calling the owner in a small place', style:'casual' }
+        ]},
+      { en:'Water, please.', py:'Qǐng gěi wǒ shuǐ.', hz:'请给我水。',
+        real:[
+          { hz:'来杯水。', py:'Lái bēi shuǐ.', note:'what you actually say when ordering', style:'casual' },
+          { hz:'有水吗？', py:'Yǒu shuǐ ma?', note:'do you have water?', style:'casual' }
+        ]},
+      { en:"I don't eat meat.", py:'Wǒ bù chī ròu.', hz:'我不吃肉。',
+        real:[
+          { hz:'我吃素。', py:'Wǒ chī sù.', note:'I am vegetarian', style:'casual' },
+          { hz:'我不大吃肉。', py:'Wǒ bú dà chī ròu.', note:'I don’t eat much meat', style:'casual' }
         ]}
     ]},
   { id:'meeting', icon:'💼', title:'Work · Meetings',
