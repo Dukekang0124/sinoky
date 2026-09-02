@@ -428,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.17';
+var APP_VERSION = '0.3.18';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -557,6 +557,11 @@ var SCENES = [
         real:[
           { hz:'快报警！', py:'Kuài bàojǐng!', note:'urgent — call the police now', style:'casual' },
           { hz:'请帮我叫警察。', py:'Qǐng bāng wǒ jiào jǐngchá.', note:'ask someone to call', style:'polite' }
+        ]},
+      { en:'There is a fire! Call 119!', py:'Zháohuǒ le! Kuài dǎ yāo yāo jiǔ!', hz:'着火了！快打119！', tts:'着火了！快打幺幺九！',
+        real:[
+          { hz:'着火啦！', py:'Zháohuǒ la!', note:'panic — fire!', style:'casual' },
+          { hz:'快打火警119！', py:'Kuài dǎ huǒjǐng yāo yāo jiǔ!', tts:'快打火警幺幺九！', note:'fire brigade number', style:'casual' }
         ]},
       { en:"I'm lost.", py:'Wǒ mí lù le.', hz:'我迷路了。',
         real:[
