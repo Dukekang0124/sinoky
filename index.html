@@ -428,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.20';
+var APP_VERSION = '0.3.21';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -484,10 +484,15 @@ var SCENES = [
           { hz:'我是美国人。', py:'Wǒ shì Měiguó rén.', note:'state your country', style:'casual' },
           { hz:'我老家在美国。', py:'Wǒ lǎojiā zài Měiguó.', note:'where home is', style:'casual' }
         ]},
-      { en:"I'm a student / teacher.", py:'Wǒ shì xuésheng.', hz:'我是学生。',
+      { en:"I'm a student.", py:'Wǒ shì xuésheng.', hz:'我是学生。',
         real:[
           { hz:'我还在念书。', py:'Wǒ hái zài niànshū.', note:'still studying', style:'casual' },
-          { hz:'我上班。', py:'Wǒ shàngbān.', note:'I have a job', style:'casual' }
+          { hz:'我是个学生。', py:'Wǒ shì ge xuésheng.', note:'I am a student', style:'casual' }
+        ]},
+      { en:"I'm a teacher.", py:'Wǒ shì lǎoshī.', hz:'我是老师。',
+        real:[
+          { hz:'我教书。', py:'Wǒ jiāo shū.', note:'I teach', style:'casual' },
+          { hz:'我是个老师。', py:'Wǒ shì ge lǎoshī.', note:'I am a teacher', style:'casual' }
         ]},
       { en:"I'm learning Chinese.", py:'Wǒ zài xué Zhōngwén.', hz:'我在学中文。',
         real:[
