@@ -30,7 +30,7 @@ const { chromium } = require('playwright');
   await p.evaluate(() => { document.querySelectorAll('.day1-step')[1].click(); });
   await p.waitForTimeout(800);
   const sc = await p.evaluate(() => ({
-    sceneVisible: document.getElementById('scene').classList.contains('on'),
+    sceneVisible: document.getElementById('v-scene').classList.contains('on'),
     phrases: document.querySelectorAll('#sc-list .phrase').length,
     title: document.getElementById('sc-title').textContent
   }));
