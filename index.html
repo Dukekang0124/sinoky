@@ -238,6 +238,20 @@ nav button.on{color:var(--red)}
 .s-formal{background:rgba(83,74,183,.22);color:#AFA9EC}
 .s-slang{background:rgba(216,90,48,.18);color:#F0997B}
 .real-note{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.45}
+/* Day 1 Survival Pack 引导卡（v0.3.15 / I-013 P1）：把"场景平铺"改成"顺序通关清单"，
+   零基础用户不用自己挑场景，按 arrival→self-intro→emergency 三步走 */
+.day1{background:linear-gradient(135deg,rgba(230,57,70,.10),rgba(127,179,176,.10));border-color:rgba(230,57,70,.30)}
+.day1-steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.day1-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;
+  font-size:14px;font-weight:600;color:var(--fg);cursor:pointer}
+.day1-step .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.day1-step .st{margin-left:auto;font-size:11px;color:var(--sub);font-weight:500}
+.day1-step.done{background:rgba(127,179,176,.12);border-color:rgba(127,179,176,.35)}
+.day1-step.done .num{background:var(--teal)}
+.day1-step.done .st{color:var(--teal)}
+.day1-cta{margin-top:13px;font-size:13px;font-weight:600;color:var(--teal);text-align:center;display:none}
 </style>
 </head>
 <body>
@@ -414,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.14';
+var APP_VERSION = '0.3.15';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -433,7 +447,7 @@ var APP_VERSION = '0.3.14';
           style: casual 随意 / polite 礼貌 / formal 正式 / slang 俚语
           —— 标注语体是关键，老外最怕用错场合。 */
 var SCENES = [
-  { id:'arrival', icon:'🛬', title:'Arrival · First hours', 
+  { id:'arrival', icon:'🛬', title:'Arrival · First hours', day1:true,
     desc:'Your first 4 survival lines: greeting, price, destination, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
     phrases:[
       { en:'Hello! (greeting anyone)', py:'Nǐ hǎo', hz:'你好',
@@ -457,7 +471,51 @@ var SCENES = [
           { hz:'太感谢了！', py:'Tài gǎnxiè le!', note:'when someone really helped', style:'polite' }
         ]}
     ]},
-  { id:'emergency', icon:'🚨', title:'Emergency · Survival',
+  { id:'self-intro', icon:'🙋', title:'Self-intro · Who am I', day1:true,
+    desc:'Introduce yourself the Chinese way: your name, where you are from, what you do, and that you are learning. Small talk that turns strangers into people who help you.',
+    phrases:[
+      { en:'My name is ___ .', py:'Wǒ jiào ___ .', hz:'我叫____。',
+        real:[
+          { hz:'我叫（你的名字）。', py:'Wǒ jiào (nǐ de míngzi).', note:'fill in your name', style:'casual' },
+          { hz:'大家叫我（昵称）。', py:'Dàjiā jiào wǒ (nǐchēng).', note:'what friends call you', style:'casual' }
+        ]},
+      { en:"I'm from ___ . (e.g. America)", py:'Wǒ lái zì ___ .', hz:'我来自____。',
+        real:[
+          { hz:'我是美国人。', py:'Wǒ shì Měiguó rén.', note:'state your country', style:'casual' },
+          { hz:'我老家在美国。', py:'Wǒ lǎojiā zài Měiguó.', note:'where home is', style:'casual' }
+        ]},
+      { en:"I'm a student / teacher.", py:'Wǒ shì xuésheng.', hz:'我是学生。',
+        real:[
+          { hz:'我还在念书。', py:'Wǒ hái zài niànshū.', note:'still studying', style:'casual' },
+          { hz:'我上班。', py:'Wǒ shàngbān.', note:'I have a job', style:'casual' }
+        ]},
+      { en:"I'm learning Chinese.", py:'Wǒ zài xué Zhōngwén.', hz:'我在学中文。',
+        real:[
+          { hz:'我在学汉语。', py:'Wǒ zài xué Hànyǔ.', note:'汉语 = Chinese language', style:'casual' },
+          { hz:'我刚开始学中文。', py:'Wǒ gāng kāishǐ xué Zhōngwén.', note:'just started', style:'casual' }
+        ]},
+      { en:'Nice to meet you.', py:'Hěn gāoxìng rènshi nǐ.', hz:'很高兴认识你。',
+        real:[
+          { hz:'幸会幸会。', py:'Xìnghuì xìnhuì.', note:'polite set phrase', style:'formal' },
+          { hz:'认识你很高兴。', py:'Rènshi nǐ hěn gāoxìng.', note:'warm, common', style:'casual' }
+        ]},
+      { en:'Do you speak English?', py:'Nǐ huì shuō Yīngyǔ ma?', hz:'你会说英语吗？',
+        real:[
+          { hz:'你会英文吗？', py:'Nǐ huì Yīngwén ma?', note:'英文 = English (casual)', style:'casual' },
+          { hz:'能不能说英文？', py:'Néng bu néng shuō Yīngwén?', note:'can we use English?', style:'polite' }
+        ]},
+      { en:"What's your name?", py:'Nǐ jiào shénme míngzi?', hz:'你叫什么名字？',
+        real:[
+          { hz:'你叫啥？', py:'Nǐ jiào shá?', note:'very casual', style:'casual' },
+          { hz:'怎么称呼你？', py:'Zěnme chēnghu nǐ?', note:'polite — what should I call you', style:'polite' }
+        ]},
+      { en:'Where are you from?', py:'Nǐ lái zì nǎlǐ?', hz:'你来自哪里？',
+        real:[
+          { hz:'你是哪国人？', py:'Nǐ shì nǎ guó rén?', note:'what country are you from', style:'casual' },
+          { hz:'你老家哪儿的？', py:'Nǐ lǎojiā nǎr de?', note:'where is home', style:'casual' }
+        ]}
+    ]},
+  { id:'emergency', icon:'🚨', title:'Emergency · Survival', day1:true,
     desc:'Life-saving lines for when something goes wrong: ask for help, find a hospital, say you are sick, call the police, get unlost. Slow it down, then say it like your life depends on it — because sometimes it does.',
     phrases:[
       { en:'Help!', py:'Bāngmáng!', hz:'帮忙！',
@@ -705,6 +763,22 @@ function renderHome(){
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
   $('st-phrases').textContent = said;
   $('st-tone').textContent = S.tone.total ? Math.round(100*S.tone.right/S.tone.total)+'%' : '—';
+  /* v0.3.15 Day 1 Survival Pack 顺序引导卡（I-013 P1）：把平铺场景改成通关清单 */
+  var day1 = SCENES.filter(function(s){ return s.day1; });
+  var day1Done = day1.filter(function(s){ return (S.phrases[s.id]||[]).length === s.phrases.length; }).length;
+  var day1All = day1Done === day1.length;
+  var d1 = '<div class="card day1"><div class="top"><h2>📅 Day 1 Survival Pack</h2>'+
+    '<span class="badge '+(day1All?'teal':'')+'">'+(day1All?'DONE ✓':day1Done+'/'+day1.length)+'</span></div>'+
+    '<p class="desc">Your first day in China. Do these 3 in order — by tonight you can survive and make friends. Tap a step to start.</p>'+
+    '<div class="day1-steps">';
+  day1.forEach(function(s,i){
+    var sd = (S.phrases[s.id]||[]).length === s.phrases.length;
+    d1 += '<button class="day1-step'+(sd?' done':'')+'" onclick="openScene(\''+s.id+'\')">'+
+      '<span class="num">'+(i+1)+'</span><span>'+s.icon+' '+s.title+'</span>'+
+      '<span class="st">'+(sd?'✓ done':'Start')+'</span></button>';
+  });
+  d1 += '</div><div class="day1-cta" style="display:'+(day1All?'block':'none')+'">🎉 Day 1 complete! You can survive in China.</div></div>';
+
   var html = '';
   SCENES.forEach(function(sc){
     var doneN = (S.phrases[sc.id]||[]).length;
@@ -716,7 +790,7 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = html;
+  $('home-scenes').innerHTML = d1 + html;
 }
 
 /* ---------- scene flow ---------- */
