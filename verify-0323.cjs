@@ -44,7 +44,7 @@ ok('跨站 origin 返回 403', /origin not allowed['"]?\s*},\s*403/.test(src) ||
 ok('速率超限返回 429', /rate limited['"]?.*429/s.test(src));
 // 关键坑（v0.3.23 实录）：rateOk 是 async，guard 里漏 await 的话 !Promise 恒为 false，
 // 429 分支永远不触发。此断言防止回归。
-ok('rateOk 调用带 await（防 !Promise 恒真坑）', /\(\s*await\s+rateOk\s*\(/.test(src));
+ok('rateOk 调用带 await（防 !Promise 恒真坑）', /await\s+rateOk\s*\(/.test(src));
 // 限流首选 Durable Object（KV 读缓存导致计数失准，勿回退 KV-only）
 ok('rateOk 首选 DO 强一致计数', /env\.RL[\s\S]{0,200}idFromName/.test(src));
 
