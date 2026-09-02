@@ -428,7 +428,7 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.19';
+var APP_VERSION = '0.3.20';
 /* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
@@ -513,6 +513,16 @@ var SCENES = [
         real:[
           { hz:'你是哪国人？', py:'Nǐ shì nǎ guó rén?', note:'what country are you from', style:'casual' },
           { hz:'你老家哪儿的？', py:'Nǐ lǎojiā nǎr de?', note:'where is home', style:'casual' }
+        ]},
+      { en:'Please speak slowly.', py:'Qǐng shuō màn yìdiǎn.', hz:'请说慢一点。',
+        real:[
+          { hz:'能麻烦您说慢一点吗？', py:'Néng máfan nín shuō màn yìdiǎn ma?', note:'polite — to elders or strangers', style:'polite' },
+          { hz:'慢点说！', py:'Màn diǎn shuō!', note:'casual — to friends', style:'casual' }
+        ]},
+      { en:'Can you say that again?', py:'Néng zài shuō yí biàn ma?', hz:'能再说一遍吗？',
+        real:[
+          { hz:'啥？再说一次！', py:'Shá? Zài shuō yí cì!', note:'very casual — did not catch it', style:'casual' },
+          { hz:'不好意思，请再说一遍。', py:'Bù hǎoyìsi, qǐng zài shuō yí biàn.', note:'polite — sorry, repeat', style:'polite' }
         ]}
     ]},
   { id:'emergency', icon:'🚨', title:'Emergency · Survival', day1:true,
