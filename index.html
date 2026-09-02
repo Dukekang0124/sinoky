@@ -252,6 +252,13 @@ nav button.on{color:var(--red)}
 .day1-step.done .num{background:var(--teal)}
 .day1-step.done .st{color:var(--teal)}
 .day1-cta{margin-top:13px;font-size:13px;font-weight:600;color:var(--teal);text-align:center;display:none}
+/* ---------- voice bar: 音色(女/男) + 引擎(标准/情感) 切换 (v0.3.26) ---------- */
+.voicebar{display:flex;align-items:center;gap:10px;margin:6px 0 2px;flex-wrap:wrap}
+.vb-label{font-size:12px;color:var(--sub)}
+.vb-group{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.vb-group button{background:none;border:none;color:var(--sub);font-size:12.5px;padding:7px 13px;cursor:pointer;font-family:inherit;transition:background .15s}
+.vb-group button.on{background:var(--red);color:#fff}
+.vb-group button:active{transform:scale(.96)}
 </style>
 </head>
 <body>
@@ -274,6 +281,17 @@ nav button.on{color:var(--red)}
       <div class="stat"><div class="n" id="st-streak">0</div><div class="l">🔥 Day streak</div></div>
       <div class="stat"><div class="n" id="st-phrases">0</div><div class="l">🗣️ Phrases said</div></div>
       <div class="stat"><div class="n" id="st-tone">—</div><div class="l">🎯 Tone accuracy</div></div>
+    </div>
+    <div class="voicebar" id="voicebar">
+      <span class="vb-label">🔊 语音</span>
+      <div class="vb-group" id="vb-voice">
+        <button type="button" data-v="zh-CN-XiaoxiaoNeural" class="on" onclick="setVoice('zh-CN-XiaoxiaoNeural',this)">女声</button>
+        <button type="button" data-v="zh-CN-YunxiNeural" onclick="setVoice('zh-CN-YunxiNeural',this)">男声</button>
+      </div>
+      <div class="vb-group" id="vb-engine">
+        <button type="button" data-e="edge" class="on" onclick="setEngine('edge',this)">标准</button>
+        <button type="button" data-e="cosy" onclick="setEngine('cosy',this)">情感</button>
+      </div>
     </div>
     <div id="home-scenes"></div>
     <div class="card">
@@ -700,6 +718,17 @@ saveState();
    v0.1.1 fix (P1-1): baidu anonymous tts 502s after cold start; overseas
    users often lack zh-CN web voices, so google goes first, baidu second ---------- */
 var ttsRate = 1;
+/* v0.3.26 语音设置：音色(女/男) + 引擎(标准 Edge / 情感 CosyVoice2)，localStorage 持久化 */
+var ttsVoice = localStorage.getItem('sinoky_voice') || 'zh-CN-XiaoxiaoNeural';
+var ttsEngine = localStorage.getItem('sinoky_engine') || 'edge';
+function setVoice(v, btn){ ttsVoice = v; localStorage.setItem('sinoky_voice', v);
+  document.querySelectorAll('#vb-voice button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
+function setEngine(e, btn){ ttsEngine = e; localStorage.setItem('sinoky_engine', e);
+  document.querySelectorAll('#vb-engine button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
+(function initVoiceUI(){
+  document.querySelectorAll('#vb-voice button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===ttsVoice); });
+  document.querySelectorAll('#vb-engine button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-e')===ttsEngine); });
+})();
 /* v0.3.1 音源重构：原顺序 Google → Baidu → WebSpeech 在国内三级全断
    （Google 直连超时 / Baidu 匿名接口频控 502 / 系统常无 zh-CN 语音包）。
    新顺序：①同源服务端 melotts（Cloudflare，国内外均可达）②本地 WebSpeech
@@ -715,18 +744,24 @@ function playBlob(b, btn, onFail){
   a.onerror = function(){ if(btn) btn.classList.remove('playing'); URL.revokeObjectURL(url); onFail && onFail(); };
   a.play().catch(function(){ if(btn) btn.classList.remove('playing'); onFail && onFail(); });
 }
-function serverSpeak(text, btn, onFail, attempt){
+function serverSpeak(text, btn, onFail, opts, attempt){
+  opts = opts || {};
+  var vVoice = opts.voice || 'zh-CN-XiaoxiaoNeural';
+  var vEngine = opts.engine || 'edge';
   attempt = attempt || 0;
   var aborted = false;
   var timer = setTimeout(function(){ aborted = true; retryOrFail(); }, 8000);
   function retryOrFail(){
     clearTimeout(timer);
-    if(attempt < 1){ setTimeout(function(){ serverSpeak(text, btn, onFail, attempt + 1); }, 400); return; }
+    if(attempt < 1){ setTimeout(function(){ serverSpeak(text, btn, onFail, opts, attempt + 1); }, 400); return; }
+    /* 情感引擎(CosyVoice2)不可用时，自动回退标准 Edge，不让用户静音 */
+    if(vEngine === 'cosy'){ serverSpeak(text, btn, onFail, { voice: vVoice, engine: 'edge' }); return; }
     onFail && onFail();
   }
   /* 用 GET 而非 POST：文本→音频是确定性映射，Worker 返回 immutable 缓存头，
      同一句第二次点播直接命中浏览器缓存（零延迟、零失败）。 */
-  fetch('api/tts?text=' + encodeURIComponent(String(text).slice(0, 300)), { method: 'GET' })
+  fetch('api/tts?text=' + encodeURIComponent(String(text).slice(0, 300)) +
+    '&voice=' + encodeURIComponent(vVoice) + '&engine=' + encodeURIComponent(vEngine), { method: 'GET' })
     .then(function(r){
       if(aborted) return null;
       if(!r.ok) throw new Error('tts ' + r.status);
@@ -782,20 +817,15 @@ function youdaoSpeak(text, btn, onFail){
   setTimeout(fail, 6000);   /* 有道偶发无响应，超时兜底降级 */
 }
 function speak(text, btn){
-  /* 音源顺序（v0.3.2 重构，全部经实测）：
-     ① /api/tts —— Worker 服务端多源（Google → melotts → 有道），实测 7/7 稳定。
-        关键：用户浏览器在国内连不上 Google，但 Cloudflare Worker 在境外能连，
-        由 Worker 代理 Google translate_tts 后把音频回传，稳定性远超浏览器直连。
-     ② 有道 dictvoice 直连 —— Worker 不可达时的本地兜底（约 70% 成功率）。
-     ③ WebSpeech —— 多数系统无 zh-CN 语音包，成功率最低，仅作末位。
-     注：已移除 Google/百度浏览器直连 —— 前者国内 502，后者匿名接口频控 502。 */
+  /* v0.3.26：把当前音色(voice)与引擎(engine)透传给服务端 /api/tts，
+     engine=edge → 微软神经网络(晓晓女/云希男)；engine=cosy → CosyVoice2 情感语音(待 key)。 */
   serverSpeak(text, btn, function(){
     youdaoSpeak(text, btn, function(){
       webSpeak(text, btn, function(){
         toast('Audio unavailable — check your connection');
       });
     });
-  });
+  }, { voice: ttsVoice, engine: ttsEngine });
 }
 
 /* ---------- helpers ---------- */

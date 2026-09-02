@@ -205,6 +205,24 @@ async function edgeTts(text, voiceShort) {
   } catch (e) { return null; }
 }
 
+/* 阶段二 CosyVoice2 情感语音：转发到同一独立 Worker 的 /cosy 路由（百炼 WS 合成）。
+   缺 key 时 /cosy 返回 501 → 收 null；上层兜底链自动回退 Edge，不让用户静音。
+   instruct 透传情绪指令，由前端 ?instruct= 传入（开心/严肃/温柔等）。 */
+const COSY_TTS_URL = 'https://sinoky-edge-tts.kang7108558.workers.dev/cosy';
+async function cosyTts(text, voiceShort, instruct) {
+  try {
+    const r = await fetch(COSY_TTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-edge-key': EDGE_KEY },
+      body: JSON.stringify({ text, voice: voiceShort || 'zh-CN-XiaoxiaoNeural', instruct: instruct || '' }),
+    });
+    if (!r.ok) return null;
+    const buf = await r.arrayBuffer();
+    if (buf.byteLength < 1000) return null;
+    return { body: new Uint8Array(buf), type: 'audio/mpeg', src: 'cosy' };
+  } catch (e) { return null; }
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -236,13 +254,19 @@ export default {
       try {
         let text = '';
         let voiceParam = '';
+        let engineParam = '';
+        let instructParam = '';
         if (req.method === 'GET') {
           text = url.searchParams.get('text') || '';
           voiceParam = url.searchParams.get('voice') || '';
+          engineParam = url.searchParams.get('engine') || '';
+          instructParam = url.searchParams.get('instruct') || '';
         } else {
           const b = await req.json().catch(() => ({}));
           text = b.text || '';
           voiceParam = b.voice || '';
+          engineParam = b.engine || '';
+          instructParam = b.instruct || '';
         }
         text = String(text).trim().slice(0, 300);
         if (!text) return json({ ok: false, error: 'text required' }, 400);
@@ -286,9 +310,13 @@ export default {
           return b.byteLength > 1000 ? { body: b, type: 'audio/mpeg', src: 'youdao' } : null;
         };
 
-        // 拟人化主音源：Edge TTS（微软神经网络，零成本）。失败整段回退 google/melo/youdao
+        // 音源顺序（v0.3.26）：engine=cosy 先走 CosyVoice2 情感语音，失败回退 Edge；
+        // 否则默认 Edge 主音源（微软神经网络，零成本），再整段回退 google/melo/youdao
         let out = null;
-        try { out = await edgeTts(text, voiceParam); } catch (e) { out = null; }
+        if (engineParam === 'cosy') {
+          try { out = await cosyTts(text, voiceParam, instructParam); } catch (e) { out = null; }
+        }
+        if (!out) { try { out = await edgeTts(text, voiceParam); } catch (e) { out = null; } }
         if (!out) out = await google();
         if (!out) out = await melo(3);
         if (!out) out = await youdao();

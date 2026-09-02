@@ -32,6 +32,9 @@ self.addEventListener('fetch', function (e) {
   /* v0.1.1 fix (P2): cross-origin (TTS audio etc.) passes straight through —
      never cached, never polluting the shell cache */
   if (url.origin !== location.origin) return;
+  /* v0.3.26: /api/tts 音频动态（音源随兜底链切换），绝不同进 SW Cache Storage，
+     否则切音色/换引擎后仍可能播到旧音频。network-only，不缓存。 */
+  if (url.pathname.indexOf('/api/tts') > -1) return;
   /* version.json: network always, cache-busting query must not create cache entries */
   if (url.pathname.indexOf('version.json') > -1) {
     e.respondWith(
