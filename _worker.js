@@ -205,9 +205,10 @@ async function edgeTts(text, voiceShort) {
   } catch (e) { return null; }
 }
 
-/* 阶段二 CosyVoice2 情感语音：转发到独立 Worker 的 /cosy 路由（百炼 cosyvoice-v3-plus HTTP，
-   支持 instruct 情绪指令）。缺 key 时 /cosy 返回 501 → 收 null；上层兜底链自动回退 Edge，
-   不让用户静音。instruct 透传情感值（happy/neutral/...），由前端 ?instruct= 传入。 */
+/* 阶段二 CosyVoice2 情感语音：转发到独立 Worker 的 /cosy 路由（百炼 HTTP）。
+   四档映射在 Worker 内完成：开心→v3-plus+happy；严肃→v3-plus+sad(≈严肃)；
+   温柔→v2+龙小淳/龙湾天生音色；标准档走 Edge 不进此路由。缺 key 时 /cosy 返 501 →
+   收 null；上层兜底链自动回退 Edge，不让用户静音。instruct 透传情感档(happy/serious/gentle)。 */
 const COSY_TTS_URL = 'https://sinoky-edge-tts.kang7108558.workers.dev/cosy';
 async function cosyTts(text, voiceShort, instruct) {
   try {
@@ -221,6 +222,112 @@ async function cosyTts(text, voiceShort, instruct) {
     if (buf.byteLength < 1000) return null;
     return { body: new Uint8Array(buf), type: 'audio/mpeg', src: 'cosy' };
   } catch (e) { return null; }
+}
+
+/* ===== v0.3.33 M2 埋点（P0）：匿名使用统计 =====
+   目的：让 M2 判停线（D7留存≥15% / 北极星每周盲说句数≥10 / 首日完成率≥60% / 声调使用率≥40%）
+         真的能被测量，而不是靠感觉。此前全库零埋点，这四个数一个都拿不到。
+   原则：① 全匿名，只有设备 uid，无 PII；② 零新增请求——统计寄生在已有的 /api/profile 同步里；
+        ③ 幂等：用 max/最新值语义，重复上报不会重复计数；④ 统计失败绝不影响进度保存。
+   存储：KV PROFILES 的 s:<uid>（与进度 p:<uid> 分开）。 */
+async function recordStat(env, uid, st) {
+  if (!env.PROFILES || !uid || !st) return;
+  const key = 's:' + uid;
+  let s = { first: 0, last: 0, days: [], phrases: 0, tone: 0, day1Done: false, scenes: {} };
+  try {
+    const raw = await env.PROFILES.get(key);
+    if (raw) { try { s = Object.assign(s, JSON.parse(raw)); } catch (e) { /* 脏数据则重建 */ } }
+  } catch (e) { /* 读失败用默认值 */ }
+
+  const now = Date.now();
+  const today = new Date(now).toISOString().slice(0, 10);
+  if (!s.first) s.first = now;
+  s.last = now;
+  if (!Array.isArray(s.days)) s.days = [];
+  if (s.days.indexOf(today) < 0) s.days.push(today);
+
+  // 幂等：累计量取 max（用户换设备/重复上报不会虚增）
+  const ph = Math.max(0, Number(st.phrases) || 0);
+  const tn = Math.max(0, Number(st.tone) || 0);
+  if (ph > (s.phrases || 0)) s.phrases = ph;
+  if (tn > (s.tone || 0)) s.tone = tn;
+  if (st.day1Done) s.day1Done = true;
+  // 首次开口时间：只在 phrases 首次 >0 时记录（用于"首日完成首次挑战率"）
+  if (ph > 0 && !s.firstPhraseAt) s.firstPhraseAt = now;
+  if (st.scenes && typeof st.scenes === 'object') {
+    s.scenes = s.scenes || {};
+    for (const k in st.scenes) {
+      const v = Math.max(0, Number(st.scenes[k]) || 0);
+      if (v > (s.scenes[k] || 0)) s.scenes[k] = v;
+    }
+  }
+  await env.PROFILES.put(key, JSON.stringify(s));
+}
+
+/* 聚合看板：只输出汇总数字，不返回任何个人信息。
+   注意分母口径：留存/首日完成率只统计"已过相应天数"的用户，避免新用户拉低分母造成误判。 */
+async function summarizeStats(env) {
+  const DAY = 86400000;
+  const now = Date.now();
+  const today = new Date(now).toISOString().slice(0, 10);
+  const list = await env.PROFILES.list({ prefix: 's:' });
+  const keys = (list && list.keys) || [];
+
+  let users = 0, dau = 0, phraseSum = 0, toneUsers = 0, day1Users = 0;
+  let e1 = 0, r1 = 0, e3 = 0, r3 = 0, e7 = 0, r7 = 0, firstDayDone = 0;
+  const sceneDist = {};
+
+  for (const k of keys) {
+    const raw = await env.PROFILES.get(k.name);
+    if (!raw) continue;
+    let s; try { s = JSON.parse(raw); } catch (e) { continue; }
+    users++;
+    const days = Array.isArray(s.days) ? s.days : [];
+    if (days.indexOf(today) >= 0) dau++;
+    const ph = Number(s.phrases) || 0;
+    phraseSum += ph;
+    if ((Number(s.tone) || 0) > 0) toneUsers++;
+    if (s.day1Done) day1Users++;
+    if (s.scenes) for (const sc in s.scenes) sceneDist[sc] = (sceneDist[sc] || 0) + (Number(s.scenes[sc]) || 0);
+
+    const first = Number(s.first) || 0;
+    if (!first) continue;
+    const dayOf = (t) => new Date(t).toISOString().slice(0, 10);
+    const inDays = (offset) => days.indexOf(dayOf(first + offset * DAY)) >= 0;
+    // 满 N 天才计入分母（eligible），否则新用户会把留存率拉低、得出错误结论
+    if (now - first >= 1 * DAY) { e1++; if (inDays(1)) r1++; }
+    if (now - first >= 3 * DAY) { e3++; if (inDays(3)) r3++; }
+    if (now - first >= 7 * DAY) { e7++; if (inDays(7)) r7++; }
+    // 首日完成首次挑战：开口时间距首次活跃 ≤1 天
+    if (s.firstPhraseAt && (Number(s.firstPhraseAt) - first) <= DAY && (now - first) >= 1 * DAY) firstDayDone++;
+  }
+
+  const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);   // 分母为 0 时返回 null（而不是假的 0%）
+  const d1 = pct(r1, e1), d3 = pct(r3, e3), d7 = pct(r7, e7);
+  const ppu = users ? Math.round((phraseSum / users) * 10) / 10 : 0;
+  const fdr = pct(firstDayDone, e1), tur = pct(toneUsers, users);
+
+  return {
+    ok: true, asOf: new Date(now).toISOString(),
+    users, dau, phraseSum,
+    retention: {
+      d1: d1, d3: d3, d7: d7,
+      eligible: { d1: e1, d3: e3, d7: e7 },   // 分母：满对应天数的用户数
+      note: '留存在"满 N 天"的用户里算，分母随内测推进逐渐变大'
+    },
+    northStar: { phrasesPerUser: ppu, target: 10 },
+    toneUsageRate: tur,
+    firstDayCompletionRate: fdr,
+    day1DoneRate: pct(day1Users, users),
+    sceneDist,
+    // 判停线（OB §6.2）一眼对照；null 表示样本还不够，别急着下结论
+    gate: {
+      d7:        { target: 15, actual: d7,  pass: d7  !== null && d7  >= 15, enough: e7  > 0 },
+      northStar: { target: 10, actual: ppu, pass: ppu >= 10,                enough: users > 0 },
+      firstDay:  { target: 60, actual: fdr, pass: fdr !== null && fdr >= 60, enough: e1  > 0 },
+      tone:      { target: 40, actual: tur, pass: tur !== null && tur >= 40, enough: users > 0 }
+    }
+  };
 }
 
 export default {
@@ -310,7 +417,7 @@ export default {
           return b.byteLength > 1000 ? { body: b, type: 'audio/mpeg', src: 'youdao' } : null;
         };
 
-        // 音源顺序（v0.3.27）：engine=cosy 先走 CosyVoice2 v3-plus 情感语音（带 instruct 情绪），失败回退 Edge；
+        // 音源顺序（v0.3.29）：engine=cosy 先走 Qwen3-TTS-Instruct 自然语言情绪语音（开心/严肃/温柔），失败回退 Edge；
         // 否则默认 Edge 主音源（微软神经网络，零成本），再整段回退 google/melo/youdao
         let out = null;
         if (engineParam === 'cosy') {
@@ -448,6 +555,75 @@ export default {
         return json(result);
       } catch (e) {
         return json({ error: String((e && e.message) || e) }, 500);
+      }
+    }
+
+    /* v0.3.31 M1 收口：设备账号 + 进度云端备份
+       /api/register：签发/校验设备 UID（无状态，UID 即身份，不落 KV）
+       /api/profile ：GET ?uid= 读云端进度；POST {uid,state} 写云端进度（KV binding=PROFILES）
+       前端 saveState 异步推云端、启动拉云端合并（云端 _ts 新则覆盖），换机/清缓存可恢复，
+       也为 L3 语伴互认铺路。两路由均走上方 guardApi（Origin + 每 IP 60s/40 次限流，防刷 KV）。 */
+    if (url.pathname === '/api/register' && req.method === 'POST') {
+      try {
+        const b = await req.json().catch(() => ({}));
+        let uid = String((b && b.uid) || '').trim();
+        // 仅接受合法既有 uid；非法或空 → 重新生成（避免脏数据写入 KV）
+        const okUid = /^[a-zA-Z0-9_-]{8,64}$/.test(uid);
+        if (!okUid) {
+          uid = (crypto.randomUUID ? crypto.randomUUID() : 'u' + Date.now() + Math.random().toString(36).slice(2));
+        }
+        return json({ ok: true, uid });
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) }, 500);
+      }
+    }
+
+    if (url.pathname === '/api/profile') {
+      if (!env.PROFILES) return json({ ok: false, error: 'profiles KV not bound' }, 500);
+      if (req.method === 'GET') {
+        const uid = url.searchParams.get('uid') || '';
+        if (!uid) return json({ ok: false, error: 'uid required' }, 400);
+        try {
+          const raw = await env.PROFILES.get('p:' + uid);
+          return json({ ok: true, state: raw ? JSON.parse(raw) : null });
+        } catch (e) {
+          return json({ ok: false, error: String((e && e.message) || e) }, 500);
+        }
+      }
+      if (req.method === 'POST') {
+        try {
+          const b = await req.json().catch(() => ({}));
+          const uid = String((b && b.uid) || '').trim();
+          if (!uid) return json({ ok: false, error: 'uid required' }, 400);
+          const state = b.state || {};
+          await env.PROFILES.put('p:' + uid, JSON.stringify(state));
+          // v0.3.33：顺带落匿名统计（寄生写入，零新增请求）；统计失败绝不影响进度保存
+          try { await recordStat(env, uid, b.stat); } catch (e) { /* 忽略 */ }
+          return json({ ok: true });
+        } catch (e) {
+          return json({ ok: false, error: String((e && e.message) || e) }, 500);
+        }
+      }
+      return json({ ok: false, error: 'method not allowed' }, 405);
+    }
+
+    /* v0.3.33 看板：GET /api/stats 返回聚合汇总（只有数字，无个人信息）。
+       注意：走上方 guardApi（Origin + 每 IP 60s/40 次限流），避免被刷导致遍历 KV。 */
+    if (url.pathname === '/api/stats' && req.method === 'GET') {
+      /* v0.3.35 热修（原 L5）：看板数据此前完全公网可读——任何人 GET /api/stats
+         就能拿到内测规模、DAU、场景分布、北极星指标与 kill criteria。
+         现在只要设了 secret STATS_TOKEN 就必须带 ?token= 或 x-stats-token 头。
+         未设置该 secret 时保持开放（本地/预览环境不挡）。 */
+      const wantTok = env.STATS_TOKEN || '';
+      if (wantTok) {
+        const gotTok = url.searchParams.get('token') || req.headers.get('x-stats-token') || '';
+        if (gotTok !== wantTok) return json({ ok: false, error: 'unauthorized' }, 401);
+      }
+      if (!env.PROFILES) return json({ ok: false, error: 'profiles KV not bound' }, 500);
+      try {
+        return json(await summarizeStats(env));
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) }, 500);
       }
     }
 

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy · Sinoky</title>
+<style>
+  :root{ --bg:#0e1020; --card:#1a1d33; --txt:#eef0f6; --sub:#9aa0b8; --t2:#2aa98f; --line:rgba(255,255,255,.12); }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.7;padding:24px 18px calc(40px + env(safe-area-inset-bottom));max-width:680px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .tag{color:var(--sub);font-size:13px;margin-bottom:20px}
+  h2{font-size:16px;margin:26px 0 8px;color:var(--t2)}
+  p{font-size:14px;color:var(--txt);margin:8px 0}
+  .small{color:var(--sub);font-size:12.5px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
+  a{color:var(--t2);text-decoration:none}
+  .back{display:inline-block;margin-top:28px;padding:10px 16px;background:var(--t2);color:#fff;border-radius:10px;font-size:14px;font-weight:600}
+  ul{font-size:14px;padding-left:20px;margin:8px 0}
+  li{margin:5px 0}
+</style>
+</head>
+<body>
+  <h1>Privacy at Sinoky</h1>
+  <div class="tag">Last updated: 2026-09-02 · Sinoky v0.3.33</div>
+
+  <div class="box">
+    <strong>🔒 The short version:</strong> Sinoky is a practice tool, not a surveillance tool.
+    Your voice recordings are <b>never uploaded, never stored, and never linked to you</b>.
+  </div>
+
+  <h2>1. Voice recordings</h2>
+  <p>When you tap <b>Score</b> and say a phrase:</p>
+  <ul>
+    <li>Your microphone audio is processed <b>on your device</b> and sent only to our speech‑recognition service to transcribe that single line.</li>
+    <li>The audio is <b>discarded immediately after scoring</b>. We do not save it, train on it, or share it.</li>
+    <li>Nothing you say is ever tied to your identity — Sinoky has no accounts and asks for no personal information.</li>
+  </ul>
+
+  <h2>2. Progress backup</h2>
+  <p>Sinoky can keep a copy of your <b>learning progress</b> (streaks, phrases practised) so it survives clearing your browser cache. This backup:</p>
+  <ul>
+    <li>Is tagged only by an anonymous device ID stored in your browser — <b>not</b> your name, email, or location.</li>
+    <li>Contains no audio and no text you typed anywhere except the practice phrases themselves.</li>
+    <li>Can be deleted any time by clearing your browser data for sinoky.pages.dev.</li>
+  </ul>
+
+  <h2>3. What we do collect</h2>
+  <p>To fix bugs, you can send us feedback. If you do, we receive only:</p>
+  <ul>
+    <li>Your message, the app version, browser type, and country (sent by your browser automatically).</li>
+    <li>No recordings, no progress data, no personal details.</li>
+  </ul>
+
+  <p><b>Anonymous usage statistics.</b> To understand whether Sinoky actually helps people speak, we also collect a small amount of anonymous usage data:</p>
+  <ul>
+    <li>How many phrases you have practised, which scenes you used, whether you tried the Tone Gym, and which days you opened the app.</li>
+    <li>It is tagged with the same <b>anonymous device ID</b> used for progress backup &#8212; no name, email, account, location, or advertising identifier.</li>
+    <li>It contains <b>no voice recordings, no audio, and no transcriptions</b> of anything you said.</li>
+    <li>We only ever look at it in aggregate (for example: &#8220;how many people came back on day 7&#8221;), to decide what to improve.</li>
+    <li>You can clear it at any time by clearing your browser data for sinoky.pages.dev.</li>
+  </ul>
+
+  <h2>4. Your rights (GDPR / CCPA)</h2>
+  <p>Because Sinoky stores no personal data, there is nothing to export or erase. If you want your progress backup removed, clear your browser's local data for this site, or email us and we will delete the associated device record.</p>
+
+  <h2>5. Contact</h2>
+  <p class="small">Questions about this policy? Email <a href="mailto:privacy@sinoky.app">privacy@sinoky.app</a>.
+  Sinoky is free during beta.</p>
+
+  <a class="back" href="./">← Back to Sinoky</a>
+</body>
+</html>

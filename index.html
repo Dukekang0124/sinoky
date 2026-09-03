@@ -13,8 +13,33 @@
 <!-- vConsole: 让康哥在手机/微信 WebView 里也能看到 console.log，
      排查录音/识别等无 UI 反馈的运行时问题。点击右下角绿色按钮打开。
      vConsole 是腾讯自家项目，国内稳定。3KB gzipped，加载几乎无感。 -->
-<script src="vendor/vconsole.min.js"></script>
-<script>try{ window.vConsole = new window.VConsole({theme:'dark'}); }catch(e){console.warn('vConsole init failed',e)}</script>
+<script>
+/* v0.3.35 S6：vConsole 改为按需开启（?debug=1 或 localStorage sinoky-debug=1），默认完全不加载。
+   原因①：它的悬浮按钮固定在右下角，正好压在底部导航最右侧的 Progress 按钮上 —— 390px 宽的
+          手机上老外根本点不到 Progress（Playwright 实测 click 被 .vc-switch 拦截，报
+          "intercepts pointer events"）。这是"导航项点不动"的第三层根因（前两层见反馈按钮注释）。
+   原因②：调试面板对老外是纯噪音，还把内部日志暴露给普通用户。
+   排查线上问题时打开 sinoky.pages.dev/?debug=1 即可，开启状态记在本地，方便连续排查。 */
+(function(){
+  var on = false;
+  try{
+    on = /(\?|&)debug=1(&|$)/.test(location.search) || localStorage.getItem('sinoky-debug') === '1';
+  }catch(e){}
+  if(!on) return;
+  var sc = document.createElement('script');
+  sc.src = 'vendor/vconsole.min.js';
+  sc.onload = function(){
+    try{
+      window.vConsole = new window.VConsole({ theme:'dark' });
+      var t = setInterval(function(){
+        var sw = document.querySelector('.vc-switch');
+        if(sw){ sw.style.bottom = 'calc(84px + env(safe-area-inset-bottom))'; clearInterval(t); }
+      }, 300);
+    }catch(e){ console.warn('vConsole init failed', e); }
+  };
+  document.head.appendChild(sc);
+})();
+</script>
 <style>
 :root{
   --bg:#141a24; --bg2:#1b2330; --card:#1e2735; --line:#2b3648;
@@ -204,6 +229,16 @@ nav button.on{color:var(--red)}
 .fb-row{display:flex;gap:8px;margin-top:12px}
 .fb-row .btn{margin-top:0;flex:1}
 
+/* v0.3.31 分享面板（复用 fb 视觉，居中弹窗） */
+#share-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:70;display:none}
+#share-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:71;
+  width:min(92vw,400px);background:var(--card);color:var(--txt);border-radius:16px;padding:18px 16px;display:none}
+#share-panel h3{margin:0 0 4px;font-size:16px;color:var(--txt)}
+#share-panel .fb-sub{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5}
+#share-stats{font-size:14px;color:var(--t2);margin:6px 0 12px;font-weight:600}
+#share-link{font-size:13px;color:var(--sub);background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 11px;word-break:break-all;margin-bottom:4px}
+
 /* 首次上手引导 */
 #onb{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:80;display:none;
   align-items:center;justify-content:center;padding:22px}
@@ -252,13 +287,33 @@ nav button.on{color:var(--red)}
 .day1-step.done .num{background:var(--teal)}
 .day1-step.done .st{color:var(--teal)}
 .day1-cta{margin-top:13px;font-size:13px;font-weight:600;color:var(--teal);text-align:center;display:none}
-/* ---------- voice bar: 音色(女/男) + 风格(标准/开心/严肃/温柔) 切换 (v0.3.27) ---------- */
+/* v0.3.34：Day 路径跳转后的短暂高亮，帮用户定位该练哪句 */
+.day-prog{margin-top:8px;font-size:11.5px;color:var(--sub);text-align:center}
+.phrase.focus{box-shadow:0 0 0 2px var(--red);border-radius:12px;transition:box-shadow .2s}
+/* ---------- voice bar: Voice(Female/Male) + Style(Standard/Cheerful/Serious/Gentle) ----------
+   v0.3.32: UI 文案改全英文（产品面向老外，原中文标签 女声/男声/标准/开心/严肃/温柔 老外看不懂）。
+   英文比中文长近一倍，故收紧 padding + white-space:nowrap + 小屏媒体查询，
+   防 .vb-group 的 overflow:hidden 把最后一个按钮(Gentle)裁掉。 */
 .voicebar{display:flex;align-items:center;gap:10px;margin:6px 0 2px;flex-wrap:wrap}
 .vb-label{font-size:12px;color:var(--sub)}
-.vb-group{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.vb-group button{background:none;border:none;color:var(--sub);font-size:12.5px;padding:7px 13px;cursor:pointer;font-family:inherit;transition:background .15s}
+.vb-group{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:100%}
+.vb-group button{background:none;border:none;color:var(--sub);font-size:12px;padding:7px 10px;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
 .vb-group button.on{background:var(--red);color:#fff}
 .vb-group button:active{transform:scale(.96)}
+@media (max-width:360px){
+  .voicebar{gap:8px}
+  .vb-label{font-size:11px}
+  .vb-group button{font-size:11.5px;padding:7px 7px}
+}
+/* ---------- v0.3.35：等待发声的呼吸态（S5） / 更新横幅（M6） / 阅读卡遮罩（M10） ---------- */
+.spk.wait,.btn.wait,.record.wait{animation:waitpulse 1.1s ease-in-out infinite}
+@keyframes waitpulse{0%,100%{opacity:1}50%{opacity:.45}}
+#updatebar{display:none;position:fixed;left:0;right:0;top:0;z-index:95;
+  background:var(--red);color:#fff;font-size:13px;font-weight:600;
+  text-align:center;padding:10px 12px;cursor:pointer}
+#rd-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:19;display:none}
+#rd-mask.on{display:block}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -283,16 +338,16 @@ nav button.on{color:var(--red)}
       <div class="stat"><div class="n" id="st-tone">—</div><div class="l">🎯 Tone accuracy</div></div>
     </div>
     <div class="voicebar" id="voicebar">
-      <span class="vb-label">🔊 语音</span>
+      <span class="vb-label">🔊 Voice</span>
       <div class="vb-group" id="vb-voice">
-        <button type="button" data-v="zh-CN-XiaoxiaoNeural" class="on" onclick="setVoice('zh-CN-XiaoxiaoNeural',this)">女声</button>
-        <button type="button" data-v="zh-CN-YunxiNeural" onclick="setVoice('zh-CN-YunxiNeural',this)">男声</button>
+        <button type="button" data-v="zh-CN-XiaoxiaoNeural" class="on" onclick="setVoice('zh-CN-XiaoxiaoNeural',this)">Female</button>
+        <button type="button" data-v="zh-CN-YunxiNeural" onclick="setVoice('zh-CN-YunxiNeural',this)">Male</button>
       </div>
       <div class="vb-group" id="vb-engine">
-        <button type="button" data-e="edge" class="on" onclick="setEngine('edge',this)">标准</button>
-        <button type="button" data-e="cosy" data-emotion="happy" onclick="setEmotion('happy',this)">开心</button>
-        <button type="button" data-e="cosy" data-emotion="neutral" onclick="setEmotion('neutral',this)">严肃</button>
-        <button type="button" data-e="cosy" data-emotion="neutral" onclick="setEmotion('neutral',this)">温柔</button>
+        <button type="button" data-e="edge" class="on" onclick="setEngine('edge',this)">Standard</button>
+        <button type="button" data-e="cosy" data-emotion="happy" onclick="setEmotion('happy',this)">Cheerful</button>
+        <button type="button" data-e="cosy" data-emotion="serious" onclick="setEmotion('serious',this)">Serious</button>
+        <button type="button" data-e="cosy" data-emotion="gentle" onclick="setEmotion('gentle',this)">Gentle</button>
       </div>
     </div>
     <div id="home-scenes"></div>
@@ -301,7 +356,12 @@ nav button.on{color:var(--red)}
       <p class="desc">Mā má mǎ mà — four tones, four meanings. Train your ear with minimal pairs. Miss a tone and you say a different word.</p>
       <button class="btn ghost" onclick="startTone()">Open Tone Gym</button>
     </div>
-    <div class="foot">Sinoky v<span class="v-txt"></span> · Speak Chinese where it matters</div>
+    <div class="card">
+      <div class="top"><h2>Learning with friends?</h2><span class="badge teal">BETA</span></div>
+      <p class="desc">Sinoky is free during beta. Invite a friend who's learning Chinese and compare your streaks.</p>
+      <button class="btn ghost" onclick="openShare()">📤 Share Sinoky</button>
+    </div>
+    <div class="foot">Sinoky v<span class="v-txt"></span> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="#" onclick="openShare();return false;">Share</a> · Speak Chinese where it matters</div>
   </section>
 
   <!-- SCENE -->
@@ -328,6 +388,7 @@ nav button.on{color:var(--red)}
       <div class="tone-big" id="tone-big"></div>
       <button class="btn primary" id="tone-play" onclick="playToneQ()">▶ Play the sound</button>
       <div class="tonebtns" id="tone-btns"></div>
+      <button class="btn ghost" id="tone-next" onclick="nextTone()">Next →</button>
       <button class="btn ghost" onclick="go('home')">← Back</button>
     </div>
   </section>
@@ -342,6 +403,15 @@ nav button.on{color:var(--red)}
     <div class="card">
       <div class="top"><h2>Details</h2></div>
       <p class="desc" id="prog-detail"></p>
+    </div>
+    <div class="card">
+      <div class="top"><h2>Backup &amp; restore</h2><span class="badge teal">YOUR DATA</span></div>
+      <p class="desc">Your progress lives in this browser. Export it before clearing your data or switching phones — then paste it here to restore.</p>
+      <div class="fc-actions">
+        <button class="btn ghost" onclick="exportProgress()">⬆ Export</button>
+        <button class="btn ghost" onclick="importProgress()">⬇ Import</button>
+      </div>
+      <textarea class="rd-input" id="prog-io" style="min-height:74px;margin-top:10px;font-size:12px" placeholder="Tap Export to get your backup code, or paste one here and tap Import."></textarea>
     </div>
     <div class="foot">Sinoky v<span class="v-txt"></span></div>
   </section>
@@ -400,7 +470,9 @@ nav button.on{color:var(--red)}
   <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
 </nav>
 <div class="toast" id="toast"></div>
-<div class="rd-pop" id="rd-pop"></div>
+<div id="updatebar"></div>
+<div class="rd-pop" id="rd-pop" role="dialog" aria-label="Word details"></div>
+<div id="rd-mask"></div>
 
 <!-- v0.3.8 真实用户保障（6 位外国朋友在用了） -->
 <button id="fb-open">💬 Feedback</button>
@@ -423,7 +495,19 @@ nav button.on{color:var(--red)}
   </div>
   <div class="fb-row">
     <button class="btn ghost" onclick="closeFB()">Cancel</button>
-    <button class="btn" onclick="sendFB()">Send feedback</button>
+    <button class="btn" onclick="sendFB(this)">Send feedback</button>
+  </div>
+</div>
+
+<div id="share-mask" onclick="closeShare()"></div>
+<div id="share-panel" role="dialog" aria-label="Share Sinoky">
+  <h3>Share Sinoky 📤</h3>
+  <div class="fb-sub">Free during beta. Invite a friend learning Chinese:</div>
+  <div class="share-stats" id="share-stats"></div>
+  <div class="share-link" id="share-link">https://sinoky.pages.dev</div>
+  <div class="fb-row">
+    <button class="btn ghost" onclick="closeShare()">Cancel</button>
+    <button class="btn" onclick="copyShare()">Copy invite link</button>
   </div>
 </div>
 
@@ -448,12 +532,23 @@ nav button.on{color:var(--red)}
 <script>
 'use strict';
 /* ============ Sinoky v0.1.0 (M0) — single-file PWA, zero dependencies ============ */
-var APP_VERSION = '0.3.22';
-/* ⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰：
+/* v0.3.35 S3：所有 localStorage 读写必须走这两个包装。
+   背景：iOS Safari 无痕、部分微信 WebView、企业策略会禁用存储，
+   localStorage.setItem 直接抛 QuotaExceededError。旧代码在顶层裸调
+   setItem('sinoky_uid') 且无 try/catch → 异常中断整段脚本 →
+   var S = loadState() / renderHome() / loadCards() 全不执行 → 白屏、无任何提示。 */
+var LS_OK = true;
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
+var APP_VERSION = '0.3.35';
+/* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
-   v0.3.3~v0.3.7 只改了后两处，index.html 停在 0.3.2，导致
-   `j.version !== APP_VERSION` 恒成立 → 用户每次打开都被提示"有新版本，
-   请刷新"，刷新后又回到旧版本号 → 无限循环提示，老外一脸懵。 */
+   第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
+   第2次 v0.3.23~v0.3.31：只改 version.json，APP_VERSION 与 sw CACHE 停在 0.3.22 长达 9 个版本
+     → 生产环境老外每次打开都弹 'New version available — refresh!'，刷新无效（拿回的还是
+       0.3.22 的 index.html）→ 无限循环骚扰；且页脚 .v-txt 显示 0.3.22 与实际不符。
+   v0.3.32 三处已重新同步。
+   根因：下方 `j.version !== APP_VERSION` 一旦不同步就恒成立 → 必弹。改版本号时三处一起改，缺一不可。 */
 
 /* ---------- data: scene packs (M0 seed content, EN-first) ---------- */
 /* py 字段由 tools/gen-pinyin.js 构建期用 pinyin-pro 生成（变调/轻声/连写已处理），勿手写修改——改 hz 后跑脚本重生成 */
@@ -470,27 +565,27 @@ var SCENES = [
   { id:'arrival', icon:'🛬', title:'Arrival · First hours', day1:true,
     desc:'Your first few survival lines: greeting, price, destination, restroom, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
     phrases:[
-      { en:'Hello! (greeting anyone)', py:'Nǐ hǎo', hz:'你好',
+      { en:'Hello! (greeting anyone)', day:1, py:'Nǐ hǎo', hz:'你好',
         real:[
           { hz:'你好啊', py:'Nǐ hǎo a', note:'softer — what you actually hear every day', style:'casual' },
           { hz:'嗨', py:'Hāi', note:'like "hi" — friends and young people', style:'casual' }
         ]},
-      { en:'How much is it?', py:'Duōshǎo qián?', hz:'多少钱？',
+      { en:'How much is it?', day:3, py:'Duōshǎo qián?', hz:'多少钱？',
         real:[
           { hz:'这多少钱？', py:'Zhè duōshǎo qián?', note:'pointing at the item', style:'casual' },
           { hz:'怎么卖？', py:'Zěnme mài?', note:'at a market stall', style:'casual' }
         ]},
-      { en:'I want to go here. (show address)', py:'Wǒ yào qù zhèlǐ.', hz:'我要去这里。',
+      { en:'I want to go here. (show address)', day:3, py:'Wǒ yào qù zhèlǐ.', hz:'我要去这里。',
         real:[
           { hz:'我去这儿。', py:'Wǒ qù zhèr.', note:'这儿 not 这里 — everyday speech', style:'casual' },
           { hz:'麻烦到这儿。', py:'Máfan dào zhèr.', note:'to a taxi driver', style:'polite' }
         ]},
-      { en:'Thank you!', py:'Xièxie!', hz:'谢谢！',
+      { en:'Thank you!', day:1, py:'Xièxie!', hz:'谢谢！',
         real:[
           { hz:'谢啦！', py:'Xiè la!', note:'light, casual thanks', style:'casual' },
           { hz:'太感谢了！', py:'Tài gǎnxiè le!', note:'when someone really helped', style:'polite' }
         ]},
-      { en:'Where is the restroom?', py:'Xǐshǒujiān zài nǎlǐ?', hz:'洗手间在哪里？',
+      { en:'Where is the restroom?', day:3, py:'Xǐshǒujiān zài nǎlǐ?', hz:'洗手间在哪里？',
         real:[
           { hz:'洗手间在哪儿？', py:'Xǐshǒujiān zài nǎr?', note:'哪儿 not 哪里 — spoken', style:'casual' },
           { hz:'请问厕所在哪？', py:'Qǐngwèn cèsuǒ zài nǎ?', note:'厕所 = toilet, very common', style:'casual' }
@@ -499,7 +594,7 @@ var SCENES = [
   { id:'self-intro', icon:'🙋', title:'Self-intro · Who am I', day1:true,
     desc:'Introduce yourself the Chinese way: your name, where you are from, what you do, and that you are learning. Small talk that turns strangers into people who help you.',
     phrases:[
-      { en:'My name is (your name).', py:'Wǒ jiào (nǐ de míngzi).', hz:'我叫（你的名字）。',
+      { en:'My name is (your name).', day:1, py:'Wǒ jiào (nǐ de míngzi).', hz:'我叫（你的名字）。',
         real:[
           { hz:'我叫（你的名字）。', py:'Wǒ jiào (nǐ de míngzi).', note:'fill in your name', style:'casual' },
           { hz:'大家叫我（昵称）。', py:'Dàjiā jiào wǒ (nǐchēng).', note:'what friends call you', style:'casual' }
@@ -524,12 +619,12 @@ var SCENES = [
           { hz:'我在学汉语。', py:'Wǒ zài xué Hànyǔ.', note:'汉语 = Chinese language', style:'casual' },
           { hz:'我刚开始学中文。', py:'Wǒ gāng kāishǐ xué Zhōngwén.', note:'just started', style:'casual' }
         ]},
-      { en:'Nice to meet you.', py:'Hěn gāoxìng rènshi nǐ.', hz:'很高兴认识你。',
+      { en:'Nice to meet you.', day:1, py:'Hěn gāoxìng rènshi nǐ.', hz:'很高兴认识你。',
         real:[
           { hz:'幸会幸会。', py:'Xìnghuì xìnhuì.', note:'polite set phrase', style:'formal' },
           { hz:'认识你很高兴。', py:'Rènshi nǐ hěn gāoxìng.', note:'warm, common', style:'casual' }
         ]},
-      { en:'Do you speak English?', py:'Nǐ huì shuō Yīngyǔ ma?', hz:'你会说英语吗？',
+      { en:'Do you speak English?', day:2, py:'Nǐ huì shuō Yīngyǔ ma?', hz:'你会说英语吗？',
         real:[
           { hz:'你会英文吗？', py:'Nǐ huì Yīngwén ma?', note:'英文 = English (casual)', style:'casual' },
           { hz:'能不能说英文？', py:'Néng bu néng shuō Yīngwén?', note:'can we use English?', style:'polite' }
@@ -539,17 +634,17 @@ var SCENES = [
           { hz:'你叫啥？', py:'Nǐ jiào shá?', note:'very casual', style:'casual' },
           { hz:'怎么称呼你？', py:'Zěnme chēnghu nǐ?', note:'polite — what should I call you', style:'polite' }
         ]},
-      { en:'Where are you from?', py:'Nǐ lái zì nǎlǐ?', hz:'你来自哪里？',
+      { en:'Where are you from?', day:5, py:'Nǐ lái zì nǎlǐ?', hz:'你来自哪里？',
         real:[
           { hz:'你是哪国人？', py:'Nǐ shì nǎ guó rén?', note:'what country are you from', style:'casual' },
           { hz:'你老家哪儿的？', py:'Nǐ lǎojiā nǎr de?', note:'where is home', style:'casual' }
         ]},
-      { en:'Please speak slowly.', py:'Qǐng shuō màn yìdiǎn.', hz:'请说慢一点。',
+      { en:'Please speak slowly.', day:2, py:'Qǐng shuō màn yìdiǎn.', hz:'请说慢一点。',
         real:[
           { hz:'能麻烦您说慢一点吗？', py:'Néng máfan nín shuō màn yìdiǎn ma?', note:'polite — to elders or strangers', style:'polite' },
           { hz:'慢点说！', py:'Màn diǎn shuō!', note:'casual — to friends', style:'casual' }
         ]},
-      { en:'Can you say that again?', py:'Néng zài shuō yí biàn ma?', hz:'能再说一遍吗？',
+      { en:'Can you say that again?', day:2, py:'Néng zài shuō yí biàn ma?', hz:'能再说一遍吗？',
         real:[
           { hz:'啥？再说一次！', py:'Shá? Zài shuō yí cì!', note:'very casual — did not catch it', style:'casual' },
           { hz:'不好意思，请再说一遍。', py:'Bù hǎoyìsi, qǐng zài shuō yí biàn.', note:'polite — sorry, repeat', style:'polite' }
@@ -558,17 +653,17 @@ var SCENES = [
   { id:'emergency', icon:'🚨', title:'Emergency · Survival', day1:true,
     desc:'Life-saving lines for when something goes wrong: ask for help, find a hospital, say you are sick, call the police, get unlost. Slow it down, then say it like your life depends on it — because sometimes it does.',
     phrases:[
-      { en:'Help!', py:'Bāngmáng!', hz:'帮忙！',
+      { en:'Help!', day:6, py:'Bāngmáng!', hz:'帮忙！',
         real:[
           { hz:'帮帮我！', py:'Bāngbang wǒ!', note:'raw cry for help', style:'casual' },
           { hz:'救命啊！', py:'Jiùmìng a!', note:'emergency — someone is in danger', style:'casual' }
         ]},
-      { en:'I need help.', py:'Wǒ xūyào bāngzhù.', hz:'我需要帮助。',
+      { en:'I need help.', day:6, py:'Wǒ xūyào bāngzhù.', hz:'我需要帮助。',
         real:[
           { hz:'我需要帮忙。', py:'Wǒ xūyào bāngmáng.', note:'everyday way to say it', style:'casual' },
           { hz:'能帮个忙吗？', py:'Néng bāng ge máng ma?', note:'polite ask', style:'polite' }
         ]},
-      { en:'Where is the hospital?', py:'Yīyuàn zài nǎlǐ?', hz:'医院在哪里？',
+      { en:'Where is the hospital?', day:6, py:'Yīyuàn zài nǎlǐ?', hz:'医院在哪里？',
         real:[
           { hz:'医院在哪儿？', py:'Yīyuàn zài nǎr?', note:'哪儿 not 哪里 — spoken', style:'casual' },
           { hz:'请问医院怎么走？', py:'Qǐngwèn yīyuàn zěnme zǒu?', note:'asking for directions, polite', style:'polite' }
@@ -578,27 +673,27 @@ var SCENES = [
           { hz:'我不舒服。', py:'Wǒ bù shūfu.', note:'softer — not feeling well', style:'casual' },
           { hz:'我难受。', py:'Wǒ nánshòu.', note:'stronger — feel awful', style:'casual' }
         ]},
-      { en:'Call an ambulance, please.', py:'Kuài jiào jiùhùchē!', hz:'快叫救护车！',
+      { en:'Call an ambulance, please.', day:7, py:'Kuài jiào jiùhùchē!', hz:'快叫救护车！',
         real:[
           { hz:'叫救护车！', py:'Jiào jiùhùchē!', note:'urgent — now', style:'casual' },
           { hz:'请帮我叫救护车。', py:'Qǐng bāng wǒ jiào jiùhùchē.', note:'ask someone', style:'polite' }
         ]},
-      { en:'The emergency number is 120.', py:'Jíjiù diànhuà shì yāo èr líng!', hz:'急救电话是120。', tts:'急救电话是幺二零。',
+      { en:'The emergency number is 120.', day:7, py:'Jíjiù diànhuà shì yāo èr líng!', hz:'急救电话是120。', tts:'急救电话是幺二零。',
         real:[
           { hz:'打120！', py:'Dǎ yāo èr líng!', tts:'打幺二零！', note:'shortest', style:'casual' },
           { hz:'请打急救电话120。', py:'Qǐng dǎ jíjiù diànhuà yāo èr líng.', tts:'请打急救电话幺二零。', note:'polite', style:'polite' }
         ]},
-      { en:'I need to see a doctor.', py:'Wǒ yào kàn yīshēng.', hz:'我要看医生。',
+      { en:'I need to see a doctor.', day:6, py:'Wǒ yào kàn yīshēng.', hz:'我要看医生。',
         real:[
           { hz:'我得看大夫。', py:'Wǒ děi kàn dàifu.', note:'colloquial', style:'casual' },
           { hz:'请带我去看医生。', py:'Qǐng dài wǒ qù kàn yīshēng.', note:'ask for help', style:'polite' }
         ]},
-      { en:'Call the police, please.', py:'Kuài bāng wǒ dǎ yāo yāo líng!', hz:'快帮我打110！', tts:'快帮我打幺幺零！',
+      { en:'Call the police, please.', day:7, py:'Kuài bāng wǒ dǎ yāo yāo líng!', hz:'快帮我打110！', tts:'快帮我打幺幺零！',
         real:[
           { hz:'快报警！', py:'Kuài bàojǐng!', note:'urgent — call the police now', style:'casual' },
           { hz:'请帮我叫警察。', py:'Qǐng bāng wǒ jiào jǐngchá.', note:'ask someone to call', style:'polite' }
         ]},
-      { en:'There is a fire! Call 119!', py:'Zháohuǒ le! Kuài dǎ yāo yāo jiǔ!', hz:'着火了！快打119！', tts:'着火了！快打幺幺九！',
+      { en:'There is a fire! Call 119!', day:7, py:'Zháohuǒ le! Kuài dǎ yāo yāo jiǔ!', hz:'着火了！快打119！', tts:'着火了！快打幺幺九！',
         real:[
           { hz:'着火啦！', py:'Zháohuǒ la!', note:'panic — fire!', style:'casual' },
           { hz:'快打火警119！', py:'Kuài dǎ huǒjǐng yāo yāo jiǔ!', tts:'快打火警幺幺九！', note:'fire brigade number', style:'casual' }
@@ -608,12 +703,12 @@ var SCENES = [
           { hz:'我找不到路了。', py:'Wǒ zhǎo bú dào lù le.', note:'can not find the way', style:'casual' },
           { hz:'请问这地方怎么走？', py:'Qǐngwèn zhè dìfang zěnme zǒu?', note:'asking a passer-by', style:'polite' }
         ]},
-      { en:'My phone is lost.', py:'Wǒ de shǒujī diū le.', hz:'我的手机丢了。',
+      { en:'My phone is lost.', day:7, py:'Wǒ de shǒujī diū le.', hz:'我的手机丢了。',
         real:[
           { hz:'我手机丢了！', py:'Wǒ shǒujī diū le!', note:'panic — phone gone', style:'casual' },
           { hz:'我手机不见了。', py:'Wǒ shǒujī bú jiàn le.', note:'phone missing', style:'casual' }
         ]},
-      { en:'My wallet is lost.', py:'Wǒ de qiánbāo diū le.', hz:'我的钱包丢了。',
+      { en:'My wallet is lost.', day:7, py:'Wǒ de qiánbāo diū le.', hz:'我的钱包丢了。',
         real:[
           { hz:'我钱包丢了！', py:'Wǒ qiánbāo diū le!', note:'panic — wallet gone', style:'casual' },
           { hz:'我钱包不见了。', py:'Wǒ qiánbāo bú jiàn le.', note:'wallet missing', style:'casual' }
@@ -632,27 +727,27 @@ var SCENES = [
   { id:'food', icon:'🍜', title:'Food · Order & pay',
     desc:'Ordering made minimal: point, say "I want this one", ask for no spice, pay by scan.',
     phrases:[
-      { en:'I want this one. (pointing)', py:'Wǒ yào zhège.', hz:'我要这个。',
+      { en:'I want this one. (pointing)', day:4, py:'Wǒ yào zhège.', hz:'我要这个。',
         real:[
           { hz:'来这个。', py:'Lái zhège.', note:'how people actually order', style:'casual' },
           { hz:'给我来这个。', py:'Gěi wǒ lái zhège.', note:'also very common', style:'casual' }
         ]},
-      { en:'Not spicy, please.', py:'Bú yào là.', hz:'不要辣。',
+      { en:'Not spicy, please.', day:4, py:'Bú yào là.', hz:'不要辣。',
         real:[
           { hz:'别放辣。', py:'Bié fàng là.', note:'said to the cook', style:'casual' },
           { hz:'不要辣，谢谢。', py:'Bú yào là, xièxie.', note:'adding 谢谢 softens it', style:'polite' }
         ]},
-      { en:'Delicious!', py:'Hǎo chī!', hz:'好吃！',
+      { en:'Delicious!', day:4, py:'Hǎo chī!', hz:'好吃！',
         real:[
           { hz:'太好吃了！', py:'Tài hǎochī le!', note:'what people really say', style:'casual' },
           { hz:'嗯，不错！', py:'Ń, búcuò!', note:'understated praise', style:'casual' }
         ]},
-      { en:'The bill, please.', py:'Mǎidān, xièxie.', hz:'买单，谢谢。',
+      { en:'The bill, please.', day:5, py:'Mǎidān, xièxie.', hz:'买单，谢谢。',
         real:[
           { hz:'结账。', py:'Jiézhàng.', note:'short and direct', style:'casual' },
           { hz:'老板，买单！', py:'Lǎobǎn, mǎidān!', note:'calling the owner in a small place', style:'casual' }
         ]},
-      { en:'Water, please.', py:'Qǐng gěi wǒ shuǐ.', hz:'请给我水。',
+      { en:'Water, please.', day:5, py:'Qǐng gěi wǒ shuǐ.', hz:'请给我水。',
         real:[
           { hz:'来杯水。', py:'Lái bēi shuǐ.', note:'what you actually say when ordering', style:'casual' },
           { hz:'有水吗？', py:'Yǒu shuǐ ma?', note:'do you have water?', style:'casual' }
@@ -699,20 +794,117 @@ var TONES = [
 var TONE_COLOR = { 1:'var(--t1)', 2:'var(--t2)', 3:'var(--t3)', 4:'var(--t4)' };
 var TONE_LABEL = { 1:'1 flat', 2:'2 rising', 3:'3 dip', 4:'4 fall' };
 
+
+/* ===== v0.3.34 P1 内容续航：Day 1-7 线性路径 =====
+   背景：此前 day1 是"场景级"标记（arrival+self-intro+emergency 共 21 句全塞第一天），
+   而 Day2 之后只剩 food 5 + meeting 4 = 9 句 → 零基础用户 1-2 天见底，D7 留存天然崩。
+   改法：改为"句级" day 标记，把 26 条主线句重排成 7 天、每天 3-6 句（5 分钟量）。
+   meeting 4 句不加 day，留作选修（仍在下方场景列表里自选）。 */
+var DAYS = [
+  { n:1, t:'First words',             d:'Your first four lines. Say them out loud \u2014 that is the whole point.' },
+  { n:2, t:"When you don't understand", d:'Someone speaks too fast? These three lines save the conversation.' },
+  { n:3, t:'Getting around',          d:'Prices, directions, and the most important question of all: where is the bathroom?' },
+  { n:4, t:'Ordering food',           d:'Point, say \u201cI want this one\u201d, and eat well.' },
+  { n:5, t:'Paying & small talk',     d:'Pay the bill, ask for water, and keep it going.' },
+  { n:6, t:'Emergency basics',        d:'The lines that matter when something goes wrong. Slow is fine \u2014 clear is better.' },
+  { n:7, t:'Emergency numbers',       d:'110 police \u00b7 119 fire \u00b7 120 ambulance \u2014 and how to say them so they understand.' }
+];
+function allDayPhrases(){
+  var out = [];
+  SCENES.forEach(function(sc){
+    sc.phrases.forEach(function(p, i){ if (p.day) out.push({ day:p.day, scene:sc, idx:i, p:p }); });
+  });
+  return out;
+}
+function dayItems(n){ return allDayPhrases().filter(function(x){ return x.day === n; }); }
+function daySaid(x){ return (S.phrases[x.scene.id] || []).indexOf(x.idx) > -1; }
+function isDayDone(n){
+  var it = dayItems(n);
+  return it.length > 0 && it.every(daySaid);
+}
+/* 当前该学第几天 = 第一个未完成的 day；全完成则停在 Day 7 */
+function currentDay(){
+  for (var n = 1; n <= DAYS.length; n++) { if (!isDayDone(n)) return n; }
+  return DAYS.length;
+}
+
 /* ---------- state (localStorage, sinoky_* keys only; uid is its own key) ---------- */
 function loadState(){
   try{ return JSON.parse(localStorage.getItem('sinoky_state')) || {}; }catch(e){ return {}; }
 }
-function saveState(){ localStorage.setItem('sinoky_state', JSON.stringify(S)); }
-var UID = localStorage.getItem('sinoky_uid');
+function saveStateLocal(){ lsSet('sinoky_state', JSON.stringify(S)); }
+function saveState(){ saveStateLocal(); pushProfile(); }   // v0.3.31 本地存 + 异步云端镜像
+/* v0.3.35 M2：高频操作（翻字卡）只写本地，云端同步防抖 3 秒。
+   旧实现每翻一张卡都 saveState() → POST /api/profile；翻 40 次/分钟即打满
+   Worker 的 RATE_MAX=40/60s 限流 → 之后整整一分钟的进度同步全部 429 静默失败。 */
+var pushTimer = null;
+function pushProfileSoon(){
+  if(pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(function(){ pushTimer = null; pushProfile(); }, 3000);
+}
+/* v0.3.31 M1 收口：进度云端备份。UID 即设备身份，进度按 uid 镜像到 KV PROFILES，
+   换机/清缓存可借同 uid 恢复（为 L3 语伴互认铺路）。云端失败静默，绝不阻塞用户。 */
+async function pushProfile(){
+  try{
+    const state = Object.assign({}, S, { _ts: Date.now() });
+    // v0.3.33：顺带上报匿名统计（零新增请求，寄生在已有的进度同步里）
+    await fetch('api/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ uid: UID, state, stat: buildStat() }) });
+  }catch(e){ /* 离线/限流忽略 */ }
+}
+/* v0.3.33 M2 埋点：从本地状态推导匿名统计。
+   只算"说过多少句 / 练了多少声调题 / Day1 是否通关 / 各场景分布"，不含任何内容或个人身份信息。
+   后端用 max 语义幂等入库，重复上报不会虚增；统计失败绝不影响进度保存。 */
+function buildStat(){
+  try{
+    var ph = S.phrases || {}, phrases = 0, scenes = {};
+    for(var k in ph){ var n = (ph[k]||[]).length; if(n > 0){ phrases += n; scenes[k] = n; } }
+    var day1Ids = [];
+    try {
+      day1Ids = (typeof SCENES !== 'undefined' ? SCENES : [])
+        .filter(function(x){ return x && x.day1; })
+        .map(function(x){ return x.id; });
+    } catch(e){ day1Ids = []; }
+    var day1Done = false;
+    if(day1Ids.length){
+      day1Done = day1Ids.every(function(id){
+        var sc = null;
+        try { sc = SCENES.filter(function(x){ return x.id === id; })[0]; } catch(e){}
+        return !!sc && ((ph[id]||[]).length >= sc.phrases.length);
+      });
+    }
+    return { phrases: phrases, scenes: scenes, tone: (S.tone && S.tone.total) || 0, day1Done: day1Done };
+  }catch(e){ return { phrases: 0, scenes: {}, tone: 0, day1Done: false }; }
+}
+async function pullProfile(){
+  try{
+    const r = await fetch('api/profile?uid=' + encodeURIComponent(UID));
+    const j = await r.json();
+    if(j.ok && j.state && (j.state._ts||0) > (S._ts||0)){
+      S = Object.assign(loadState(), j.state);
+      saveStateLocal();
+      renderHome();
+    }
+  }catch(e){ /* 离线/失败忽略 */ }
+}
+var UID = lsGet('sinoky_uid');
 if(!UID){
   UID = (crypto.randomUUID ? crypto.randomUUID() : 'u'+Date.now()+Math.random().toString(36).slice(2));
-  localStorage.setItem('sinoky_uid', UID);
+  lsSet('sinoky_uid', UID);
 }
+/* v0.3.31 启动：向后端注册设备 uid（保持前后端口径一致），并拉云端进度合并（云端 _ts 新则覆盖） */
+(async function bootSync(){
+  try{
+    const r = await fetch('api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ uid: UID }) });
+    const j = await r.json();
+    if(j.ok && j.uid && j.uid !== UID){ UID = j.uid; lsSet('sinoky_uid', UID); }
+  }catch(e){ /* 离线忽略，本地 uid 照常工作 */ }
+  pullProfile();
+})();
 var S = loadState();
 S.streak = S.streak || 0; S.lastDone = S.lastDone || null;
 S.phrases = S.phrases || {};   /* {sceneId: [idx,...]} */
 S.days = S.days || [];         /* ['2026-08-30',...] */
+S._ts = S._ts || 0;            /* v0.3.31 云端合并时间戳 */
 S.tone = S.tone || { right:0, total:0 };
 saveState();
 
@@ -720,27 +912,35 @@ saveState();
    v0.1.1 fix (P1-1): baidu anonymous tts 502s after cold start; overseas
    users often lack zh-CN web voices, so google goes first, baidu second ---------- */
 var ttsRate = 1;
-/* v0.3.27 语音设置：音色(女/男) + 风格(标准 Edge / 情感 CosyVoice2 v3-plus 带情绪)。
-   instruct 取值限百炼七情感：neutral/happy/surprised/fearful/angry/sad/disgusted。
+/* v0.3.28 语音设置：音色(女/男) + 风格四档(标准 / 开心 / 严肃 / 温柔)。
+   标准 = Edge 微软神经网络(晓晓女/云希男)；
+   开心 = cosyvoice-v3-plus + instruction happy（欢快）；
+   严肃 = cosyvoice-v3-plus + instruction sad（低沉郑重；v3-plus 七情感无"严肃"精确项，sad 最近）；
+   温柔 = cosyvoice-v2 + 龙小淳_v2(女·温柔)/龙湾_v2(男·沉稳) 天生音色，不靠 instruct（v3-plus 无"温柔"档）。
    localStorage 持久化。 */
-var ttsVoice = localStorage.getItem('sinoky_voice') || 'zh-CN-XiaoxiaoNeural';
-var ttsEngine = localStorage.getItem('sinoky_engine') || 'edge';
-var ttsInstruct = localStorage.getItem('sinoky_instruct') || '';
-function setVoice(v, btn){ ttsVoice = v; localStorage.setItem('sinoky_voice', v);
+var ttsVoice = lsGet('sinoky_voice') || 'zh-CN-XiaoxiaoNeural';
+var ttsEngine = lsGet('sinoky_engine') || 'edge';
+var ttsInstruct = lsGet('sinoky_instruct') || '';
+function setVoice(v, btn){ ttsVoice = v; lsSet('sinoky_voice', v);
   document.querySelectorAll('#vb-voice button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
 function setEngine(e, btn){ ttsEngine = e; ttsInstruct = '';
-  localStorage.setItem('sinoky_engine', e); localStorage.removeItem('sinoky_instruct');
+  lsSet('sinoky_engine', e); try{ localStorage.removeItem('sinoky_instruct'); }catch(err){}
   document.querySelectorAll('#vb-engine button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
 function setEmotion(em, btn){ ttsEngine = 'cosy'; ttsInstruct = em;
-  localStorage.setItem('sinoky_engine', 'cosy'); localStorage.setItem('sinoky_instruct', em);
+  lsSet('sinoky_engine', 'cosy'); lsSet('sinoky_instruct', em);
   document.querySelectorAll('#vb-engine button').forEach(function(b){ b.classList.toggle('on', b===btn); }); }
 (function initVoiceUI(){
   document.querySelectorAll('#vb-voice button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===ttsVoice); });
   var engBtns = document.querySelectorAll('#vb-engine button');
   if(ttsEngine==='cosy'){
-    if(!ttsInstruct){ ttsInstruct='happy'; localStorage.setItem('sinoky_instruct','happy'); }  // 旧状态兼容：默认开心
-    var hit = document.querySelector('#vb-engine button[data-emotion="'+ttsInstruct+'"]');
-    engBtns.forEach(function(b){ b.classList.toggle('on', b===hit); });
+    // v0.3.28：仅 happy/serious/gentle 是新四档；旧数据(neutral/''，v0.3.27 的严肃/温柔)回退到标准(edge)，听感保持平静
+    if(ttsInstruct!=='happy' && ttsInstruct!=='serious' && ttsInstruct!=='gentle'){
+      ttsEngine='edge'; lsSet('sinoky_engine','edge'); try{ localStorage.removeItem('sinoky_instruct'); }catch(err){}
+      engBtns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-e')==='edge'); });
+    } else {
+      var hit = document.querySelector('#vb-engine button[data-emotion="'+ttsInstruct+'"]');
+      engBtns.forEach(function(b){ b.classList.toggle('on', b===hit); });
+    }
   } else {
     engBtns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-e')==='edge'); });
   }
@@ -751,11 +951,37 @@ function setEmotion(em, btn){ ttsEngine = 'cosy'; ttsInstruct = em;
    ③Google ④Baidu（后两级主要服务海外用户）。每级失败才降级。 */
 /* melotts 免费层会间歇返回 3043 Internal server error（实测约半数请求），
    故失败先重试最多 2 次再降级；播放阶段失败则直接降级（重试音频无意义）。 */
+/* v0.3.35 S2：全应用复用同一个 <audio> 元素 + 首次用户手势静音解锁。
+   原因① iOS Safari 要求元素的首次 play() 发生在用户手势的同步调用栈内，
+          而 TTS 音频是在 fetch 回调里播的 —— 每次 new Audio() 都是全新元素、
+          从未被解锁 → iOS 上整条兜底链可能全部静音（听发音是全产品第一入口）。
+   原因② 连点 ▶ 会 new 出多个 Audio 同时播，声音叠在一起听不清。
+   解法：单例元素在首次 pointerdown/touchstart/keydown 时用一段静音 WAV 解锁，
+        之后无论多晚 play() 都放行；每次播放前 pause + 换 src，杜绝叠加。 */
+var AUDIO = null, AUDIO_UNLOCKED = false;
+var SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+function unlockAudio(){
+  if(AUDIO_UNLOCKED) return;
+  try{
+    if(!AUDIO) AUDIO = new Audio();
+    AUDIO.src = SILENT_WAV; AUDIO.volume = 0;
+    var pr = AUDIO.play();
+    if(pr && pr.then) pr.then(function(){ AUDIO_UNLOCKED = true; AUDIO.volume = 1; })
+                          .catch(function(){ AUDIO_UNLOCKED = true; AUDIO.volume = 1; });
+    else { AUDIO_UNLOCKED = true; AUDIO.volume = 1; }
+  }catch(e){ AUDIO_UNLOCKED = true; }
+}
+['pointerdown','touchstart','keydown'].forEach(function(ev){
+  document.addEventListener(ev, unlockAudio, { passive:true });
+});
 function playBlob(b, btn, onFail){
   var url = URL.createObjectURL(b);
-  var a = new Audio(url);
-  if(ttsRate < 1) a.playbackRate = ttsRate;   /* melotts 无 speed 参数，用播放速率实现慢放 */
-  if(btn) btn.classList.add('playing');
+  var a = AUDIO || (AUDIO = new Audio());
+  try{ a.pause(); }catch(e){}
+  a.volume = 1;
+  a.src = url;
+  a.playbackRate = (ttsRate && ttsRate < 1) ? ttsRate : 1;   /* melotts 无 speed 参数，用播放速率实现慢放 */
+  if(btn){ btn.classList.add('playing'); btn.classList.remove('wait'); }
   a.onended = function(){ if(btn) btn.classList.remove('playing'); URL.revokeObjectURL(url); };
   a.onerror = function(){ if(btn) btn.classList.remove('playing'); URL.revokeObjectURL(url); onFail && onFail(); };
   a.play().catch(function(){ if(btn) btn.classList.remove('playing'); onFail && onFail(); });
@@ -767,7 +993,7 @@ function serverSpeak(text, btn, onFail, opts, attempt){
   var vInstruct = opts.instruct || '';
   attempt = attempt || 0;
   var aborted = false;
-  var timer = setTimeout(function(){ aborted = true; retryOrFail(); }, 8000);
+  var timer = setTimeout(function(){ aborted = true; retryOrFail(); }, 6000);   /* v0.3.35 S5：8s→6s，缩短无声等待 */
   function retryOrFail(){
     clearTimeout(timer);
     if(attempt < 1){ setTimeout(function(){ serverSpeak(text, btn, onFail, opts, attempt + 1); }, 400); return; }
@@ -803,7 +1029,7 @@ function webSpeak(text, btn, onFail){
     var u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-CN'; u.rate = 0.85 * ttsRate;
     var started = false;
-    u.onstart = function(){ started = true; if(btn) btn.classList.add('playing'); };
+    u.onstart = function(){ started = true; if(btn){ btn.classList.add('playing'); btn.classList.remove('wait'); } };
     u.onend = function(){ if(btn) btn.classList.remove('playing'); };
     u.onerror = function(){ if(btn) btn.classList.remove('playing'); if(!started && onFail) onFail(); };
     speechSynthesis.speak(u);
@@ -817,7 +1043,7 @@ function webSpeak(text, btn, onFail){
    而 audio 元素播放跨域媒体不需要 CORS。无效音频会触发 onerror → 可降级。 */
 function youdaoSpeak(text, btn, onFail){
   if(!text){ onFail && onFail(); return; }
-  var a = new Audio();
+  var a = AUDIO || (AUDIO = new Audio());   /* v0.3.35 S2：复用已解锁的单例，iOS 兜底链才不会静音 */
   var done = false, started = false;
   if(ttsRate < 1) a.playbackRate = ttsRate;   /* 有道无 speed 参数，用播放速率慢放 */
   function fail(){
@@ -826,7 +1052,7 @@ function youdaoSpeak(text, btn, onFail){
     if(btn) btn.classList.remove('playing');
     onFail && onFail();
   }
-  a.onplaying = function(){ started = true; if(btn) btn.classList.add('playing'); };
+  a.onplaying = function(){ started = true; if(btn){ btn.classList.add('playing'); btn.classList.remove('wait'); } };
   a.onended = function(){ if(done) return; done = true; if(btn) btn.classList.remove('playing'); };
   a.onerror = fail;
   a.src = 'https://dict.youdao.com/dictvoice?audio=' +
@@ -835,10 +1061,19 @@ function youdaoSpeak(text, btn, onFail){
   setTimeout(fail, 6000);   /* 有道偶发无响应，超时兜底降级 */
 }
 function speak(text, btn){
-  /* v0.3.27：把当前音色(voice)、引擎(engine)、情绪(instruct)透传给服务端 /api/tts。
-     engine=edge → 微软神经网络(晓晓女/云希男)；engine=cosy → CosyVoice2 v3-plus 情感语音
-     （instruct=happy/neutral/... 走百炼情绪指令；缺 key 自动回退标准）。 */
+  /* v0.3.35 S5：点击立刻进入 wait（呼吸）状态。
+     兜底链最长 20+ 秒（服务端 8s×2 → 有道 6s → 系统语音 1.5s），
+     此前等待期间按钮毫无变化，用户以为没点上 → 反复点（叠加播放）→ 判定"没声音"。
+     wait 会在真正开始播放（playBlob/youdao/webSpeech 的 start 回调）时自动清除。 */
+  if(btn) btn.classList.add('wait');
+  setTimeout(function(){ if(btn) btn.classList.remove('wait'); }, 25000);
+  /* v0.3.28：把当前音色(voice)、引擎(engine)、风格(instruct)透传给服务端 /api/tts。
+     engine=edge → 微软神经网络(晓晓女/云希男)；
+     engine=cosy → CosyVoice2（开心=v3-plus+happy / 严肃=v3-plus+sad / 温柔=v2+龙小淳天生音色；
+     缺 key 自动回退标准 Edge）。 */
   serverSpeak(text, btn, function(){
+    /* v0.3.35 S5：主音源失败换有道时给一次可见提示，别让用户对着静止的按钮干等 */
+    if(btn) btn.title = 'Trying another voice source…';
     youdaoSpeak(text, btn, function(){
       webSpeak(text, btn, function(){
         toast('Audio unavailable — check your connection');
@@ -855,6 +1090,8 @@ function toast(msg){
 }
 function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
+  /* v0.3.35 S1：离开场景视图时停止进行中的录音，避免麦克风在后台常开 */
+  if(v !== 'scene' && typeof stopRecording === 'function') stopRecording();
   ['home','scene','tone','prog','cards','sentences','reading'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
@@ -872,21 +1109,23 @@ function renderHome(){
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
   $('st-phrases').textContent = said;
   $('st-tone').textContent = S.tone.total ? Math.round(100*S.tone.right/S.tone.total)+'%' : '—';
-  /* v0.3.15 Day 1 Survival Pack 顺序引导卡（I-013 P1）：把平铺场景改成通关清单 */
-  var day1 = SCENES.filter(function(s){ return s.day1; });
-  var day1Done = day1.filter(function(s){ return (S.phrases[s.id]||[]).length === s.phrases.length; }).length;
-  var day1All = day1Done === day1.length;
-  var d1 = '<div class="card day1"><div class="top"><h2>📅 Day 1 Survival Pack</h2>'+
-    '<span class="badge '+(day1All?'teal':'')+'">'+(day1All?'DONE ✓':day1Done+'/'+day1.length)+'</span></div>'+
-    '<p class="desc">Your first day in China. Do these 3 in order — by tonight you can survive and make friends. Tap a step to start.</p>'+
+  /* v0.3.34 Day 1-7 引导卡：按"句"分组（跨场景），每天 3-6 句，5 分钟量 */
+  var cd = currentDay(), cdInfo = DAYS[cd-1], cItems = dayItems(cd);
+  var cdDone = cItems.filter(daySaid).length;
+  var cdAll = cdDone === cItems.length && cItems.length > 0;
+  var doneDays = 0; for (var dn = 1; dn <= DAYS.length; dn++) { if (isDayDone(dn)) doneDays++; }
+  var d1 = '<div class="card day1"><div class="top"><h2>📅 Day '+cd+' of 7 · '+cdInfo.t+'</h2>'+
+    '<span class="badge '+(cdAll?'teal':'')+'">'+cdDone+'/'+cItems.length+'</span></div>'+
+    '<p class="desc">'+cdInfo.d+' Tap a line to open it — play, cover, say it 3×.</p>'+
     '<div class="day1-steps">';
-  day1.forEach(function(s,i){
-    var sd = (S.phrases[s.id]||[]).length === s.phrases.length;
-    d1 += '<button class="day1-step'+(sd?' done':'')+'" onclick="openScene(\''+s.id+'\')">'+
-      '<span class="num">'+(i+1)+'</span><span>'+s.icon+' '+s.title+'</span>'+
-      '<span class="st">'+(sd?'✓ done':'Start')+'</span></button>';
+  cItems.forEach(function(x,i){
+    d1 += '<button class="day1-step'+(daySaid(x)?' done':'')+'" onclick="openScene(\''+x.scene.id+'\','+x.idx+')">'+
+      '<span class="num">'+(i+1)+'</span><span>'+x.p.en+'</span>'+
+      '<span class="st">'+(daySaid(x)?'✓ done':'Start')+'</span></button>';
   });
-  d1 += '</div><div class="day1-cta" style="display:'+(day1All?'block':'none')+'">🎉 Day 1 complete! You can survive in China.</div></div>';
+  d1 += '</div><div class="day1-cta" style="display:'+(cdAll?'block':'none')+'">'+
+    (cd>=7 ? '🎉 All 7 days done — you can survive in China.' : '🎉 Day '+cd+' complete! Day '+(cd+1)+' unlocks next time you open Sinoky.')+
+    '</div><div class="day-prog">'+doneDays+' / 7 days finished</div></div>';
 
   var html = '';
   SCENES.forEach(function(sc){
@@ -904,27 +1143,38 @@ function renderHome(){
 
 /* ---------- scene flow ---------- */
 var curScene = null;
-function openScene(id){
+function openScene(id, idx){
   curScene = SCENES.filter(function(s){ return s.id===id; })[0];
   $('sc-title').textContent = curScene.icon+' '+curScene.title;
   $('sc-desc').textContent = curScene.desc;
   $('sc-finish').style.display = 'none';
   renderSceneList();
   go('scene');
+  /* v0.3.34：从 Day 路径点进来时定位并短暂高亮目标句，免得用户在长列表里找不到该练哪句 */
+  if (typeof idx === 'number') {
+    setTimeout(function(){
+      var el = document.getElementById('ph-'+idx);
+      if (el) {
+        el.classList.add('focus');
+        try { el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e){ el.scrollIntoView(); }
+        setTimeout(function(){ el.classList.remove('focus'); }, 2600);
+      }
+    }, 140);
+  }
 }
 function renderSceneList(){
   var done = S.phrases[curScene.id] || [];
   var html = '';
   curScene.phrases.forEach(function(p,i){
     var isDone = done.indexOf(i) > -1;
-    html += '<div class="phrase'+(isDone?' done':'')+'">'+
+    html += '<div class="phrase'+(isDone?' done':'')+'" id="ph-'+i+'">'+
       '<div class="p-row"><div><div class="p-en">'+p.en+'</div>'+
-      '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="this.classList.remove(\'hidden\')" id="zh-'+i+'">'+
+      '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="toggleZh('+i+')" id="zh-'+i+'" title="Tap to reveal / cover">'+
       '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div></div>'+
       '<div class="p-hint">'+(isDone?'✓ said out loud':'Tap to reveal · cover &amp; say it 3×')+'</div></div>'+
       '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)">▶</button></div>'+
       '<div class="p-actions">'+
-      '<button class="btn ghost speed" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Tap again for a faster speed">'+SPEEDS[speedIdx].label+'</button>'+
+      '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Next tap: '+SPEEDS[0].tip+'">'+SPEEDS[0].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
       '</div>' + realHtml(i, p) + '<div class="score-result" id="score-'+i+'"></div></div>';
@@ -943,20 +1193,24 @@ var SPEEDS = [
   { rate: 1.0, label: '▶ Normal',  tip: 'textbook speed' },
   { rate: 1.3, label: '🚀 Real',   tip: 'real-life speed' }
 ];
-var speedIdx = 0;
+var rateTimer = null;
 function speedSpeak(text, btn){
-  var s = SPEEDS[speedIdx];
+  /* v0.3.35 M1：档位改为"每个按钮自己记"（data-sp），不再用全局 speedIdx。
+     旧实现全局共用一个索引：点 A 句后索引 +1，之后点 B 句时 B 按钮仍显示
+     Slow 却播放 Normal —— 标签与实际速度永久错位，"三档语速对比"等于在骗人。 */
+  var cur = btn ? parseInt(btn.getAttribute('data-sp') || '0', 10) : 0;
+  if(!(cur >= 0)) cur = 0;
+  var s = SPEEDS[cur % SPEEDS.length];
+  var next = (cur + 1) % SPEEDS.length;
   ttsRate = s.rate;
   speak(text, btn);
-  speedIdx = (speedIdx + 1) % SPEEDS.length;
-  var nxt = SPEEDS[speedIdx];
-  setTimeout(function(){
-    ttsRate = 1;
-    if(btn && btn.parentNode){
-      btn.textContent = nxt.label;
-      btn.title = 'Next tap: ' + nxt.tip;
-    }
-  }, 4000);
+  if(btn){
+    btn.setAttribute('data-sp', String(next));
+    btn.textContent = SPEEDS[next].label;
+    btn.title = 'Next tap: ' + SPEEDS[next].tip;
+  }
+  if(rateTimer) clearTimeout(rateTimer);
+  rateTimer = setTimeout(function(){ ttsRate = 1; rateTimer = null; }, 4000);
 }
 
 /* 真实口语变体（v0.3.9 / I-012）：课本句下面给出真实生活说法。
@@ -987,10 +1241,31 @@ function toggleReal(i){
   var btn = el.parentNode.querySelector('.real-toggle');
   if(btn) btn.classList.toggle('on', willOpen);
 }
+/* v0.3.35 M3：拼音可以反复盖回去。
+   旧实现只能 remove('hidden') —— 点开一次后就再也"遮不住"，
+   无法重来一遍盲说，与产品口号 cover & say it 3× 直接冲突。 */
+function toggleZh(i){
+  var el = $('zh-'+i);
+  if(!el) return;
+  el.classList.toggle('hidden');
+  var hint = el.parentNode && el.parentNode.querySelector('.p-hint');
+  if(hint){
+    var done = (S.phrases[curScene.id] || []).indexOf(i) > -1;
+    hint.textContent = el.classList.contains('hidden')
+      ? 'Covered — say it out loud, then tap to check'
+      : (done ? '✓ said out loud' : 'Tap again to cover · say it 3×');
+  }
+}
 function markDone(i){
   var arr = S.phrases[curScene.id] = S.phrases[curScene.id] || [];
-  if(arr.indexOf(i)===-1){ arr.push(i); saveState(); }
-  renderSceneList();
+  var at = arr.indexOf(i);
+  if(at === -1){ arr.push(i); saveState(); toast('Nice — now say it twice more out loud'); }
+  else {
+    /* v0.3.35 M4：误点可撤销。旧实现只 push 不 pop，一次误点就永久污染
+       Day 进度与场景进度条，且无法回退。 */
+    arr.splice(at, 1); saveState(); toast('Un-marked — say it again to count it');
+  }
+  renderSceneList(); renderHome();
 }
 // ---- M1 评分：前端耳朵(Web Speech) + Worker 大脑(pinyin-pro 比对) ----
 var SCORE_API = ''; // v0.3.6 同源 /api/score（合并到 Pages Worker），消除跨域/跨网络依赖
@@ -1001,7 +1276,15 @@ var SCORE_API = ''; // v0.3.6 同源 /api/score（合并到 Pages Worker），�
    新链路：MediaRecorder 本地录音 → 重采样 16kHz 单声道 → WAV
    → 同源 api/asr（Cloudflare whisper，国内外均可达）→ 拿到文本
    → 交给 score-worker 做音节级评分（保留详细反馈）。 */
-var scRec = null, scChunks = null;
+var scRec = null, scRecIdx = -1;
+/* v0.3.35 S1：录音锁 + 每次录音自己的数据桶。
+   旧实现用全局 scChunks + 全局 scRec：在第 1 句录音时点第 3 句 Score，
+   新的 MediaRecorder 覆盖 scRec → 旧 recorder 永不被 stop →
+   ①旧按钮永久卡在 "Stop"、评分结果永不出 ②麦克风轨道永不释放（指示灯常亮）
+   ③全局 scChunks 被清空，旧录音数据丢失。 */
+function stopRecording(){
+  try{ if(scRec && scRec.state !== 'inactive') scRec.stop(); }catch(e){}
+}
 function encodeWAV(samples, sampleRate){
   var n = samples.length;
   var buf = new ArrayBuffer(44 + n * 2);
@@ -1058,9 +1341,12 @@ async function scorePhrase(i){
   if(!btn || !box) return;
   /* 正在录音 → 停止并把音频送去识别 */
   if(btn.classList.contains('listening')){
-    try{ if(scRec && scRec.state !== 'inactive') scRec.stop(); }catch(e){}
+    stopRecording();
     return;
   }
+  /* v0.3.35 S1：别的句子还在录 → 先收掉它（它仍会走完自己的识别/评分），
+     再开始新的。避免旧按钮永久卡 Stop + 麦克风泄漏。 */
+  if(scRec && scRec.state !== 'inactive'){ stopRecording(); }
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined'){
     box.style.display='block';
     box.innerHTML='<div class="score-err">Recording is not supported in this browser. Use Chrome or Edge to practise with scoring.</div>';
@@ -1094,10 +1380,10 @@ async function scorePhrase(i){
     }
     return;
   }
-  scChunks = [];
+  var chunks = [];                 /* v0.3.35 S1：本次录音专属桶，不再共用全局 scChunks */
   var rec = new MediaRecorder(stream);
-  scRec = rec;
-  rec.ondataavailable = function(e){ if(e.data && e.data.size) scChunks.push(e.data); };
+  scRec = rec; scRecIdx = i;
+  rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
   rec.onerror = function(e){
     /* 录音过程中出错（手机端/微信 WebView 常见） */
     console.log('[REC] MediaRecorder error', e && e.error && e.error.message);
@@ -1107,13 +1393,13 @@ async function scorePhrase(i){
       ((e && e.error && e.error.name) || 'unknown') + '. Try again in a different browser.</div>';
   };
   rec.onstop = async function(){
-    scRec = null;
+    if(scRec === rec){ scRec = null; scRecIdx = -1; }
     btn.classList.remove('listening'); btn.textContent='🎤 Score';
     stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} });
     box.style.display='block';
     box.innerHTML='<div class="score-load">Recognising…</div>';
-    var blob = new Blob(scChunks);
-    console.log('[REC] stopped, chunks=', scChunks.length, 'total bytes=', blob.size);
+    var blob = new Blob(chunks);
+    console.log('[REC] stopped, chunks=', chunks.length, 'total bytes=', blob.size);
     /* 录音字节数过小（<500 字节）说明基本是空的，可能是没真的录到声音 */
     if(blob.size < 500){
       box.innerHTML='<div class="score-err">No sound captured. Hold the phone closer to your mouth and try again.</div>';
@@ -1160,7 +1446,7 @@ async function sendScore(p, transcript, i){
     console.log('[SCORE] http', res.status);
     var data = await res.json();
     console.log('[SCORE] body', JSON.stringify(data).slice(0, 300));
-    if(data.error){ box.innerHTML='<div class="score-err">'+data.error+'</div>'; return; }
+    if(data.error){ box.innerHTML='<div class="score-err">'+esc(data.error)+'</div>'; return; }
     box.innerHTML = renderScore(data);
     var badge = document.querySelector('#v-scene .badge.teal');
     if(badge) badge.textContent = 'SCORED · '+data.overall;
@@ -1175,7 +1461,7 @@ function renderScore(d){
   var h = '<div class="score-card"><div class="score-overall">'+d.overall+'<span>'+d.verdict+'</span></div><div class="score-sylls">';
   (d.perSyll||[]).forEach(function(s){
     var ok = s.score>=0.99;
-    h += '<span class="ss '+(ok?'ok':'bad')+'" title="'+(s.errs&&s.errs.length?s.errs.join('/'):'✓')+'">'+s.target+'</span>';
+    h += '<span class="ss '+(ok?'ok':'bad')+'" title="'+esc(s.errs&&s.errs.length?s.errs.join('/'):'✓')+'">'+esc(s.target)+'</span>';   /* v0.3.35 L4：识别文本转义 */
   });
   h += '</div></div>';
   return h;
@@ -1194,11 +1480,13 @@ function finishScene(){
 }
 
 /* ---------- tone gym ---------- */
-var toneQ = null, toneLocked = false, lastTone = -1;
+var toneQ = null, toneLocked = false, lastTone = -1, toneTimer = null;
 function startTone(){
   go('tone'); nextTone();
 }
 function nextTone(){
+  /* v0.3.35 L2：允许手动跳过（原实现只能干等自动跳转，答对 1.4s 就被推走） */
+  if(toneTimer){ clearTimeout(toneTimer); toneTimer = null; }
   /* v0.1.1 fix (P2): never repeat the same item twice in a row */
   var n;
   do { n = Math.floor(Math.random()*4); } while(n === lastTone);
@@ -1224,13 +1512,13 @@ function answerTone(n){
   var ok = n === toneQ.t;
   if(ok){ S.tone.right++; }
   saveState();
-  $('tb-'+toneQ.t).classList.add(ok?'right':'right'); /* reveal correct */
+  $('tb-'+toneQ.t).classList.add('right');   /* v0.3.35 L1：原写法 ok?'right':'right' 两分支相同，是笔误 */
   if(!ok){ $('tb-'+n).classList.add('wrong'); }
   $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
   $('tone-big').innerHTML = ok
     ? '<b>✓ '+toneQ.hz+' ('+toneQ.py+')</b> = '+toneQ.mean
     : '<b style="color:var(--red)">✗ That meant something else!</b> '+toneQ.hz+' ('+toneQ.py+') = '+toneQ.mean;
-  setTimeout(nextTone, ok ? 1400 : 2600);
+  toneTimer = setTimeout(nextTone, ok ? 1800 : 3000);
 }
 
 /* ---------- progress ---------- */
@@ -1252,7 +1540,7 @@ function renderProgress(){
    数据离线可用：sw.js 预缓存 data/flashcards.hsk1.json。 */
 var CARDS = [], fcIdx = 0, fcRevealed = false, NW = [];
 try { NW = JSON.parse(localStorage.getItem('sinoky_newwords')) || []; } catch(e){ NW = []; }
-function saveNW(){ localStorage.setItem('sinoky_newwords', JSON.stringify(NW)); }
+function saveNW(){ lsSet('sinoky_newwords', JSON.stringify(NW)); }
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function loadCards(){
@@ -1297,7 +1585,7 @@ function renderCard(){
       '<button class="btn ghost" onclick="fcMove(1)">Next →</button>' +
     '</div>' +
     '<div class="fc-strokes" id="fc-strokes"></div>';
-  S.cards = S.cards || {}; S.cards.idx = fcIdx; saveState();
+  S.cards = S.cards || {}; S.cards.idx = fcIdx; saveStateLocal(); pushProfileSoon();
 }
 function fcToggle(){ fcRevealed = !fcRevealed; renderCard(); }
 function fcMove(d){
@@ -1414,7 +1702,7 @@ var SENT_IDX = 0;
 var SENT_STATS;
 try { SENT_STATS = JSON.parse(localStorage.getItem('sinoky-connect-stats')) || {attempts:0,passes:0}; }
 catch(e){ SENT_STATS = {attempts:0,passes:0}; }
-function saveSentStats(){ localStorage.setItem('sinoky-connect-stats', JSON.stringify(SENT_STATS)); }
+function saveSentStats(){ lsSet('sinoky-connect-stats', JSON.stringify(SENT_STATS)); }
 
 function loadSentences(){
   if(SENT_TEMPLATES) return Promise.resolve();
@@ -1468,7 +1756,10 @@ function renderSentence(){
       '</div>' +
       '<div class="sent-result" id="sent-result" style="display:none"></div>' +
       '<div class="sent-en">' + esc(t.en) + '</div>';
-    setTimeout(function(){ var i = $('sent-input'); if(i) i.focus(); }, 60);
+    /* v0.3.35 M7：只在指针精确的设备（桌面）自动聚焦。
+       移动端一进页面就弹软键盘，题目还没看清就被顶掉半屏。 */
+    setTimeout(function(){ var i = $('sent-input');
+      if(i && window.matchMedia && window.matchMedia('(pointer:fine)').matches) i.focus(); }, 60);
   } else if(SENT_MODE === 'connectors'){
     $('sent-area').innerHTML =
       '<div class="sent-meta"><span>' + (SENT_IDX+1) + ' / ' + list.length + '</span><span>' + modeLabel + '</span></div>' +
@@ -1494,7 +1785,10 @@ function renderSentence(){
       '</div>' +
       '<div class="sent-result" id="sent-result" style="display:none"></div>' +
       '<div class="sent-en">' + esc(t.en) + '</div>';
-    setTimeout(function(){ var i = $('sent-input'); if(i) i.focus(); }, 60);
+    /* v0.3.35 M7：只在指针精确的设备（桌面）自动聚焦。
+       移动端一进页面就弹软键盘，题目还没看清就被顶掉半屏。 */
+    setTimeout(function(){ var i = $('sent-input');
+      if(i && window.matchMedia && window.matchMedia('(pointer:fine)').matches) i.focus(); }, 60);
   }
 }
 function sentCheck(){
@@ -1562,8 +1856,10 @@ function sentReveal(){
   box.style.display = 'block';
   box.className = 'sent-result bad';
   var ans = SENT_MODE === 'completion' ? (t.front + t.answer) : t.sample;
-  box.innerHTML = '❌ ' + esc(ans) + '<div class="sent-en">' + esc(t.en) + '</div>';
-  recordSent(false);
+  box.innerHTML = 'ℹ️ ' + esc(ans) + '<div class="sent-en">' + esc(t.en) + '</div>';
+  /* v0.3.35 M5：看答案不再记为一次失败。
+     旧实现 recordSent(false) → attempts+1 / passes 不变，用户只是想看答案，
+     准确率却被拉低，统计失真 + 用户困惑。看答案不计入 attempts。 */
 }
 
 /* ---------- reading (v0.3.0): 沉浸阅读器 ----------
@@ -1592,12 +1888,18 @@ function rdCardOf(w){
   for(var i=0;i<CARDS.length;i++){ if(CARDS[i].hanzi === w) return CARDS[i]; }
   return null;
 }
+var rdBusy = false;
 function rdRead(){
+  /* v0.3.35 M8：字典（614KB）首次加载要等，期间禁用重复点击，
+     否则连点会并发 import、每个都从零下。 */
+  if(rdBusy) return;
   var txt = ($('rd-input').value || '').trim();
   if(!txt){ toast('Paste some Chinese text first'); return; }
   var hint = $('rd-hint'), box = $('rd-text');
-  hint.textContent = 'Loading dictionary, then segmenting…';
+  rdBusy = true;
+  hint.textContent = 'Loading the dictionary (first time only)…';
   rdLoadPY().then(function(mod){
+    rdBusy = false;
     var items;
     try { items = mod.segment(txt); }
     catch(e){ hint.textContent = 'Segmentation failed: ' + e.message; return; }
@@ -1617,8 +1919,11 @@ function rdRead(){
     box.classList.toggle('nopy', !rdShowPy);
     hint.textContent = items.length + ' segments. Tap any Chinese word for details.';
     window.__rdItems = items;
-  }).catch(function(e){
-    hint.textContent = 'Could not load the dictionary: ' + (e && e.message ? e.message : '');
+    }).catch(function(e){
+    rdBusy = false;
+    /* v0.3.35 M8：区分"字典没下来（网络/离线）"与"分词失败"，
+       别把 JSON 解析错误（SW 把失败请求回落成 index.html）甩给用户看。 */
+    hint.textContent = 'Could not load the dictionary — check your connection and tap Read again.';
   });
 }
 function rdTap(i){
@@ -1639,15 +1944,37 @@ function rdTap(i){
           (card.bushou ? ' · radical ' + esc(card.bushou) : '') +
           (card.tone ? ' · tone ' + esc(card.tone) : '') + '</div>' +
         (card.sentence ? '<div class="rd-pop-meta">e.g. ' + esc(card.sentence.zh) + ' — ' + esc(card.sentence.en) + '</div>' : '')
-      : '<div class="rd-pop-meta">Not in the HSK1 deck yet — pinyin only.</div>') +
+      /* v0.3.35 M9：CARDS 为空时的真实原因是"字卡库没加载"（多为离线首访），
+         旧文案一律说"不在 HSK1 库里"，把加载失败伪装成内容缺失。 */
+      : '<div class="rd-pop-meta">' + (CARDS.length
+          ? 'Not in the HSK1 deck yet — pinyin only.'
+          : 'Character deck not loaded (offline?) — pinyin only.') + '</div>') +
     '<div class="rd-pop-actions">' +
       '<button class="btn ghost" onclick="speak(\'' + esc(w) + '\',this)">🔊 Play</button>' +
       '<button class="btn ' + (starred ? 'primary' : 'ghost') + '" onclick="rdStar(\'' + esc(w) + '\')">' + (starred ? '★ Saved' : '☆ Save') + '</button>' +
       '<button class="btn ghost" onclick="rdClose()">Close</button>' +
     '</div>';
   pop.classList.add('on');
+  /* v0.3.35 M10：加遮罩 + 锁背景滚动（与反馈面板一致）。
+     旧实现没有遮罩，弹卡浮在内容上、背景还能滚，误触后只能精准点 Close。 */
+  var mk = $('rd-mask');
+  if(mk){ mk.classList.add('on'); mk.onclick = rdClose; }
+  document.body.style.overflow = 'hidden';
 }
-function rdClose(){ $('rd-pop').classList.remove('on'); }
+function rdClose(){
+  $('rd-pop').classList.remove('on');
+  var mk = $('rd-mask');
+  if(mk) mk.classList.remove('on');
+  document.body.style.overflow = '';
+}
+/* v0.3.35：ESC 关闭任意浮层（阅读卡 / 反馈 / 分享） */
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  var fb = $('fb-panel'), sp = $('share-panel'), rp = $('rd-pop');
+  if(fb && fb.classList.contains('on')) closeFB();
+  else if(sp && sp.style.display === 'block') closeShare();
+  else if(rp && rp.classList.contains('on')) rdClose();
+});
 function rdStar(w){
   var i = NW.indexOf(w);
   if(i > -1){ NW.splice(i,1); toast('Removed from saved words'); }
@@ -1691,10 +2018,11 @@ function closeFB(){
   $('fb-panel').classList.remove('on');
   document.body.style.overflow = '';
 }
-function sendFB(){
+function sendFB(btn){
+  /* v0.3.35 M11：btn 由 onclick 显式传入。
+     旧实现用全局 window.event —— Chrome/Safari 有，严格模式与其它环境更脆。 */
   var txt = ($('fb-text').value || '').trim();
   if(!txt){ toast('Please write a short message first'); return; }
-  var btn = event && event.target;
   if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
   fetch('api/feedback', {
     method:'POST',
@@ -1821,6 +2149,10 @@ function sendFB(){
   }
   /* 长按复位时防弹出系统菜单/选择 */
   btn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  /* v0.3.35 M11：键盘用户也能打开反馈（原实现只在 pointerup 打开，Tab+Enter 无效） */
+  btn.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openFB(); }
+  });
 })();
 
 /* 反馈分类标签切换 */
@@ -1850,16 +2182,98 @@ function closeOnb(){
   }
 })();
 
+/* v0.3.31 分享/内测招募：复制邀请链接（含进度成就文案） */
+function openShare(){
+  var said = 0; for(var k in (S.phrases||{})) said += (S.phrases[k]||[]).length;
+  var st = $('share-stats');
+  if(st) st.innerHTML = '🔥 ' + (S.streak||0) + ' day streak · 🗣️ ' + said + ' phrases said';
+  var m = $('share-mask'), p = $('share-panel');
+  if(m) m.style.display='block'; if(p) p.style.display='block';
+}
+function closeShare(){
+  var m = $('share-mask'), p = $('share-panel');
+  if(m) m.style.display='none'; if(p) p.style.display='none';
+}
+function copyShare(){
+  var link = 'https://sinoky.pages.dev';
+  var text = "I'm learning to actually speak Chinese with Sinoky (free beta) — " + link;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ toast('Invite link copied ✅'); }).catch(function(){ fallbackCopy(text); });
+  } else { fallbackCopy(text); }
+}
+function fallbackCopy(t){
+  var ta = document.createElement('textarea'); ta.value = t; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('Invite link copied ✅'); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ---------- v0.3.35 S4：进度导出 / 导入 ----------
+   背景：privacy.html 白纸黑字承诺"清缓存后进度仍可恢复"，但 uid 只是本地随机生成
+   并存在 localStorage，没有账号、没有导出入口 —— 清缓存或换机后 uid 丢失，
+   云端那份 p:<uid> 永远取不回，承诺落空（GDPR 层面属于不实声明）。
+   备份串 = base64(uid + state)，粘回即恢复；因为带 uid，恢复后也能重新接续云端备份。 */
+function exportProgress(){
+  var payload = { v: 1, app: 'sinoky', uid: UID, state: S, at: Date.now() };
+  var code;
+  try { code = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); }
+  catch(e){ toast('Export failed on this browser'); return; }
+  var box = $('prog-io');
+  if(box){ box.value = code; box.select && box.select(); }
+  copyText(code, 'Backup code copied ✅');
+}
+function importProgress(){
+  var box = $('prog-io');
+  var raw = ((box && box.value) || '').trim();
+  if(!raw){ toast('Paste your backup code first'); return; }
+  var payload = null;
+  try { payload = JSON.parse(decodeURIComponent(escape(atob(raw)))); }
+  catch(e){ toast('That does not look like a Sinoky backup code'); return; }
+  if(!payload || payload.app !== 'sinoky' || !payload.state || typeof payload.state !== 'object'){
+    toast('Backup code is not valid'); return;
+  }
+  var st = payload.state;
+  if(!st.phrases && !st.days && !st.tone && !st.streak){
+    toast('This backup has no progress in it'); return;
+  }
+  S = st;
+  S.streak = S.streak || 0; S.lastDone = S.lastDone || null;
+  S.phrases = S.phrases || {}; S.days = S.days || []; S._ts = S._ts || 0;
+  S.tone = S.tone || { right:0, total:0 };
+  if(typeof payload.uid === 'string' && payload.uid.length >= 8){
+    UID = payload.uid; lsSet('sinoky_uid', UID);
+  }
+  saveStateLocal(); pushProfile(); renderProgress(); renderHome();
+  toast('Progress restored ✅');
+}
+function copyText(t, okMsg){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast(okMsg); }).catch(function(){ fallbackCopy(t); });
+  } else { fallbackCopy(t); }
+}
+
 /* ---------- pwa: sw register + version check ---------- */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(function(){});
 }
 fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(function(j){
-  if(j.version && j.version !== APP_VERSION){ toast('New version available — refresh!'); }
+  /* v0.3.35 M6：改为顶部常驻、可点击的横幅。
+     旧实现是 2.2 秒就消失且不可点的 toast，用户根本不知道"refresh"该怎么操作
+     （PWA 里既不能下拉刷新也没人知道要重装）→ 长期停留在旧版。 */
+  if(j.version && j.version !== APP_VERSION){
+    var bar = $('updatebar');
+    if(bar){
+      bar.textContent = 'New version ' + j.version + ' — tap to refresh';
+      bar.style.display = 'block';
+      bar.onclick = function(){ try{ location.reload(true); }catch(e){ location.reload(); } };
+    }
+  }
 }).catch(function(){});
 
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
 renderHome();
+/* v0.3.35 S3：存储被禁用时明确告诉用户"进度不会被保存"，而不是让他以为保存了 */
+if(!LS_OK) setTimeout(function(){ toast('Storage is blocked — progress will not be saved'); }, 1200);
 loadCards();
 loadSentences();
 </script>

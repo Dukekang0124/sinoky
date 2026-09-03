@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinoky — Beta Stats</title>
+<style>
+  body{margin:0;background:#141a24;color:#e8eef5;font-family:system-ui,-apple-system,sans-serif;padding:20px;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{font-size:13px;color:#8fa3b8;margin-bottom:20px}
+  h2{font-size:13px;color:#7fb3b0;margin:26px 0 10px;text-transform:uppercase;letter-spacing:.6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .card{background:#1b2330;border:1px solid #2a3542;border-radius:12px;padding:12px 14px}
+  .card .n{font-size:22px;font-weight:800}
+  .card .l{font-size:11px;color:#8fa3b8;margin-top:2px}
+  .card .h{font-size:11px;color:#6b7f94;margin-top:4px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #2a3542}
+  th{color:#8fa3b8;font-weight:600;font-size:11px;text-transform:uppercase}
+  .pass{color:#5ec9a0;font-weight:700}
+  .fail{color:#e63946;font-weight:700}
+  .na{color:#6b7f94}
+  .foot{margin-top:28px;font-size:12px;color:#6b7f94}
+  a{color:#7fb3b0}
+  .err{background:#3a1f24;border:1px solid #e63946;border-radius:10px;padding:12px;color:#ffb3ba}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📊 Sinoky Beta Stats</h1>
+  <div class="sub">Anonymous usage data only — no personal information, no voice recordings. <span id="asof"></span></div>
+
+  <div id="err"></div>
+
+  <div id="body" style="display:none">
+    <h2>Users</h2>
+    <div class="grid">
+      <div class="card"><div class="n" id="users">—</div><div class="l">Total users</div></div>
+      <div class="card"><div class="n" id="dau">—</div><div class="l">Active today</div></div>
+      <div class="card"><div class="n" id="ppu">—</div><div class="l">Phrases per user</div><div class="h">North star metric</div></div>
+      <div class="card"><div class="n" id="day1">—</div><div class="l">Finished Day 1</div></div>
+    </div>
+
+    <h2>Retention (only counts users old enough)</h2>
+    <div class="grid">
+      <div class="card"><div class="n" id="d1">—</div><div class="l">Day 1</div><div class="h" id="d1e"></div></div>
+      <div class="card"><div class="n" id="d3">—</div><div class="l">Day 3</div><div class="h" id="d3e"></div></div>
+      <div class="card"><div class="n" id="d7">—</div><div class="l">Day 7</div><div class="h" id="d7e"></div></div>
+    </div>
+
+    <h2>Beta gate — kill criteria</h2>
+    <table>
+      <tr><th>Metric</th><th>Actual</th><th>Target</th><th>Verdict</th></tr>
+      <tbody id="gate"></tbody>
+    </table>
+
+    <h2>Scene usage</h2>
+    <table><tbody id="scenes"></tbody></table>
+  </div>
+
+  <div class="foot"><a href="./">← Back to Sinoky</a></div>
+</div>
+
+<script>
+/* v0.3.35 热修：配合 /api/stats 的 token 鉴权。
+   token 从 URL ?token= 读取并记住，或已存在 localStorage 时复用。 */
+var SK = 'sinoky_stats_token';
+var qsTok = new URLSearchParams(location.search).get('token') || '';
+if (qsTok) { try { localStorage.setItem(SK, qsTok); } catch (e) {} }
+var TOK = qsTok || '';
+try { if (!TOK) TOK = localStorage.getItem(SK) || ''; } catch (e) {}
+
+function showLock(msg){
+  var b = document.getElementById('body');
+  b.style.display = 'block';
+  b.innerHTML = '<div class="card"><div class="n" style="font-size:15px">🔒 ' + msg + '</div>' +
+    '<div style="margin-top:10px"><input id="tk" placeholder="stats token" autocomplete="off" ' +
+    'style="background:#0f151d;color:#e8eef5;border:1px solid #2a3542;border-radius:8px;padding:8px 10px;width:60%">' +
+    ' <button id="tkgo" style="background:#7fb3b0;color:#141a24;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer">Unlock</button></div>' +
+    '<div class="h" style="margin-top:8px">Tip: bookmark <code>stats.html?token=YOUR_TOKEN</code></div></div>';
+  document.getElementById('tkgo').onclick = function(){
+    var v = document.getElementById('tk').value.trim();
+    if (!v) return;
+    try { localStorage.setItem(SK, v); } catch (e) {}
+    location.search = '?token=' + encodeURIComponent(v);
+  };
+  document.getElementById('tk').addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter') document.getElementById('tkgo').click();
+  });
+}
+
+fetch('api/stats' + (TOK ? '?token=' + encodeURIComponent(TOK) : '')).then(function(r){
+  if (r.status === 401) { showLock('This dashboard needs a token.'); throw new Error('__HANDLED__'); }
+  return r.json();
+}).then(function(j){
+  if(j && j.ok === false && /unauthorized/i.test(j.error || '')){ showLock('This dashboard needs a token.'); throw new Error('__HANDLED__'); }
+  if(!j.ok) throw new Error(j.error || 'request failed');
+  document.getElementById('body').style.display = 'block';
+  document.getElementById('asof').textContent = 'Updated ' + new Date(j.asOf).toLocaleString();
+
+  document.getElementById('users').textContent  = j.users;
+  document.getElementById('dau').textContent    = j.dau;
+  document.getElementById('ppu').textContent    = j.northStar.phrasesPerUser;
+  document.getElementById('day1').textContent   = (j.day1DoneRate == null ? '—' : j.day1DoneRate + '%');
+
+  var r = j.retention, e = r.eligible;
+  function setRet(id, v, el){
+    document.getElementById(id).textContent = (v == null ? '—' : v + '%');
+    document.getElementById(id + 'e').textContent = el + ' users old enough';
+  }
+  setRet('d1', r.d1, e.d1); setRet('d3', r.d3, e.d3); setRet('d7', r.d7, e.d7);
+
+  var g = j.gate;
+  var rows = [
+    ['D7 retention',           g.d7,        '%'],
+    ['Phrases per user',       g.northStar, ''],
+    ['First-day completion',   g.firstDay,  '%'],
+    ['Tone Gym usage',         g.tone,      '%']
+  ];
+  document.getElementById('gate').innerHTML = rows.map(function(x){
+    var m = x[1], v = m.actual;
+    var cls  = !m.enough ? 'na' : (m.pass ? 'pass' : 'fail');
+    var txt  = !m.enough ? 'not enough data yet' : (m.pass ? 'PASS' : 'below target');
+    return '<tr><td>' + x[0] + '</td><td>' + (v == null ? '—' : v + x[2]) +
+           '</td><td>' + m.target + '</td><td class="' + cls + '">' + txt + '</td></tr>';
+  }).join('');
+
+  var sd = j.sceneDist || {};
+  var keys = Object.keys(sd).sort(function(a,b){ return sd[b] - sd[a]; });
+  document.getElementById('scenes').innerHTML = keys.length
+    ? keys.map(function(k){ return '<tr><td>' + k + '</td><td>' + sd[k] + '</td></tr>'; }).join('')
+    : '<tr><td class="na">No data yet</td><td></td></tr>';
+}).catch(function(e){
+  if (e && e.message === '__HANDLED__') return;
+  document.getElementById('err').innerHTML =
+    '<div class="err">Could not load stats: ' + (e && e.message ? e.message : e) + '</div>';
+});
+</script>
+</body>
+</html>
