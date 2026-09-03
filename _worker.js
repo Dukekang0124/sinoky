@@ -252,6 +252,14 @@ async function recordStat(env, uid, st) {
   if (ph > (s.phrases || 0)) s.phrases = ph;
   if (tn > (s.tone || 0)) s.tone = tn;
   if (st.day1Done) s.day1Done = true;
+  // v0.3.36 功能级使用计数（tone/cards/reading/sentences/prog/scene 打开次数），同口径 max 幂等
+  if (st.feat && typeof st.feat === 'object') {
+    s.feat = s.feat || {};
+    for (const k in st.feat) {
+      const v = Math.max(0, Number(st.feat[k]) || 0);
+      if (v > (s.feat[k] || 0)) s.feat[k] = v;
+    }
+  }
   // 首次开口时间：只在 phrases 首次 >0 时记录（用于"首日完成首次挑战率"）
   if (ph > 0 && !s.firstPhraseAt) s.firstPhraseAt = now;
   if (st.scenes && typeof st.scenes === 'object') {
@@ -276,6 +284,7 @@ async function summarizeStats(env) {
   let users = 0, dau = 0, phraseSum = 0, toneUsers = 0, day1Users = 0;
   let e1 = 0, r1 = 0, e3 = 0, r3 = 0, e7 = 0, r7 = 0, firstDayDone = 0;
   const sceneDist = {};
+  const featDist = {};   /* v0.3.36 功能使用分布 */
 
   for (const k of keys) {
     const raw = await env.PROFILES.get(k.name);
@@ -289,6 +298,7 @@ async function summarizeStats(env) {
     if ((Number(s.tone) || 0) > 0) toneUsers++;
     if (s.day1Done) day1Users++;
     if (s.scenes) for (const sc in s.scenes) sceneDist[sc] = (sceneDist[sc] || 0) + (Number(s.scenes[sc]) || 0);
+    if (s.feat) for (const f in s.feat) featDist[f] = (featDist[f] || 0) + (Number(s.feat[f]) || 0);
 
     const first = Number(s.first) || 0;
     if (!first) continue;
@@ -320,6 +330,7 @@ async function summarizeStats(env) {
     firstDayCompletionRate: fdr,
     day1DoneRate: pct(day1Users, users),
     sceneDist,
+    featDist,
     // 判停线（OB §6.2）一眼对照；null 表示样本还不够，别急着下结论
     gate: {
       d7:        { target: 15, actual: d7,  pass: d7  !== null && d7  >= 15, enough: e7  > 0 },

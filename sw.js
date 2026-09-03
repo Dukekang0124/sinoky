@@ -1,5 +1,5 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.3.35';
+var CACHE = 'sinoky-v0.3.36';
 var ASSETS = [
   './',
   './index.html',
@@ -9,7 +9,11 @@ var ASSETS = [
   './data/connect-templates.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/favicon-32.png'
+  './icons/favicon-32.png',
+  './assets/tones/tone1.mp3',
+  './assets/tones/tone2.mp3',
+  './assets/tones/tone3.mp3',
+  './assets/tones/tone4.mp3'
 ];
 
 self.addEventListener('install', function (e) {

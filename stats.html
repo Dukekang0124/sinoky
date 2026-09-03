@@ -55,6 +55,9 @@
       <tbody id="gate"></tbody>
     </table>
 
+    <h2>Feature usage</h2>
+    <table><tbody id="feats"></tbody></table>
+
     <h2>Scene usage</h2>
     <table><tbody id="scenes"></tbody></table>
   </div>
@@ -125,6 +128,14 @@ fetch('api/stats' + (TOK ? '?token=' + encodeURIComponent(TOK) : '')).then(funct
     return '<tr><td>' + x[0] + '</td><td>' + (v == null ? '—' : v + x[2]) +
            '</td><td>' + m.target + '</td><td class="' + cls + '">' + txt + '</td></tr>';
   }).join('');
+
+  var FEAT_NAMES = { scene: 'Scenario practice', tone: 'Tone Gym', cards: 'Flashcards',
+                     reading: 'Reader', sentences: 'Sentence builder', prog: 'Progress' };
+  var fd = j.featDist || {};
+  var fkeys = Object.keys(fd).sort(function(a,b){ return fd[b] - fd[a]; });
+  document.getElementById('feats').innerHTML = fkeys.length
+    ? fkeys.map(function(k){ return '<tr><td>' + (FEAT_NAMES[k] || k) + '</td><td>' + fd[k] + '</td></tr>'; }).join('')
+    : '<tr><td class="na">No data yet (collects from v0.3.36)</td><td></td></tr>';
 
   var sd = j.sceneDist || {};
   var keys = Object.keys(sd).sort(function(a,b){ return sd[b] - sd[a]; });

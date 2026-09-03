@@ -111,6 +111,15 @@ nav button .ic{font-size:19px}
 nav button.on{color:var(--red)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:var(--red);color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
 .toast.show{opacity:1}
+.tour-steps div{font-size:12.5px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:7px;line-height:1.45}
+.q{font-size:12.5px;color:var(--sub);line-height:1.5;margin-top:8px;font-style:italic}
+.q-by{font-size:10.5px;color:var(--sub);margin-top:9px;opacity:.8}
+.tour-steps div{font-size:12.5px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:7px;line-height:1.45}
+.q{font-size:12.5px;color:var(--sub);line-height:1.5;margin-top:8px;font-style:italic}
+.q-by{font-size:10.5px;color:var(--sub);margin-top:9px;opacity:.8}
+.tour-steps div{font-size:12.5px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:7px;line-height:1.45}
+.q{font-size:12.5px;color:var(--sub);line-height:1.5;margin-top:8px;font-style:italic}
+.q-by{font-size:10.5px;color:var(--sub);margin-top:9px;opacity:.8}
 .foot{text-align:center;color:var(--sub);font-size:10.5px;margin-top:22px}
 .record{background:rgba(230,57,70,.12);color:var(--red);border:1px solid rgba(230,57,70,.4);font-size:12.5px;border-radius:10px;flex:0 0 auto;padding:9px 12px;white-space:nowrap;margin-top:0}
 .record.listening{background:var(--red);color:#fff;animation:pulse 1s infinite}
@@ -239,15 +248,6 @@ nav button.on{color:var(--red)}
 #share-link{font-size:13px;color:var(--sub);background:rgba(255,255,255,.05);
   border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 11px;word-break:break-all;margin-bottom:4px}
 
-/* 首次上手引导 */
-#onb{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:80;display:none;
-  align-items:center;justify-content:center;padding:22px}
-#onb.on{display:flex}
-#onb .card{background:var(--card);border-radius:16px;padding:20px 18px;max-width:340px}
-#onb h2{margin:0 0 10px;font-size:18px}
-#onb ol{margin:0 0 14px;padding-left:20px;font-size:13.5px;line-height:1.7;color:var(--txt)}
-#onb li{margin-bottom:7px}
-#onb .hint{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:14px}
 
 /* 麦克风被拒后的恢复步骤 */
 .mic-help{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:7px;
@@ -330,7 +330,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <section id="v-home" class="views on">
     <div class="hero">
       <h1>Stop memorizing characters.<br><em>Start answering people.</em></h1>
-      <p>Daily real-life phrases, tone training, and blind-speak practice. 5 minutes a day.</p>
+      <p>Daily real-life phrases, tone training, and blind-speak practice. 100 survival lines, a few minutes a day.</p>
     </div>
     <div class="streakrow">
       <div class="stat"><div class="n" id="st-streak">0</div><div class="l">🔥 Day streak</div></div>
@@ -360,6 +360,30 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <div class="top"><h2>Learning with friends?</h2><span class="badge teal">BETA</span></div>
       <p class="desc">Sinoky is free during beta. Invite a friend who's learning Chinese and compare your streaks.</p>
       <button class="btn ghost" onclick="openShare()">📤 Share Sinoky</button>
+    </div>
+    <!-- v0.3.36 内测见证卡（引用已获两位内测用户授权，匿名展示）。
+         放在主路径最底部：不占首屏、不加导航，只给新用户一点"真人用过说好"的底气。 -->
+    <div class="card">
+      <div class="top"><h2>From our beta testers</h2><span class="badge teal">REAL TALK</span></div>
+      <div class="q">&ldquo;You're doing absolutely awesome, brother. This is great.&rdquo;</div>
+      <div class="q">&ldquo;Playing it slower for people who don't understand normal speed is amazing. And covering the answer is good for studying.&rdquo;</div>
+      <div class="q-by">&mdash; anonymous beta testers, shared with permission</div>
+    </div>
+    <!-- v0.3.36 内测见证卡（引用已获两位内测用户授权，匿名展示）。
+         放在主路径最底部：不占首屏、不加导航，只给新用户一点"真人用过说好"的底气。 -->
+    <div class="card">
+      <div class="top"><h2>From our beta testers</h2><span class="badge teal">REAL TALK</span></div>
+      <div class="q">&ldquo;You're doing absolutely awesome, brother. This is great.&rdquo;</div>
+      <div class="q">&ldquo;Playing it slower for people who don't understand normal speed is amazing. And covering the answer is good for studying.&rdquo;</div>
+      <div class="q-by">&mdash; anonymous beta testers, shared with permission</div>
+    </div>
+    <!-- v0.3.36 内测见证卡（引用已获两位内测用户授权，匿名展示）。
+         放在主路径最底部：不占首屏、不加导航，只给新用户一点"真人用过说好"的底气。 -->
+    <div class="card">
+      <div class="top"><h2>From our beta testers</h2><span class="badge teal">REAL TALK</span></div>
+      <div class="q">&ldquo;You're doing absolutely awesome, brother. This is great.&rdquo;</div>
+      <div class="q">&ldquo;Playing it slower for people who don't understand normal speed is amazing. And covering the answer is good for studying.&rdquo;</div>
+      <div class="q-by">&mdash; anonymous beta testers, shared with permission</div>
     </div>
     <div class="foot">Sinoky v<span class="v-txt"></span> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="#" onclick="openShare();return false;">Share</a> · Speak Chinese where it matters</div>
   </section>
@@ -466,7 +490,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <button id="nav-cards" onclick="go('cards')"><span class="ic">🗂️</span>Cards</button>
   <button id="nav-reading" onclick="go('reading')"><span class="ic">📖</span>Read</button>
   <button id="nav-sentences" onclick="go('sentences')"><span class="ic">✍️</span>Sentences</button>
-  <button id="nav-tone" onclick="go('tone')"><span class="ic">🎵</span>Tones</button>
+  <button id="nav-tone" onclick="startTone()"><span class="ic">🎵</span>Tones</button>
   <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
 </nav>
 <div class="toast" id="toast"></div>
@@ -511,23 +535,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   </div>
 </div>
 
-<div id="onb">
-  <div class="card">
-    <h2>Welcome to Sinoky 👋</h2>
-    <ol>
-      <li><b>Cards</b> — learn 193 HSK1 characters with pinyin, stroke order and audio</li>
-      <li><b>Read</b> — paste any Chinese text, tap a word for meaning</li>
-      <li><b>Sentences</b> — practise building real phrases</li>
-      <li><b>Score</b> — in a scene, tap <b>Score</b>, say the line, then tap <b>Stop</b></li>
-    </ol>
-    <div class="hint">
-      🔒 Your recordings are never saved — audio is scored on your device and discarded.
-      Tap <b>💬 Feedback</b> (bottom-left) any time to tell us what's broken —
-      <b>drag it</b> if it's in the way, or double-tap to reset it.
-    </div>
-    <button class="btn" onclick="closeOnb()">Got it — let's start</button>
-  </div>
-</div>
+<!-- v0.3.36: 全屏首访弹窗 #onb 已退役，由 renderHome 内非遮挡轻引导卡取代（合并其隐私/反馈提示） -->
+
 
 <script>
 'use strict';
@@ -540,7 +549,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.35';
+var APP_VERSION = '0.3.36';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -781,15 +790,345 @@ var SCENES = [
           { hz:'那我先走了。', py:'Nà wǒ xiān zǒu le.', note:'那 adds natural flow', style:'casual' },
           { hz:'先撤了啊。', py:'Xiān chè le a.', note:'撤 = slang for leaving — friends only', style:'slang' }
         ]}
+    ]},
+  /* ===== v0.3.36 内容扩容：40 -> 100 句（I-015-B + I-013 双源印证）=====
+     每个场景 = 一个真实生活场；每句 = en + 带调拼音 + 汉字 + Day 标记 + 2 条真实口语变体。 */
+  { id:'shopping', icon:'🛍️', title:'Shopping · Markets & malls',
+    desc:'Ask the price, try it on, pay by phone. Haggling is expected at markets \u2014 and "too expensive" is how it starts.',
+    phrases:[
+      { en:'How much is this one?', day:8, py:'Zhège duōshǎo qián?', hz:'这个多少钱？',
+        real:[
+          { hz:'老板，这个怎么卖？', py:'Lǎobǎn, zhège zěnme mài?', note:'at a market stall', style:'casual' },
+          { hz:'那件呢？', py:'Nà jiàn ne?', note:'pointing at another one', style:'casual' }
+        ]},
+      { en:"That's too expensive.", day:8, py:'Tài guì le.', hz:'太贵了。',
+        real:[
+          { hz:'能便宜点儿吗？', py:'Néng piányi diǎnr ma?', note:'the classic haggle', style:'casual' },
+          { hz:'便宜点儿吧！', py:'Piányi diǎnr ba!', note:'friendlier push', style:'casual' }
+        ]},
+      { en:"I'm just looking.", day:8, py:'Wǒ suíbiàn kànkan.', hz:'我随便看看。',
+        real:[
+          { hz:'我就看看。', py:'Wǒ jiù kànkan.', note:'shorter version', style:'casual' },
+          { hz:'不用管我，我自己看。', py:'Búyòng guǎn wǒ, wǒ zìjǐ kàn.', note:'polite refusal of help', style:'polite' }
+        ]},
+      { en:'Do you have a bigger one?', day:8, py:'Yǒu dà yìdiǎn de ma?', hz:'有大一点的吗？',
+        real:[
+          { hz:'有大号的吗？', py:'Yǒu dàhào de ma?', note:'asking for size L', style:'casual' },
+          { hz:'有没有小一点的？', py:'Yǒu méiyǒu xiǎo yìdiǎn de?', note:'asking for smaller', style:'casual' }
+        ]},
+      { en:'Can I try it on?', day:8, py:'Kěyǐ shìchuān ma?', hz:'可以试穿吗？',
+        real:[
+          { hz:'试一下可以吗？', py:'Shì yíxià kěyǐ ma?', note:'softer ask', style:'polite' },
+          { hz:'试衣间在哪儿？', py:'Shìyījiān zài nǎr?', note:'where is the fitting room', style:'casual' }
+        ]},
+      { en:"I'll take it.", day:8, py:'Wǒ yào le.', hz:'我要了。',
+        real:[
+          { hz:'就这个了。', py:'Jiù zhège le.', note:'decided \u2014 this one', style:'casual' },
+          { hz:'我要两个。', py:'Wǒ yào liǎng ge.', note:'taking two', style:'casual' }
+        ]},
+      { en:'Can I pay by phone?', day:8, py:'Kěyǐ yòng shǒujī fùqián ma?', hz:'可以用手机付钱吗？',
+        real:[
+          { hz:'可以扫码吗？', py:'Kěyǐ sǎo mǎ ma?', note:'scan the QR code', style:'casual' },
+          { hz:'我没有现金。', py:'Wǒ méiyǒu xiànjīn.', note:'no cash on me', style:'casual' }
+        ]},
+      { en:'Can I get a bag?', day:8, py:'Néng gěi wǒ yí ge dàizi ma?', hz:'能给我一个袋子吗？',
+        real:[
+          { hz:'要一个袋子。', py:'Yào yí ge dàizi.', note:'short ask at checkout', style:'casual' },
+          { hz:'不用袋子，谢谢。', py:'Bú yòng dàizi, xièxie.', note:'declining a bag', style:'polite' }
+        ]},
+      { en:'Where do I pay?', day:8, py:'Zài nǎr fù qián?', hz:'在哪儿付钱？',
+        real:[
+          { hz:'收银台在哪儿？', py:'Shōuyíntái zài nǎr?', note:'where is the cash desk', style:'casual' },
+          { hz:'结账在哪儿？', py:'Jiézhàng zài nǎr?', note:'where to check out', style:'casual' }
+        ]}
+    ]},
+  { id:'numbers', icon:'🔢', title:'Numbers · Prices & counting',
+    desc:'Hear a price, say a number. Counting to ten, prices, weights, and the time \u2014 the day that saves you real money.',
+    phrases:[
+      { en:'One, two, three, four, five.', day:9, py:'Yī, èr, sān, sì, wǔ.', hz:'一、二、三、四、五。',
+        real:[
+          { hz:'幺', py:'yāo', note:'how 1 is said in phone numbers (110 = yāo yāo líng)', style:'casual' },
+          { hz:'两', py:'liǎng', note:'2 before a measure word: 两个', style:'casual' }
+        ]},
+      { en:'Six, seven, eight, nine, ten.', day:9, py:'Liù, qī, bā, jiǔ, shí.', hz:'六、七、八、九、十。',
+        real:[
+          { hz:'十块', py:'shí kuài', note:'ten yuan', style:'casual' },
+          { hz:'一百', py:'yì bǎi', note:'one hundred', style:'casual' }
+        ]},
+      { en:'Twenty-five yuan.', day:9, py:'Èrshíwǔ kuài.', hz:'二十五块。',
+        real:[
+          { hz:'两块五', py:'liǎng kuài wǔ', note:'2.5 yuan \u2014 spoken shortcut', style:'casual' },
+          { hz:'二十五个', py:'èrshíwǔ ge', note:'25 of something', style:'casual' }
+        ]},
+      { en:'How much for one jin (500g)?', day:9, py:'Yì jīn duōshǎo qián?', hz:'一斤多少钱？',
+        real:[
+          { hz:'来一斤。', py:'Lái yì jīn.', note:'give me one jin', style:'casual' },
+          { hz:'半斤', py:'bàn jīn', note:'half a jin = 250g', style:'casual' }
+        ]},
+      { en:"I'll take two.", day:9, py:'Lái liǎng ge.', hz:'来两个。',
+        real:[
+          { hz:'再来一个。', py:'Zài lái yí ge.', note:'one more', style:'casual' },
+          { hz:'一共三个。', py:'Yígòng sān ge.', note:'three in total', style:'casual' }
+        ]},
+      { en:"That's a fair price.", day:9, py:'Bú guì.', hz:'不贵。',
+        real:[
+          { hz:'挺便宜的。', py:'Tǐng piányi de.', note:'quite cheap', style:'casual' },
+          { hz:'有点贵。', py:'Yǒudiǎn guì.', note:'a bit expensive', style:'casual' }
+        ]},
+      { en:'Can you break a 100?', day:9, py:'Néng zhǎokāi yìbǎi ma?', hz:'能找开一百吗？',
+        real:[
+          { hz:'我没零钱。', py:'Wǒ méi língqián.', note:'I have no small change', style:'casual' },
+          { hz:'给你一百。', py:'Gěi nǐ yìbǎi.', note:'handing over a 100 note', style:'casual' }
+        ]},
+      { en:"What time is it?", day:9, py:'Xiànzài jǐ diǎn?', hz:'现在几点？',
+        real:[
+          { hz:'几点了？', py:'Jǐ diǎn le?', note:'shorter, casual', style:'casual' },
+          { hz:'三点半。', py:'Sān diǎn bàn.', note:'3:30 \u2014 half past', style:'casual' }
+        ]}
+    ]},
+  { id:'transport', icon:'🚕', title:'Getting around · Taxi & metro',
+    desc:'Taxis, metro, buses. Say where you are going, ask how long, and know when to get off.',
+    phrases:[
+      { en:'Take me to this address.', day:10, py:'Qù zhège dìzhǐ.', hz:'去这个地址。',
+        real:[
+          { hz:'师傅，去机场。', py:'Shīfu, qù jīchǎng.', note:'to a taxi driver', style:'casual' },
+          { hz:'我要去火车站。', py:'Wǒ yào qù huǒchēzhàn.', note:'to the train station', style:'casual' }
+        ]},
+      { en:'How long does it take?', day:10, py:'Yào duō cháng shíjiān?', hz:'要多长时间？',
+        real:[
+          { hz:'还有多久？', py:'Hái yǒu duō jiǔ?', note:'how much longer?', style:'casual' },
+          { hz:'快不快？', py:'Kuài bu kuài?', note:'is it quick?', style:'casual' }
+        ]},
+      { en:'Stop here, please.', day:10, py:'Jiù tíng zhèlǐ.', hz:'就停这里。',
+        real:[
+          { hz:'前面停。', py:'Qiánmiàn tíng.', note:'stop up ahead', style:'casual' },
+          { hz:'停在路口。', py:'Tíng zài lùkǒu.', note:'stop at the corner', style:'casual' }
+        ]},
+      { en:'Which metro line?', day:10, py:'Zuò jǐ hào xiàn?', hz:'坐几号线？',
+        real:[
+          { hz:'地铁站在哪儿？', py:'Dìtiězhàn zài nǎr?', note:'where is the metro', style:'casual' },
+          { hz:'两张票。', py:'Liǎng zhāng piào.', note:'two tickets', style:'casual' }
+        ]},
+      { en:'Turn left / right.', day:10, py:'Zuǒ guǎi / yòu guǎi.', hz:'左拐 / 右拐。',
+        real:[
+          { hz:'往左走。', py:'Wǎng zuǒ zǒu.', note:'go left', style:'casual' },
+          { hz:'直走就到。', py:'Zhí zǒu jiù dào.', note:'straight ahead and you are there', style:'casual' }
+        ]},
+      { en:'Is it far from here?', day:10, py:'Lí zhèr yuǎn ma?', hz:'离这儿远吗？',
+        real:[
+          { hz:'走路能到吗？', py:'Zǒulù néng dào ma?', note:'can I walk there?', style:'casual' },
+          { hz:'很近。', py:'Hěn jìn.', note:'very close \u2014 what you will hear', style:'casual' }
+        ]},
+      { en:'Please use the meter.', day:10, py:'Qǐng dǎ biǎo.', hz:'请打表。',
+        real:[
+          { hz:'打表吗？', py:'Dǎ biǎo ma?', note:'do you use the meter?', style:'casual' },
+          { hz:'多少钱到市中心？', py:'Duōshǎo qián dào shìzhōngxīn?', note:'asking a flat price', style:'casual' }
+        ]},
+      { en:"I'd like to buy a ticket.", day:10, py:'Wǒ yào mǎi piào.', hz:'我要买票。',
+        real:[
+          { hz:'一张去北京的车票。', py:'Yì zhāng qù Běijīng de chēpiào.', note:'one ticket to Beijing', style:'casual' },
+          { hz:'往返的。', py:'Wǎngfǎn de.', note:'round trip', style:'casual' }
+        ]},
+      { en:'Where is the bus stop?', day:10, py:'Gōngjiāochēzhàn zài nǎr?', hz:'公交车站在哪儿？',
+        real:[
+          { hz:'坐几路车？', py:'Zuò jǐ lù chē?', note:'which bus number', style:'casual' },
+          { hz:'这儿能打车吗？', py:'Zhèr néng dǎchē ma?', note:'can I get a taxi here?', style:'casual' }
+        ]}
+    ]},
+  { id:'hotel', icon:'🏨', title:'Hotel · Check in',
+    desc:'Check in, get the Wi-Fi password, survive a broken AC. Everything you need at the front desk.',
+    phrases:[
+      { en:"I have a reservation.", day:11, py:'Wǒ dìng le fángjiān.', hz:'我订了房间。',
+        real:[
+          { hz:'预订名叫……', py:'Yùdìng míng jiào…', note:'the reservation is under…', style:'polite' },
+          { hz:'有空房吗？', py:'Yǒu kòngfáng ma?', note:'any rooms available?', style:'casual' }
+        ]},
+      { en:'How much per night?', day:11, py:'Yí ge wǎnshang duōshǎo qián?', hz:'一个晚上多少钱？',
+        real:[
+          { hz:'住两晚。', py:'Zhù liǎng wǎn.', note:'staying two nights', style:'casual' },
+          { hz:'含早餐吗？', py:'Hán zǎocān ma?', note:'breakfast included?', style:'casual' }
+        ]},
+      { en:'Is there free Wi-Fi?', day:11, py:'Yǒu miǎnfèi de Wi-Fi ma?', hz:'有免费的Wi-Fi吗？',
+        real:[
+          { hz:'Wi-Fi密码是多少？', py:'Wi-Fi mìmǎ shì duōshǎo?', note:'what is the password', style:'casual' },
+          { hz:'网速怎么样？', py:'Wǎngsù zěnmeyàng?', note:'how is the internet speed', style:'casual' }
+        ]},
+      { en:"The air conditioning doesn't work.", day:11, py:'Kōngtiáo huài le.', hz:'空调坏了。',
+        real:[
+          { hz:'空调不制冷。', py:'Kōngtiáo bú zhìlěng.', note:'not cooling', style:'casual' },
+          { hz:'能换一间房吗？', py:'Néng huàn yì jiān fáng ma?', note:'can I change rooms?', style:'polite' }
+        ]},
+      { en:'What time is checkout?', day:11, py:'Jǐ diǎn tuìfáng?', hz:'几点退房？',
+        real:[
+          { hz:'明天中午退房。', py:'Míngtiān zhōngwǔ tuìfáng.', note:'checkout at noon tomorrow', style:'casual' },
+          { hz:'能延迟退房吗？', py:'Néng yánchí tuìfáng ma?', note:'can I check out late?', style:'polite' }
+        ]},
+      { en:'Where is the elevator?', day:11, py:'Diàntī zài nǎr?', hz:'电梯在哪儿？',
+        real:[
+          { hz:'我的房间在几楼？', py:'Wǒ de fángjiān zài jǐ lóu?', note:'which floor is my room', style:'casual' },
+          { hz:'走楼梯上去。', py:'Zǒu lóutī shàngqu.', note:'take the stairs up', style:'casual' }
+        ]},
+      { en:'I need a receipt.', day:11, py:'Wǒ yào fāpiào.', hz:'我要发票。',
+        real:[
+          { hz:'开个收据。', py:'Kāi ge shōujù.', note:'a simple receipt', style:'casual' },
+          { hz:'公司报销用。', py:'Gōngsī bàoxiāo yòng.', note:'for company expenses', style:'casual' }
+        ]},
+      { en:'Can I leave my luggage here?', day:11, py:'Xíngli kěyǐ fàng zhèr ma?', hz:'行李可以放这儿吗？',
+        real:[
+          { hz:'寄存一下行李。', py:'Jìcún yíxià xíngli.', note:'store the luggage', style:'polite' },
+          { hz:'下午来取。', py:'Xiàwǔ lái qǔ.', note:'pick it up in the afternoon', style:'casual' }
+        ]}
+    ]},
+  { id:'smalltalk', icon:'☕', title:'Small talk · Daily chat',
+    desc:'Weather, work, WeChat. The low-pressure lines that turn a stranger into a conversation.',
+    phrases:[
+      { en:'The weather is nice today.', day:12, py:'Jīntiān tiānqì búcuò.', hz:'今天天气不错。',
+        real:[
+          { hz:'今天好热啊！', py:'Jīntiān hǎo rè a!', note:'so hot today', style:'casual' },
+          { hz:'要下雨了。', py:'Yào xiàyǔ le.', note:'it is about to rain', style:'casual' }
+        ]},
+      { en:'What do you do for work?', day:12, py:'Nǐ zuò shénme gōngzuò?', hz:'你做什么工作？',
+        real:[
+          { hz:'你在哪儿上班？', py:'Nǐ zài nǎr shàngbān?', note:'where do you work', style:'casual' },
+          { hz:'工作忙吗？', py:'Gōngzuò máng ma?', note:'is work busy?', style:'casual' }
+        ]},
+      { en:'Have you eaten?', day:12, py:'Nǐ chī fàn le ma?', hz:'你吃饭了吗？',
+        real:[
+          { hz:'吃了吗？', py:'Chī le ma?', note:'the classic greeting', style:'casual' },
+          { hz:'还没呢。', py:'Hái méi ne.', note:'not yet \u2014 a normal answer', style:'casual' }
+        ]},
+      { en:'What do you do for fun?', day:12, py:'Nǐ yǒu shénme àihào?', hz:'你有什么爱好？',
+        real:[
+          { hz:'周末喜欢干嘛？', py:'Zhōumò xǐhuan gànma?', note:'what do you do on weekends', style:'casual' },
+          { hz:'我喜欢看电影。', py:'Wǒ xǐhuan kàn diànyǐng.', note:'I like movies', style:'casual' }
+        ]},
+      { en:'How long have you been in China?', day:12, py:'Nǐ zài Zhōngguó duō jiǔ le?', hz:'你在中国多久了？',
+        real:[
+          { hz:'刚来中国。', py:'Gāng lái Zhōngguó.', note:'just arrived', style:'casual' },
+          { hz:'住了三年。', py:'Zhù le sān nián.', note:'lived here three years', style:'casual' }
+        ]},
+      { en:'Do you have WeChat?', day:12, py:'Nǐ yǒu Wēixìn ma?', hz:'你有微信吗？',
+        real:[
+          { hz:'加个微信吧。', py:'Jiā ge Wēixìn ba.', note:"let's add each other", style:'casual' },
+          { hz:'我扫你。', py:'Wǒ sǎo nǐ.', note:'I will scan your QR code', style:'casual' }
+        ]},
+      { en:'See you tomorrow!', day:12, py:'Míngtiān jiàn!', hz:'明天见！',
+        real:[
+          { hz:'回见！', py:'Huí jiàn!', note:'see you later', style:'casual' },
+          { hz:'下次再聊。', py:'Xiàcì zài liáo.', note:'talk next time', style:'casual' }
+        ]},
+      { en:'Where are you heading?', day:12, py:'Nǐ qù nǎr?', hz:'你去哪儿？',
+        real:[
+          { hz:'出去逛逛。', py:'Chūqù guàngguang.', note:'just going out for a stroll', style:'casual' },
+          { hz:'回家。', py:'Huí jiā.', note:'going home', style:'casual' }
+        ]},
+      { en:'That sounds great!', day:12, py:'Tài hǎo le!', hz:'太好了！',
+        real:[
+          { hz:'好主意！', py:'Hǎo zhǔyi!', note:'good idea', style:'casual' },
+          { hz:'没问题！', py:'Méi wèntí!', note:'no problem', style:'casual' }
+        ]}
+    ]},
+  { id:'replies', icon:'💬', title:'Keep it going · Replies',
+    desc:'Really? Me too! No way! The tiny reactions that keep a conversation alive \u2014 and the asks that get you unstuck.',
+    phrases:[
+      { en:'Really?', day:13, py:'Zhēn de ma?', hz:'真的吗？',
+        real:[
+          { hz:'真的假的？', py:'Zhēn de jiǎ de?', note:'for real? \u2014 very colloquial', style:'casual' },
+          { hz:'是吗？', py:'Shì ma?', note:'oh yeah?', style:'casual' }
+        ]},
+      { en:'Me too!', day:13, py:'Wǒ yě shì!', hz:'我也是！',
+        real:[
+          { hz:'我也想去。', py:'Wǒ yě xiǎng qù.', note:'I want to go too', style:'casual' },
+          { hz:'咱俩一样。', py:'Zán liǎ yíyàng.', note:'we are the same', style:'casual' }
+        ]},
+      { en:'No way!', day:13, py:'Bú huì ba!', hz:'不会吧！',
+        real:[
+          { hz:'真的呀！', py:'Zhēn de ya!', note:'seriously!', style:'casual' },
+          { hz:'天哪！', py:'Tiān na!', note:'oh my god', style:'casual' }
+        ]},
+      { en:'I agree.', day:13, py:'Wǒ tóngyì.', hz:'我同意。',
+        real:[
+          { hz:'说得对。', py:'Shuō de duì.', note:'you are right', style:'casual' },
+          { hz:'行，就这么办。', py:'Xíng, jiù zhème bàn.', note:"OK, let's do that", style:'casual' }
+        ]},
+      { en:"I don't think so.", day:13, py:'Wǒ kàn bú xíng.', hz:'我看不行。',
+        real:[
+          { hz:'不太好吧。', py:'Bú tài hǎo ba.', note:'that is not great…', style:'casual' },
+          { hz:'再想想。', py:'Zài xiǎng xiang.', note:"let's think again", style:'casual' }
+        ]},
+      { en:"What does that mean?", day:13, py:'Shì shénme yìsi?', hz:'是什么意思？',
+        real:[
+          { hz:'这个词什么意思？', py:'Zhège cí shénme yìsi?', note:'what does this word mean', style:'casual' },
+          { hz:'用英语怎么说？', py:'Yòng Yīngyǔ zěnme shuō?', note:'how do you say it in English', style:'casual' }
+        ]},
+      { en:'How do you say … in Chinese?', day:13, py:'… yòng Zhōngwén zěnme shuō?', hz:'……用中文怎么说？',
+        real:[
+          { hz:'这个用中文怎么说？', py:'Zhège yòng Zhōngwén zěnme shuō?', note:'pointing at a thing', style:'casual' },
+          { hz:'那两个字怎么写？', py:'Nà liǎng ge zì zěnme xiě?', note:'how do you write those characters', style:'casual' }
+        ]},
+      { en:'Just a moment.', day:13, py:'Děng yíxià.', hz:'等一下。',
+        real:[
+          { hz:'马上就好。', py:'Mǎshàng jiù hǎo.', note:'almost ready', style:'casual' },
+          { hz:'稍等。', py:'Shāo děng.', note:'one moment \u2014 slightly formal', style:'polite' }
+        ]},
+      { en:"I'm full.", day:13, py:'Wǒ chī bǎo le.', hz:'我吃饱了。',
+        real:[
+          { hz:'吃不下了。', py:'Chī bu xià le.', note:'cannot eat another bite', style:'casual' },
+          { hz:'撑死我了！', py:'Chēng sǐ wǒ le!', note:'I am stuffed \u2014 playful', style:'slang' }
+        ]}
+    ]},
+  { id:'social', icon:'🍻', title:'Out with friends · Drinks',
+    desc:'Dinners, drinks, invitations. The fun part \u2014 where "干杯" matters more than grammar.',
+    phrases:[
+      { en:"Let's get dinner together.", day:14, py:'Zánmen yìqǐ chī fàn ba.', hz:'咱们一起吃饭吧。',
+        real:[
+          { hz:'晚上一起吃个饭？', py:'Wǎnshang yìqǐ chī ge fàn?', note:'dinner tonight?', style:'casual' },
+          { hz:'周末有空吗？', py:'Zhōumò yǒu kòng ma?', note:'are you free this weekend?', style:'casual' }
+        ]},
+      { en:"It's my treat.", day:14, py:'Wǒ qǐng kè.', hz:'我请客。',
+        real:[
+          { hz:'这顿我请。', py:'Zhè dùn wǒ qǐng.', note:'this meal is on me', style:'casual' },
+          { hz:'AA吧。', py:'AA ba.', note:"let's split the bill", style:'casual' }
+        ]},
+      { en:'Cheers!', day:14, py:'Gānbēi!', hz:'干杯！',
+        real:[
+          { hz:'走一个！', py:'Zǒu yí ge!', note:'down it! \u2014 drinking slang', style:'slang' },
+          { hz:'随意。', py:'Suíyì.', note:'drink as you like \u2014 polite middle ground', style:'polite' }
+        ]},
+      { en:'One more beer, please.', day:14, py:'Zài lái yì píng píjiǔ.', hz:'再来一瓶啤酒。',
+        real:[
+          { hz:'来两杯。', py:'Lái liǎng bēi.', note:'two glasses', style:'casual' },
+          { hz:'不要冰的。', py:'Bú yào bīng de.', note:'no ice', style:'casual' }
+        ]},
+      { en:"Karaoke? Let's go!", day:14, py:'Qù KTV ba!', hz:'去KTV吧！',
+        real:[
+          { hz:'唱歌去不去？', py:'Chàng gē qù bu qù?', note:'wanna go sing?', style:'casual' },
+          { hz:'下次一定。', py:'Xiàcì yídìng.', note:'next time for sure (polite dodge)', style:'casual' }
+        ]},
+      { en:'What time shall we meet?', day:14, py:'Jǐ diǎn jiàn?', hz:'几点见面？',
+        real:[
+          { hz:'七点老地方。', py:'Qī diǎn lǎo dìfang.', note:'7 at the usual place', style:'casual' },
+          { hz:'我快到了。', py:'Wǒ kuài dào le.', note:'I am almost there', style:'casual' }
+        ]},
+      { en:'How do I get to your place?', day:14, py:'Nǐ jiā zěnme zǒu?', hz:'你家怎么走？',
+        real:[
+          { hz:'发个位置给我。', py:'Fā ge wèizhi gěi wǒ.', note:'send me your location', style:'casual' },
+          { hz:'我在楼下了。', py:'Wǒ zài lóuxià le.', note:'I am downstairs', style:'casual' }
+        ]},
+      { en:"I had a great time.", day:14, py:'Jīntiān wánr de tǐng kāixīn.', hz:'今天玩儿得挺开心。',
+        real:[
+          { hz:'玩得开心！', py:'Wán de kāixīn!', note:'have fun! \u2014 said when leaving', style:'casual' },
+          { hz:'下次再约！', py:'Xiàcì zài yuē!', note:"let's meet again", style:'casual' }
+        ]}
     ]}
 ];
 
 /* tone gym: minimal pair "ma" — 4 tones, 4 meanings */
 var TONES = [
-  { hz:'妈', py:'mā', t:1, mean:'mother' },
-  { hz:'麻', py:'má', t:2, mean:'hemp / numb' },
-  { hz:'马', py:'mǎ', t:3, mean:'horse' },
-  { hz:'骂', py:'mà', t:4, mean:'scold' }
+  { hz:'妈', py:'mā', t:1, mean:'mother', audio:'assets/tones/tone1.mp3' },
+  { hz:'麻', py:'má', t:2, mean:'hemp / numb', audio:'assets/tones/tone2.mp3' },
+  { hz:'马', py:'mǎ', t:3, mean:'horse', audio:'assets/tones/tone3.mp3' },
+  { hz:'骂', py:'mà', t:4, mean:'scold', audio:'assets/tones/tone4.mp3' }
 ];
 var TONE_COLOR = { 1:'var(--t1)', 2:'var(--t2)', 3:'var(--t3)', 4:'var(--t4)' };
 var TONE_LABEL = { 1:'1 flat', 2:'2 rising', 3:'3 dip', 4:'4 fall' };
@@ -807,8 +1146,17 @@ var DAYS = [
   { n:4, t:'Ordering food',           d:'Point, say \u201cI want this one\u201d, and eat well.' },
   { n:5, t:'Paying & small talk',     d:'Pay the bill, ask for water, and keep it going.' },
   { n:6, t:'Emergency basics',        d:'The lines that matter when something goes wrong. Slow is fine \u2014 clear is better.' },
-  { n:7, t:'Emergency numbers',       d:'110 police \u00b7 119 fire \u00b7 120 ambulance \u2014 and how to say them so they understand.' }
+  { n:7, t:'Emergency numbers',       d:'110 police \u00b7 119 fire \u00b7 120 ambulance \u2014 and how to say them so they understand.' },
+  /* v0.3.36 内容扩容（I-015-B）：Day 8-14，每条都是真实场景里马上用得上的句子 */
+  { n:8,  t:'Shopping',               d:'Markets and malls: ask the price, try it on, pay by phone.' },
+  { n:9,  t:'Numbers & money',        d:'Hear a price, say a number. This day saves you real money.' },
+  { n:10, t:'Taxis & directions',     d:'Get in, say where, get out \u2014 and find your way when GPS dies.' },
+  { n:11, t:'Hotel & a place to stay', d:'Check in, get the Wi-Fi, fix the AC. A roof with no drama.' },
+  { n:12, t:'Small talk',             d:'Weather, food, weekend plans \u2014 the glue of every conversation.' },
+  { n:13, t:'Keep it going',          d:'Replies that keep a conversation alive: really? me too, no way!' },
+  { n:14, t:'Out with friends',       d:'Dinners, drinks, invitations \u2014 the fun part of learning a language.' }
 ];
+
 function allDayPhrases(){
   var out = [];
   SCENES.forEach(function(sc){
@@ -872,8 +1220,8 @@ function buildStat(){
         return !!sc && ((ph[id]||[]).length >= sc.phrases.length);
       });
     }
-    return { phrases: phrases, scenes: scenes, tone: (S.tone && S.tone.total) || 0, day1Done: day1Done };
-  }catch(e){ return { phrases: 0, scenes: {}, tone: 0, day1Done: false }; }
+    return { phrases: phrases, scenes: scenes, tone: (S.tone && S.tone.total) || 0, day1Done: day1Done, feat: S.feat || {} };
+  }catch(e){ return { phrases: 0, scenes: {}, tone: 0, day1Done: false, feat: {} }; }
 }
 async function pullProfile(){
   try{
@@ -906,6 +1254,7 @@ S.phrases = S.phrases || {};   /* {sceneId: [idx,...]} */
 S.days = S.days || [];         /* ['2026-08-30',...] */
 S._ts = S._ts || 0;            /* v0.3.31 云端合并时间戳 */
 S.tone = S.tone || { right:0, total:0 };
+S.feat = S.feat || {};   /* v0.3.36 功能级使用统计 */
 saveState();
 
 /* ---------- tts: multi-source fallback (google zh -> baidu zh -> web speech)
@@ -1095,6 +1444,11 @@ function go(v){
   ['home','scene','tone','prog','cards','sentences','reading'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
+  /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
+     用于回答"用户用得最多的是哪个功能"。home 是被动落地页不计。 */
+  if(v==='tone'||v==='cards'||v==='reading'||v==='sentences'||v==='prog'){
+    S.feat = S.feat || {}; S.feat[v] = (S.feat[v]||0)+1; saveStateLocal(); pushProfileSoon();
+  }
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
   if(v==='cards') renderNW();
@@ -1104,6 +1458,26 @@ function go(v){
 }
 
 /* ---------- home ---------- */
+/* v0.3.36 首视图轻引导（I-014 边界内：一次性、单卡片、不遮挡不弹窗）。
+   只对"零进度"新用户出现；点一次即记 sinoky_tour 永不再现；
+   有任何进度的老用户（含换设备导入）一律不打扰。 */
+function tourNeeded(){
+  try{ if(localStorage.getItem('sinoky_tour')) return false; }catch(e){ return false; }
+  var said = 0; Object.keys(S.phrases||{}).forEach(function(k){ said += (S.phrases[k]||[]).length; });
+  return said === 0 && !(S.tone && S.tone.total) && !S.streak;
+}
+function endTour(){ lsSet('sinoky_tour','1'); renderHome(); }
+function tourHtml(){
+  return '<div class="card"><div class="top"><h2>\u{1F44B} New here?</h2><span class="badge teal">60 SECONDS</span></div>'+
+    '<p class="desc">Three steps \u2014 that is the whole app:</p>'+
+    '<div class="tour-steps">'+
+    '<div>1\uFE0F\u20E3 Tap a line below \u2192 listen, cover the Chinese, <b>say it out loud 3\u00D7</b>. Speaking is the whole point.</div>'+
+    '<div>2\uFE0F\u20E3 Do one <b>Day</b> card a day \u2014 the streak keeps you coming back.</div>'+
+    '<div>3\uFE0F\u20E3 Open <b>Tones</b> for 1 minute \u2014 train your ear: four tones, four different words.</div>'+
+    '</div>'+
+    '<p class="desc" style="font-size:11.5px;color:var(--sub);margin:10px 0 0">\u{1F512} Recordings are never saved \u00B7 \u{1F4AC} Feedback (bottom-left) any time</p>'+
+    '<button class="btn primary" onclick="endTour()">Got it \u2014 let\'s speak</button></div>';
+}
 function renderHome(){
   $('st-streak').textContent = S.streak;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -1114,7 +1488,7 @@ function renderHome(){
   var cdDone = cItems.filter(daySaid).length;
   var cdAll = cdDone === cItems.length && cItems.length > 0;
   var doneDays = 0; for (var dn = 1; dn <= DAYS.length; dn++) { if (isDayDone(dn)) doneDays++; }
-  var d1 = '<div class="card day1"><div class="top"><h2>📅 Day '+cd+' of 7 · '+cdInfo.t+'</h2>'+
+  var d1 = '<div class="card day1"><div class="top"><h2>📅 Day '+cd+' of '+DAYS.length+' · '+cdInfo.t+'</h2>'+
     '<span class="badge '+(cdAll?'teal':'')+'">'+cdDone+'/'+cItems.length+'</span></div>'+
     '<p class="desc">'+cdInfo.d+' Tap a line to open it — play, cover, say it 3×.</p>'+
     '<div class="day1-steps">';
@@ -1124,8 +1498,8 @@ function renderHome(){
       '<span class="st">'+(daySaid(x)?'✓ done':'Start')+'</span></button>';
   });
   d1 += '</div><div class="day1-cta" style="display:'+(cdAll?'block':'none')+'">'+
-    (cd>=7 ? '🎉 All 7 days done — you can survive in China.' : '🎉 Day '+cd+' complete! Day '+(cd+1)+' unlocks next time you open Sinoky.')+
-    '</div><div class="day-prog">'+doneDays+' / 7 days finished</div></div>';
+    (cd>=DAYS.length ? '🎉 All '+DAYS.length+' days done — you can survive in China.' : '🎉 Day '+cd+' complete! Day '+(cd+1)+' unlocks next time you open Sinoky.')+
+    '</div><div class="day-prog">'+doneDays+' / '+DAYS.length+' days finished</div></div>';
 
   var html = '';
   SCENES.forEach(function(sc){
@@ -1138,12 +1512,13 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = d1 + html;
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + html;
 }
 
 /* ---------- scene flow ---------- */
 var curScene = null;
 function openScene(id, idx){
+  S.feat = S.feat || {}; S.feat.scene = (S.feat.scene||0)+1; saveStateLocal(); pushProfileSoon();
   curScene = SCENES.filter(function(s){ return s.id===id; })[0];
   $('sc-title').textContent = curScene.icon+' '+curScene.title;
   $('sc-desc').textContent = curScene.desc;
@@ -1504,7 +1879,28 @@ function nextTone(){
   $('tone-btns').innerHTML = html;
   $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
 }
-function playToneQ(){ if(toneQ) speak(toneQ.hz); }
+/* v0.3.36 听力题宪法落地（I-015）：Tone Gym 判分音频改为预生成静态文件
+   assets/tones/（有道音源，parselmouth 基频实测 4/4 调型正确）。
+   用户按耳朵选的答案与音频实际呈现一致 —— 不再依赖运行时 TTS 的运气。
+   静态文件播放失败（如极端情况资源缺失）才降级走 speak() 兜底链。 */
+function playToneQ(){
+  if(!toneQ) return;
+  var btn = $('tone-play');
+  if(toneQ.audio){
+    var a = AUDIO || (AUDIO = new Audio());
+    try{ a.pause(); }catch(e){}
+    a.volume = 1;
+    a.playbackRate = (ttsRate && ttsRate < 1) ? ttsRate : 1;
+    a.onplaying = function(){ if(btn){ btn.classList.remove('wait'); } };
+    a.onended = function(){ if(btn) btn.classList.remove('wait'); };
+    a.onerror = function(){ if(btn) btn.classList.remove('wait'); speak(toneQ.hz, btn); };
+    a.src = toneQ.audio;
+    if(btn) btn.classList.add('wait');
+    a.play().catch(function(){ if(btn) btn.classList.remove('wait'); speak(toneQ.hz, btn); });
+    return;
+  }
+  speak(toneQ.hz, btn);
+}
 function answerTone(n){
   if(toneLocked || !toneQ) return;
   toneLocked = true;
@@ -2164,23 +2560,7 @@ document.querySelectorAll('#fb-cats .fb-cat').forEach(function(el){
   };
 });
 
-/* 首次上手引导（localStorage 记住，只显示一次） */
-function closeOnb(){
-  $('onb').classList.remove('on');
-  document.body.style.overflow = '';
-  try{ localStorage.setItem('sinoky-onb', '1'); }catch(e){}
-}
-(function(){
-  var seen = null;
-  try{ seen = localStorage.getItem('sinoky-onb'); }catch(e){}
-  if(!seen){
-    /* 延迟一点，让首屏先渲染完，避免引导盖在空白页上 */
-    setTimeout(function(){
-      $('onb').classList.add('on');
-      document.body.style.overflow = 'hidden';
-    }, 700);
-  }
-})();
+/* v0.3.36: 旧首访弹窗触发逻辑已退役，见上方注释；唯一引导 = renderHome 内轻卡片 */
 
 /* v0.3.31 分享/内测招募：复制邀请链接（含进度成就文案） */
 function openShare(){
@@ -2240,6 +2620,7 @@ function importProgress(){
   S.streak = S.streak || 0; S.lastDone = S.lastDone || null;
   S.phrases = S.phrases || {}; S.days = S.days || []; S._ts = S._ts || 0;
   S.tone = S.tone || { right:0, total:0 };
+  S.feat = S.feat || {};
   if(typeof payload.uid === 'string' && payload.uid.length >= 8){
     UID = payload.uid; lsSet('sinoky_uid', UID);
   }
