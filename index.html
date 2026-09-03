@@ -558,7 +558,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.38';
+var APP_VERSION = '0.3.43';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1129,6 +1129,268 @@ var SCENES = [
           { hz:'玩得开心！', py:'Wán de kāixīn!', note:'have fun! \u2014 said when leaving', style:'casual' },
           { hz:'下次再约！', py:'Xiàcì zài yuē!', note:"let's meet again", style:'casual' }
         ]}
+    ]},
+  /* ===== v0.3.42 城市内容扩容（18 城 · 教老外聊中国）=====
+     每个城 = 一个真实生活场（名胜 + 美食）；每句 = en + 带调拼音 + 汉字 + 2 条真实口语变体。
+     关键约定：day1:false 且【不标 day】——城市内容是 elective，只从 Home 卡片进，不进 Day 1-14 通关路径，
+     否则 allDayPhrases() 会把它算进对应 Day 要求，导致已通关老用户进度回退（致命回归）。
+     图（img 字段 + Home 带图渲染）在豆包出图齐后由九思补，本轮只落内容。 */
+  { id:'beijing', icon:'🏯', title:'Beijing · Sights & Food', day1:false,
+    desc:'Famous sights and local food in Beijing. Tap a card, hear it, then say it 3 times.',
+    phrases:[
+      { en:'I want to go to the Forbidden City.', py:'Wǒ xiǎng qù Gùgōng.', hz:'我想去故宫。',
+        real:[
+          { hz:'我们去故宫吧。', py:'Wǒmen qù Gùgōng ba.', note:'suggest going with friends', style:'casual' },
+          { hz:'故宫怎么走？', py:'Gùgōng zěnme zǒu?', note:'asking for directions', style:'casual' }
+        ]},
+      { en:'Peking duck is delicious.', py:'Běijīng kǎoyā hěn hǎochī.', hz:'北京烤鸭很好吃。',
+        real:[
+          { hz:'咱们吃烤鸭去？', py:'Zánmen chī kǎoyā qù?', note:'invite to eat duck', style:'casual' },
+          { hz:'这烤鸭绝了！', py:'Zhè kǎoyā jué le!', note:'delicious — slangy praise', style:'casual' }
+        ]},
+      { en:'The Great Wall is magnificent.', py:'Chángchéng zhēn zhuàngguān.', hz:'长城真壮观。',
+        real:[
+          { hz:'明天去爬长城？', py:'Míngtiān qù pá Chángchéng?', note:'suggest climbing', style:'casual' },
+          { hz:'不到长城非好汉。', py:'Bú dào Chángchéng fēi hǎohàn.', note:'famous saying', style:'casual' }
+        ]}
+    ]},
+  { id:'shanghai', icon:'🌃', title:'Shanghai · Waterfront & Dumplings', day1:false,
+    desc:'Iconic waterfront and soup dumplings in Shanghai. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'The Bund is beautiful.', py:'Wàitān hěn piàoliang.', hz:'外滩很漂亮。',
+        real:[
+          { hz:'晚上去外滩逛逛？', py:'Wǎnshang qù Wàitān guàngguang?', note:'suggest an evening walk', style:'casual' },
+          { hz:'外滩夜景绝了。', py:'Wàitān yèjǐng jué le!', note:'praise the night view', style:'casual' }
+        ]},
+      { en:'Xiaolongbao is delicious.', py:'Xiǎolóngbāo hěn hǎochī.', hz:'小笼包很好吃。',
+        real:[
+          { hz:'来笼小笼包？', py:'Lái lóng xiǎolóngbāo?', note:'order a basket', style:'casual' },
+          { hz:'这汤汁太鲜了。', py:'Zhè tāngzhī tài xiān le!', note:'praise the broth', style:'casual' }
+        ]}
+    ]},
+  { id:'hangzhou', icon:'🌊', title:'Hangzhou · West Lake', day1:false,
+    desc:'West Lake views and vinegar fish in Hangzhou. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'West Lake is beautiful.', py:'Xīhú hěn měi.', hz:'西湖很美。',
+        real:[
+          { hz:'去西湖边走走？', py:'Qù Xīhú biān zǒuzou?', note:'suggest a lakeside walk', style:'casual' },
+          { hz:'西湖骑行挺舒服。', py:'Xīhú qíxíng tǐng shūfu.', note:'cycling by the lake', style:'casual' }
+        ]},
+      { en:'West Lake vinegar fish is delicious.', py:'Xīhú cùyú hěn hǎochī.', hz:'西湖醋鱼很好吃。',
+        real:[
+          { hz:'尝尝西湖醋鱼？', py:'Chángchang Xīhú cùyú?', note:'invite to taste', style:'casual' },
+          { hz:'这鱼酸酸甜甜。', py:'Zhè yú suānsuān tiántián.', note:'sweet and sour', style:'casual' }
+        ]}
+    ]},
+  { id:'chongqing', icon:'🌶️', title:'Chongqing · Cliffs & Hotpot', day1:false,
+    desc:'Cliff-side night views and fiery hotpot in Chongqing. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Hongyadong is magnificent.', py:'Hóngyádòng hěn zhuàngguān.', hz:'洪崖洞很壮观。',
+        real:[
+          { hz:'洪崖洞夜景必看。', py:'Hóngyádòng yèjǐng bì kàn.', note:'must-see night view', style:'casual' },
+          { hz:'去洪崖洞打卡？', py:'Qù Hóngyádòng dǎkǎ?', note:'suggest a photo stop', style:'casual' }
+        ]},
+      { en:'Chongqing hotpot is spicy.', py:'Chóngqìng huǒguō hěn là.', hz:'重庆火锅很辣。',
+        real:[
+          { hz:'吃重庆火锅去？', py:'Chī Chóngqìng huǒguō qù?', note:'invite to hotpot', style:'casual' },
+          { hz:'这火锅辣得过瘾！', py:'Zhè huǒguō là de guòyǐn!', note:'spicy and satisfying', style:'casual' }
+        ]}
+    ]},
+  { id:'chengdu', icon:'🐼', title:'Chengdu · Pandas & Hotpot', day1:false,
+    desc:'Giant pandas and numbing hotpot in Chengdu. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'I want to see giant pandas.', py:'Wǒ xiǎng kàn dàxióngmāo.', hz:'我想看大熊猫。',
+        real:[
+          { hz:'去熊猫基地？', py:'Qù xióngmāo jīdì?', note:'suggest the panda base', style:'casual' },
+          { hz:'熊猫幼崽太可爱了。', py:'Xióngmāo yòuzǎi tài kěài le.', note:'cubs are adorable', style:'casual' }
+        ]},
+      { en:'Chengdu hotpot is delicious.', py:'Chéngdū huǒguō hǎochī.', hz:'成都火锅好吃。',
+        real:[
+          { hz:'整一顿成都火锅？', py:'Zhěng yí dùn Chéngdū huǒguō?', note:'go for a hotpot meal', style:'casual' },
+          { hz:'成都火锅麻得舒服。', py:'Chéngdū huǒguō má de shūfu.', note:'numbingly good', style:'casual' }
+        ]}
+    ]},
+  { id:'nanchang', icon:'🏯', title:'Nanchang · Pavilion & Soup', day1:false,
+    desc:'A famous pavilion and jar soup in Nanchang. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Tengwang Pavilion is famous.', py:'Téngwánggé hěn yǒumíng.', hz:'滕王阁很有名。',
+        real:[
+          { hz:'滕王阁登高望远。', py:'Téngwánggé dēng gāo wàng yuǎn.', note:'climb for the view', style:'casual' },
+          { hz:'滕王阁夜游不错。', py:'Téngwánggé yèyóu bùcuò.', note:'night visit is nice', style:'casual' }
+        ]},
+      { en:'Nanchang jar soup is tasty.', py:'Nánchāng wǎguàn tāng hǎo hē.', hz:'南昌瓦罐汤好喝。',
+        real:[
+          { hz:'来碗瓦罐汤？', py:'Lái wǎn wǎguàn tāng?', note:'order a bowl', style:'casual' },
+          { hz:'瓦罐汤鲜得很。', py:'Wǎguàn tāng xiān de hěn.', note:'the broth is fresh', style:'casual' }
+        ]}
+    ]},
+  { id:'changsha', icon:'🍢', title:'Changsha · Isle & Tofu', day1:false,
+    desc:'River isle and stinky tofu in Changsha. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Orange Isle is beautiful.', py:'Júzǐzhōu hěn měi.', hz:'橘子洲很美。',
+        real:[
+          { hz:'橘子洲头看湘江。', py:'Júzǐzhōutóu kàn Xiāngjiāng.', note:'view the river', style:'casual' },
+          { hz:'周末去橘子洲？', py:'Zhōumò qù Júzǐzhōu?', note:'suggest a weekend trip', style:'casual' }
+        ]},
+      { en:'Changsha stinky tofu is delicious.', py:'Chángshā chòudòufu hǎochī.', hz:'长沙臭豆腐好吃。',
+        real:[
+          { hz:'尝尝臭豆腐？', py:'Chángchang chòudòufu?', note:'invite to try', style:'casual' },
+          { hz:'闻着臭吃着香。', py:'Wénzhe chòu chīzhe xiāng.', note:'smells funky, tastes great', style:'casual' }
+        ]}
+    ]},
+  { id:'xinjiang', icon:'🏔️', title:'Xinjiang · Landscapes & Lamb', day1:false,
+    desc:'Vast landscapes and lamb skewers in Xinjiang. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Xinjiang is vast and beautiful.', py:'Xīnjiāng hěn dà hěn měi.', hz:'新疆很大很美。',
+        real:[
+          { hz:'天山雪景绝了。', py:'Tiānshān xuějǐng jué le!', note:'Tianshan snow view', style:'casual' },
+          { hz:'喀纳斯像仙境。', py:'Kānàsī xiàng xiānjìng.', note:'Kanas like a fairyland', style:'casual' }
+        ]},
+      { en:'Xinjiang lamb skewers are delicious.', py:'Xīnjiāng Kǎo yángròu chuàn hǎochī.', hz:'新疆烤羊肉串好吃。',
+        real:[
+          { hz:'来串烤羊肉？', py:'Lái chuàn kǎoyángròu?', note:'order a skewer', style:'casual' },
+          { hz:'大盘鸡配皮带面。', py:'Dàpánjī pèi pídàimiàn.', note:'big-plate chicken with noodles', style:'casual' }
+        ]}
+    ]},
+  { id:'shenzhen', icon:'🏙️', title:'Shenzhen · Skyline & Beef', day1:false,
+    desc:'A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Shenzhen is modern.', py:'Shēnzhèn hěn xiàndài.', hz:'深圳很现代。',
+        real:[
+          { hz:'深圳节奏快。', py:'Shēnzhèn jiézòu kuài.', note:'fast-paced city', style:'casual' },
+          { hz:'平安大厦够高。', py:'Píng ān dàshà gòu gāo.', note:'Ping An tower is tall', style:'casual' }
+        ]},
+      { en:'Chaoshan beef hotpot is delicious.', py:'Cháoshàn niúròu huǒguō hǎochī.', hz:'潮汕牛肉火锅好吃。',
+        real:[
+          { hz:'吃潮汕牛肉火锅？', py:'Chī Cháoshàn niúròu huǒguō?', note:'invite to beef hotpot', style:'casual' },
+          { hz:'牛肉丸弹牙。', py:'Niúròu wán tányá.', note:'meatballs are bouncy', style:'casual' }
+        ]}
+    ]},
+  { id:'guangzhou', icon:'🍵', title:'Guangzhou · Tower & Dim Sum', day1:false,
+    desc:'The slender tower and dim sum in Guangzhou. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Canton Tower is tall.', py:'Guǎngzhōu tǎ hěn gāo.', hz:'广州塔很高。',
+        real:[
+          { hz:'小蛮腰夜景美。', py:'Xiǎományāo yèjǐng měi.', note:'slender-waist night view', style:'casual' },
+          { hz:'登广州塔看全城。', py:'Dēng Guǎngzhōu tǎ kàn quánchéng.', note:'top for the skyline', style:'casual' }
+        ]},
+      { en:'Guangzhou dim sum is delicious.', py:'Guǎngzhōu zǎochá hǎochī.', hz:'广州早茶好吃。',
+        real:[
+          { hz:'饮早茶去？', py:'Yǐn zǎochá qù?', note:'go for morning tea', style:'casual' },
+          { hz:'虾饺烧鹅绝了。', py:'Xiājiǎo shāo é jué le!', note:'shrimp dumplings and roast goose', style:'casual' }
+        ]}
+    ]},
+  { id:'xiamen', icon:'🏝️', title:'Xiamen · Car-free Isle', day1:false,
+    desc:'A car-free island and shacha noodles in Xiamen. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Gulangyu is beautiful.', py:'Gǔlàngyǔ hěn piàoliang.', hz:'鼓浪屿很漂亮。',
+        real:[
+          { hz:'鼓浪屿散步很爽。', py:'Gǔlàngyǔ sànbù hěn shuǎng.', note:'strolling is great', style:'casual' },
+          { hz:'坐船去鼓浪屿？', py:'Zuò chuán qù Gǔlàngyǔ?', note:'take a ferry', style:'casual' }
+        ]},
+      { en:'Shacha noodles are delicious.', py:'Shāchá miàn hǎochī.', hz:'沙茶面好吃。',
+        real:[
+          { hz:'来碗沙茶面？', py:'Lái wǎn shāchá miàn?', note:'order a bowl', style:'casual' },
+          { hz:'海蛎煎配沙茶。', py:'Hǎilìjiān pèi shāchá.', note:'oyster omelette with shacha', style:'casual' }
+        ]}
+    ]},
+  { id:'haikou', icon:'🌴', title:'Haikou · Slow Island Life', day1:false,
+    desc:'Slow island life and chicken rice in Haikou. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Haikou is comfortable.', py:'Hǎikǒu hěn shūfu.', hz:'海口很舒服。',
+        real:[
+          { hz:'海口慢生活。', py:'Hǎikǒu màn shēnghuó.', note:'slow living', style:'casual' },
+          { hz:'骑楼老街逛逛。', py:'Qílóu lǎojiē guàngguang.', note:'stroll the arcade street', style:'casual' }
+        ]},
+      { en:'Hainan chicken rice is delicious.', py:'Hǎinán jīfàn hǎochī.', hz:'海南鸡饭好吃。',
+        real:[
+          { hz:'吃海南鸡饭？', py:'Chī Hǎinán jīfàn?', note:'invite to chicken rice', style:'casual' },
+          { hz:'清补凉消暑。', py:'Qīngbǔliáng xiāoshǔ.', note:'cooling dessert', style:'casual' }
+        ]}
+    ]},
+  { id:'qingdao', icon:'🍺', title:'Qingdao · Sea & Beer', day1:false,
+    desc:'Sea bridges and fresh beer in Qingdao. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Qingdao is beautiful.', py:'Qīngdǎo hěn měi.', hz:'青岛很美。',
+        real:[
+          { hz:'栈桥看海。', py:'Zhànqiáo kàn hǎi.', note:'see the sea from the pier', style:'casual' },
+          { hz:'八大关红瓦绿树。', py:'Bādàguān hóngwǎ lǜshù.', note:'red tiles, green trees', style:'casual' }
+        ]},
+      { en:'Tsingtao beer is delicious.', py:'Qīngdǎo píjiǔ hěn hǎohē.', hz:'青岛啤酒很好喝。',
+        real:[
+          { hz:'来杯青岛啤酒？', py:'Lái bēi Qīngdǎo píjiǔ?', note:'order a beer', style:'casual' },
+          { hz:'原浆最鲜。', py:'Yuánjiāng zuì xiān.', note:'fresh draft is best', style:'casual' }
+        ]}
+    ]},
+  { id:'xian', icon:'🗿', title:'Xi\'an · Terracotta Army', day1:false,
+    desc:'The Terracotta Army and roujiamo in Xi\'an. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'The Terracotta Army is magnificent.', py:'Bīngmǎyǒng hěn zhuàngguān.', hz:'兵马俑很壮观。',
+        real:[
+          { hz:'兵马俑震撼。', py:'Bīngmǎyǒng zhènhàn.', note:'awe-inspiring', style:'casual' },
+          { hz:'去看兵马俑？', py:'Qù kàn Bīngmǎyǒng?', note:'suggest a visit', style:'casual' }
+        ]},
+      { en:'Roujiamo is delicious.', py:'Ròujiāmó hǎochī.', hz:'肉夹馍好吃。',
+        real:[
+          { hz:'来个肉夹馍？', py:'Lái ge ròujiāmó?', note:'order one', style:'casual' },
+          { hz:'凉皮肉夹馍绝配。', py:'Liángpí ròujiāmó jué pèi.', note:'cold noodles pair perfectly', style:'casual' }
+        ]}
+    ]},
+  { id:'guilin', icon:'⛰️', title:'Guilin · Karst Peaks', day1:false,
+    desc:'Karst peaks and rice noodles in Guilin. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Guilin scenery is beautiful.', py:'Guìlín shānshuǐ hěn měi.', hz:'桂林山水很美。',
+        real:[
+          { hz:'漓江坐竹筏。', py:'Líjiāng zuò zhúfá.', note:'bamboo raft on the river', style:'casual' },
+          { hz:'桂林山水甲天下。', py:'Guìlín shānshuǐ jiǎ tiānxià.', note:'famous saying', style:'casual' }
+        ]},
+      { en:'Guilin rice noodles are delicious.', py:'Guìlín mǐfěn hǎochī.', hz:'桂林米粉好吃。',
+        real:[
+          { hz:'来碗桂林米粉？', py:'Lái wǎn Guìlín mǐfěn?', note:'order a bowl', style:'casual' },
+          { hz:'卤水香。', py:'Lǔshuǐ xiāng.', note:'the broth is fragrant', style:'casual' }
+        ]}
+    ]},
+  { id:'zhangjiajie', icon:'🧗', title:'Zhangjiajie · Pillars of Mist', day1:false,
+    desc:'Misty quartz peaks and a local stew in Zhangjiajie. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Zhangjiajie is magical.', py:'Zhāngjiājiè hěn shénqí.', hz:'张家界很神奇。',
+        real:[
+          { hz:'天门山玻璃栈道。', py:'Tiānménshān bōli zhàndào.', note:'glass skywalk', style:'casual' },
+          { hz:'阿凡达取景地。', py:'Āfándá qǔjǐng dì.', note:'Avatar filming site', style:'casual' }
+        ]},
+      { en:'Sanxia guo is delicious.', py:'Sānxiàguō hǎochī.', hz:'三下锅好吃。',
+        real:[
+          { hz:'尝尝三下锅？', py:'Chángchang sānxiàguō?', note:'invite to try', style:'casual' },
+          { hz:'麻辣鲜香。', py:'Málà xiānxiāng.', note:'numbing, spicy, fresh, fragrant', style:'casual' }
+        ]}
+    ]},
+  { id:'dali', icon:'💧', title:'Dali · Erhai Lake', day1:false,
+    desc:'Erhai Lake and roasted rushan in Dali. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Dali is beautiful.', py:'Dàlǐ hěn měi.', hz:'大理很美。',
+        real:[
+          { hz:'洱海边发呆。', py:'Ěrhǎi biān fādāi.', note:'zone out by the lake', style:'casual' },
+          { hz:'苍山洱海。', py:'Cāngshān Ěrhǎi.', note:'mountain and lake', style:'casual' }
+        ]},
+      { en:'Roasted rushan is delicious.', py:'Kǎo rǔshàn hǎochī.', hz:'烤乳扇好吃。',
+        real:[
+          { hz:'尝尝烤乳扇？', py:'Chángchang kǎorǔshàn?', note:'invite to try', style:'casual' },
+          { hz:'白族三道茶。', py:'Báizú sāndào chá.', note:'Bai three-course tea', style:'casual' }
+        ]}
+    ]},
+  { id:'hongkong', icon:'🌆', title:'Hong Kong · Victoria Harbour', day1:false,
+    desc:'Victoria Harbour and milk tea in Hong Kong. Tap, listen, then say it 3 times.',
+    phrases:[
+      { en:'Victoria Harbour is beautiful.', py:'Wéiduōlìyà gǎng hěn piàoliang.', hz:'维多利亚港很漂亮。',
+        real:[
+          { hz:'维港夜景必看。', py:'Wéigǎng yèjǐng bì kàn.', note:'must-see harbour night view', style:'casual' },
+          { hz:'太平山顶看全港。', py:'Tàipíngshān dǐng kàn quángǎng.', note:'peak for the skyline', style:'casual' }
+        ]},
+      { en:'Hong Kong milk tea is delicious.', py:'Xiānggǎng nǎichá hěn hǎohē.', hz:'香港奶茶好喝。',
+        real:[
+          { hz:'来杯丝袜奶茶？', py:'Lái bēi sīwà nǎichá?', note:'order silk-stocking milk tea', style:'casual' },
+          { hz:'菠萝包配奶茶。', py:'Bōluóbāo pèi nǎichá.', note:'pineapple bun with milk tea', style:'casual' }
+        ]}
     ]}
 ];
 
@@ -1190,23 +1452,39 @@ function loadState(){
   try{ return JSON.parse(localStorage.getItem('sinoky_state')) || {}; }catch(e){ return {}; }
 }
 function saveStateLocal(){ lsSet('sinoky_state', JSON.stringify(S)); }
-function saveState(){ saveStateLocal(); pushProfile(); }   // v0.3.31 本地存 + 异步云端镜像
+function saveState(){ S._ts = Date.now(); saveStateLocal(); pushProfileSoon(); }   // v0.3.39 云端同步走 8s 防抖（原直接 pushProfile 每次立即写 KV，猛练用户翻 40 卡/min 会每分钟打 ~40 次写、1 小时打满全天 1000 配额；pagehide 时由 flushProfileNow 立即发兜底）
 /* v0.3.35 M2：高频操作（翻字卡）只写本地，云端同步防抖 3 秒。
    旧实现每翻一张卡都 saveState() → POST /api/profile；翻 40 次/分钟即打满
    Worker 的 RATE_MAX=40/60s 限流 → 之后整整一分钟的进度同步全部 429 静默失败。 */
 var pushTimer = null;
 function pushProfileSoon(){
   if(pushTimer) clearTimeout(pushTimer);
-  pushTimer = setTimeout(function(){ pushTimer = null; pushProfile(); }, 3000);
+  pushTimer = setTimeout(function(){ pushTimer = null; pushProfile(); }, 8000);  // v0.3.39 写入节流：8s 合并窗口（原 3s，猛练用户翻 40 卡/min 会每分钟打 ~40 次 KV 写，1 小时打满全天 1000 配额）
 }
 /* v0.3.31 M1 收口：进度云端备份。UID 即设备身份，进度按 uid 镜像到 KV PROFILES，
    换机/清缓存可借同 uid 恢复（为 L3 语伴互认铺路）。云端失败静默，绝不阻塞用户。 */
-async function pushProfile(){
+async function pushProfile(useBeacon){
   try{
-    const state = Object.assign({}, S, { _ts: Date.now() });
-    // v0.3.33：顺带上报匿名统计（零新增请求，寄生在已有的进度同步里）
-    await fetch('api/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ uid: UID, state, stat: buildStat() }) });
-  }catch(e){ /* 离线/限流忽略 */ }
+    /* v0.3.40：上云载荷剔除纯游标字段。cards 只是"翻到第几张"，换设备重来一遍无损失，
+       却是最高频的状态变化——带上它脏检查永远成立。真实进度（开口/声调/Day）照常 8s 内上云。 */
+    const cloudState = Object.assign({}, S, { _ts: Date.now() });
+    delete cloudState.cards;
+    const state = cloudState;
+    const body = JSON.stringify({ uid: UID, state, stat: buildStat() });
+    /* v0.3.39 写入节流：pagehide/后台时普通 fetch 会被浏览器丢弃，sendBeacon 在 unload 最可靠；
+       常态仍走 fetch（便于拿到响应）。两条路径后端都有脏检查，未变化不落 KV。 */
+    if(useBeacon && navigator.sendBeacon){
+      try{ if(navigator.sendBeacon('api/profile', new Blob([body], { type:'application/json' }))) return true; }catch(e){}
+    }
+    const r = await fetch('api/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body });
+    let ok = false;
+    try{ const j = await r.json(); ok = !!(j && j.ok); }catch(e){ ok = !!r.ok; }
+    /* v0.3.41 同步结果必须可感知。写入失败（最常见是 KV 每日 1000 写配额耗尽）时标脏留痕，
+       否则用户以为进度已上云，换设备/清缓存才发现云端停在旧版本 —— 静默丢数据比不同步严重得多。 */
+    if(ok){ lsSet('sinoky_cloud_dirty', ''); }
+    else { lsSet('sinoky_cloud_dirty', String(Date.now())); console.warn('[Sinoky] cloud sync failed; progress kept locally'); }
+    return ok;
+  }catch(e){ lsSet('sinoky_cloud_dirty', String(Date.now())); return false; }
 }
 /* v0.3.33 M2 埋点：从本地状态推导匿名统计。
    只算"说过多少句 / 练了多少声调题 / Day1 是否通关 / 各场景分布"，不含任何内容或个人身份信息。
@@ -1241,7 +1519,10 @@ async function pullProfile(){
       saveStateLocal();
       renderHome();
     }
-  }catch(e){ /* 离线/失败忽略 */ }
+    /* v0.3.41：合并完成后再同步。若本地比云端新（上次写入失败/离线），这一步把进度补回云端。
+       顺序不能反 —— 先 sync 再合并会让云端旧数据覆盖本地新进度。 */
+    pushProfileSoon();
+  }catch(e){ pushProfileSoon(); /* 拉取失败同样尝试同步本地进度 */ }
 }
 var UID = lsGet('sinoky_uid');
 if(!UID){
@@ -1264,7 +1545,21 @@ S.days = S.days || [];         /* ['2026-08-30',...] */
 S._ts = S._ts || 0;            /* v0.3.31 云端合并时间戳 */
 S.tone = S.tone || { right:0, total:0 };
 S.feat = S.feat || {};   /* v0.3.36 功能级使用统计 */
-saveState();
+/* v0.3.41：启动只落本地，不推 _ts、不触发同步。若在 pullProfile 之前就把 _ts 推到 now，
+   多设备场景下会判定「本地比云端新」，把本设备旧进度写回云端、冲掉另一台设备的新进度。
+   同步交给 pullProfile 合并完成后触发。 */
+saveStateLocal();
+
+/* v0.3.39 写入节流：用户切后台/关页时防抖可能还没触发，强制 flush 一次，
+   避免最后几分钟进度/统计丢失（KV 配额够，多这 1 次 flush 无关紧要）。 */
+function flushProfileNow(){
+  if(pushTimer){ clearTimeout(pushTimer); pushTimer = null; }
+  pushProfile(true);   // v0.3.41 卸载路径用 sendBeacon（fetch 会被浏览器丢弃），代价是拿不到响应
+}
+window.addEventListener('pagehide', flushProfileNow);
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'hidden') flushProfileNow();
+});
 
 /* ---------- tts: multi-source fallback (google zh -> baidu zh -> web speech)
    v0.1.1 fix (P1-1): baidu anonymous tts 502s after cold start; overseas
@@ -1456,7 +1751,7 @@ function go(v){
   /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
      用于回答"用户用得最多的是哪个功能"。home 是被动落地页不计。 */
   if(v==='tone'||v==='cards'||v==='reading'||v==='sentences'||v==='prog'){
-    S.feat = S.feat || {}; S.feat[v] = (S.feat[v]||0)+1; saveStateLocal(); pushProfileSoon();
+    S.feat = S.feat || {}; S.feat[v] = (S.feat[v]||0)+1; saveStateLocal();   /* v0.3.40：埋点计数只写本地，随真实进度或会话结束 flush 上云（recordStat 是 max 幂等，批量上报不丢数据） */
   }
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
@@ -1527,7 +1822,7 @@ function renderHome(){
 /* ---------- scene flow ---------- */
 var curScene = null;
 function openScene(id, idx){
-  S.feat = S.feat || {}; S.feat.scene = (S.feat.scene||0)+1; saveStateLocal(); pushProfileSoon();
+  S.feat = S.feat || {}; S.feat.scene = (S.feat.scene||0)+1; saveStateLocal();   /* v0.3.40：同上，场景打开计数只写本地 */
   curScene = SCENES.filter(function(s){ return s.id===id; })[0];
   $('sc-title').textContent = curScene.icon+' '+curScene.title;
   $('sc-desc').textContent = curScene.desc;
@@ -2042,7 +2337,7 @@ function renderCard(){
       '<button class="btn ghost" onclick="fcMove(1)">Next →</button>' +
     '</div>' +
     '<div class="fc-strokes" id="fc-strokes"></div>';
-  S.cards = S.cards || {}; S.cards.idx = fcIdx; saveStateLocal(); pushProfileSoon();
+  S.cards = S.cards || {}; S.cards.idx = fcIdx; saveStateLocal();   /* v0.3.40 写入节流：卡片游标是纯 UI 位置、零学习价值，绝不触发云端同步。此前每翻一张卡都写一次 KV（40/min），是打爆 1000/天配额的真凶——带上它脏检查恒成立、防抖形同虚设 */
 }
 function fcToggle(){ fcRevealed = !fcRevealed; renderCard(); }
 function fcMove(d){

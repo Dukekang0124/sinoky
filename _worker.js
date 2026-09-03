@@ -234,9 +234,10 @@ async function recordStat(env, uid, st) {
   if (!env.PROFILES || !uid || !st) return;
   const key = 's:' + uid;
   let s = { first: 0, last: 0, days: [], phrases: 0, tone: 0, day1Done: false, scenes: {} };
+  let s_before = null;  // v0.3.39：保留写入前的独立副本，用于判断业务字段是否真变化
   try {
     const raw = await env.PROFILES.get(key);
-    if (raw) { try { s = Object.assign(s, JSON.parse(raw)); } catch (e) { /* 脏数据则重建 */ } }
+    if (raw) { try { s_before = JSON.parse(raw); s = Object.assign(s, s_before); } catch (e) { /* 脏数据则重建 */ } }
   } catch (e) { /* 读失败用默认值 */ }
 
   const now = Date.now();
@@ -268,6 +269,17 @@ async function recordStat(env, uid, st) {
       const v = Math.max(0, Number(st.scenes[k]) || 0);
       if (v > (s.scenes[k] || 0)) s.scenes[k] = v;
     }
+  }
+  // v0.3.39 写入节流：派生统计无变化就跳过 put（每天 KV 写仅 1000 配额）。
+  // 业务字段 = phrases/tone/day1Done/feat/scenes/days；忽略 first/last/firstPhraseAt（时间戳每次变，非业务变化）。
+  const sig = (o) => JSON.stringify([
+    o.phrases || 0, o.tone || 0, !!o.day1Done,
+    o.feat || {}, o.scenes || {}, (o.days || []).slice().sort()
+  ]);
+  const before = s_before ? sig(s_before) : null;
+  if (before !== null && before === sig(s)) {
+    console.log('[RECORDSTAT] skip no-change', key);
+    return;
   }
   await env.PROFILES.put(key, JSON.stringify(s));
 }
@@ -607,7 +619,24 @@ export default {
           const uid = String((b && b.uid) || '').trim();
           if (!uid) return json({ ok: false, error: 'uid required' }, 400);
           const state = b.state || {};
-          await env.PROFILES.put('p:' + uid, JSON.stringify(state));
+          // v0.3.39 写入节流：业务状态没变就跳过 put（KV 免费额度每天仅 1000 写，
+          // 否则前端每 8s 一次同步、或 pullProfile 触发的合并，都会重复刷爆配额）。
+          // 比对时剥离 _ts（合并时间戳每次都变，不算业务变化）。
+          let skipPut = false;
+          try {
+            const prev = await env.PROFILES.get('p:' + uid);
+            if (prev) {
+              /* v0.3.40：比对时同时剥离 cards（前端已不再上报该字段，
+             剥离它可让历史已存记录与新载荷判定为一致，避免上线瞬间全量重写一次） */
+              const strip = (o) => JSON.stringify(o, (k, v) => (k === '_ts' || k === 'cards') ? undefined : v);
+              if (strip(JSON.parse(prev)) === strip(state)) skipPut = true;
+            }
+          } catch (e) { /* 读失败则照常写，不阻塞 */ }
+          if (!skipPut) {
+            await env.PROFILES.put('p:' + uid, JSON.stringify(state));
+          } else {
+            console.log('[PROFILE] skip unchanged put for', uid);
+          }
           // v0.3.33：顺带落匿名统计（寄生写入，零新增请求）；统计失败绝不影响进度保存
           try { await recordStat(env, uid, b.stat); } catch (e) { /* 忽略 */ }
           return json({ ok: true });
