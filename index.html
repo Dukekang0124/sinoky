@@ -97,6 +97,12 @@ header img{width:34px;height:34px;border-radius:9px}
 .tonebtn .tl{font-size:10px;color:var(--sub);margin-top:5px}
 .tonebtn.right{border-color:var(--t2);background:rgba(42,157,143,.15)}
 .tonebtn.wrong{border-color:var(--red);background:rgba(230,57,70,.13)}
+.tonebtn.sel{border-color:var(--teal);background:rgba(127,179,176,.18);box-shadow:0 0 0 2px var(--teal) inset}
+.tone-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tone-actions .btn{flex:1 1 auto}
+.tonebtn.sel{border-color:var(--teal);background:rgba(127,179,176,.18);box-shadow:0 0 0 2px var(--teal) inset}
+.tone-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tone-actions .btn{flex:1 1 auto}
 .tone-q{font-size:13px;color:var(--sub);text-align:center;margin-top:10px}
 .tone-big{font-size:15px;text-align:center;margin-top:12px;min-height:22px}
 .tone-big b{color:var(--teal)}
@@ -408,12 +414,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <section id="v-tone" class="views">
     <div class="card">
       <div class="top"><h2>Tone Gym</h2><span class="badge teal" id="tone-score">0/0</span></div>
-      <p class="tone-q">Listen. Which tone do you hear?</p>
+      <p class="tone-q" id="tone-q">Tap a tone to hear it. Then try the quiz.</p>
       <div class="tone-big" id="tone-big"></div>
-      <button class="btn primary" id="tone-play" onclick="playToneQ()">▶ Play the sound</button>
       <div class="tonebtns" id="tone-btns"></div>
-      <button class="btn ghost" id="tone-next" onclick="nextTone()">Next →</button>
-      <button class="btn ghost" onclick="go('home')">← Back</button>
+      <button class="btn primary" id="tone-play" onclick="playToneQ()">▶ Play the sound</button>
+      <div class="tone-actions">
+        <button class="btn ghost" id="tone-quiz" onclick="toneToggleQuiz()">🎯 Quiz me</button>
+        <button class="btn ghost" id="tone-next" onclick="nextTone()" style="display:none">Next →</button>
+        <button class="btn ghost" onclick="go('home')">← Back</button>
+      </div>
     </div>
   </section>
 
@@ -549,7 +558,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.37';
+var APP_VERSION = '0.3.38';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1856,72 +1865,117 @@ function finishScene(){
 
 /* ---------- tone gym ---------- */
 var toneQ = null, toneLocked = false, lastTone = -1, toneTimer = null;
+/* v0.3.38 Tone Gym 交互重做（修复康哥实测"双选"bug）：
+   根因：4 个按钮是"答题键"(answerTone)，点一个即揭示答案 → 双高亮（绿=答案 / 红=误选），
+   用户误读为"系统又选了另一个"，且 Play 永远播题面音而非用户点的 → 看似"播错声调"。
+   修复：按钮改为"选/听声调"键(toneTap)——点哪个只高亮哪个(.sel)、播哪个；
+   Play 播"当前选中"的声调。保留训练价值：🎯 Quiz 模式（题面随机、点按钮=猜、只高亮正确答案、绝不双高亮）。 */
+var toneSel = -1;            // 当前选中的声调（player 模式）
+var toneMode = 'play';       // 'play' | 'quiz'
+
 function startTone(){
-  go('tone'); nextTone();
-}
-function nextTone(){
-  /* v0.3.35 L2：允许手动跳过（原实现只能干等自动跳转，答对 1.4s 就被推走） */
-  if(toneTimer){ clearTimeout(toneTimer); toneTimer = null; }
-  /* v0.1.1 fix (P2): never repeat the same item twice in a row */
-  var n;
-  do { n = Math.floor(Math.random()*4); } while(n === lastTone);
-  lastTone = n;
-  toneQ = TONES[n];
-  toneLocked = false;
+  go('tone');
+  toneMode = 'play';
+  toneSel = -1;
+  renderToneBtns();
+  $('tone-q').textContent = 'Tap a tone to hear it. Then try the quiz.';
+  $('tone-quiz').textContent = '🎯 Quiz me';
+  $('tone-next').style.display = 'none';
   $('tone-big').innerHTML = '';
-  $('tone-play').textContent = '▶ Play the sound';
+  $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
+}
+
+function renderToneBtns(){
   var html = '';
   [1,2,3,4].forEach(function(n){
-    html += '<button class="tonebtn" id="tb-'+n+'" onclick="answerTone('+n+')">'+
+    html += '<button class="tonebtn" id="tb-'+n+'" onclick="toneTap('+n+')">'+
       '<span class="dot" style="background:'+TONE_COLOR[n]+'"></span>'+
       '<div class="tl">'+TONE_LABEL[n]+'</div></button>';
   });
   $('tone-btns').innerHTML = html;
-  $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
 }
-/* v0.3.37 Tone Gym 判分音频三重加固（康哥实测「有时准有时乱」）：
-   ① 音频 base64 内嵌 TONES —— 根因：微信 X5 内核不支持 SW，音频网络加载失败会坠入
-      speak() 运行时 TTS（Edge TTS 孤立音节正确率实测仅 1/4），判分即掷骰子。
-      内嵌后零网络依赖，任何内核首帧可播。
-   ② 恒速播放 —— playbackRate 变速即变调（重采样），调型被破坏，判分场景禁止。
-   ③ 失败绝不降级 TTS（听力题宪法）—— 只提示重试，绝不运行时 TTS 判分。
-   tone3.mp3 为 PSOLA 重制版：214 全三声（谷位 0.49 / 净升 +21.7%），治「三声不准」。 */
+
+function toneTap(n){
+  if(toneMode === 'quiz'){ answerTone(n); return; }   // quiz 模式：点按钮=猜
+  // player 模式：选中并播放该声调（只高亮这一个，绝不双选）
+  toneSel = n;
+  [1,2,3,4].forEach(function(i){ var b = $('tb-'+i); if(b) b.classList.toggle('sel', i === n); });
+  playToneAudio(TONES[n-1]);
+}
+
 function playToneQ(){
-  if(!toneQ) return;
-  var btn = $('tone-play');
-  if(!toneQ.audio || toneQ.audio.indexOf('data:audio') !== 0){
-    if(btn){ btn.classList.remove('wait'); btn.textContent = '↻ Tap to retry'; }
-    return;
+  if(toneMode === 'quiz'){ if(toneQ) playToneAudio(toneQ); return; }  // quiz 模式：播题面
+  // player 模式：Play = 播当前选中的声调（未选则默认第 1 声并选中它）
+  if(toneSel < 0) toneSel = 1;
+  [1,2,3,4].forEach(function(i){ var b = $('tb-'+i); if(b) b.classList.toggle('sel', i === toneSel); });
+  playToneAudio(TONES[toneSel-1]);
+}
+
+function playToneAudio(t){
+  if(!t || !t.audio || t.audio.indexOf('data:audio') !== 0){
+    var btn = $('tone-play'); if(btn){ btn.textContent = '↻ Tap to retry'; } return;
   }
   var a = AUDIO || (AUDIO = new Audio());
-  try{ a.pause(); }catch(e){}
+  try { a.pause(); } catch(e){}
   a.volume = 1;
-  a.onplaying = function(){ if(btn){ btn.classList.remove('wait'); btn.textContent = '▶ Play the sound'; } };
-  a.onended = function(){ if(btn){ btn.classList.remove('wait'); btn.textContent = '▶ Play the sound'; } };
-  a.onerror = function(){ if(btn){ btn.classList.remove('wait'); btn.textContent = '↻ Tap to retry'; } };
-  a.src = toneQ.audio;
-  if(btn){ btn.classList.add('wait'); btn.textContent = '… loading'; }
-  a.play().catch(function(){ if(btn){ btn.classList.remove('wait'); btn.textContent = '↻ Tap to retry'; } });
+  var btn = $('tone-play');
+  a.onplaying = function(){ if(btn){ btn.textContent = '▶ Play the sound'; } };
+  a.onended = function(){ if(btn){ btn.textContent = '▶ Play the sound'; } };
+  a.onerror = function(){ if(btn){ btn.textContent = '↻ Tap to retry'; } };
+  a.src = t.audio;
+  if(btn){ btn.textContent = '… loading'; }
+  a.play().catch(function(){ if(btn){ btn.textContent = '↻ Tap to retry'; } });
 }
+
+function nextTone(){
+  /* player 模式：清空选中；quiz 模式：出下一题 */
+  if(toneMode === 'quiz'){ toneNewQuiz(); return; }
+  toneSel = -1;
+  [1,2,3,4].forEach(function(i){ var b = $('tb-'+i); if(b) b.classList.remove('sel'); });
+  $('tone-big').innerHTML = '';
+}
+
+function toneToggleQuiz(){
+  toneMode = (toneMode === 'quiz') ? 'play' : 'quiz';
+  if(toneMode === 'quiz'){
+    $('tone-q').textContent = 'Listen. Which tone do you hear?';
+    $('tone-quiz').textContent = '← Hear tones';
+    toneNewQuiz();
+  } else {
+    $('tone-q').textContent = 'Tap a tone to hear it. Then try the quiz.';
+    $('tone-quiz').textContent = '🎯 Quiz me';
+    $('tone-next').style.display = 'none';
+    [1,2,3,4].forEach(function(i){ var b = $('tb-'+i); if(b) b.classList.remove('right','wrong','sel'); });
+    $('tone-big').innerHTML = '';
+  }
+}
+
+function toneNewQuiz(){
+  if(toneTimer){ clearTimeout(toneTimer); toneTimer = null; }
+  var n; do { n = Math.floor(Math.random()*4); } while(n === lastTone);
+  lastTone = n;
+  toneQ = TONES[n];
+  toneLocked = false;
+  [1,2,3,4].forEach(function(i){ var b = $('tb-'+i); if(b) b.classList.remove('right','wrong','sel'); });
+  $('tone-big').innerHTML = '';
+  $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
+}
+
 function answerTone(n){
+  /* quiz 模式判分：只高亮正确答案(.right)，绝不双高亮（修复"选一个亮两个"误读） */
   if(toneLocked || !toneQ) return;
   toneLocked = true;
   S.tone.total++;
   var ok = n === toneQ.t;
   if(ok){ S.tone.right++; }
   saveState();
-  $('tb-'+toneQ.t).classList.add('right');   /* v0.3.35 L1：原写法 ok?'right':'right' 两分支相同，是笔误 */
-  /* v0.3.37：绿框是「正确答案揭示」不是你点的 —— 在按钮上打 ✓/✗ 消歧 */
-  $('tb-'+toneQ.t).querySelector('.tl').textContent = '✓ '+TONE_LABEL[toneQ.t];
-  if(!ok){
-    $('tb-'+n).classList.add('wrong');
-    $('tb-'+n).querySelector('.tl').textContent = '✗ '+TONE_LABEL[n];
-  }
+  $('tb-'+toneQ.t).classList.add('right');   /* 仅正确答案绿框；用户误选不再红框，避免"双选"错觉 */
   $('tone-score').textContent = S.tone.right+'/'+S.tone.total;
   $('tone-big').innerHTML = ok
-    ? '<b>✓ '+toneQ.hz+' ('+toneQ.py+')</b> = '+toneQ.mean
-    : '<b style="color:var(--red)">✗ You picked '+TONE_LABEL[n]+'.</b> That meant something else! '+toneQ.hz+' ('+toneQ.py+') = '+toneQ.mean;
-  toneTimer = setTimeout(nextTone, ok ? 1800 : 3000);
+    ? '<b>✓ '+TONE_LABEL[toneQ.t]+'.</b> '+toneQ.hz+' ('+toneQ.py+') = '+toneQ.mean
+    : '<b style="color:var(--red)">✗ You picked tone '+n+'.</b> That was tone '+toneQ.t+'. '+toneQ.hz+' ('+toneQ.py+') = '+toneQ.mean;
+  $('tone-next').style.display = '';
+  toneTimer = setTimeout(function(){ $('tone-next').style.display = 'none'; toneNewQuiz(); }, ok ? 1800 : 3000);
 }
 
 /* ---------- progress ---------- */

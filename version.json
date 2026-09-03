@@ -1,5 +1,5 @@
 {
-  "version": "0.3.37",
+  "version": "0.3.38",
   "updated": "2026-09-03",
-  "note": "Tone Gym audio reliability: 4 sounds embedded as base64 (zero network, works in WeChat X5 without SW); playback always 1.0x (pitch intact); no more runtime-TTS fallback on grading (retry hint instead); tone3 re-synthesized to full dipping 214 contour (PSOLA, F0-verified); answer feedback now marks your pick with x and the correct tone with a check."
+  "note": "Tone Gym 交互重做：4 按钮改为选/听声调键（只高亮所选、Play 播所选），修复\"双选+播错声调\"误读；保留 🎯 Quiz 模式且判分只高亮正确答案不双高亮。"
 }
