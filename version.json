@@ -1,5 +1,5 @@
 {
-  "version": "0.3.36",
+  "version": "0.3.37",
   "updated": "2026-09-03",
-  "note": "v0.3.36 (两条内测反馈落地): P0 Tone Gym 判分音频静态化(预生成 assets/tones/ 妈麻马骂, 有道源, parselmouth 基频实测 4/4 调型正确, 听力题答案锚音频实际呈现而非文字标注; 失败才降级运行时TTS; SW 预缓存离线可判分) / 首视图轻引导(一次性单卡片, 零进度才出现, 点过即记) / 内容扩容 40→100 句(新增购物/数字/交通/酒店/寒暄/接话/朋友聚会 7场景, Day 路径扩到 14 天) / 好评见证卡(授权引用, 匿名, Home 底部) / 功能级使用统计(feat 计数寄生于进度同步, 看板新增 Feature usage)。"
+  "note": "Tone Gym audio reliability: 4 sounds embedded as base64 (zero network, works in WeChat X5 without SW); playback always 1.0x (pitch intact); no more runtime-TTS fallback on grading (retry hint instead); tone3 re-synthesized to full dipping 214 contour (PSOLA, F0-verified); answer feedback now marks your pick with x and the correct tone with a check."
 }
