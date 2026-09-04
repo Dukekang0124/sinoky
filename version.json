@@ -1,5 +1,5 @@
 {
-  "version": "0.3.48",
+  "version": "0.3.49",
   "updated": "2026-09-04",
-  "note": "Daily Phase 3 复习循环：让用户「重说」已学过的句子 —— 不是再看一遍，是回忆（中文默认 blur，逼用户看着英文先想）→ 开口（Play & say 3×，复用现有场景流程）→ 验证（Show Chinese 对答案）。状态只记 S.review={d,n}（~40 字节，跨天自动重置，不记历史）。首页 Day 卡之后插一张「Review · today」卡：① 门槛≥3 句才出现（新用户零打扰）；② 稳定随机（同一天同序号同一条，刷新不换题）；③ 点「Said it · next」换下一条并计数+1；④ 复习不写 S.phrases、不影响 currentDay、不污染 Day 进度，纯加法零破坏。"
+  "note": "听辨接主流程：单字声调听辨题库从 Tone Gym 扩展到首页（Ear check 卡）。① 数据驱动题库 LISTEN_Q（人工策展，不靠脚本自动切音节），opts.audio 为空不进池，零空壳；② 现仅 ma 一组（复用 Tone Gym 4 条真人音频），康哥录新单字往 LISTEN_Q 塞数据即可，前端零改动；③ edify 闭环硬约束：听 → 辨 → 知 → 说，答完必出「Now say it →」按钮跳当日 Day 第一句开口 3 遍，缺这一步 = 孤立练耳 = 🔴 fancy 本项目不做；④ 不超前（day > currentDay 的题不出）；⑤ 稳定随机 FNV-1a + avalanche finalizer（修 v0.3.48 漏掉的低位熵差 bug：未修时 12 题 1 声占 10 道）；⑥ S.listen = {d,n,r} 跨天重置，随 S 上云。零破坏：不动 Tone Gym、不动 Review 卡、不动 S.phrases / currentDay / 导航 6 项。验收：本地 42/42 + 3 处变异测试反向证明断言真咬住代码。"
 }

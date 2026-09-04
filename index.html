@@ -309,6 +309,22 @@ nav button.on{color:var(--red)}
 .rv-acts{display:flex;gap:8px;margin-top:12px}
 .rv-acts .btn{flex:1;margin:0}
 .phrase.focus{box-shadow:0 0 0 2px var(--red);border-radius:12px;transition:box-shadow .2s}
+/* ---------- v0.3.49 听辨卡（Ear check）：复用 --teal / --bg2 / .btn / 四个声调色，零新增设计语言 ---------- */
+.earcheck{background:linear-gradient(135deg,rgba(42,157,143,.13),rgba(42,157,143,.04));border-color:rgba(42,157,143,.32)}
+.ear-play{display:block;width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+  padding:14px;margin-top:12px;cursor:pointer;color:var(--fg);font-family:inherit;font-size:14px;font-weight:600}
+.earbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.earbtn{border:1px solid var(--line);background:var(--bg2);border-radius:13px;padding:12px 4px;text-align:center;
+  cursor:pointer;color:var(--txt);font-family:inherit}
+.earbtn .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.earbtn .tl{font-size:10px;color:var(--sub);margin-top:5px}
+.earbtn.right{border-color:var(--t2);background:rgba(42,157,143,.15)}
+.earbtn.wrong{border-color:var(--red);background:rgba(230,57,70,.13)}
+.earbtn:disabled{cursor:default}
+.ear-res{margin-top:12px;font-size:13px;text-align:center;color:var(--fg);line-height:1.5}
+.ear-res b{color:var(--teal)}
+.ear-acts{display:flex;gap:8px;margin-top:12px}
+.ear-acts .btn{flex:1;margin:0}
 /* ---------- voice bar: Voice(Female/Male) + Style(Standard/Cheerful/Serious/Gentle) ----------
    v0.3.32: UI 文案改全英文（产品面向老外，原中文标签 女声/男声/标准/开心/严肃/温柔 老外看不懂）。
    英文比中文长近一倍，故收紧 padding + white-space:nowrap + 小屏媒体查询，
@@ -626,7 +642,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.48';
+var APP_VERSION = '0.3.49';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1472,6 +1488,19 @@ var TONES = [
 var TONE_COLOR = { 1:'var(--t1)', 2:'var(--t2)', 3:'var(--t3)', 4:'var(--t4)' };
 var TONE_LABEL = { 1:'1 flat', 2:'2 rising', 3:'3 dip', 4:'4 fall' };
 
+/* v0.3.49 听辨题库（人工策展，不复靠脚本从句子里自动切音节——切不准会造出错题）。
+   数据驱动：opts 里 audio 为空的题目不进池（零空壳）。
+   当前仅 ma 一组，复用 Tone Gym 已有的 4 条真人音频；康哥录完新音频往 LISTEN_Q 追加即可，前端零改动。
+   day 字段 = 归属第几天，只出「当天及以前」的题，不超前。 */
+var LISTEN_Q = [
+  { syl:'ma', day:1, opts:[
+    { t:1, py:'mā', hz:'妈', mean:'mother',        audio:TONES[0].audio },
+    { t:2, py:'má', hz:'麻', mean:'hemp / numb',   audio:TONES[1].audio },
+    { t:3, py:'mǎ', hz:'马', mean:'horse',         audio:TONES[2].audio },
+    { t:4, py:'mà', hz:'骂', mean:'scold',         audio:TONES[3].audio }
+  ]}
+];
+
 
 /* ===== v0.3.34 P1 内容续航：Day 1-7 线性路径 =====
    背景：此前 day1 是"场景级"标记（arrival+self-intro+emergency 共 21 句全塞第一天），
@@ -1648,6 +1677,7 @@ S.tone = S.tone || { right:0, total:0 };
 S.feat = S.feat || {};   /* v0.3.36 功能级使用统计 */
 S.dayDone = S.dayDone || {};  /* v0.3.47 {dayN:'YYYY-MM-DD'}；'' = 历史完成日期未知 */
 S.review = S.review || { d:'', n:0 };  /* v0.3.48 每日复习计数（跨天自动重置，不记历史） */
+S.listen = S.listen || { d:'', n:0, r:0 };  /* v0.3.49 听辨成绩（跨天重置，只记当日答题数/对题数，不记历史） */
 seedDayDone();               /* 首次运行：把已完成的 Day 标成 ''，避免下次打卡记成今天 */
 /* v0.3.41：启动只落本地，不推 _ts、不触发同步。若在 pullProfile 之前就把 _ts 推到 now，
    多设备场景下会判定「本地比云端新」，把本设备旧进度写回云端、冲掉另一台设备的新进度。
@@ -2080,12 +2110,22 @@ function reviewToday(){
 }
 /* 稳定随机（FNV-1a）：同一天同一序号 → 同一条，刷新不换题（防止用户刷到会说的那句）。
    点 next 序号 +1 → 换下一条。 */
+/* FNV-1a + avalanche finalizer（全局唯一的稳定随机实现，复习卡与听辨卡共用）。
+   ★ 必须带 finalizer：FNV-1a 原始值【低位熵极差】，直接 %N 会严重倾斜——
+     v0.3.49 实测：12 道听辨题里 1 声占 10 道、3 声占 2 道，2/4 声一次没出。
+     加完 finalizer 后 4 种声调均匀。finalizer 是确定性函数，不影响「同序号同一条」的稳定性。 */
+function fnv(s){
+  var h = 2166136261, i;
+  for(i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  h ^= h >>> 16; h = (h * 2246822507) >>> 0;
+  h ^= h >>> 13; h = (h * 3266489909) >>> 0;
+  h ^= h >>> 16;
+  return h >>> 0;
+}
 function pickReview(k){
   var pool = reviewPool();
   if(!pool.length) return null;
-  var s = today() + '#' + k, h = 2166136261;
-  for(var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
-  return pool[h % pool.length];
+  return pool[fnv(today() + '#' + k) % pool.length];
 }
 var rvShown = false;   /* UI 游标：中文是否已揭示，纯内存，永不上云 */
 function reviewPeek(){ rvShown = !rvShown; renderHome(); }
@@ -2115,6 +2155,110 @@ function reviewCardHtml(){
     '\u{1F50A} Play &amp; say 3\u00D7</button>'+
     '<button class="btn ghost" onclick="reviewNext()">\u2713 Said it \u00B7 next</button>'+
     '</div></div>';
+}
+
+/* ---------- v0.3.49 听辨卡（Ear check）----------
+   Edify Gate 硬约束：听辨本身不产生开口，所以必须闭环到「说」——
+   听（播真人音频）→ 辨（4选 1 声调）→ 知（揭示答案）→ 说（Now say it 跳当日句子开口 3×）。
+   缺第 4 步 = 孤立练耳 = 🔴 fancy，本项目不做。
+   状态只记 S.listen={d,n,r}：体积恒定，跨天自动重置，不记历史（无产品价值、只让 KV 膨胀）。 */
+var listenAns = -1;   /* 当前题用户已选（-1 未答）—纯内存游标，永不上云 */
+
+function listenPool(){
+  var cd = currentDay(), out = [];
+  LISTEN_Q.forEach(function(g){
+    if(g.day > cd) return;                                     /* 不超前：只出当天及以前 Day 的题 */
+    var os = (g.opts||[]).filter(function(o){ return !!o.audio; });  /* 有音频才出题，零空壳 */
+    if(os.length) out.push({ syl:g.syl, day:g.day, opts:os });
+  });
+  return out;
+}
+function listenToday(){
+  if(!S.listen || S.listen.d !== today()) return { n:0, r:0 };
+  return { n:S.listen.n||0, r:S.listen.r||0 };
+}
+/* 双重种子：先选组（哪个音节），再选组内哪个声调当题面。
+   复用 pickReview 同款的 fnv（带 finalizer，低位熵均匀），不重复实现。 */
+function pickListen(k){
+  var pool = listenPool();
+  if(!pool.length) return null;
+  var s = today() + '#ear#' + k;
+  var g = pool[fnv(s) % pool.length];
+  var o = g.opts[fnv(s + '~') % g.opts.length];
+  return { syl:g.syl, day:g.day, q:o };
+}
+/* 当前题索引：已答且未点 Next 时，显示的是第 n-1 题（答案已揭示）；未答时显示第 n 题 */
+function listenCur(){
+  var st = listenToday();
+  var k = (listenAns >= 0) ? Math.max(0, st.n - 1) : st.n;
+  return pickListen(k);
+}
+function listenPlay(){
+  var it = listenCur();
+  if(!it || !it.q) return;
+  playToneAudio(it.q);      /* 复用 Tone Gym 的播放器（同一套真人音频，零重复实现） */
+}
+function answerListen(x){
+  if(listenAns >= 0) return;                 /* 一题只判一次 */
+  var it = listenCur();
+  if(!it) return;
+  listenAns = x;
+  var ok = (x === it.q.t);
+  var d = today();
+  if(!S.listen || S.listen.d !== d) S.listen = { d:d, n:0, r:0 };
+  S.listen.n = (S.listen.n||0) + 1;
+  if(ok) S.listen.r = (S.listen.r||0) + 1;
+  saveState();      /* 听辨成绩 = 真实学习行为（练耳证据），随进度上云 */
+  renderHome();
+}
+function listenNext(){
+  var d = today();
+  if(!S.listen || S.listen.d !== d) S.listen = { d:d, n:0, r:0 };
+  S.listen.n = (S.listen.n||0) + 1;
+  listenAns = -1;
+  saveState();
+  renderHome();
+}
+/* edify 闭环的第 4 步：跳该题所属 Day 的第一句，直接进场景开口 3 遍 */
+function listenSay(){
+  var it = listenCur();
+  var dn = it ? it.day : currentDay();
+  var items = dayItems(dn);
+  if(items.length) openScene(items[0].scene.id, items[0].idx);
+}
+function listenCardHtml(){
+  var pool = listenPool();
+  if(!pool.length) return '';                /* 无音频 = 无题 = 不出现，零空壳 */
+  var st = listenToday();
+  var it = listenCur();
+  if(!it) return '';
+  var revealed = listenAns >= 0;
+  var ok = revealed && listenAns === it.q.t;
+  var html = '<div class="card earcheck"><div class="top"><h2>👂 Ear check · today</h2>'+
+    '<span class="badge'+(st.n>0?' teal':'')+'">'+(st.n>0 ? st.r+'/'+st.n+' right' : '1 sound')+'</span></div>'+
+    '<p class="desc">Listen to the sound. Which tone do you hear?</p>'+
+    '<button class="ear-play" id="ear-play" onclick="listenPlay()">▶ Play the sound</button>'+
+    '<div class="earbtns" id="ear-btns">';
+  [1,2,3,4].forEach(function(n){
+    var cls = 'earbtn';
+    if(revealed && n === it.q.t) cls += ' right';
+    else if(revealed && n === listenAns) cls += ' wrong';
+    html += '<button class="'+cls+'" id="eb-'+n+'"'+(revealed?' disabled':'')+
+      ' onclick="answerListen('+n+')">'+
+      '<span class="dot" style="background:'+TONE_COLOR[n]+'"></span>'+
+      '<div class="tl">'+TONE_LABEL[n]+'</div></button>';
+  });
+  html += '</div>';
+  if(revealed){
+    html += '<div class="ear-res" id="ear-res">'+
+      (ok ? '<b>✓ Tone '+it.q.t+'.</b> ' : '<b style="color:var(--red)">✗ That was tone '+it.q.t+'.</b> ')+
+      it.q.py+' '+it.q.hz+' = '+it.q.mean+'</div>'+
+      '<div class="ear-acts">'+
+      '<button class="btn primary" id="ear-say" onclick="listenSay()">🔊 Now say it →</button>'+
+      '<button class="btn ghost" id="ear-next" onclick="listenNext()">Next →</button>'+
+      '</div>';
+  }
+  return html + '</div>';
 }
 
 function renderHome(){
@@ -2153,7 +2297,7 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + html + cityBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + html + cityBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -3324,6 +3468,7 @@ function importProgress(){
   S.feat = S.feat || {};
   S.dayDone = S.dayDone || {};
   S.review = S.review || { d:'', n:0 };
+  S.listen = S.listen || { d:'', n:0, r:0 };
   if(typeof payload.uid === 'string' && payload.uid.length >= 8){
     UID = payload.uid; lsSet('sinoky_uid', UID);
   }
