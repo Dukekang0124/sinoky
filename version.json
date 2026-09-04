@@ -1,5 +1,5 @@
 {
-  "version": "0.3.43",
-  "updated": "2026-09-03",
-  "note": "18 城内容扩容：北京/上海/杭州/重庆/成都/南昌/长沙/新疆/深圳/广州/厦门/海口/青岛/西安/桂林/张家界/大理/香港，每城锚定名胜+美食真实高频句（en+带调拼音+汉字+2 条口语变体），纯加数据零新导航。关键约定：day1:false 且【不标 day】——城市内容为 elective，只从 Home 卡片进，不进 Day 1-14 通关路径，避免 allDayPhrases() 把城市句算进 Day 要求导致已通关老用户进度回退。图（img 字段 + Home 带图渲染）在豆包出图齐后补。同步逻辑沿用 v0.3.41：真实进度 8s 防抖上云、cards 游标剥离、worker 脏检查剥 _ts+cards、KV 免费档 1000 写/天够用。"
+  "version": "0.3.47",
+  "updated": "2026-09-04",
+  "note": "Daily 内容重组 Phase 2：把「哪天开口过」升级到「哪天完成 Day N」。① 新增平行字段 S.dayDone = {dayN:'YYYY-MM-DD'}，S.days 结构一行不动（热力图/备份/云端三处 indexOf 零改动）；② 时间线上已完成的 Day 显示真实完成日期（如 9/4），老用户升级前的历史完成显示 DONE（'' 占位、绝不回填假日期）；③ 热力图格子悬停显示「2026-09-04 · Day 1 done」，打卡历史与 Day 内容打通；④ 新增 seedDayDone/markDaysDone/dayDoneLabel/dayDoneCell 四个函数，seed 守卫用独立 localStorage key sinoky_ddseed，不写进 S。纯加法：不碰 p.day、不改 S.days、不动 KV 同步逻辑，用户进度零风险。"
 }

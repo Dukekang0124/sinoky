@@ -320,6 +320,61 @@ nav button.on{color:var(--red)}
 #rd-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:19;display:none}
 #rd-mask.on{display:block}
 button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+/* v0.3.44 城市入口：首页热门 chip（紧凑，视觉权重匹配 2.1 句/城的内容权重）+ 城市页列表 */
+.citygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.citychip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:var(--bg2);border:1px solid var(--line);border-radius:13px;padding:10px 4px;
+  cursor:pointer;font-family:inherit;color:var(--txt);text-align:center;min-height:64px}
+.citychip:active{border-color:var(--red)}
+.citychip.done{background:rgba(0,201,167,.10);border-color:rgba(0,201,167,.42)}
+.citychip .ci{font-size:19px;line-height:1.15}
+.citychip .cn{font-size:12.5px;font-weight:700}
+.citychip .cz{font-size:11px;color:var(--sub)}
+.citysearch{width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--line);
+  border-radius:13px;padding:11px 13px;font-size:15px;color:var(--txt);font-family:inherit;margin-top:12px}
+.citysearch::placeholder{color:var(--sub)}
+.region-h{font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--sub);margin:20px 0 8px;padding-left:2px}
+.cityrow{display:flex;align-items:center;gap:11px;background:var(--bg2);border:1px solid var(--line);
+  border-radius:13px;padding:11px 13px;margin-bottom:8px;cursor:pointer;width:100%;text-align:left;
+  font-family:inherit;color:var(--txt)}
+.cityrow .ci{font-size:20px}
+.cityrow .cm{flex:1;min-width:0}
+.cityrow .cn{display:block;font-size:14.5px;font-weight:700}
+.cityrow .cz{display:block;font-size:11.5px;color:var(--sub);margin-top:2px}
+.cityrow .cd{font-size:11.5px;font-weight:700;color:var(--sub);white-space:nowrap}
+.cityrow.done .cd{color:var(--teal)}
+.cityempty{text-align:center;color:var(--sub);font-size:13.5px;padding:28px 0;line-height:1.7}
+
+/* v0.3.45 图片管线：句子配图（16:9）+ 城市页缩略图。
+   图缺失时 onerror 隐藏容器/回退 emoji，布局不留空位。 */
+.p-pic{width:100%;aspect-ratio:16/9;border-radius:11px;overflow:hidden;margin-bottom:10px;background:var(--bg2)}
+.p-pic img{width:100%;height:100%;object-fit:cover;display:block}
+.cthumb{width:44px;height:44px;border-radius:10px;overflow:hidden;flex:none;background:var(--bg2)}
+.cthumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+
+/* v0.3.46 Daily 聚合视图（复用 cityrow 风格，零新增设计语言） */
+.daytabs{display:flex;gap:8px;margin-top:12px}
+.daytab{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:9px 0;font-size:13px;font-weight:600;color:var(--sub);font-family:inherit;cursor:pointer}
+.daytab.on{background:rgba(230,57,70,.14);border-color:rgba(230,57,70,.40);color:var(--txt)}
+.dayrow{display:flex;align-items:center;gap:11px;background:var(--bg2);border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:8px;cursor:pointer;width:100%;text-align:left;font-family:inherit;color:var(--txt)}
+.dayrow .di{font-size:17px;flex:none}
+.dayrow .dm{flex:1;min-width:0}
+.dayrow .dn{display:block;font-size:14.5px;font-weight:700}
+.dayrow .dz{display:block;font-size:11.5px;color:var(--sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dayrow .dd{font-size:11.5px;font-weight:700;color:var(--sub);white-space:nowrap}
+.dayrow.done .dd{color:var(--teal)}
+.dayrow.locked{opacity:.45}
+.dayrow.exp{border-color:rgba(230,57,70,.35);margin-bottom:0;border-radius:13px 13px 0 0}
+.dayitems{background:var(--bg2);border:1px solid rgba(230,57,70,.35);border-top:none;border-radius:0 0 13px 13px;padding:4px 10px 10px;margin-bottom:8px}
+.dayitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-top:6px;font-size:13.5px;color:var(--txt);font-family:inherit;cursor:pointer}
+.dayitem .num{flex:none;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.dayitem .st{margin-left:auto;font-size:11px;color:var(--sub);font-weight:500}
+.dayitem.done{background:rgba(127,179,176,.10);border-color:rgba(127,179,176,.30)}
+.dayitem.done .num{background:var(--teal)}
+.dayitem.done .st{color:var(--teal)}
+.dayempty{font-size:12px;color:var(--sub);padding:6px 2px}
+.daylink{margin-top:9px;width:100%;background:none;border:none;color:var(--teal);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
 </style>
 </head>
 <body>
@@ -357,32 +412,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       </div>
     </div>
     <div id="home-scenes"></div>
-    <div class="card">
-      <div class="top"><h2>Tone Gym</h2><span class="badge teal">LISTEN</span></div>
-      <p class="desc">Mā má mǎ mà — four tones, four meanings. Train your ear with minimal pairs. Miss a tone and you say a different word.</p>
-      <button class="btn ghost" onclick="startTone()">Open Tone Gym</button>
-    </div>
-    <div class="card">
-      <div class="top"><h2>Learning with friends?</h2><span class="badge teal">BETA</span></div>
-      <p class="desc">Sinoky is free during beta. Invite a friend who's learning Chinese and compare your streaks.</p>
-      <button class="btn ghost" onclick="openShare()">📤 Share Sinoky</button>
-    </div>
-    <!-- v0.3.36 内测见证卡（引用已获两位内测用户授权，匿名展示）。
-         放在主路径最底部：不占首屏、不加导航，只给新用户一点"真人用过说好"的底气。 -->
-    <div class="card">
-      <div class="top"><h2>From our beta testers</h2><span class="badge teal">REAL TALK</span></div>
-      <div class="q">&ldquo;You're doing absolutely awesome, brother. This is great.&rdquo;</div>
-      <div class="q">&ldquo;Playing it slower for people who don't understand normal speed is amazing. And covering the answer is good for studying.&rdquo;</div>
-      <div class="q-by">&mdash; anonymous beta testers, shared with permission</div>
-    </div>
-    <!-- v0.3.36 内测见证卡（引用已获两位内测用户授权，匿名展示）。
-         放在主路径最底部：不占首屏、不加导航，只给新用户一点"真人用过说好"的底气。 -->
-    <div class="card">
-      <div class="top"><h2>From our beta testers</h2><span class="badge teal">REAL TALK</span></div>
-      <div class="q">&ldquo;You're doing absolutely awesome, brother. This is great.&rdquo;</div>
-      <div class="q">&ldquo;Playing it slower for people who don't understand normal speed is amazing. And covering the answer is good for studying.&rdquo;</div>
-      <div class="q-by">&mdash; anonymous beta testers, shared with permission</div>
-    </div>
+    <!-- v0.3.44 Phase 0：Tone Gym 卡与底部导航 🎵 Tones 重复、Share 卡与 foot 的 Share 重复，
+         均已移除（省约 340px）。可发现性由底部导航与 foot 承担，不是砍功能。 -->
     <!-- v0.3.36 内测见证卡（引用已获两位内测用户授权，匿名展示）。
          放在主路径最底部：不占首屏、不加导航，只给新用户一点"真人用过说好"的底气。 -->
     <div class="card">
@@ -407,6 +438,30 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     </div>
     <div id="sc-list"></div>
     <button class="btn primary" id="sc-finish" style="display:none" onclick="finishScene()">I completed today's challenge 🎉</button>
+    <button class="btn ghost" id="sc-back" onclick="goBack()">← Back</button>
+  </section>
+
+  <!-- CITIES · v0.3.44：城市从首页平铺收敛到此页（区域分组 + 搜索：英文 / 中文 / 拼音 id 均可匹配） -->
+  <section id="v-cities" class="views">
+    <div class="card">
+      <div class="top"><h2>\ud83d\udccd All cities</h2><span class="badge" id="city-count"></span></div>
+      <p class="desc">Pick a place. Learn the few lines that actually come up there.</p>
+      <input id="citySearch" class="citysearch" type="search" placeholder="Search \u2014 Beijing / \u6210\u90fd / chengdu" oninput="renderCities()" autocomplete="off">
+    </div>
+    <div id="city-list"></div>
+    <button class="btn ghost" onclick="go('home')">← Back</button>
+  </section>
+
+  <section id="v-days" class="views">
+    <div class="card">
+      <div class="top"><h2>📅 14-day path</h2><span class="badge" id="days-count"></span></div>
+      <p class="desc">Fourteen days, five minutes each. Finish them and you can survive in China.</p>
+      <div class="daytabs">
+        <button class="daytab" id="dtab-time" onclick="setDayMode('timeline')">Timeline</button>
+        <button class="daytab" id="dtab-topic" onclick="setDayMode('topic')">Topics</button>
+      </div>
+    </div>
+    <div id="days-list"></div>
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
 
@@ -558,7 +613,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.43';
+var APP_VERSION = '0.3.47';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1135,7 +1190,7 @@ var SCENES = [
      关键约定：day1:false 且【不标 day】——城市内容是 elective，只从 Home 卡片进，不进 Day 1-14 通关路径，
      否则 allDayPhrases() 会把它算进对应 Day 要求，导致已通关老用户进度回退（致命回归）。
      图（img 字段 + Home 带图渲染）在豆包出图齐后由九思补，本轮只落内容。 */
-  { id:'beijing', icon:'🏯', title:'Beijing · Sights & Food', day1:false,
+  { id:'beijing', icon:'🏯', title:'Beijing · Sights & Food', day1:false, region:'north', hot:true, city:'北京', pic:['landmark','food','landmark'],
     desc:'Famous sights and local food in Beijing. Tap a card, hear it, then say it 3 times.',
     phrases:[
       { en:'I want to go to the Forbidden City.', py:'Wǒ xiǎng qù Gùgōng.', hz:'我想去故宫。',
@@ -1154,7 +1209,7 @@ var SCENES = [
           { hz:'不到长城非好汉。', py:'Bú dào Chángchéng fēi hǎohàn.', note:'famous saying', style:'casual' }
         ]}
     ]},
-  { id:'shanghai', icon:'🌃', title:'Shanghai · Waterfront & Dumplings', day1:false,
+  { id:'shanghai', icon:'🌃', title:'Shanghai · Waterfront & Dumplings', day1:false, region:'east', hot:true, city:'上海', pic:['landmark','food'],
     desc:'Iconic waterfront and soup dumplings in Shanghai. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'The Bund is beautiful.', py:'Wàitān hěn piàoliang.', hz:'外滩很漂亮。',
@@ -1168,7 +1223,7 @@ var SCENES = [
           { hz:'这汤汁太鲜了。', py:'Zhè tāngzhī tài xiān le!', note:'praise the broth', style:'casual' }
         ]}
     ]},
-  { id:'hangzhou', icon:'🌊', title:'Hangzhou · West Lake', day1:false,
+  { id:'hangzhou', icon:'🌊', title:'Hangzhou · West Lake', day1:false, region:'east',  city:'杭州', pic:['landmark','food'],
     desc:'West Lake views and vinegar fish in Hangzhou. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'West Lake is beautiful.', py:'Xīhú hěn měi.', hz:'西湖很美。',
@@ -1182,7 +1237,7 @@ var SCENES = [
           { hz:'这鱼酸酸甜甜。', py:'Zhè yú suānsuān tiántián.', note:'sweet and sour', style:'casual' }
         ]}
     ]},
-  { id:'chongqing', icon:'🌶️', title:'Chongqing · Cliffs & Hotpot', day1:false,
+  { id:'chongqing', icon:'🌶️', title:'Chongqing · Cliffs & Hotpot', day1:false, region:'west',  city:'重庆', pic:['landmark','food'],
     desc:'Cliff-side night views and fiery hotpot in Chongqing. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Hongyadong is magnificent.', py:'Hóngyádòng hěn zhuàngguān.', hz:'洪崖洞很壮观。',
@@ -1196,7 +1251,7 @@ var SCENES = [
           { hz:'这火锅辣得过瘾！', py:'Zhè huǒguō là de guòyǐn!', note:'spicy and satisfying', style:'casual' }
         ]}
     ]},
-  { id:'chengdu', icon:'🐼', title:'Chengdu · Pandas & Hotpot', day1:false,
+  { id:'chengdu', icon:'🐼', title:'Chengdu · Pandas & Hotpot', day1:false, region:'west', hot:true, city:'成都', pic:['landmark','food'],
     desc:'Giant pandas and numbing hotpot in Chengdu. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'I want to see giant pandas.', py:'Wǒ xiǎng kàn dàxióngmāo.', hz:'我想看大熊猫。',
@@ -1210,7 +1265,7 @@ var SCENES = [
           { hz:'成都火锅麻得舒服。', py:'Chéngdū huǒguō má de shūfu.', note:'numbingly good', style:'casual' }
         ]}
     ]},
-  { id:'nanchang', icon:'🏯', title:'Nanchang · Pavilion & Soup', day1:false,
+  { id:'nanchang', icon:'🏯', title:'Nanchang · Pavilion & Soup', day1:false, region:'central',  city:'南昌', pic:['landmark','food'],
     desc:'A famous pavilion and jar soup in Nanchang. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Tengwang Pavilion is famous.', py:'Téngwánggé hěn yǒumíng.', hz:'滕王阁很有名。',
@@ -1224,7 +1279,7 @@ var SCENES = [
           { hz:'瓦罐汤鲜得很。', py:'Wǎguàn tāng xiān de hěn.', note:'the broth is fresh', style:'casual' }
         ]}
     ]},
-  { id:'changsha', icon:'🍢', title:'Changsha · Isle & Tofu', day1:false,
+  { id:'changsha', icon:'🍢', title:'Changsha · Isle & Tofu', day1:false, region:'central',  city:'长沙', pic:['landmark','food'],
     desc:'River isle and stinky tofu in Changsha. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Orange Isle is beautiful.', py:'Júzǐzhōu hěn měi.', hz:'橘子洲很美。',
@@ -1238,7 +1293,7 @@ var SCENES = [
           { hz:'闻着臭吃着香。', py:'Wénzhe chòu chīzhe xiāng.', note:'smells funky, tastes great', style:'casual' }
         ]}
     ]},
-  { id:'xinjiang', icon:'🏔️', title:'Xinjiang · Landscapes & Lamb', day1:false,
+  { id:'xinjiang', icon:'🏔️', title:'Xinjiang · Landscapes & Lamb', day1:false, region:'west',  city:'新疆', pic:['landmark','food'],
     desc:'Vast landscapes and lamb skewers in Xinjiang. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Xinjiang is vast and beautiful.', py:'Xīnjiāng hěn dà hěn měi.', hz:'新疆很大很美。',
@@ -1252,7 +1307,7 @@ var SCENES = [
           { hz:'大盘鸡配皮带面。', py:'Dàpánjī pèi pídàimiàn.', note:'big-plate chicken with noodles', style:'casual' }
         ]}
     ]},
-  { id:'shenzhen', icon:'🏙️', title:'Shenzhen · Skyline & Beef', day1:false,
+  { id:'shenzhen', icon:'🏙️', title:'Shenzhen · Skyline & Beef', day1:false, region:'south',  city:'深圳', pic:['landmark','food'],
     desc:'A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Shenzhen is modern.', py:'Shēnzhèn hěn xiàndài.', hz:'深圳很现代。',
@@ -1266,7 +1321,7 @@ var SCENES = [
           { hz:'牛肉丸弹牙。', py:'Niúròu wán tányá.', note:'meatballs are bouncy', style:'casual' }
         ]}
     ]},
-  { id:'guangzhou', icon:'🍵', title:'Guangzhou · Tower & Dim Sum', day1:false,
+  { id:'guangzhou', icon:'🍵', title:'Guangzhou · Tower & Dim Sum', day1:false, region:'south', hot:true, city:'广州', pic:['landmark','food'],
     desc:'The slender tower and dim sum in Guangzhou. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Canton Tower is tall.', py:'Guǎngzhōu tǎ hěn gāo.', hz:'广州塔很高。',
@@ -1280,7 +1335,7 @@ var SCENES = [
           { hz:'虾饺烧鹅绝了。', py:'Xiājiǎo shāo é jué le!', note:'shrimp dumplings and roast goose', style:'casual' }
         ]}
     ]},
-  { id:'xiamen', icon:'🏝️', title:'Xiamen · Car-free Isle', day1:false,
+  { id:'xiamen', icon:'🏝️', title:'Xiamen · Car-free Isle', day1:false, region:'south',  city:'厦门', pic:['landmark','food'],
     desc:'A car-free island and shacha noodles in Xiamen. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Gulangyu is beautiful.', py:'Gǔlàngyǔ hěn piàoliang.', hz:'鼓浪屿很漂亮。',
@@ -1294,7 +1349,7 @@ var SCENES = [
           { hz:'海蛎煎配沙茶。', py:'Hǎilìjiān pèi shāchá.', note:'oyster omelette with shacha', style:'casual' }
         ]}
     ]},
-  { id:'haikou', icon:'🌴', title:'Haikou · Slow Island Life', day1:false,
+  { id:'haikou', icon:'🌴', title:'Haikou · Slow Island Life', day1:false, region:'south',  city:'海口', pic:['landmark','food'],
     desc:'Slow island life and chicken rice in Haikou. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Haikou is comfortable.', py:'Hǎikǒu hěn shūfu.', hz:'海口很舒服。',
@@ -1308,7 +1363,7 @@ var SCENES = [
           { hz:'清补凉消暑。', py:'Qīngbǔliáng xiāoshǔ.', note:'cooling dessert', style:'casual' }
         ]}
     ]},
-  { id:'qingdao', icon:'🍺', title:'Qingdao · Sea & Beer', day1:false,
+  { id:'qingdao', icon:'🍺', title:'Qingdao · Sea & Beer', day1:false, region:'north',  city:'青岛', pic:['landmark','food'],
     desc:'Sea bridges and fresh beer in Qingdao. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Qingdao is beautiful.', py:'Qīngdǎo hěn měi.', hz:'青岛很美。',
@@ -1322,7 +1377,7 @@ var SCENES = [
           { hz:'原浆最鲜。', py:'Yuánjiāng zuì xiān.', note:'fresh draft is best', style:'casual' }
         ]}
     ]},
-  { id:'xian', icon:'🗿', title:'Xi\'an · Terracotta Army', day1:false,
+  { id:'xian', icon:'🗿', title:'Xi\'an · Terracotta Army', day1:false, region:'north', hot:true, city:'西安', pic:['landmark','food'],
     desc:'The Terracotta Army and roujiamo in Xi\'an. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'The Terracotta Army is magnificent.', py:'Bīngmǎyǒng hěn zhuàngguān.', hz:'兵马俑很壮观。',
@@ -1336,7 +1391,7 @@ var SCENES = [
           { hz:'凉皮肉夹馍绝配。', py:'Liángpí ròujiāmó jué pèi.', note:'cold noodles pair perfectly', style:'casual' }
         ]}
     ]},
-  { id:'guilin', icon:'⛰️', title:'Guilin · Karst Peaks', day1:false,
+  { id:'guilin', icon:'⛰️', title:'Guilin · Karst Peaks', day1:false, region:'west',  city:'桂林', pic:['landmark','food'],
     desc:'Karst peaks and rice noodles in Guilin. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Guilin scenery is beautiful.', py:'Guìlín shānshuǐ hěn měi.', hz:'桂林山水很美。',
@@ -1350,7 +1405,7 @@ var SCENES = [
           { hz:'卤水香。', py:'Lǔshuǐ xiāng.', note:'the broth is fragrant', style:'casual' }
         ]}
     ]},
-  { id:'zhangjiajie', icon:'🧗', title:'Zhangjiajie · Pillars of Mist', day1:false,
+  { id:'zhangjiajie', icon:'🧗', title:'Zhangjiajie · Pillars of Mist', day1:false, region:'central',  city:'张家界', pic:['landmark','food'],
     desc:'Misty quartz peaks and a local stew in Zhangjiajie. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Zhangjiajie is magical.', py:'Zhāngjiājiè hěn shénqí.', hz:'张家界很神奇。',
@@ -1364,7 +1419,7 @@ var SCENES = [
           { hz:'麻辣鲜香。', py:'Málà xiānxiāng.', note:'numbing, spicy, fresh, fragrant', style:'casual' }
         ]}
     ]},
-  { id:'dali', icon:'💧', title:'Dali · Erhai Lake', day1:false,
+  { id:'dali', icon:'💧', title:'Dali · Erhai Lake', day1:false, region:'west',  city:'大理', pic:['landmark','food'],
     desc:'Erhai Lake and roasted rushan in Dali. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Dali is beautiful.', py:'Dàlǐ hěn měi.', hz:'大理很美。',
@@ -1378,7 +1433,7 @@ var SCENES = [
           { hz:'白族三道茶。', py:'Báizú sāndào chá.', note:'Bai three-course tea', style:'casual' }
         ]}
     ]},
-  { id:'hongkong', icon:'🌆', title:'Hong Kong · Victoria Harbour', day1:false,
+  { id:'hongkong', icon:'🌆', title:'Hong Kong · Victoria Harbour', day1:false, region:'south', hot:true, city:'香港', pic:['landmark','food'],
     desc:'Victoria Harbour and milk tea in Hong Kong. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Victoria Harbour is beautiful.', py:'Wéiduōlìyà gǎng hěn piàoliang.', hz:'维多利亚港很漂亮。',
@@ -1411,21 +1466,21 @@ var TONE_LABEL = { 1:'1 flat', 2:'2 rising', 3:'3 dip', 4:'4 fall' };
    改法：改为"句级" day 标记，把 26 条主线句重排成 7 天、每天 3-6 句（5 分钟量）。
    meeting 4 句不加 day，留作选修（仍在下方场景列表里自选）。 */
 var DAYS = [
-  { n:1, t:'First words',             d:'Your first four lines. Say them out loud \u2014 that is the whole point.' },
-  { n:2, t:"When you don't understand", d:'Someone speaks too fast? These three lines save the conversation.' },
-  { n:3, t:'Getting around',          d:'Prices, directions, and the most important question of all: where is the bathroom?' },
-  { n:4, t:'Ordering food',           d:'Point, say \u201cI want this one\u201d, and eat well.' },
-  { n:5, t:'Paying & small talk',     d:'Pay the bill, ask for water, and keep it going.' },
-  { n:6, t:'Emergency basics',        d:'The lines that matter when something goes wrong. Slow is fine \u2014 clear is better.' },
-  { n:7, t:'Emergency numbers',       d:'110 police \u00b7 119 fire \u00b7 120 ambulance \u2014 and how to say them so they understand.' },
+  { n:1, t:'First words', topic:'survival', items:[],             d:'Your first four lines. Say them out loud \u2014 that is the whole point.' },
+  { n:2, t:"When you don't understand", topic:'survival', items:[], d:'Someone speaks too fast? These three lines save the conversation.' },
+  { n:3, t:'Getting around', topic:'getting-around', items:[],          d:'Prices, directions, and the most important question of all: where is the bathroom?' },
+  { n:4, t:'Ordering food', topic:'food', items:[],           d:'Point, say \u201cI want this one\u201d, and eat well.' },
+  { n:5, t:'Paying & small talk', topic:'money', items:[],     d:'Pay the bill, ask for water, and keep it going.' },
+  { n:6, t:'Emergency basics', topic:'survival', items:[],        d:'The lines that matter when something goes wrong. Slow is fine \u2014 clear is better.' },
+  { n:7, t:'Emergency numbers', topic:'survival', items:[],       d:'110 police \u00b7 119 fire \u00b7 120 ambulance \u2014 and how to say them so they understand.' },
   /* v0.3.36 内容扩容（I-015-B）：Day 8-14，每条都是真实场景里马上用得上的句子 */
-  { n:8,  t:'Shopping',               d:'Markets and malls: ask the price, try it on, pay by phone.' },
-  { n:9,  t:'Numbers & money',        d:'Hear a price, say a number. This day saves you real money.' },
-  { n:10, t:'Taxis & directions',     d:'Get in, say where, get out \u2014 and find your way when GPS dies.' },
-  { n:11, t:'Hotel & a place to stay', d:'Check in, get the Wi-Fi, fix the AC. A roof with no drama.' },
-  { n:12, t:'Small talk',             d:'Weather, food, weekend plans \u2014 the glue of every conversation.' },
-  { n:13, t:'Keep it going',          d:'Replies that keep a conversation alive: really? me too, no way!' },
-  { n:14, t:'Out with friends',       d:'Dinners, drinks, invitations \u2014 the fun part of learning a language.' }
+  { n:8,  t:'Shopping', topic:'social', items:[],               d:'Markets and malls: ask the price, try it on, pay by phone.' },
+  { n:9,  t:'Numbers & money', topic:'money', items:[],        d:'Hear a price, say a number. This day saves you real money.' },
+  { n:10, t:'Taxis & directions', topic:'getting-around', items:[],     d:'Get in, say where, get out \u2014 and find your way when GPS dies.' },
+  { n:11, t:'Hotel & a place to stay', topic:'getting-around', items:[], d:'Check in, get the Wi-Fi, fix the AC. A roof with no drama.' },
+  { n:12, t:'Small talk', topic:'social', items:[],             d:'Weather, food, weekend plans \u2014 the glue of every conversation.' },
+  { n:13, t:'Keep it going', topic:'social', items:[],          d:'Replies that keep a conversation alive: really? me too, no way!' },
+  { n:14, t:'Out with friends', topic:'food', items:[],       d:'Dinners, drinks, invitations \u2014 the fun part of learning a language.' }
 ];
 
 function allDayPhrases(){
@@ -1445,6 +1500,39 @@ function isDayDone(n){
 function currentDay(){
   for (var n = 1; n <= DAYS.length; n++) { if (!isDayDone(n)) return n; }
   return DAYS.length;
+}
+
+/* ---------- v0.3.47 Day 完成日期（S.dayDone）—— Daily Phase 2 ----------
+   为什么是「平行字段」而不是改 S.days 结构：S.days 是「哪天开口过」的日期数组，
+   热力图 / 备份校验 / 云端同步三处都直接用字符串 indexOf，改结构要同时动四五个读取点
+   外加幂等迁移，收益（多显示一个日期）不值这个风险。
+   dayDone 只回答一件事：Day N 是哪天完成的。
+   值语义：'2026-08-30' = 那天完成；'' = 老用户升级前的历史完成、日期未知（不撒谎，
+   绝不回填成今天）；undefined = 还没完成。 */
+function seedDayDone(){
+  /* 只跑一次。标记存独立 localStorage key，不写进 S —— 它是纯本地技术标记，
+     另一设备不需要它（那边自己 seed 一遍即可），按 KV 宪法不该上云。
+     ⚠️ 不能用 `if(S.dayDone) return` 当守卫：S.dayDone 初始化后是 {}（truthy），
+     首次加载就会直接 return，seed 永远不执行 —— 老用户升级后 Day 1 会被记成"今天完成"。 */
+  try{ if(localStorage.getItem('sinoky_ddseed')) return; }catch(e){}
+  S.dayDone = S.dayDone || {};
+  for(var n=1;n<=DAYS.length;n++){ if(isDayDone(n) && S.dayDone[n]===undefined) S.dayDone[n] = ''; }
+  try{ localStorage.setItem('sinoky_ddseed','1'); }catch(e){}
+}
+function markDaysDone(){
+  var d = today();
+  S.dayDone = S.dayDone || {};
+  for(var n=1;n<=DAYS.length;n++){
+    if(S.dayDone[n] !== undefined) continue; /* 已记录（含 '' 历史未知）永不覆盖 */
+    if(isDayDone(n)) S.dayDone[n] = d;
+  }
+}
+/* '2026-08-30' -> '8/30'；''（历史未知）返回空串，UI 不显示假日期 */
+function dayDoneLabel(n){
+  var v = (S.dayDone||{})[n];
+  if(!v) return '';
+  var p = String(v).split('-');
+  return (p.length === 3) ? (+p[1]) + '/' + (+p[2]) : '';
 }
 
 /* ---------- state (localStorage, sinoky_* keys only; uid is its own key) ---------- */
@@ -1545,6 +1633,8 @@ S.days = S.days || [];         /* ['2026-08-30',...] */
 S._ts = S._ts || 0;            /* v0.3.31 云端合并时间戳 */
 S.tone = S.tone || { right:0, total:0 };
 S.feat = S.feat || {};   /* v0.3.36 功能级使用统计 */
+S.dayDone = S.dayDone || {};  /* v0.3.47 {dayN:'YYYY-MM-DD'}；'' = 历史完成日期未知 */
+seedDayDone();               /* 首次运行：把已完成的 Day 标成 ''，避免下次打卡记成今天 */
 /* v0.3.41：启动只落本地，不推 _ts、不触发同步。若在 pullProfile 之前就把 _ts 推到 now，
    多设备场景下会判定「本地比云端新」，把本设备旧进度写回云端、冲掉另一台设备的新进度。
    同步交给 pullProfile 合并完成后触发。 */
@@ -1745,7 +1835,7 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
   /* v0.3.35 S1：离开场景视图时停止进行中的录音，避免麦克风在后台常开 */
   if(v !== 'scene' && typeof stopRecording === 'function') stopRecording();
-  ['home','scene','tone','prog','cards','sentences','reading'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences','reading','cities','days'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
@@ -1755,10 +1845,184 @@ function go(v){
   }
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
+  if(v==='cities') renderCities();
+  if(v==='days') renderDays();
   if(v==='cards') renderNW();
   if(v==='sentences') renderSentStats();
   if(v!=='reading') rdClose();
   window.scrollTo(0,0);
+}
+
+
+/* ---------- v0.3.44 城市入口收敛 ----------
+   背景：18 城占首页 60% 卡片位却只贡献 27% 内容（平均 2.1 句/城），
+   城市是「地点维度」、功能是「任务维度」，混排在同一列表里必然失衡。
+   方案：首页只放热门 6 城（chip 紧凑形态，视觉权重匹配内容权重），
+   全部城市收进独立城市页（区域分组 + 搜索）。
+   扩展性：加第 N 个城市 = SCENES 加一条并标 region/hot/city，前端零改动，首页高度恒定。
+   注意：本文件内所有 Hong Kong 均指中国香港特别行政区。 */
+var REGIONS = [
+  {k:'north',   en:'North China',   zh:'\u5317\u65b9'},
+  {k:'east',    en:'East China',    zh:'\u4e1c\u90e8'},
+  {k:'central', en:'Central China', zh:'\u4e2d\u90e8'},
+  {k:'south',   en:'South China',   zh:'\u5357\u90e8'},
+  {k:'west',    en:'West China',    zh:'\u897f\u90e8'}
+];
+function isCity(sc){ return sc.day1 === false; }
+function cityList(){ return SCENES.filter(isCity); }
+function cityDoneN(sc){ return (S.phrases[sc.id]||[]).length; }
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function cityEn(sc){ return String(sc.title||'').split(' \u00b7 ')[0]; }
+/* v0.3.45 图片管线：图配在「句子」上，不是当 banner。
+   目的：撤掉英文中介语时，用户靠图理解句意（洞察 #001 的技术前提）。
+   命名约定：assets/cities/<id>_landmark.webp / <id>_food.webp（大图，句子用，按需加载）
+             assets/cities/thumb_<id>.webp（120x120，城市页列表用）
+   开关：CITY_IMG_ON=false 时不渲染任何 img —— 图未到位零 404、零占位空白。
+        豆包出图 + 压缩脚本产出后，改这里为 true 即可，只改一处。 */
+var CITY_IMG_ON = false;
+function phrasePic(sc, i){
+  if(!CITY_IMG_ON || !isCity(sc)) return '';
+  var k = (sc.pic && sc.pic[i]) || (i === 1 ? 'food' : 'landmark');
+  return '<div class="p-pic"><img src="assets/cities/' + sc.id + '_' + k +
+    '.webp" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>';
+}
+function cityThumbHtml(sc){
+  if(!CITY_IMG_ON) return '<span class="ci">' + sc.icon + '</span>';
+  return '<span class="ci cthumb"><img src="assets/cities/thumb_' + sc.id +
+    '.webp" alt="" loading="lazy" onerror="var p=this.parentNode;p.className=\'ci\';p.innerHTML=\'' +
+    sc.icon + '\'"></span>';
+}
+
+function cityRowHtml(sc, from){
+  var d = cityDoneN(sc), tot = sc.phrases.length, fin = d >= tot;
+  return '<button class="cityrow'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\',undefined,\''+from+'\')">'+
+    cityThumbHtml(sc)+'<span class="cm">'+
+    '<span class="cn">'+escHtml(cityEn(sc))+' \u00b7 '+escHtml(sc.city)+'</span>'+
+    '<span class="cz">'+escHtml(sc.desc||'')+'</span></span>'+
+    '<span class="cd">'+(fin?'\u2713':d+'/'+tot)+'</span></button>';
+}
+function cityBlockHtml(){
+  var all = cityList();
+  if(!all.length) return '';
+  var hot = all.filter(function(sc){ return sc.hot; });
+  if(!hot.length) hot = all.slice(0,6);
+  var h = '<div class="card"><div class="top"><h2>\ud83d\udccd City phrases</h2>'+
+    '<span class="badge">'+all.length+' CITIES</span></div>'+
+    '<p class="desc">A few lines for the places people actually go \u2014 order, ask, get around.</p>'+
+    '<div class="citygrid">';
+  hot.forEach(function(sc){
+    var fin = cityDoneN(sc) >= sc.phrases.length;
+    h += '<button class="citychip'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\')">'+
+      '<span class="ci">'+sc.icon+'</span>'+
+      '<span class="cn">'+escHtml(cityEn(sc))+'</span>'+
+      '<span class="cz">'+escHtml(sc.city)+'</span></button>';
+  });
+  h += '</div><button class="btn ghost" onclick="go(\'cities\')">See all '+all.length+' cities \u2192</button></div>';
+  return h;
+}
+function renderCities(){
+  var q = (($('citySearch') && $('citySearch').value) || '').trim().toLowerCase();
+  var list = cityList();
+  var h = '';
+  if(q){
+    list = list.filter(function(sc){
+      var hay = (String(sc.title||'')+' '+(sc.city||'')+' '+sc.id+' '+String(sc.desc||'')).toLowerCase();
+      return hay.indexOf(q) >= 0;
+    });
+  }
+  $('city-count').textContent = cityList().length + ' CITIES';
+  if(!list.length){
+    h = '<div class="cityempty">No city matches \u201c'+escHtml(q)+'\u201d.<br>Try Beijing, \u6210\u90fd or chengdu.</div>';
+  } else if(q){
+    h += '<div class="region-h">'+list.length+' RESULT'+(list.length>1?'S':'')+'</div>';
+    list.forEach(function(sc){ h += cityRowHtml(sc, 'cities'); });
+  } else {
+    REGIONS.forEach(function(r){
+      var rs = list.filter(function(sc){ return sc.region === r.k; });
+      if(!rs.length) return;
+      h += '<div class="region-h">'+r.en+' \u00b7 '+r.zh+' ('+rs.length+')</div>';
+      rs.forEach(function(sc){ h += cityRowHtml(sc, 'cities'); });
+    });
+  }
+  $('city-list').innerHTML = h;
+}
+
+/* ---------- v0.3.46 Daily 聚合：14 天路径的可浏览目录 ----------
+   Phase 1 纯展示层：只读调用 dayItems/daySaid/isDayDone/currentDay，不修改任何进度逻辑。
+   items[] 是扩展槽：未来加 video/article/link 类型，只动 dayItemHtml 一个 switch。 */
+var TOPICS = [
+  {k:'survival',       en:'Survival',        zh:'生存底线', ic:'\u{1F198}'},
+  {k:'getting-around', en:'Getting around',  zh:'出行问路', ic:'\u{1F695}'},
+  {k:'food',           en:'Food & drinks',   zh:'吃饭聚餐', ic:'\u{1F35C}'},
+  {k:'money',          en:'Money & numbers', zh:'付钱算数', ic:'\u{1F4B0}'},
+  {k:'social',         en:'Social',          zh:'寒暄接话', ic:'\u{1F4AC}'}
+];
+var dayMode = 'timeline';  /* UI 游标：只存内存，永不上云（v0.3.40 铁律：纯 UI 状态不进 KV） */
+var daysOpen = 0;          /* 当前展开的天，0 = 无 */
+
+function dayState(n){
+  if(isDayDone(n)) return 'done';
+  if(n <= currentDay()) return 'open';
+  return 'locked';
+}
+/* 扩展槽分发：未来加 type 只加一个 case；未知 type 静默跳过不崩（免白屏） */
+function dayItemHtml(it, i){
+  switch(it.type){
+    case 'phrase': return dayPhraseRow(it, i);
+    default: return '';
+  }
+}
+function dayPhraseRow(it, i){
+  return '<button class="dayitem'+(daySaid(it.x)?' done':'')+'" onclick="openScene(\''+it.x.scene.id+'\','+it.x.idx+',\'days\')">'+
+    '<span class="num">'+(i+1)+'</span><span>'+it.x.p.en+'</span>'+
+    '<span class="st">'+(daySaid(it.x)?'\u2713 done':'Start')+'</span></button>';
+}
+function toggleDay(n){
+  if(dayState(n) === 'locked') return;   /* 未解锁的天不可展开 */
+  daysOpen = (daysOpen === n ? 0 : n);
+  renderDays();
+}
+function setDayMode(m){ dayMode = m; daysOpen = 0; renderDays(); }
+/* 时间线右侧小字：LOCKED / 完成日期 8/30 / 已说条数 2/3 */
+function dayDoneCell(st, n, said, total){
+  if(st === 'locked') return 'LOCKED';
+  if(st === 'done'){ var lb = dayDoneLabel(n); return lb || 'DONE'; }
+  return said+'/'+total;
+}
+function dayRowHtml(n){
+  var d = DAYS[n-1], st = dayState(n), it = dayItems(n);
+  var said = it.filter(daySaid).length;
+  var ic = st === 'done' ? '\u2705' : (st === 'locked' ? '\u{1F512}' : (n === currentDay() ? '\u{1F535}' : '\u2B55'));
+  var h = '<button class="dayrow '+st+(daysOpen===n?' exp':'')+'" onclick="toggleDay('+n+')">'+
+    '<span class="di">'+ic+'</span>'+
+    '<span class="dm"><span class="dn">Day '+n+' \u00b7 '+d.t+'</span>'+
+    '<span class="dz">'+d.d+'</span></span>'+
+    '<span class="dd">'+dayDoneCell(st, n, said, it.length)+'</span></button>';
+  if(daysOpen === n){
+    h += '<div class="dayitems">';
+    var items = it.map(function(x){ return {type:'phrase', x:x}; });   /* 现有 p.day 逻辑包成 items[] 形态 */
+    var body = items.map(dayItemHtml).join('');
+    h += body || '<div class="dayempty">No lines in this day yet.</div>';
+    h += '</div>';
+  }
+  return h;
+}
+function renderDays(){
+  var h = '', cd = currentDay();
+  $('days-count').textContent = cd > DAYS.length ? 'ALL DONE' : 'DAY '+cd+' / '+DAYS.length;
+  $('dtab-time').className = 'daytab'+(dayMode==='timeline'?' on':'');
+  $('dtab-topic').className = 'daytab'+(dayMode==='topic'?' on':'');
+  if(dayMode === 'timeline'){
+    for(var n=1;n<=DAYS.length;n++) h += dayRowHtml(n);
+  } else {
+    TOPICS.forEach(function(tp){
+      var ns = DAYS.filter(function(d){ return d.topic === tp.k; });
+      if(!ns.length) return;
+      h += '<div class="region-h">'+tp.ic+' '+tp.en+' \u00b7 '+tp.zh+' ('+ns.length+')</div>';
+      ns.forEach(function(d){ h += dayRowHtml(d.n); });
+    });
+  }
+  $('days-list').innerHTML = h;
 }
 
 /* ---------- home ---------- */
@@ -1803,10 +2067,12 @@ function renderHome(){
   });
   d1 += '</div><div class="day1-cta" style="display:'+(cdAll?'block':'none')+'">'+
     (cd>=DAYS.length ? '🎉 All '+DAYS.length+' days done — you can survive in China.' : '🎉 Day '+cd+' complete! Day '+(cd+1)+' unlocks next time you open Sinoky.')+
-    '</div><div class="day-prog">'+doneDays+' / '+DAYS.length+' days finished</div></div>';
+    '</div><div class="day-prog">'+doneDays+' / '+DAYS.length+' days finished</div>'+
+    '<button class="daylink" onclick="go(\'days\')">See all '+DAYS.length+' days →</button></div>';
 
   var html = '';
   SCENES.forEach(function(sc){
+    if(isCity(sc)) return;   /* v0.3.44：城市不再平铺进首页，收敛到下方城市区（详见 cityBlockHtml） */
     var doneN = (S.phrases[sc.id]||[]).length;
     var pct = Math.round(100*doneN/sc.phrases.length);
     html += '<div class="card"><div class="top"><h2>'+sc.icon+' '+sc.title+'</h2>'+
@@ -1816,12 +2082,15 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + html;
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + html + cityBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
 var curScene = null;
-function openScene(id, idx){
+var sceneFrom = 'home';   /* v0.3.44：记录从哪个视图进的场景，返回时原路回去 */
+function goBack(){ go(sceneFrom); }
+function openScene(id, idx, from){
+  sceneFrom = (from === 'cities') ? 'cities' : (from === 'days' ? 'days' : 'home');
   S.feat = S.feat || {}; S.feat.scene = (S.feat.scene||0)+1; saveStateLocal();   /* v0.3.40：同上，场景打开计数只写本地 */
   curScene = SCENES.filter(function(s){ return s.id===id; })[0];
   $('sc-title').textContent = curScene.icon+' '+curScene.title;
@@ -1847,6 +2116,7 @@ function renderSceneList(){
   curScene.phrases.forEach(function(p,i){
     var isDone = done.indexOf(i) > -1;
     html += '<div class="phrase'+(isDone?' done':'')+'" id="ph-'+i+'">'+
+      phrasePic(curScene,i)+
       '<div class="p-row"><div><div class="p-en">'+p.en+'</div>'+
       '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="toggleZh('+i+')" id="zh-'+i+'" title="Tap to reveal / cover">'+
       '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div></div>'+
@@ -2153,6 +2423,7 @@ function finishScene(){
     S.lastDone = d;
   }
   if(S.days.indexOf(d)===-1){ S.days.push(d); }
+  markDaysDone();          /* v0.3.47：记下本次完成的 Day（幂等，只记第一次） */
   saveState();
   toast('🔥 '+S.streak+'-day streak! Speak it out there.');
   renderHome(); go('home');
@@ -2279,7 +2550,10 @@ function renderProgress(){
   for(var i=13;i>=0;i--){
     var d = new Date(Date.now()-i*864e5).toISOString().slice(0,10);
     var dd = new Date(Date.now()-i*864e5);
-    html += '<div class="day'+(S.days.indexOf(d)>-1?' hit':'')+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</div>';
+    var hit = S.days.indexOf(d)>-1;
+    var dn = []; for(var q=1;q<=DAYS.length;q++){ if((S.dayDone||{})[q]===d) dn.push(q); }
+    var tip = hit ? (dn.length ? d+' \u00b7 Day '+dn.join(', ')+' done' : d+' \u00b7 practiced') : d;
+    html += '<div class="day'+(hit?' hit':'')+'" title="'+tip+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</div>';
   }
   $('cal').innerHTML = html;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -2977,6 +3251,7 @@ function importProgress(){
   S.phrases = S.phrases || {}; S.days = S.days || []; S._ts = S._ts || 0;
   S.tone = S.tone || { right:0, total:0 };
   S.feat = S.feat || {};
+  S.dayDone = S.dayDone || {};
   if(typeof payload.uid === 'string' && payload.uid.length >= 8){
     UID = payload.uid; lsSet('sinoky_uid', UID);
   }
