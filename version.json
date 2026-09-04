@@ -1,5 +1,5 @@
 {
-  "version": "0.3.49",
+  "version": "0.3.50",
   "updated": "2026-09-04",
-  "note": "听辨接主流程：单字声调听辨题库从 Tone Gym 扩展到首页（Ear check 卡）。① 数据驱动题库 LISTEN_Q（人工策展，不靠脚本自动切音节），opts.audio 为空不进池，零空壳；② 现仅 ma 一组（复用 Tone Gym 4 条真人音频），康哥录新单字往 LISTEN_Q 塞数据即可，前端零改动；③ edify 闭环硬约束：听 → 辨 → 知 → 说，答完必出「Now say it →」按钮跳当日 Day 第一句开口 3 遍，缺这一步 = 孤立练耳 = 🔴 fancy 本项目不做；④ 不超前（day > currentDay 的题不出）；⑤ 稳定随机 FNV-1a + avalanche finalizer（修 v0.3.48 漏掉的低位熵差 bug：未修时 12 题 1 声占 10 道）；⑥ S.listen = {d,n,r} 跨天重置，随 S 上云。零破坏：不动 Tone Gym、不动 Review 卡、不动 S.phrases / currentDay / 导航 6 项。验收：本地 42/42 + 3 处变异测试反向证明断言真咬住代码。"
+  "note": "康哥克隆音色上线：409 句场景句本地真人声直播，TTS 机器感根治"
 }
