@@ -642,7 +642,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.50';
+var APP_VERSION = '0.3.51';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1678,6 +1678,7 @@ S.feat = S.feat || {};   /* v0.3.36 功能级使用统计 */
 S.dayDone = S.dayDone || {};  /* v0.3.47 {dayN:'YYYY-MM-DD'}；'' = 历史完成日期未知 */
 S.review = S.review || { d:'', n:0 };  /* v0.3.48 每日复习计数（跨天自动重置，不记历史） */
 S.listen = S.listen || { d:'', n:0, r:0 };  /* v0.3.49 听辨成绩（跨天重置，只记当日答题数/对题数，不记历史） */
+S.lsent = S.lsent || { d:'', n:0, r:0 };  /* v0.3.51 听辨·句子层成绩（同 listen：跨天重置，只记当日） */
 seedDayDone();               /* 首次运行：把已完成的 Day 标成 ''，避免下次打卡记成今天 */
 /* v0.3.41：启动只落本地，不推 _ts、不触发同步。若在 pullProfile 之前就把 _ts 推到 now，
    多设备场景下会判定「本地比云端新」，把本设备旧进度写回云端、冲掉另一台设备的新进度。
@@ -2291,6 +2292,111 @@ function listenCardHtml(){
   return html + '</div>';
 }
 
+/* ---------- v0.3.51 听辨 B 层（Ear check · sentence）----------
+   听（播 v0.3.50 克隆音频，复用 speak() 本地命中）→ 辨（4选1英文意思）→ 知（揭示 hz/py/en）→ 说（Now say it 跳原句开口）。
+   缺第 4 步 = 🔴 fancy，不做。池子 = SCENES×SENT_AUDIO 自动生成（Day gating），加句零改前端。
+   状态 S.lsent={d,n,r} 与 S.listen 同构：真实学习行为随进度上云，跨天重置。 */
+var lsentAns = -1;   /* 当前题用户已选（-1 未答）—纯内存游标，永不上云 */
+function listenSPool(){
+  var cd = currentDay(), out = [];
+  if(typeof SENT_AUDIO === 'undefined' || !SENT_AUDIO) return out;
+  SCENES.forEach(function(sc){
+    sc.phrases.forEach(function(p, pi){
+      if((p.day||1) > cd) return;
+      var txt = String(p.tts || p.hz || '').replace(/'/g,'');
+      if(!txt || !SENT_AUDIO[txt]) return;
+      out.push({ txt:txt, file:SENT_AUDIO[txt], en:p.en, py:p.py, hz:p.hz, scene:sc.id, idx:pi });
+    });
+  });
+  return out;
+}
+function listenSToday(){
+  if(!S.lsent || S.lsent.d !== today()) return { n:0, r:0 };
+  return { n:S.lsent.n||0, r:S.lsent.r||0 };
+}
+/* 双重种子：选句 + 干扰项 + 答案位，全 fnv（带 finalizer）确定性——同一天第 k 题恒定 */
+function pickListenS(k){
+  var pool = listenSPool();
+  if(pool.length < 4) return null;
+  var s = today() + '#lsent#' + k;
+  var it = pool[fnv(s) % pool.length];
+  var opts = [it.en], used = {}; used[it.en] = 1;
+  for(var i = 0; opts.length < 4 && i < pool.length * 4; i++){
+    var cand = pool[fnv(s + '~d' + i) % pool.length];
+    if(cand.en && !used[cand.en]) { opts.push(cand.en); used[cand.en] = 1; }
+  }
+  if(opts.length < 4) return null;
+  var correct = fnv(s + '~pos') % 4;
+  var tmp = opts[0]; opts[0] = opts[correct]; opts[correct] = tmp;
+  return { it: it, opts: opts, correct: correct };
+}
+function listenSCur(){
+  var st = listenSToday();
+  var k = (lsentAns >= 0) ? Math.max(0, st.n - 1) : st.n;
+  return pickListenS(k);
+}
+function listenSPlay(btn){
+  var it = listenSCur();
+  if(it) speak(it.it.txt, btn);   /* v0.3.50：SENT_AUDIO 命中即克隆音本地直播，miss 自动落 TTS 兜底链 */
+}
+function answerListenS(x){
+  if(lsentAns >= 0) return;                 /* 一题只判一次 */
+  var it = listenSCur();
+  if(!it) return;
+  lsentAns = x;
+  var d = today();
+  if(!S.lsent || S.lsent.d !== d) S.lsent = { d:d, n:0, r:0 };
+  S.lsent.n = (S.lsent.n||0) + 1;
+  if(x === it.correct) S.lsent.r = (S.lsent.r||0) + 1;
+  saveState();      /* 真实学习行为，随进度上云 */
+  renderHome();
+}
+function listenSNext(){
+  var d = today();
+  if(!S.lsent || S.lsent.d !== d) S.lsent = { d:d, n:0, r:0 };
+  S.lsent.n = (S.lsent.n||0) + 1;
+  lsentAns = -1;
+  saveState();
+  renderHome();
+}
+/* edify 闭环第 4 步：跳回这句所在的场景开口 3 遍 */
+function listenSSay(){
+  var it = listenSCur();
+  if(it && it.it) openScene(it.it.scene, it.it.idx);
+}
+function listenCardSHtml(){
+  var pool = listenSPool();
+  if(pool.length < 4) return '';            /* 池子不足 4 = 出不了题 = 不出现，零空壳 */
+  var st = listenSToday();
+  var it = listenSCur();
+  if(!it) return '';
+  var revealed = lsentAns >= 0;
+  var ok = revealed && lsentAns === it.correct;
+  var html = '<div class="card earcheck"><div class="top"><h2>👂 Ear check · sentence</h2>'+
+    '<span class="badge'+(st.n>0?' teal':'')+'">'+(st.n>0 ? st.r+'/'+st.n+' right' : 'listen')+'</span></div>'+
+    '<p class="desc">Listen to the sentence. What does it mean?</p>'+
+    '<button class="ear-play" id="ears-play" onclick="listenSPlay(this)">▶ Play the sentence</button>'+
+    '<div class="earbtns" id="ears-btns">';
+  it.opts.forEach(function(t, i){
+    var cls = 'earbtn';
+    if(revealed && i === it.correct) cls += ' right';
+    else if(revealed && i === lsentAns) cls += ' wrong';
+    html += '<button class="'+cls+'" id="esb-'+i+'"'+(revealed?' disabled':'')+
+      ' onclick="answerListenS('+i+')"><div class="tl">'+t+'</div></button>';
+  });
+  html += '</div>';
+  if(revealed){
+    html += '<div class="ear-res" id="ears-res">'+
+      (ok ? '<b>✓ Correct.</b> ' : '<b style="color:var(--red)">✗ The answer is highlighted.</b> ')+
+      it.it.hz+' <i>'+it.it.py+'</i> = '+it.it.en+'</div>'+
+      '<div class="ear-acts">'+
+      '<button class="btn primary" id="ears-say" onclick="listenSSay()">🔊 Now say it →</button>'+
+      '<button class="btn ghost" id="ears-next" onclick="listenSNext()">Next →</button>'+
+      '</div>';
+  }
+  return html + '</div>';
+}
+
 function renderHome(){
   $('st-streak').textContent = S.streak;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -2327,7 +2433,7 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + html + cityBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -3499,6 +3605,7 @@ function importProgress(){
   S.dayDone = S.dayDone || {};
   S.review = S.review || { d:'', n:0 };
   S.listen = S.listen || { d:'', n:0, r:0 };
+  S.lsent = S.lsent || { d:'', n:0, r:0 };
   if(typeof payload.uid === 'string' && payload.uid.length >= 8){
     UID = payload.uid; lsSet('sinoky_uid', UID);
   }
