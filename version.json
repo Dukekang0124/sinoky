@@ -1,5 +1,5 @@
 {
-  "version": "0.3.51",
+  "version": "0.3.52",
   "updated": "2026-09-04",
-  "note": "Ear check 句子层：听康哥的声音选意思，答完即开口（edify 闭环）"
+  "note": "18 城实景图上线（CITY_IMG_ON=true，54 张 webp/170KB）+ 首页 Day 卡显示完成日期"
 }

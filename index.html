@@ -642,7 +642,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.51';
+var APP_VERSION = '0.3.52';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1954,7 +1954,7 @@ function cityEn(sc){ return String(sc.title||'').split(' \u00b7 ')[0]; }
              assets/cities/thumb_<id>.webp（120x120，城市页列表用）
    开关：CITY_IMG_ON=false 时不渲染任何 img —— 图未到位零 404、零占位空白。
         豆包出图 + 压缩脚本产出后，改这里为 true 即可，只改一处。 */
-var CITY_IMG_ON = false;
+var CITY_IMG_ON = true;
 function phrasePic(sc, i){
   if(!CITY_IMG_ON || !isCity(sc)) return '';
   var k = (sc.pic && sc.pic[i]) || (i === 1 ? 'food' : 'landmark');
@@ -1988,7 +1988,7 @@ function cityBlockHtml(){
   hot.forEach(function(sc){
     var fin = cityDoneN(sc) >= sc.phrases.length;
     h += '<button class="citychip'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\')">'+
-      '<span class="ci">'+sc.icon+'</span>'+
+      cityThumbHtml(sc)+
       '<span class="cn">'+escHtml(cityEn(sc))+'</span>'+
       '<span class="cz">'+escHtml(sc.city)+'</span></button>';
   });
@@ -2416,9 +2416,12 @@ function renderHome(){
       '<span class="num">'+(i+1)+'</span><span>'+x.p.en+'</span>'+
       '<span class="st">'+(daySaid(x)?'✓ done':'Start')+'</span></button>';
   });
+  var lastDone = 0, lastDate = '';
+  for (var dn = 1; dn <= DAYS.length; dn++) { var dv = (S.dayDone||{})[dn]; if (dv) { lastDone = dn; lastDate = dayDoneLabel(dn); } }
   d1 += '</div><div class="day1-cta" style="display:'+(cdAll?'block':'none')+'">'+
     (cd>=DAYS.length ? '🎉 All '+DAYS.length+' days done — you can survive in China.' : '🎉 Day '+cd+' complete! Day '+(cd+1)+' unlocks next time you open Sinoky.')+
     '</div><div class="day-prog">'+doneDays+' / '+DAYS.length+' days finished</div>'+
+    (lastDate ? '<div class="day-finish-date" style="margin-top:6px;font-size:12.5px;font-weight:600;color:#0a8f6e">✅ Day '+lastDone+' finished on '+lastDate+'</div>' : '')+
     '<button class="daylink" onclick="go(\'days\')">See all '+DAYS.length+' days →</button></div>';
 
   var html = '';
