@@ -1,5 +1,5 @@
 {
-  "version": "0.3.52",
+  "version": "0.3.53",
   "updated": "2026-09-04",
   "note": "18 城实景图上线（CITY_IMG_ON=true，54 张 webp/170KB）+ 首页 Day 卡显示完成日期"
 }

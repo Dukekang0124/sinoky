@@ -642,7 +642,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.52';
+var APP_VERSION = '0.3.53';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1768,7 +1768,7 @@ function playBlob(b, btn, onFail){
   try{ a.pause(); }catch(e){}
   a.volume = 1;
   a.src = url;
-  a.playbackRate = (ttsRate && ttsRate < 1) ? ttsRate : 1;   /* melotts 无 speed 参数，用播放速率实现慢放 */
+  a.playbackRate = ttsRate;   /* melotts 无 speed 参数，用播放速率实现慢放 */
   if(btn){ btn.classList.add('playing'); btn.classList.remove('wait'); }
   a.onended = function(){ if(btn) btn.classList.remove('playing'); URL.revokeObjectURL(url); };
   a.onerror = function(){ if(btn) btn.classList.remove('playing'); URL.revokeObjectURL(url); onFail && onFail(); };
@@ -1833,7 +1833,7 @@ function youdaoSpeak(text, btn, onFail){
   if(!text){ onFail && onFail(); return; }
   var a = AUDIO || (AUDIO = new Audio());   /* v0.3.35 S2：复用已解锁的单例，iOS 兜底链才不会静音 */
   var done = false, started = false;
-  if(ttsRate < 1) a.playbackRate = ttsRate;   /* 有道无 speed 参数，用播放速率慢放 */
+  a.playbackRate = ttsRate;   /* 有道无 speed 参数，用播放速率慢放 */
   function fail(){
     if(done || started) return;
     done = true; a.src = '';
@@ -1867,7 +1867,7 @@ function playLocal(url, btn, onFail){
   a.onplaying = function(){ started = true; if(btn){ btn.classList.add('playing'); btn.classList.remove('wait'); } };
   a.onended = function(){ done = true; if(btn) btn.classList.remove('playing'); };
   a.onerror = fail;
-  a.playbackRate = (ttsRate && ttsRate < 1) ? ttsRate : 1;
+  a.playbackRate = ttsRate;
   a.src = url;
   var p = a.play();
   if(p && p.catch) p.catch(fail);
