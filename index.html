@@ -295,6 +295,19 @@ nav button.on{color:var(--red)}
 .day1-cta{margin-top:13px;font-size:13px;font-weight:600;color:var(--teal);text-align:center;display:none}
 /* v0.3.34：Day 路径跳转后的短暂高亮，帮用户定位该练哪句 */
 .day-prog{margin-top:8px;font-size:11.5px;color:var(--sub);text-align:center}
+/* ---------- v0.3.48 每日复习卡（Daily Phase 3 复习循环）----------
+   样式全部复用 --teal / var(--bg2) / .btn / .badge，零新增设计语言。
+   中文默认 blur：不是"隐藏"（隐藏等于没有回忆成本），是"看不清但知道在那儿"。 */
+.review{background:linear-gradient(135deg,rgba(127,179,176,.13),rgba(127,179,176,.04));border-color:rgba(127,179,176,.32)}
+.rv-line{display:block;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);
+  border-radius:12px;padding:13px 14px;margin-top:12px;cursor:pointer}
+.rv-en{display:block;font-size:15px;font-weight:700;color:var(--fg);line-height:1.35}
+.rv-hz{display:block;margin-top:8px;font-size:18px;font-weight:600;color:var(--teal);letter-spacing:.5px}
+.rv-hz.blur{filter:blur(6px);opacity:.6;user-select:none}
+.rv-peek{margin-top:9px;font-size:11.5px;color:var(--sub);background:none;border:none;padding:0;
+  cursor:pointer;text-decoration:underline;font-family:inherit}
+.rv-acts{display:flex;gap:8px;margin-top:12px}
+.rv-acts .btn{flex:1;margin:0}
 .phrase.focus{box-shadow:0 0 0 2px var(--red);border-radius:12px;transition:box-shadow .2s}
 /* ---------- voice bar: Voice(Female/Male) + Style(Standard/Cheerful/Serious/Gentle) ----------
    v0.3.32: UI 文案改全英文（产品面向老外，原中文标签 女声/男声/标准/开心/严肃/温柔 老外看不懂）。
@@ -613,7 +626,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.47';
+var APP_VERSION = '0.3.48';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1634,6 +1647,7 @@ S._ts = S._ts || 0;            /* v0.3.31 云端合并时间戳 */
 S.tone = S.tone || { right:0, total:0 };
 S.feat = S.feat || {};   /* v0.3.36 功能级使用统计 */
 S.dayDone = S.dayDone || {};  /* v0.3.47 {dayN:'YYYY-MM-DD'}；'' = 历史完成日期未知 */
+S.review = S.review || { d:'', n:0 };  /* v0.3.48 每日复习计数（跨天自动重置，不记历史） */
 seedDayDone();               /* 首次运行：把已完成的 Day 标成 ''，避免下次打卡记成今天 */
 /* v0.3.41：启动只落本地，不推 _ts、不触发同步。若在 pullProfile 之前就把 _ts 推到 now，
    多设备场景下会判定「本地比云端新」，把本设备旧进度写回云端、冲掉另一台设备的新进度。
@@ -2046,6 +2060,63 @@ function tourHtml(){
     '<p class="desc" style="font-size:11.5px;color:var(--sub);margin:10px 0 0">\u{1F512} Recordings are never saved \u00B7 \u{1F4AC} Feedback (bottom-left) any time</p>'+
     '<button class="btn primary" onclick="endTour()">Got it \u2014 let\'s speak</button></div>';
 }
+/* ---------- v0.3.48 每日复习卡（Daily Phase 3 复习循环）----------
+   Edify Gate：让用户「重说」已学过的句子 —— 实打实的开口增量，不是再看一遍。
+   三步：回忆（中文默认 blur，逼用户看着英文先想）→ 开口（Play & say 3×，
+   复用现有 openScene 流程，跟主路径完全一致）→ 验证（Show Chinese 对答案）。
+   状态只记 S.review={d,n}：体积恒定，跨天自动重置，不记历史。 */
+function reviewPool(){
+  var out = [];
+  SCENES.forEach(function(sc){
+    (S.phrases[sc.id]||[]).forEach(function(i){
+      if(sc.phrases[i]) out.push({ scene:sc, idx:i, p:sc.phrases[i] });
+    });
+  });
+  return out;
+}
+function reviewToday(){
+  if(!S.review || S.review.d !== today()) return 0;
+  return S.review.n || 0;
+}
+/* 稳定随机（FNV-1a）：同一天同一序号 → 同一条，刷新不换题（防止用户刷到会说的那句）。
+   点 next 序号 +1 → 换下一条。 */
+function pickReview(k){
+  var pool = reviewPool();
+  if(!pool.length) return null;
+  var s = today() + '#' + k, h = 2166136261;
+  for(var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return pool[h % pool.length];
+}
+var rvShown = false;   /* UI 游标：中文是否已揭示，纯内存，永不上云 */
+function reviewPeek(){ rvShown = !rvShown; renderHome(); }
+function reviewNext(){
+  var d = today();
+  if(!S.review || S.review.d !== d) S.review = { d:d, n:0 };
+  S.review.n = (S.review.n||0) + 1;
+  rvShown = false;
+  saveState();          /* 复习计数 = 开口证据（真实学习行为），随进度上云 */
+  renderHome();
+}
+function reviewCardHtml(){
+  var pool = reviewPool();
+  if(pool.length < 3) return '';       /* 说过的不满 3 句 → 新用户不打扰 */
+  var n = reviewToday(), it = pickReview(n);
+  if(!it) return '';
+  return '<div class="card review"><div class="top"><h2>\u{1F501} Review \u00B7 today</h2>'+
+    '<span class="badge'+(n>0?' teal':'')+'">'+(n>0 ? n+' done' : '1 line')+'</span></div>'+
+    '<p class="desc">You said this one before. <b>Say it out loud before you peek.</b></p>'+
+    '<button class="rv-line" onclick="openScene(\''+it.scene.id+'\','+it.idx+')">'+
+    '<span class="rv-en">'+esc(it.p.en)+'</span>'+
+    '<span class="rv-hz'+(rvShown?'':' blur')+'">'+esc(it.p.hz)+'</span></button>'+
+    '<button class="rv-peek" onclick="reviewPeek()">'+
+    (rvShown?'\u{1F441}\uFE0F Hide Chinese':'\u{1F441}\uFE0F Show Chinese')+'</button>'+
+    '<div class="rv-acts">'+
+    '<button class="btn primary" onclick="openScene(\''+it.scene.id+'\','+it.idx+')">'+
+    '\u{1F50A} Play &amp; say 3\u00D7</button>'+
+    '<button class="btn ghost" onclick="reviewNext()">\u2713 Said it \u00B7 next</button>'+
+    '</div></div>';
+}
+
 function renderHome(){
   $('st-streak').textContent = S.streak;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -2082,7 +2153,7 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + html + cityBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + html + cityBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -3252,6 +3323,7 @@ function importProgress(){
   S.tone = S.tone || { right:0, total:0 };
   S.feat = S.feat || {};
   S.dayDone = S.dayDone || {};
+  S.review = S.review || { d:'', n:0 };
   if(typeof payload.uid === 'string' && payload.uid.length >= 8){
     UID = payload.uid; lsSet('sinoky_uid', UID);
   }

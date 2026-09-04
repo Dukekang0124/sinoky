@@ -1,5 +1,5 @@
 {
-  "version": "0.3.47",
+  "version": "0.3.48",
   "updated": "2026-09-04",
-  "note": "Daily 内容重组 Phase 2：把「哪天开口过」升级到「哪天完成 Day N」。① 新增平行字段 S.dayDone = {dayN:'YYYY-MM-DD'}，S.days 结构一行不动（热力图/备份/云端三处 indexOf 零改动）；② 时间线上已完成的 Day 显示真实完成日期（如 9/4），老用户升级前的历史完成显示 DONE（'' 占位、绝不回填假日期）；③ 热力图格子悬停显示「2026-09-04 · Day 1 done」，打卡历史与 Day 内容打通；④ 新增 seedDayDone/markDaysDone/dayDoneLabel/dayDoneCell 四个函数，seed 守卫用独立 localStorage key sinoky_ddseed，不写进 S。纯加法：不碰 p.day、不改 S.days、不动 KV 同步逻辑，用户进度零风险。"
+  "note": "Daily Phase 3 复习循环：让用户「重说」已学过的句子 —— 不是再看一遍，是回忆（中文默认 blur，逼用户看着英文先想）→ 开口（Play & say 3×，复用现有场景流程）→ 验证（Show Chinese 对答案）。状态只记 S.review={d,n}（~40 字节，跨天自动重置，不记历史）。首页 Day 卡之后插一张「Review · today」卡：① 门槛≥3 句才出现（新用户零打扰）；② 稳定随机（同一天同序号同一条，刷新不换题）；③ 点「Said it · next」换下一条并计数+1；④ 复习不写 S.phrases、不影响 currentDay、不污染 Day 进度，纯加法零破坏。"
 }
