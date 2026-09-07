@@ -1,5 +1,5 @@
 {
-  "version": "0.3.55",
-  "updated": "2026-09-04",
-  "note": "18 城实景图上线（CITY_IMG_ON=true，54 张 webp/170KB）+ 首页 Day 卡显示完成日期"
+  "version": "0.3.56",
+  "updated": "2026-09-07",
+  "note": "Progress 页脚新增开源许可署名区块（Arphic PL/MIT 义务载体）"
 }

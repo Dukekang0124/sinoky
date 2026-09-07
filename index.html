@@ -134,6 +134,11 @@ nav button.on{color:var(--red)}
 .q{font-size:12.5px;color:var(--sub);line-height:1.5;margin-top:8px;font-style:italic}
 .q-by{font-size:10.5px;color:var(--sub);margin-top:9px;opacity:.8}
 .foot{text-align:center;color:var(--sub);font-size:10.5px;margin-top:22px}
+/* v0.3.56 Attribution：Arphic PL §1(保留许可文件)+署名义务 / MIT 库压缩丢版权头的补救载体 */
+.foot details.attr{margin-top:8px;max-width:340px;margin-left:auto;margin-right:auto;text-align:left}
+.foot details.attr summary{cursor:pointer;color:var(--sub);font-size:10.5px}
+.foot details.attr p{margin:6px 0 0;color:var(--sub);font-size:10.5px;line-height:1.5}
+.foot details.attr a{color:var(--sub);text-decoration:underline}
 .record{background:rgba(230,57,70,.12);color:var(--red);border:1px solid rgba(230,57,70,.4);font-size:12.5px;border-radius:10px;flex:0 0 auto;padding:9px 12px;white-space:nowrap;margin-top:0}
 .record.listening{background:var(--red);color:#fff;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
@@ -537,7 +542,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       </div>
       <textarea class="rd-input" id="prog-io" style="min-height:74px;margin-top:10px;font-size:12px" placeholder="Tap Export to get your backup code, or paste one here and tap Import."></textarea>
     </div>
-    <div class="foot">Sinoky v<span class="v-txt"></span></div>
+    <div class="foot">
+      Sinoky v<span class="v-txt"></span>
+      <details class="attr">
+        <summary>Credits &amp; open-source licenses</summary>
+        <p>Writing engine: <b>Hanzi Writer</b> (MIT License). Stroke order data via the <b>Make Me a Hanzi</b> project, based on glyphs from Arphic Public Fonts, distributed under the <a href="ARPHICPL.TXT" target="_blank" rel="noopener">Arphic Public License</a>.</p>
+        <p>Pinyin: <b>pinyin-pro</b> (MIT License). On-device debug console: <b>vConsole</b> (MIT License, Tencent).</p>
+        <p>All pronunciation audio in Sinoky is original content.</p>
+      </details>
+    </div>
   </section>
 
   <!-- CARDS -->
@@ -649,7 +662,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.55';
+var APP_VERSION = '0.3.56';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
