@@ -602,7 +602,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
   <button id="nav-cards" onclick="go('cards')"><span class="ic">🗂️</span>Cards</button>
   <button id="nav-reading" onclick="go('reading')"><span class="ic">📖</span>Read</button>
-  <button id="nav-sentences" onclick="go('sentences')"><span class="ic">✍️</span>Sentences</button>
+  <button id="nav-sentences" onclick="go('sentences')"><span class="ic">💬</span>Sentences</button>
   <button id="nav-tone" onclick="startTone()"><span class="ic">🎵</span>Tones</button>
   <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
 </nav>
@@ -662,7 +662,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.56';
+var APP_VERSION = '0.3.57';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -2141,6 +2141,7 @@ function tourHtml(){
     '<div>1\uFE0F\u20E3 Tap a line below \u2192 listen, cover the Chinese, <b>say it out loud 3\u00D7</b>. Speaking is the whole point.</div>'+
     '<div>2\uFE0F\u20E3 Do one <b>Day</b> card a day \u2014 the streak keeps you coming back.</div>'+
     '<div>3\uFE0F\u20E3 Open <b>Tones</b> for 1 minute \u2014 train your ear: four tones, four different words.</div>'+
+    '<div>4\uFE0F\u20E3 Want to <b>write</b> characters too? Open <b>Cards</b> \u2192 tap \u270D\uFE0F <b>Strokes</b> \u2014 watch the stroke order, then trace it yourself.</div>'+
     '</div>'+
     '<p class="desc" style="font-size:11.5px;color:var(--sub);margin:10px 0 0">\u{1F512} Recordings are never saved \u00B7 \u{1F4AC} Feedback (bottom-left) any time</p>'+
     '<button class="btn primary" onclick="endTour()">Got it \u2014 let\'s speak</button></div>';
