@@ -84,6 +84,13 @@ header img{width:34px;height:34px;border-radius:9px}
 .p-py{font-size:14px;color:var(--teal);margin-top:3px}
 .p-zh.hidden .p-hz,.p-zh.hidden .p-py{filter:blur(7px);user-select:none}
 .p-hint{font-size:10.5px;color:var(--sub);margin-top:5px}
+/* v0.3.55 零基础拼读：句卡音节拆分，点一个音节只听这一个字 */
+.syls{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.syl{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:5px 9px;cursor:pointer;color:var(--txt);font-family:inherit;text-align:center;line-height:1.2}
+.syl .syl-py{display:block;font-size:11px;color:var(--teal)}
+.syl .syl-zi{display:block;font-size:16px;margin-top:1px}
+.syl.wait{opacity:.55}
+.p-zh.hidden .syls{filter:blur(7px);user-select:none;pointer-events:none}
 .spk{flex-shrink:0;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--teal);font-size:17px;cursor:pointer}
 .spk.playing{background:rgba(127,179,176,.15);border-color:var(--teal)}
 .p-actions{display:flex;gap:8px;margin-top:11px;flex-wrap:nowrap}
@@ -642,7 +649,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.54';
+var APP_VERSION = '0.3.55';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -667,27 +674,27 @@ var SCENES = [
   { id:'arrival', icon:'🛬', title:'Arrival · First hours', day1:true,
     desc:'Your first few survival lines: greeting, price, destination, restroom, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
     phrases:[
-      { en:'Hello! (greeting anyone)', day:1, py:'Nǐ hǎo', hz:'你好',
+      { en:'Hello! (greeting anyone)', day:1, py:'Nǐ hǎo', hz:'你好', pya:'你:nǐ|好:hǎo',
         real:[
           { hz:'你好啊', py:'Nǐ hǎo a', note:'softer — what you actually hear every day', style:'casual' },
           { hz:'嗨', py:'Hāi', note:'like "hi" — friends and young people', style:'casual' }
         ]},
-      { en:'How much is it?', day:3, py:'Duōshǎo qián?', hz:'多少钱？',
+      { en:'How much is it?', day:3, py:'Duōshǎo qián?', hz:'多少钱？', pya:'多:duō|少:shǎo|钱:qián',
         real:[
           { hz:'这多少钱？', py:'Zhè duōshǎo qián?', note:'pointing at the item', style:'casual' },
           { hz:'怎么卖？', py:'Zěnme mài?', note:'at a market stall', style:'casual' }
         ]},
-      { en:'I want to go here. (show address)', day:3, py:'Wǒ yào qù zhèlǐ.', hz:'我要去这里。',
+      { en:'I want to go here. (show address)', day:3, py:'Wǒ yào qù zhèlǐ.', hz:'我要去这里。', pya:'我:wǒ|要:yào|去:qù|这:zhè|里:lǐ',
         real:[
           { hz:'我去这儿。', py:'Wǒ qù zhèr.', note:'这儿 not 这里 — everyday speech', style:'casual' },
           { hz:'麻烦到这儿。', py:'Máfan dào zhèr.', note:'to a taxi driver', style:'polite' }
         ]},
-      { en:'Thank you!', day:1, py:'Xièxie!', hz:'谢谢！',
+      { en:'Thank you!', day:1, py:'Xièxie!', hz:'谢谢！', pya:'谢:xiè|谢:xiè',
         real:[
           { hz:'谢啦！', py:'Xiè la!', note:'light, casual thanks', style:'casual' },
           { hz:'太感谢了！', py:'Tài gǎnxiè le!', note:'when someone really helped', style:'polite' }
         ]},
-      { en:'Where is the restroom?', day:3, py:'Xǐshǒujiān zài nǎlǐ?', hz:'洗手间在哪里？',
+      { en:'Where is the restroom?', day:3, py:'Xǐshǒujiān zài nǎlǐ?', hz:'洗手间在哪里？', pya:'洗:xǐ|手:shǒu|间:jiān|在:zài|哪:nǎ|里:lǐ',
         real:[
           { hz:'洗手间在哪儿？', py:'Xǐshǒujiān zài nǎr?', note:'哪儿 not 哪里 — spoken', style:'casual' },
           { hz:'请问厕所在哪？', py:'Qǐngwèn cèsuǒ zài nǎ?', note:'厕所 = toilet, very common', style:'casual' }
@@ -696,57 +703,57 @@ var SCENES = [
   { id:'self-intro', icon:'🙋', title:'Self-intro · Who am I', day1:true,
     desc:'Introduce yourself the Chinese way: your name, where you are from, what you do, and that you are learning. Small talk that turns strangers into people who help you.',
     phrases:[
-      { en:'My name is (your name).', day:1, py:'Wǒ jiào (nǐ de míngzi).', hz:'我叫（你的名字）。',
+      { en:'My name is (your name).', day:1, py:'Wǒ jiào (nǐ de míngzi).', hz:'我叫（你的名字）。', pya:'我:wǒ|叫:jiào|你:nǐ|的:de|名:míng|字:zì',
         real:[
           { hz:'我叫（你的名字）。', py:'Wǒ jiào (nǐ de míngzi).', note:'fill in your name', style:'casual' },
           { hz:'大家叫我（昵称）。', py:'Dàjiā jiào wǒ (nǐchēng).', note:'what friends call you', style:'casual' }
         ]},
-      { en:"I'm from (your country, e.g. America).", py:'Wǒ lái zì (nǐ de guójiā).', hz:'我来自（你的国家）。',
+      { en:"I'm from (your country, e.g. America).", py:'Wǒ lái zì (nǐ de guójiā).', hz:'我来自（你的国家）。', pya:'我:wǒ|来:lái|自:zì|你:nǐ|的:de|国:guó|家:jiā',
         real:[
           { hz:'我是美国人。', py:'Wǒ shì Měiguó rén.', note:'state your country', style:'casual' },
           { hz:'我老家在美国。', py:'Wǒ lǎojiā zài Měiguó.', note:'where home is', style:'casual' }
         ]},
-      { en:"I'm a student.", py:'Wǒ shì xuésheng.', hz:'我是学生。',
+      { en:"I'm a student.", py:'Wǒ shì xuésheng.', hz:'我是学生。', pya:'我:wǒ|是:shì|学:xué|生:shēng',
         real:[
           { hz:'我还在念书。', py:'Wǒ hái zài niànshū.', note:'still studying', style:'casual' },
           { hz:'我是个学生。', py:'Wǒ shì ge xuésheng.', note:'I am a student', style:'casual' }
         ]},
-      { en:"I'm a teacher.", py:'Wǒ shì lǎoshī.', hz:'我是老师。',
+      { en:"I'm a teacher.", py:'Wǒ shì lǎoshī.', hz:'我是老师。', pya:'我:wǒ|是:shì|老:lǎo|师:shī',
         real:[
           { hz:'我教书。', py:'Wǒ jiāo shū.', note:'I teach', style:'casual' },
           { hz:'我是个老师。', py:'Wǒ shì ge lǎoshī.', note:'I am a teacher', style:'casual' }
         ]},
-      { en:"I'm learning Chinese.", py:'Wǒ zài xué Zhōngwén.', hz:'我在学中文。',
+      { en:"I'm learning Chinese.", py:'Wǒ zài xué Zhōngwén.', hz:'我在学中文。', pya:'我:wǒ|在:zài|学:xué|中:zhōng|文:wén',
         real:[
           { hz:'我在学汉语。', py:'Wǒ zài xué Hànyǔ.', note:'汉语 = Chinese language', style:'casual' },
           { hz:'我刚开始学中文。', py:'Wǒ gāng kāishǐ xué Zhōngwén.', note:'just started', style:'casual' }
         ]},
-      { en:'Nice to meet you.', day:1, py:'Hěn gāoxìng rènshi nǐ.', hz:'很高兴认识你。',
+      { en:'Nice to meet you.', day:1, py:'Hěn gāoxìng rènshi nǐ.', hz:'很高兴认识你。', pya:'很:hěn|高:gāo|兴:xìng|认:rèn|识:shi|你:nǐ',
         real:[
           { hz:'幸会幸会。', py:'Xìnghuì xìnhuì.', note:'polite set phrase', style:'formal' },
           { hz:'认识你很高兴。', py:'Rènshi nǐ hěn gāoxìng.', note:'warm, common', style:'casual' }
         ]},
-      { en:'Do you speak English?', day:2, py:'Nǐ huì shuō Yīngyǔ ma?', hz:'你会说英语吗？',
+      { en:'Do you speak English?', day:2, py:'Nǐ huì shuō Yīngyǔ ma?', hz:'你会说英语吗？', pya:'你:nǐ|会:huì|说:shuō|英:yīng|语:yǔ|吗:ma',
         real:[
           { hz:'你会英文吗？', py:'Nǐ huì Yīngwén ma?', note:'英文 = English (casual)', style:'casual' },
           { hz:'能不能说英文？', py:'Néng bu néng shuō Yīngwén?', note:'can we use English?', style:'polite' }
         ]},
-      { en:"What's your name?", py:'Nǐ jiào shénme míngzi?', hz:'你叫什么名字？',
+      { en:"What's your name?", py:'Nǐ jiào shénme míngzi?', hz:'你叫什么名字？', pya:'你:nǐ|叫:jiào|什:shén|么:me|名:míng|字:zì',
         real:[
           { hz:'你叫啥？', py:'Nǐ jiào shá?', note:'very casual', style:'casual' },
           { hz:'怎么称呼你？', py:'Zěnme chēnghu nǐ?', note:'polite — what should I call you', style:'polite' }
         ]},
-      { en:'Where are you from?', day:5, py:'Nǐ lái zì nǎlǐ?', hz:'你来自哪里？',
+      { en:'Where are you from?', day:5, py:'Nǐ lái zì nǎlǐ?', hz:'你来自哪里？', pya:'你:nǐ|来:lái|自:zì|哪:nǎ|里:lǐ',
         real:[
           { hz:'你是哪国人？', py:'Nǐ shì nǎ guó rén?', note:'what country are you from', style:'casual' },
           { hz:'你老家哪儿的？', py:'Nǐ lǎojiā nǎr de?', note:'where is home', style:'casual' }
         ]},
-      { en:'Please speak slowly.', day:2, py:'Qǐng shuō màn yìdiǎn.', hz:'请说慢一点。',
+      { en:'Please speak slowly.', day:2, py:'Qǐng shuō màn yìdiǎn.', hz:'请说慢一点。', pya:'请:qǐng|说:shuō|慢:màn|一:yì|点:diǎn',
         real:[
           { hz:'能麻烦您说慢一点吗？', py:'Néng máfan nín shuō màn yìdiǎn ma?', note:'polite — to elders or strangers', style:'polite' },
           { hz:'慢点说！', py:'Màn diǎn shuō!', note:'casual — to friends', style:'casual' }
         ]},
-      { en:'Can you say that again?', day:2, py:'Néng zài shuō yí biàn ma?', hz:'能再说一遍吗？',
+      { en:'Can you say that again?', day:2, py:'Néng zài shuō yí biàn ma?', hz:'能再说一遍吗？', pya:'能:néng|再:zài|说:shuō|一:yí|遍:biàn|吗:ma',
         real:[
           { hz:'啥？再说一次！', py:'Shá? Zài shuō yí cì!', note:'very casual — did not catch it', style:'casual' },
           { hz:'不好意思，请再说一遍。', py:'Bù hǎoyìsi, qǐng zài shuō yí biàn.', note:'polite — sorry, repeat', style:'polite' }
@@ -755,72 +762,72 @@ var SCENES = [
   { id:'emergency', icon:'🚨', title:'Emergency · Survival', day1:true,
     desc:'Life-saving lines for when something goes wrong: ask for help, find a hospital, say you are sick, call the police, get unlost. Slow it down, then say it like your life depends on it — because sometimes it does.',
     phrases:[
-      { en:'Help!', day:6, py:'Bāngmáng!', hz:'帮忙！',
+      { en:'Help!', day:6, py:'Bāngmáng!', hz:'帮忙！', pya:'帮:bāng|忙:máng',
         real:[
           { hz:'帮帮我！', py:'Bāngbang wǒ!', note:'raw cry for help', style:'casual' },
           { hz:'救命啊！', py:'Jiùmìng a!', note:'emergency — someone is in danger', style:'casual' }
         ]},
-      { en:'I need help.', day:6, py:'Wǒ xūyào bāngzhù.', hz:'我需要帮助。',
+      { en:'I need help.', day:6, py:'Wǒ xūyào bāngzhù.', hz:'我需要帮助。', pya:'我:wǒ|需:xū|要:yào|帮:bāng|助:zhù',
         real:[
           { hz:'我需要帮忙。', py:'Wǒ xūyào bāngmáng.', note:'everyday way to say it', style:'casual' },
           { hz:'能帮个忙吗？', py:'Néng bāng ge máng ma?', note:'polite ask', style:'polite' }
         ]},
-      { en:'Where is the hospital?', day:6, py:'Yīyuàn zài nǎlǐ?', hz:'医院在哪里？',
+      { en:'Where is the hospital?', day:6, py:'Yīyuàn zài nǎlǐ?', hz:'医院在哪里？', pya:'医:yī|院:yuàn|在:zài|哪:nǎ|里:lǐ',
         real:[
           { hz:'医院在哪儿？', py:'Yīyuàn zài nǎr?', note:'哪儿 not 哪里 — spoken', style:'casual' },
           { hz:'请问医院怎么走？', py:'Qǐngwèn yīyuàn zěnme zǒu?', note:'asking for directions, polite', style:'polite' }
         ]},
-      { en:"I'm sick.", py:'Wǒ bìng le.', hz:'我病了。',
+      { en:"I'm sick.", py:'Wǒ bìng le.', hz:'我病了。', pya:'我:wǒ|病:bìng|了:le',
         real:[
           { hz:'我不舒服。', py:'Wǒ bù shūfu.', note:'softer — not feeling well', style:'casual' },
           { hz:'我难受。', py:'Wǒ nánshòu.', note:'stronger — feel awful', style:'casual' }
         ]},
-      { en:'Call an ambulance, please.', day:7, py:'Kuài jiào jiùhùchē!', hz:'快叫救护车！',
+      { en:'Call an ambulance, please.', day:7, py:'Kuài jiào jiùhùchē!', hz:'快叫救护车！', pya:'快:kuài|叫:jiào|救:jiù|护:hù|车:chē',
         real:[
           { hz:'叫救护车！', py:'Jiào jiùhùchē!', note:'urgent — now', style:'casual' },
           { hz:'请帮我叫救护车。', py:'Qǐng bāng wǒ jiào jiùhùchē.', note:'ask someone', style:'polite' }
         ]},
-      { en:'The emergency number is 120.', day:7, py:'Jíjiù diànhuà shì yāo èr líng!', hz:'急救电话是120。', tts:'急救电话是幺二零。',
+      { en:'The emergency number is 120.', day:7, py:'Jíjiù diànhuà shì yāo èr líng!', hz:'急救电话是120。', pya:'急:jí|救:jiù|电:diàn|话:huà|是:shì', tts:'急救电话是幺二零。',
         real:[
           { hz:'打120！', py:'Dǎ yāo èr líng!', tts:'打幺二零！', note:'shortest', style:'casual' },
           { hz:'请打急救电话120。', py:'Qǐng dǎ jíjiù diànhuà yāo èr líng.', tts:'请打急救电话幺二零。', note:'polite', style:'polite' }
         ]},
-      { en:'I need to see a doctor.', day:6, py:'Wǒ yào kàn yīshēng.', hz:'我要看医生。',
+      { en:'I need to see a doctor.', day:6, py:'Wǒ yào kàn yīshēng.', hz:'我要看医生。', pya:'我:wǒ|要:yào|看:kàn|医:yī|生:shēng',
         real:[
           { hz:'我得看大夫。', py:'Wǒ děi kàn dàifu.', note:'colloquial', style:'casual' },
           { hz:'请带我去看医生。', py:'Qǐng dài wǒ qù kàn yīshēng.', note:'ask for help', style:'polite' }
         ]},
-      { en:'Call the police, please.', day:7, py:'Kuài bāng wǒ dǎ yāo yāo líng!', hz:'快帮我打110！', tts:'快帮我打幺幺零！',
+      { en:'Call the police, please.', day:7, py:'Kuài bāng wǒ dǎ yāo yāo líng!', hz:'快帮我打110！', pya:'快:kuài|帮:bāng|我:wǒ|打:dǎ', tts:'快帮我打幺幺零！',
         real:[
           { hz:'快报警！', py:'Kuài bàojǐng!', note:'urgent — call the police now', style:'casual' },
           { hz:'请帮我叫警察。', py:'Qǐng bāng wǒ jiào jǐngchá.', note:'ask someone to call', style:'polite' }
         ]},
-      { en:'There is a fire! Call 119!', day:7, py:'Zháohuǒ le! Kuài dǎ yāo yāo jiǔ!', hz:'着火了！快打119！', tts:'着火了！快打幺幺九！',
+      { en:'There is a fire! Call 119!', day:7, py:'Zháohuǒ le! Kuài dǎ yāo yāo jiǔ!', hz:'着火了！快打119！', pya:'着:zháo|火:huǒ|了:le|快:kuài|打:dǎ', tts:'着火了！快打幺幺九！',
         real:[
           { hz:'着火啦！', py:'Zháohuǒ la!', note:'panic — fire!', style:'casual' },
           { hz:'快打火警119！', py:'Kuài dǎ huǒjǐng yāo yāo jiǔ!', tts:'快打火警幺幺九！', note:'fire brigade number', style:'casual' }
         ]},
-      { en:"I'm lost.", py:'Wǒ mí lù le.', hz:'我迷路了。',
+      { en:"I'm lost.", py:'Wǒ mí lù le.', hz:'我迷路了。', pya:'我:wǒ|迷:mí|路:lù|了:le',
         real:[
           { hz:'我找不到路了。', py:'Wǒ zhǎo bú dào lù le.', note:'can not find the way', style:'casual' },
           { hz:'请问这地方怎么走？', py:'Qǐngwèn zhè dìfang zěnme zǒu?', note:'asking a passer-by', style:'polite' }
         ]},
-      { en:'My phone is lost.', day:7, py:'Wǒ de shǒujī diū le.', hz:'我的手机丢了。',
+      { en:'My phone is lost.', day:7, py:'Wǒ de shǒujī diū le.', hz:'我的手机丢了。', pya:'我:wǒ|的:de|手:shǒu|机:jī|丢:diū|了:le',
         real:[
           { hz:'我手机丢了！', py:'Wǒ shǒujī diū le!', note:'panic — phone gone', style:'casual' },
           { hz:'我手机不见了。', py:'Wǒ shǒujī bú jiàn le.', note:'phone missing', style:'casual' }
         ]},
-      { en:'My wallet is lost.', day:7, py:'Wǒ de qiánbāo diū le.', hz:'我的钱包丢了。',
+      { en:'My wallet is lost.', day:7, py:'Wǒ de qiánbāo diū le.', hz:'我的钱包丢了。', pya:'我:wǒ|的:de|钱:qián|包:bāo|丢:diū|了:le',
         real:[
           { hz:'我钱包丢了！', py:'Wǒ qiánbāo diū le!', note:'panic — wallet gone', style:'casual' },
           { hz:'我钱包不见了。', py:'Wǒ qiánbāo bú jiàn le.', note:'wallet missing', style:'casual' }
         ]},
-      { en:"I'm allergic to (peanuts).", py:'Wǒ duì (huāshēng) guòmǐn.', hz:'我对（花生）过敏。',
+      { en:"I'm allergic to (peanuts).", py:'Wǒ duì (huāshēng) guòmǐn.', hz:'我对（花生）过敏。', pya:'我:wǒ|对:duì|花:huā|生:shēng|过:guò|敏:mǐn',
         real:[
           { hz:'我花生过敏！', py:'Wǒ huāshēng guòmǐn!', note:'urgent — state your allergen', style:'casual' },
           { hz:'我对（海鲜）过敏。', py:'Wǒ duì (hǎixiān) guòmǐn.', note:'swap in your allergen', style:'casual' }
         ]},
-      { en:"I don't speak Chinese.", py:'Wǒ bú huì shuō Zhōngwén.', hz:'我不会说中文。',
+      { en:"I don't speak Chinese.", py:'Wǒ bú huì shuō Zhōngwén.', hz:'我不会说中文。', pya:'我:wǒ|不:bú|会:huì|说:shuō|中:zhōng|文:wén',
         real:[
           { hz:'我不会中文。', py:'Wǒ bú huì Zhōngwén.', note:'short and clear', style:'casual' },
           { hz:'对不起，我听不懂。', py:'Duìbuqǐ, wǒ tīng bù dǒng.', note:'sorry, I don’t understand', style:'polite' }
@@ -829,32 +836,32 @@ var SCENES = [
   { id:'food', icon:'🍜', title:'Food · Order & pay',
     desc:'Ordering made minimal: point, say "I want this one", ask for no spice, pay by scan.',
     phrases:[
-      { en:'I want this one. (pointing)', day:4, py:'Wǒ yào zhège.', hz:'我要这个。',
+      { en:'I want this one. (pointing)', day:4, py:'Wǒ yào zhège.', hz:'我要这个。', pya:'我:wǒ|要:yào|这:zhè|个:ge',
         real:[
           { hz:'来这个。', py:'Lái zhège.', note:'how people actually order', style:'casual' },
           { hz:'给我来这个。', py:'Gěi wǒ lái zhège.', note:'also very common', style:'casual' }
         ]},
-      { en:'Not spicy, please.', day:4, py:'Bú yào là.', hz:'不要辣。',
+      { en:'Not spicy, please.', day:4, py:'Bú yào là.', hz:'不要辣。', pya:'不:bú|要:yào|辣:là',
         real:[
           { hz:'别放辣。', py:'Bié fàng là.', note:'said to the cook', style:'casual' },
           { hz:'不要辣，谢谢。', py:'Bú yào là, xièxie.', note:'adding 谢谢 softens it', style:'polite' }
         ]},
-      { en:'Delicious!', day:4, py:'Hǎo chī!', hz:'好吃！',
+      { en:'Delicious!', day:4, py:'Hǎo chī!', hz:'好吃！', pya:'好:hǎo|吃:chī',
         real:[
           { hz:'太好吃了！', py:'Tài hǎochī le!', note:'what people really say', style:'casual' },
           { hz:'嗯，不错！', py:'Ń, búcuò!', note:'understated praise', style:'casual' }
         ]},
-      { en:'The bill, please.', day:5, py:'Mǎidān, xièxie.', hz:'买单，谢谢。',
+      { en:'The bill, please.', day:5, py:'Mǎidān, xièxie.', hz:'买单，谢谢。', pya:'买:mǎi|单:dān|谢:xiè|谢:xiè',
         real:[
           { hz:'结账。', py:'Jiézhàng.', note:'short and direct', style:'casual' },
           { hz:'老板，买单！', py:'Lǎobǎn, mǎidān!', note:'calling the owner in a small place', style:'casual' }
         ]},
-      { en:'Water, please.', day:5, py:'Qǐng gěi wǒ shuǐ.', hz:'请给我水。',
+      { en:'Water, please.', day:5, py:'Qǐng gěi wǒ shuǐ.', hz:'请给我水。', pya:'请:qǐng|给:gěi|我:wǒ|水:shuǐ',
         real:[
           { hz:'来杯水。', py:'Lái bēi shuǐ.', note:'what you actually say when ordering', style:'casual' },
           { hz:'有水吗？', py:'Yǒu shuǐ ma?', note:'do you have water?', style:'casual' }
         ]},
-      { en:"I don't eat meat.", py:'Wǒ bù chī ròu.', hz:'我不吃肉。',
+      { en:"I don't eat meat.", py:'Wǒ bù chī ròu.', hz:'我不吃肉。', pya:'我:wǒ|不:bù|吃:chī|肉:ròu',
         real:[
           { hz:'我吃素。', py:'Wǒ chī sù.', note:'I am vegetarian', style:'casual' },
           { hz:'我不大吃肉。', py:'Wǒ bú dà chī ròu.', note:'I don’t eat much meat', style:'casual' }
@@ -863,22 +870,22 @@ var SCENES = [
   { id:'meeting', icon:'💼', title:'Work · Meetings',
     desc:'Survival lines for a Chinese workplace meeting: greet, ask to repeat, give a view, exit politely. (Calibrated v0.1.3 via content-spec self-check; native-speaker spot check pending.)',
     phrases:[
-      { en:'Hello, everyone.', py:'Dàjiā hǎo.', hz:'大家好。',
+      { en:'Hello, everyone.',  py:'Dàjiā hǎo.', hz:'大家好。', pya:'大:dà|家:jiā|好:hǎo',
         real:[
           { hz:'各位好。', py:'Gèwèi hǎo.', note:'more formal — to a group', style:'formal' },
           { hz:'大家好啊。', py:'Dàjiā hǎo a.', note:'relaxed — with a team you know', style:'casual' }
         ]},
-      { en:'Sorry, say that again, please.', py:'Bù hǎo yìsi, qǐng zài shuō yí biàn.', hz:'不好意思，请再说一遍。',
+      { en:'Sorry, say that again, please.',  py:'Bù hǎo yìsi, qǐng zài shuō yí biàn.', hz:'不好意思，请再说一遍。', pya:'不:bù|好:hǎo|意:yì|思:si|请:qǐng|再:zài|说:shuō|一:yí|遍:biàn',
         real:[
           { hz:'抱歉，能再说一次吗？', py:'Bàoqiàn, néng zài shuō yí cì ma?', note:'softer, polite', style:'polite' },
           { hz:'啊？你说什么？', py:'Á? Nǐ shuō shénme?', note:'only with close colleagues', style:'casual' }
         ]},
-      { en:'I think it’s fine.', py:'Wǒ juéde méi wèntí.', hz:'我觉得没问题。',
+      { en:'I think it’s fine.',  py:'Wǒ juéde méi wèntí.', hz:'我觉得没问题。', pya:'我:wǒ|觉:jué|得:de|没:méi|问:wèn|题:tí',
         real:[
           { hz:'我觉得行。', py:'Wǒ juéde xíng.', note:'行 = fine/OK, very common', style:'casual' },
           { hz:'没问题。', py:'Méi wèntí.', note:'short and confident', style:'casual' }
         ]},
-      { en:'Thanks, I’ll head out first.', py:'Xièxie, wǒ xiān zǒu le.', hz:'谢谢，我先走了。',
+      { en:'Thanks, I’ll head out first.',  py:'Xièxie, wǒ xiān zǒu le.', hz:'谢谢，我先走了。', pya:'谢:xiè|谢:xiè|我:wǒ|先:xiān|走:zǒu|了:le',
         real:[
           { hz:'那我先走了。', py:'Nà wǒ xiān zǒu le.', note:'那 adds natural flow', style:'casual' },
           { hz:'先撤了啊。', py:'Xiān chè le a.', note:'撤 = slang for leaving — friends only', style:'slang' }
@@ -889,47 +896,47 @@ var SCENES = [
   { id:'shopping', icon:'🛍️', title:'Shopping · Markets & malls',
     desc:'Ask the price, try it on, pay by phone. Haggling is expected at markets \u2014 and "too expensive" is how it starts.',
     phrases:[
-      { en:'How much is this one?', day:8, py:'Zhège duōshǎo qián?', hz:'这个多少钱？',
+      { en:'How much is this one?', day:8, py:'Zhège duōshǎo qián?', hz:'这个多少钱？', pya:'这:zhè|个:ge|多:duō|少:shǎo|钱:qián',
         real:[
           { hz:'老板，这个怎么卖？', py:'Lǎobǎn, zhège zěnme mài?', note:'at a market stall', style:'casual' },
           { hz:'那件呢？', py:'Nà jiàn ne?', note:'pointing at another one', style:'casual' }
         ]},
-      { en:"That's too expensive.", day:8, py:'Tài guì le.', hz:'太贵了。',
+      { en:"That's too expensive.", day:8, py:'Tài guì le.', hz:'太贵了。', pya:'太:tài|贵:guì|了:le',
         real:[
           { hz:'能便宜点儿吗？', py:'Néng piányi diǎnr ma?', note:'the classic haggle', style:'casual' },
           { hz:'便宜点儿吧！', py:'Piányi diǎnr ba!', note:'friendlier push', style:'casual' }
         ]},
-      { en:"I'm just looking.", day:8, py:'Wǒ suíbiàn kànkan.', hz:'我随便看看。',
+      { en:"I'm just looking.", day:8, py:'Wǒ suíbiàn kànkan.', hz:'我随便看看。', pya:'我:wǒ|随:suí|便:biàn|看:kàn|看:kàn',
         real:[
           { hz:'我就看看。', py:'Wǒ jiù kànkan.', note:'shorter version', style:'casual' },
           { hz:'不用管我，我自己看。', py:'Búyòng guǎn wǒ, wǒ zìjǐ kàn.', note:'polite refusal of help', style:'polite' }
         ]},
-      { en:'Do you have a bigger one?', day:8, py:'Yǒu dà yìdiǎn de ma?', hz:'有大一点的吗？',
+      { en:'Do you have a bigger one?', day:8, py:'Yǒu dà yìdiǎn de ma?', hz:'有大一点的吗？', pya:'有:yǒu|大:dà|一:yì|点:diǎn|的:de|吗:ma',
         real:[
           { hz:'有大号的吗？', py:'Yǒu dàhào de ma?', note:'asking for size L', style:'casual' },
           { hz:'有没有小一点的？', py:'Yǒu méiyǒu xiǎo yìdiǎn de?', note:'asking for smaller', style:'casual' }
         ]},
-      { en:'Can I try it on?', day:8, py:'Kěyǐ shìchuān ma?', hz:'可以试穿吗？',
+      { en:'Can I try it on?', day:8, py:'Kěyǐ shìchuān ma?', hz:'可以试穿吗？', pya:'可:kě|以:yǐ|试:shì|穿:chuān|吗:ma',
         real:[
           { hz:'试一下可以吗？', py:'Shì yíxià kěyǐ ma?', note:'softer ask', style:'polite' },
           { hz:'试衣间在哪儿？', py:'Shìyījiān zài nǎr?', note:'where is the fitting room', style:'casual' }
         ]},
-      { en:"I'll take it.", day:8, py:'Wǒ yào le.', hz:'我要了。',
+      { en:"I'll take it.", day:8, py:'Wǒ yào le.', hz:'我要了。', pya:'我:wǒ|要:yào|了:le',
         real:[
           { hz:'就这个了。', py:'Jiù zhège le.', note:'decided \u2014 this one', style:'casual' },
           { hz:'我要两个。', py:'Wǒ yào liǎng ge.', note:'taking two', style:'casual' }
         ]},
-      { en:'Can I pay by phone?', day:8, py:'Kěyǐ yòng shǒujī fùqián ma?', hz:'可以用手机付钱吗？',
+      { en:'Can I pay by phone?', day:8, py:'Kěyǐ yòng shǒujī fùqián ma?', hz:'可以用手机付钱吗？', pya:'可:kě|以:yǐ|用:yòng|手:shǒu|机:jī|付:fù|钱:qián|吗:ma',
         real:[
           { hz:'可以扫码吗？', py:'Kěyǐ sǎo mǎ ma?', note:'scan the QR code', style:'casual' },
           { hz:'我没有现金。', py:'Wǒ méiyǒu xiànjīn.', note:'no cash on me', style:'casual' }
         ]},
-      { en:'Can I get a bag?', day:8, py:'Néng gěi wǒ yí ge dàizi ma?', hz:'能给我一个袋子吗？',
+      { en:'Can I get a bag?', day:8, py:'Néng gěi wǒ yí ge dàizi ma?', hz:'能给我一个袋子吗？', pya:'能:néng|给:gěi|我:wǒ|一:yí|个:gè|袋:dài|子:zǐ|吗:ma',
         real:[
           { hz:'要一个袋子。', py:'Yào yí ge dàizi.', note:'short ask at checkout', style:'casual' },
           { hz:'不用袋子，谢谢。', py:'Bú yòng dàizi, xièxie.', note:'declining a bag', style:'polite' }
         ]},
-      { en:'Where do I pay?', day:8, py:'Zài nǎr fù qián?', hz:'在哪儿付钱？',
+      { en:'Where do I pay?', day:8, py:'Zài nǎr fù qián?', hz:'在哪儿付钱？', pya:'在:zài|哪:nǎ|儿:ér|付:fù|钱:qián',
         real:[
           { hz:'收银台在哪儿？', py:'Shōuyíntái zài nǎr?', note:'where is the cash desk', style:'casual' },
           { hz:'结账在哪儿？', py:'Jiézhàng zài nǎr?', note:'where to check out', style:'casual' }
@@ -938,42 +945,42 @@ var SCENES = [
   { id:'numbers', icon:'🔢', title:'Numbers · Prices & counting',
     desc:'Hear a price, say a number. Counting to ten, prices, weights, and the time \u2014 the day that saves you real money.',
     phrases:[
-      { en:'One, two, three, four, five.', day:9, py:'Yī, èr, sān, sì, wǔ.', hz:'一、二、三、四、五。',
+      { en:'One, two, three, four, five.', day:9, py:'Yī, èr, sān, sì, wǔ.', hz:'一、二、三、四、五。', pya:'一:yī|二:èr|三:sān|四:sì|五:wǔ',
         real:[
           { hz:'幺', py:'yāo', note:'how 1 is said in phone numbers (110 = yāo yāo líng)', style:'casual' },
           { hz:'两', py:'liǎng', note:'2 before a measure word: 两个', style:'casual' }
         ]},
-      { en:'Six, seven, eight, nine, ten.', day:9, py:'Liù, qī, bā, jiǔ, shí.', hz:'六、七、八、九、十。',
+      { en:'Six, seven, eight, nine, ten.', day:9, py:'Liù, qī, bā, jiǔ, shí.', hz:'六、七、八、九、十。', pya:'六:liù|七:qī|八:bā|九:jiǔ|十:shí',
         real:[
           { hz:'十块', py:'shí kuài', note:'ten yuan', style:'casual' },
           { hz:'一百', py:'yì bǎi', note:'one hundred', style:'casual' }
         ]},
-      { en:'Twenty-five yuan.', day:9, py:'Èrshíwǔ kuài.', hz:'二十五块。',
+      { en:'Twenty-five yuan.', day:9, py:'Èrshíwǔ kuài.', hz:'二十五块。', pya:'二:èr|十:shí|五:wǔ|块:kuài',
         real:[
           { hz:'两块五', py:'liǎng kuài wǔ', note:'2.5 yuan \u2014 spoken shortcut', style:'casual' },
           { hz:'二十五个', py:'èrshíwǔ ge', note:'25 of something', style:'casual' }
         ]},
-      { en:'How much for one jin (500g)?', day:9, py:'Yì jīn duōshǎo qián?', hz:'一斤多少钱？',
+      { en:'How much for one jin (500g)?', day:9, py:'Yì jīn duōshǎo qián?', hz:'一斤多少钱？', pya:'一:yì|斤:jīn|多:duō|少:shǎo|钱:qián',
         real:[
           { hz:'来一斤。', py:'Lái yì jīn.', note:'give me one jin', style:'casual' },
           { hz:'半斤', py:'bàn jīn', note:'half a jin = 250g', style:'casual' }
         ]},
-      { en:"I'll take two.", day:9, py:'Lái liǎng ge.', hz:'来两个。',
+      { en:"I'll take two.", day:9, py:'Lái liǎng ge.', hz:'来两个。', pya:'来:lái|两:liǎng|个:gè',
         real:[
           { hz:'再来一个。', py:'Zài lái yí ge.', note:'one more', style:'casual' },
           { hz:'一共三个。', py:'Yígòng sān ge.', note:'three in total', style:'casual' }
         ]},
-      { en:"That's a fair price.", day:9, py:'Bú guì.', hz:'不贵。',
+      { en:"That's a fair price.", day:9, py:'Bú guì.', hz:'不贵。', pya:'不:bú|贵:guì',
         real:[
           { hz:'挺便宜的。', py:'Tǐng piányi de.', note:'quite cheap', style:'casual' },
           { hz:'有点贵。', py:'Yǒudiǎn guì.', note:'a bit expensive', style:'casual' }
         ]},
-      { en:'Can you break a 100?', day:9, py:'Néng zhǎokāi yìbǎi ma?', hz:'能找开一百吗？',
+      { en:'Can you break a 100?', day:9, py:'Néng zhǎokāi yìbǎi ma?', hz:'能找开一百吗？', pya:'能:néng|找:zhǎo|开:kāi|一:yì|百:bǎi|吗:ma',
         real:[
           { hz:'我没零钱。', py:'Wǒ méi língqián.', note:'I have no small change', style:'casual' },
           { hz:'给你一百。', py:'Gěi nǐ yìbǎi.', note:'handing over a 100 note', style:'casual' }
         ]},
-      { en:"What time is it?", day:9, py:'Xiànzài jǐ diǎn?', hz:'现在几点？',
+      { en:"What time is it?", day:9, py:'Xiànzài jǐ diǎn?', hz:'现在几点？', pya:'现:xiàn|在:zài|几:jǐ|点:diǎn',
         real:[
           { hz:'几点了？', py:'Jǐ diǎn le?', note:'shorter, casual', style:'casual' },
           { hz:'三点半。', py:'Sān diǎn bàn.', note:'3:30 \u2014 half past', style:'casual' }
@@ -982,47 +989,47 @@ var SCENES = [
   { id:'transport', icon:'🚕', title:'Getting around · Taxi & metro',
     desc:'Taxis, metro, buses. Say where you are going, ask how long, and know when to get off.',
     phrases:[
-      { en:'Take me to this address.', day:10, py:'Qù zhège dìzhǐ.', hz:'去这个地址。',
+      { en:'Take me to this address.', day:10, py:'Qù zhège dìzhǐ.', hz:'去这个地址。', pya:'去:qù|这:zhè|个:ge|地:dì|址:zhǐ',
         real:[
           { hz:'师傅，去机场。', py:'Shīfu, qù jīchǎng.', note:'to a taxi driver', style:'casual' },
           { hz:'我要去火车站。', py:'Wǒ yào qù huǒchēzhàn.', note:'to the train station', style:'casual' }
         ]},
-      { en:'How long does it take?', day:10, py:'Yào duō cháng shíjiān?', hz:'要多长时间？',
+      { en:'How long does it take?', day:10, py:'Yào duō cháng shíjiān?', hz:'要多长时间？', pya:'要:yào|多:duō|长:cháng|时:shí|间:jiān',
         real:[
           { hz:'还有多久？', py:'Hái yǒu duō jiǔ?', note:'how much longer?', style:'casual' },
           { hz:'快不快？', py:'Kuài bu kuài?', note:'is it quick?', style:'casual' }
         ]},
-      { en:'Stop here, please.', day:10, py:'Jiù tíng zhèlǐ.', hz:'就停这里。',
+      { en:'Stop here, please.', day:10, py:'Jiù tíng zhèlǐ.', hz:'就停这里。', pya:'就:jiù|停:tíng|这:zhè|里:lǐ',
         real:[
           { hz:'前面停。', py:'Qiánmiàn tíng.', note:'stop up ahead', style:'casual' },
           { hz:'停在路口。', py:'Tíng zài lùkǒu.', note:'stop at the corner', style:'casual' }
         ]},
-      { en:'Which metro line?', day:10, py:'Zuò jǐ hào xiàn?', hz:'坐几号线？',
+      { en:'Which metro line?', day:10, py:'Zuò jǐ hào xiàn?', hz:'坐几号线？', pya:'坐:zuò|几:jǐ|号:hào|线:xiàn',
         real:[
           { hz:'地铁站在哪儿？', py:'Dìtiězhàn zài nǎr?', note:'where is the metro', style:'casual' },
           { hz:'两张票。', py:'Liǎng zhāng piào.', note:'two tickets', style:'casual' }
         ]},
-      { en:'Turn left / right.', day:10, py:'Zuǒ guǎi / yòu guǎi.', hz:'左拐 / 右拐。',
+      { en:'Turn left / right.', day:10, py:'Zuǒ guǎi / yòu guǎi.', hz:'左拐 / 右拐。', pya:'左:zuǒ|拐:guǎi',
         real:[
           { hz:'往左走。', py:'Wǎng zuǒ zǒu.', note:'go left', style:'casual' },
           { hz:'直走就到。', py:'Zhí zǒu jiù dào.', note:'straight ahead and you are there', style:'casual' }
         ]},
-      { en:'Is it far from here?', day:10, py:'Lí zhèr yuǎn ma?', hz:'离这儿远吗？',
+      { en:'Is it far from here?', day:10, py:'Lí zhèr yuǎn ma?', hz:'离这儿远吗？', pya:'离:lí|这:zhè|儿:ér|远:yuǎn|吗:ma',
         real:[
           { hz:'走路能到吗？', py:'Zǒulù néng dào ma?', note:'can I walk there?', style:'casual' },
           { hz:'很近。', py:'Hěn jìn.', note:'very close \u2014 what you will hear', style:'casual' }
         ]},
-      { en:'Please use the meter.', day:10, py:'Qǐng dǎ biǎo.', hz:'请打表。',
+      { en:'Please use the meter.', day:10, py:'Qǐng dǎ biǎo.', hz:'请打表。', pya:'请:qǐng|打:dǎ|表:biǎo',
         real:[
           { hz:'打表吗？', py:'Dǎ biǎo ma?', note:'do you use the meter?', style:'casual' },
           { hz:'多少钱到市中心？', py:'Duōshǎo qián dào shìzhōngxīn?', note:'asking a flat price', style:'casual' }
         ]},
-      { en:"I'd like to buy a ticket.", day:10, py:'Wǒ yào mǎi piào.', hz:'我要买票。',
+      { en:"I'd like to buy a ticket.", day:10, py:'Wǒ yào mǎi piào.', hz:'我要买票。', pya:'我:wǒ|要:yào|买:mǎi|票:piào',
         real:[
           { hz:'一张去北京的车票。', py:'Yì zhāng qù Běijīng de chēpiào.', note:'one ticket to Beijing', style:'casual' },
           { hz:'往返的。', py:'Wǎngfǎn de.', note:'round trip', style:'casual' }
         ]},
-      { en:'Where is the bus stop?', day:10, py:'Gōngjiāochēzhàn zài nǎr?', hz:'公交车站在哪儿？',
+      { en:'Where is the bus stop?', day:10, py:'Gōngjiāochēzhàn zài nǎr?', hz:'公交车站在哪儿？', pya:'公:gōng|交:jiāo|车:chē|站:zhàn|在:zài|哪:nǎ|儿:ér',
         real:[
           { hz:'坐几路车？', py:'Zuò jǐ lù chē?', note:'which bus number', style:'casual' },
           { hz:'这儿能打车吗？', py:'Zhèr néng dǎchē ma?', note:'can I get a taxi here?', style:'casual' }
@@ -1031,42 +1038,42 @@ var SCENES = [
   { id:'hotel', icon:'🏨', title:'Hotel · Check in',
     desc:'Check in, get the Wi-Fi password, survive a broken AC. Everything you need at the front desk.',
     phrases:[
-      { en:"I have a reservation.", day:11, py:'Wǒ dìng le fángjiān.', hz:'我订了房间。',
+      { en:"I have a reservation.", day:11, py:'Wǒ dìng le fángjiān.', hz:'我订了房间。', pya:'我:wǒ|订:dìng|了:le|房:fáng|间:jiān',
         real:[
           { hz:'预订名叫……', py:'Yùdìng míng jiào…', note:'the reservation is under…', style:'polite' },
           { hz:'有空房吗？', py:'Yǒu kòngfáng ma?', note:'any rooms available?', style:'casual' }
         ]},
-      { en:'How much per night?', day:11, py:'Yí ge wǎnshang duōshǎo qián?', hz:'一个晚上多少钱？',
+      { en:'How much per night?', day:11, py:'Yí ge wǎnshang duōshǎo qián?', hz:'一个晚上多少钱？', pya:'一:yí|个:gè|晚:wǎn|上:shàng|多:duō|少:shǎo|钱:qián',
         real:[
           { hz:'住两晚。', py:'Zhù liǎng wǎn.', note:'staying two nights', style:'casual' },
           { hz:'含早餐吗？', py:'Hán zǎocān ma?', note:'breakfast included?', style:'casual' }
         ]},
-      { en:'Is there free Wi-Fi?', day:11, py:'Yǒu miǎnfèi de Wi-Fi ma?', hz:'有免费的Wi-Fi吗？',
+      { en:'Is there free Wi-Fi?', day:11, py:'Yǒu miǎnfèi de Wi-Fi ma?', hz:'有免费的Wi-Fi吗？', pya:'有:yǒu|免:miǎn|费:fèi|的:de',
         real:[
           { hz:'Wi-Fi密码是多少？', py:'Wi-Fi mìmǎ shì duōshǎo?', note:'what is the password', style:'casual' },
           { hz:'网速怎么样？', py:'Wǎngsù zěnmeyàng?', note:'how is the internet speed', style:'casual' }
         ]},
-      { en:"The air conditioning doesn't work.", day:11, py:'Kōngtiáo huài le.', hz:'空调坏了。',
+      { en:"The air conditioning doesn't work.", day:11, py:'Kōngtiáo huài le.', hz:'空调坏了。', pya:'空:kōng|调:tiáo|坏:huài|了:le',
         real:[
           { hz:'空调不制冷。', py:'Kōngtiáo bú zhìlěng.', note:'not cooling', style:'casual' },
           { hz:'能换一间房吗？', py:'Néng huàn yì jiān fáng ma?', note:'can I change rooms?', style:'polite' }
         ]},
-      { en:'What time is checkout?', day:11, py:'Jǐ diǎn tuìfáng?', hz:'几点退房？',
+      { en:'What time is checkout?', day:11, py:'Jǐ diǎn tuìfáng?', hz:'几点退房？', pya:'几:jǐ|点:diǎn|退:tuì|房:fáng',
         real:[
           { hz:'明天中午退房。', py:'Míngtiān zhōngwǔ tuìfáng.', note:'checkout at noon tomorrow', style:'casual' },
           { hz:'能延迟退房吗？', py:'Néng yánchí tuìfáng ma?', note:'can I check out late?', style:'polite' }
         ]},
-      { en:'Where is the elevator?', day:11, py:'Diàntī zài nǎr?', hz:'电梯在哪儿？',
+      { en:'Where is the elevator?', day:11, py:'Diàntī zài nǎr?', hz:'电梯在哪儿？', pya:'电:diàn|梯:tī|在:zài|哪:nǎ|儿:ér',
         real:[
           { hz:'我的房间在几楼？', py:'Wǒ de fángjiān zài jǐ lóu?', note:'which floor is my room', style:'casual' },
           { hz:'走楼梯上去。', py:'Zǒu lóutī shàngqu.', note:'take the stairs up', style:'casual' }
         ]},
-      { en:'I need a receipt.', day:11, py:'Wǒ yào fāpiào.', hz:'我要发票。',
+      { en:'I need a receipt.', day:11, py:'Wǒ yào fāpiào.', hz:'我要发票。', pya:'我:wǒ|要:yào|发:fā|票:piào',
         real:[
           { hz:'开个收据。', py:'Kāi ge shōujù.', note:'a simple receipt', style:'casual' },
           { hz:'公司报销用。', py:'Gōngsī bàoxiāo yòng.', note:'for company expenses', style:'casual' }
         ]},
-      { en:'Can I leave my luggage here?', day:11, py:'Xíngli kěyǐ fàng zhèr ma?', hz:'行李可以放这儿吗？',
+      { en:'Can I leave my luggage here?', day:11, py:'Xíngli kěyǐ fàng zhèr ma?', hz:'行李可以放这儿吗？', pya:'行:xíng|李:li|可:kě|以:yǐ|放:fàng|这:zhè|儿:ér|吗:ma',
         real:[
           { hz:'寄存一下行李。', py:'Jìcún yíxià xíngli.', note:'store the luggage', style:'polite' },
           { hz:'下午来取。', py:'Xiàwǔ lái qǔ.', note:'pick it up in the afternoon', style:'casual' }
@@ -1075,47 +1082,47 @@ var SCENES = [
   { id:'smalltalk', icon:'☕', title:'Small talk · Daily chat',
     desc:'Weather, work, WeChat. The low-pressure lines that turn a stranger into a conversation.',
     phrases:[
-      { en:'The weather is nice today.', day:12, py:'Jīntiān tiānqì búcuò.', hz:'今天天气不错。',
+      { en:'The weather is nice today.', day:12, py:'Jīntiān tiānqì búcuò.', hz:'今天天气不错。', pya:'今:jīn|天:tiān|天:tiān|气:qì|不:bú|错:cuò',
         real:[
           { hz:'今天好热啊！', py:'Jīntiān hǎo rè a!', note:'so hot today', style:'casual' },
           { hz:'要下雨了。', py:'Yào xiàyǔ le.', note:'it is about to rain', style:'casual' }
         ]},
-      { en:'What do you do for work?', day:12, py:'Nǐ zuò shénme gōngzuò?', hz:'你做什么工作？',
+      { en:'What do you do for work?', day:12, py:'Nǐ zuò shénme gōngzuò?', hz:'你做什么工作？', pya:'你:nǐ|做:zuò|什:shén|么:me|工:gōng|作:zuò',
         real:[
           { hz:'你在哪儿上班？', py:'Nǐ zài nǎr shàngbān?', note:'where do you work', style:'casual' },
           { hz:'工作忙吗？', py:'Gōngzuò máng ma?', note:'is work busy?', style:'casual' }
         ]},
-      { en:'Have you eaten?', day:12, py:'Nǐ chī fàn le ma?', hz:'你吃饭了吗？',
+      { en:'Have you eaten?', day:12, py:'Nǐ chī fàn le ma?', hz:'你吃饭了吗？', pya:'你:nǐ|吃:chī|饭:fàn|了:le|吗:ma',
         real:[
           { hz:'吃了吗？', py:'Chī le ma?', note:'the classic greeting', style:'casual' },
           { hz:'还没呢。', py:'Hái méi ne.', note:'not yet \u2014 a normal answer', style:'casual' }
         ]},
-      { en:'What do you do for fun?', day:12, py:'Nǐ yǒu shénme àihào?', hz:'你有什么爱好？',
+      { en:'What do you do for fun?', day:12, py:'Nǐ yǒu shénme àihào?', hz:'你有什么爱好？', pya:'你:nǐ|有:yǒu|什:shén|么:me|爱:ài|好:hào',
         real:[
           { hz:'周末喜欢干嘛？', py:'Zhōumò xǐhuan gànma?', note:'what do you do on weekends', style:'casual' },
           { hz:'我喜欢看电影。', py:'Wǒ xǐhuan kàn diànyǐng.', note:'I like movies', style:'casual' }
         ]},
-      { en:'How long have you been in China?', day:12, py:'Nǐ zài Zhōngguó duō jiǔ le?', hz:'你在中国多久了？',
+      { en:'How long have you been in China?', day:12, py:'Nǐ zài Zhōngguó duō jiǔ le?', hz:'你在中国多久了？', pya:'你:nǐ|在:zài|中:zhōng|国:guó|多:duō|久:jiǔ|了:le',
         real:[
           { hz:'刚来中国。', py:'Gāng lái Zhōngguó.', note:'just arrived', style:'casual' },
           { hz:'住了三年。', py:'Zhù le sān nián.', note:'lived here three years', style:'casual' }
         ]},
-      { en:'Do you have WeChat?', day:12, py:'Nǐ yǒu Wēixìn ma?', hz:'你有微信吗？',
+      { en:'Do you have WeChat?', day:12, py:'Nǐ yǒu Wēixìn ma?', hz:'你有微信吗？', pya:'你:nǐ|有:yǒu|微:wēi|信:xìn|吗:ma',
         real:[
           { hz:'加个微信吧。', py:'Jiā ge Wēixìn ba.', note:"let's add each other", style:'casual' },
           { hz:'我扫你。', py:'Wǒ sǎo nǐ.', note:'I will scan your QR code', style:'casual' }
         ]},
-      { en:'See you tomorrow!', day:12, py:'Míngtiān jiàn!', hz:'明天见！',
+      { en:'See you tomorrow!', day:12, py:'Míngtiān jiàn!', hz:'明天见！', pya:'明:míng|天:tiān|见:jiàn',
         real:[
           { hz:'回见！', py:'Huí jiàn!', note:'see you later', style:'casual' },
           { hz:'下次再聊。', py:'Xiàcì zài liáo.', note:'talk next time', style:'casual' }
         ]},
-      { en:'Where are you heading?', day:12, py:'Nǐ qù nǎr?', hz:'你去哪儿？',
+      { en:'Where are you heading?', day:12, py:'Nǐ qù nǎr?', hz:'你去哪儿？', pya:'你:nǐ|去:qù|哪:nǎ|儿:ér',
         real:[
           { hz:'出去逛逛。', py:'Chūqù guàngguang.', note:'just going out for a stroll', style:'casual' },
           { hz:'回家。', py:'Huí jiā.', note:'going home', style:'casual' }
         ]},
-      { en:'That sounds great!', day:12, py:'Tài hǎo le!', hz:'太好了！',
+      { en:'That sounds great!', day:12, py:'Tài hǎo le!', hz:'太好了！', pya:'太:tài|好:hǎo|了:le',
         real:[
           { hz:'好主意！', py:'Hǎo zhǔyi!', note:'good idea', style:'casual' },
           { hz:'没问题！', py:'Méi wèntí!', note:'no problem', style:'casual' }
@@ -1124,47 +1131,47 @@ var SCENES = [
   { id:'replies', icon:'💬', title:'Keep it going · Replies',
     desc:'Really? Me too! No way! The tiny reactions that keep a conversation alive \u2014 and the asks that get you unstuck.',
     phrases:[
-      { en:'Really?', day:13, py:'Zhēn de ma?', hz:'真的吗？',
+      { en:'Really?', day:13, py:'Zhēn de ma?', hz:'真的吗？', pya:'真:zhēn|的:de|吗:ma',
         real:[
           { hz:'真的假的？', py:'Zhēn de jiǎ de?', note:'for real? \u2014 very colloquial', style:'casual' },
           { hz:'是吗？', py:'Shì ma?', note:'oh yeah?', style:'casual' }
         ]},
-      { en:'Me too!', day:13, py:'Wǒ yě shì!', hz:'我也是！',
+      { en:'Me too!', day:13, py:'Wǒ yě shì!', hz:'我也是！', pya:'我:wǒ|也:yě|是:shì',
         real:[
           { hz:'我也想去。', py:'Wǒ yě xiǎng qù.', note:'I want to go too', style:'casual' },
           { hz:'咱俩一样。', py:'Zán liǎ yíyàng.', note:'we are the same', style:'casual' }
         ]},
-      { en:'No way!', day:13, py:'Bú huì ba!', hz:'不会吧！',
+      { en:'No way!', day:13, py:'Bú huì ba!', hz:'不会吧！', pya:'不:bú|会:huì|吧:ba',
         real:[
           { hz:'真的呀！', py:'Zhēn de ya!', note:'seriously!', style:'casual' },
           { hz:'天哪！', py:'Tiān na!', note:'oh my god', style:'casual' }
         ]},
-      { en:'I agree.', day:13, py:'Wǒ tóngyì.', hz:'我同意。',
+      { en:'I agree.', day:13, py:'Wǒ tóngyì.', hz:'我同意。', pya:'我:wǒ|同:tóng|意:yì',
         real:[
           { hz:'说得对。', py:'Shuō de duì.', note:'you are right', style:'casual' },
           { hz:'行，就这么办。', py:'Xíng, jiù zhème bàn.', note:"OK, let's do that", style:'casual' }
         ]},
-      { en:"I don't think so.", day:13, py:'Wǒ kàn bú xíng.', hz:'我看不行。',
+      { en:"I don't think so.", day:13, py:'Wǒ kàn bú xíng.', hz:'我看不行。', pya:'我:wǒ|看:kàn|不:bù|行:xíng',
         real:[
           { hz:'不太好吧。', py:'Bú tài hǎo ba.', note:'that is not great…', style:'casual' },
           { hz:'再想想。', py:'Zài xiǎng xiang.', note:"let's think again", style:'casual' }
         ]},
-      { en:"What does that mean?", day:13, py:'Shì shénme yìsi?', hz:'是什么意思？',
+      { en:"What does that mean?", day:13, py:'Shì shénme yìsi?', hz:'是什么意思？', pya:'是:shì|什:shén|么:me|意:yì|思:sī',
         real:[
           { hz:'这个词什么意思？', py:'Zhège cí shénme yìsi?', note:'what does this word mean', style:'casual' },
           { hz:'用英语怎么说？', py:'Yòng Yīngyǔ zěnme shuō?', note:'how do you say it in English', style:'casual' }
         ]},
-      { en:'How do you say … in Chinese?', day:13, py:'… yòng Zhōngwén zěnme shuō?', hz:'……用中文怎么说？',
+      { en:'How do you say … in Chinese?', day:13, py:'… yòng Zhōngwén zěnme shuō?', hz:'……用中文怎么说？', pya:'用:zhōng|中:wén|文:zěn|怎:me|么:shuō',
         real:[
           { hz:'这个用中文怎么说？', py:'Zhège yòng Zhōngwén zěnme shuō?', note:'pointing at a thing', style:'casual' },
           { hz:'那两个字怎么写？', py:'Nà liǎng ge zì zěnme xiě?', note:'how do you write those characters', style:'casual' }
         ]},
-      { en:'Just a moment.', day:13, py:'Děng yíxià.', hz:'等一下。',
+      { en:'Just a moment.', day:13, py:'Děng yíxià.', hz:'等一下。', pya:'等:děng|一:yí|下:xià',
         real:[
           { hz:'马上就好。', py:'Mǎshàng jiù hǎo.', note:'almost ready', style:'casual' },
           { hz:'稍等。', py:'Shāo děng.', note:'one moment \u2014 slightly formal', style:'polite' }
         ]},
-      { en:"I'm full.", day:13, py:'Wǒ chī bǎo le.', hz:'我吃饱了。',
+      { en:"I'm full.", day:13, py:'Wǒ chī bǎo le.', hz:'我吃饱了。', pya:'我:wǒ|吃:chī|饱:bǎo|了:le',
         real:[
           { hz:'吃不下了。', py:'Chī bu xià le.', note:'cannot eat another bite', style:'casual' },
           { hz:'撑死我了！', py:'Chēng sǐ wǒ le!', note:'I am stuffed \u2014 playful', style:'slang' }
@@ -1173,42 +1180,42 @@ var SCENES = [
   { id:'social', icon:'🍻', title:'Out with friends · Drinks',
     desc:'Dinners, drinks, invitations. The fun part \u2014 where "干杯" matters more than grammar.',
     phrases:[
-      { en:"Let's get dinner together.", day:14, py:'Zánmen yìqǐ chī fàn ba.', hz:'咱们一起吃饭吧。',
+      { en:"Let's get dinner together.", day:14, py:'Zánmen yìqǐ chī fàn ba.', hz:'咱们一起吃饭吧。', pya:'咱:zán|们:men|一:yì|起:qǐ|吃:chī|饭:fàn|吧:ba',
         real:[
           { hz:'晚上一起吃个饭？', py:'Wǎnshang yìqǐ chī ge fàn?', note:'dinner tonight?', style:'casual' },
           { hz:'周末有空吗？', py:'Zhōumò yǒu kòng ma?', note:'are you free this weekend?', style:'casual' }
         ]},
-      { en:"It's my treat.", day:14, py:'Wǒ qǐng kè.', hz:'我请客。',
+      { en:"It's my treat.", day:14, py:'Wǒ qǐng kè.', hz:'我请客。', pya:'我:wǒ|请:qǐng|客:kè',
         real:[
           { hz:'这顿我请。', py:'Zhè dùn wǒ qǐng.', note:'this meal is on me', style:'casual' },
           { hz:'AA吧。', py:'AA ba.', note:"let's split the bill", style:'casual' }
         ]},
-      { en:'Cheers!', day:14, py:'Gānbēi!', hz:'干杯！',
+      { en:'Cheers!', day:14, py:'Gānbēi!', hz:'干杯！', pya:'干:gān|杯:bēi',
         real:[
           { hz:'走一个！', py:'Zǒu yí ge!', note:'down it! \u2014 drinking slang', style:'slang' },
           { hz:'随意。', py:'Suíyì.', note:'drink as you like \u2014 polite middle ground', style:'polite' }
         ]},
-      { en:'One more beer, please.', day:14, py:'Zài lái yì píng píjiǔ.', hz:'再来一瓶啤酒。',
+      { en:'One more beer, please.', day:14, py:'Zài lái yì píng píjiǔ.', hz:'再来一瓶啤酒。', pya:'再:zài|来:lái|一:yì|瓶:píng|啤:pí|酒:jiǔ',
         real:[
           { hz:'来两杯。', py:'Lái liǎng bēi.', note:'two glasses', style:'casual' },
           { hz:'不要冰的。', py:'Bú yào bīng de.', note:'no ice', style:'casual' }
         ]},
-      { en:"Karaoke? Let's go!", day:14, py:'Qù KTV ba!', hz:'去KTV吧！',
+      { en:"Karaoke? Let's go!", day:14, py:'Qù KTV ba!', hz:'去KTV吧！', pya:'去:qù',
         real:[
           { hz:'唱歌去不去？', py:'Chàng gē qù bu qù?', note:'wanna go sing?', style:'casual' },
           { hz:'下次一定。', py:'Xiàcì yídìng.', note:'next time for sure (polite dodge)', style:'casual' }
         ]},
-      { en:'What time shall we meet?', day:14, py:'Jǐ diǎn jiàn?', hz:'几点见面？',
+      { en:'What time shall we meet?', day:14, py:'Jǐ diǎn jiàn?', hz:'几点见面？', pya:'几:jǐ|点:diǎn|见:jiàn|面:miàn',
         real:[
           { hz:'七点老地方。', py:'Qī diǎn lǎo dìfang.', note:'7 at the usual place', style:'casual' },
           { hz:'我快到了。', py:'Wǒ kuài dào le.', note:'I am almost there', style:'casual' }
         ]},
-      { en:'How do I get to your place?', day:14, py:'Nǐ jiā zěnme zǒu?', hz:'你家怎么走？',
+      { en:'How do I get to your place?', day:14, py:'Nǐ jiā zěnme zǒu?', hz:'你家怎么走？', pya:'你:nǐ|家:jiā|怎:zěn|么:me|走:zǒu',
         real:[
           { hz:'发个位置给我。', py:'Fā ge wèizhi gěi wǒ.', note:'send me your location', style:'casual' },
           { hz:'我在楼下了。', py:'Wǒ zài lóuxià le.', note:'I am downstairs', style:'casual' }
         ]},
-      { en:"I had a great time.", day:14, py:'Jīntiān wánr de tǐng kāixīn.', hz:'今天玩儿得挺开心。',
+      { en:"I had a great time.", day:14, py:'Jīntiān wánr de tǐng kāixīn.', hz:'今天玩儿得挺开心。', pya:'今:jīn|天:tiān|玩:wán|儿:ér|得:dé|挺:tǐng|开:kāi|心:xīn',
         real:[
           { hz:'玩得开心！', py:'Wán de kāixīn!', note:'have fun! \u2014 said when leaving', style:'casual' },
           { hz:'下次再约！', py:'Xiàcì zài yuē!', note:"let's meet again", style:'casual' }
@@ -1222,17 +1229,17 @@ var SCENES = [
   { id:'beijing', icon:'🏯', title:'Beijing · Sights & Food', day1:false, region:'north', hot:true, city:'北京', pic:['landmark','food','landmark'],
     desc:'Famous sights and local food in Beijing. Tap a card, hear it, then say it 3 times.',
     phrases:[
-      { en:'I want to go to the Forbidden City.', py:'Wǒ xiǎng qù Gùgōng.', hz:'我想去故宫。',
+      { en:'I want to go to the Forbidden City.',  py:'Wǒ xiǎng qù Gùgōng.', hz:'我想去故宫。', pya:'我:wǒ|想:xiǎng|去:qù|故:gù|宫:gōng',
         real:[
           { hz:'我们去故宫吧。', py:'Wǒmen qù Gùgōng ba.', note:'suggest going with friends', style:'casual' },
           { hz:'故宫怎么走？', py:'Gùgōng zěnme zǒu?', note:'asking for directions', style:'casual' }
         ]},
-      { en:'Peking duck is delicious.', py:'Běijīng kǎoyā hěn hǎochī.', hz:'北京烤鸭很好吃。',
+      { en:'Peking duck is delicious.',  py:'Běijīng kǎoyā hěn hǎochī.', hz:'北京烤鸭很好吃。', pya:'北:běi|京:jīng|烤:kǎo|鸭:yā|很:hěn|好:hǎo|吃:chī',
         real:[
           { hz:'咱们吃烤鸭去？', py:'Zánmen chī kǎoyā qù?', note:'invite to eat duck', style:'casual' },
           { hz:'这烤鸭绝了！', py:'Zhè kǎoyā jué le!', note:'delicious — slangy praise', style:'casual' }
         ]},
-      { en:'The Great Wall is magnificent.', py:'Chángchéng zhēn zhuàngguān.', hz:'长城真壮观。',
+      { en:'The Great Wall is magnificent.',  py:'Chángchéng zhēn zhuàngguān.', hz:'长城真壮观。', pya:'长:cháng|城:chéng|真:zhēn|壮:zhuàng|观:guān',
         real:[
           { hz:'明天去爬长城？', py:'Míngtiān qù pá Chángchéng?', note:'suggest climbing', style:'casual' },
           { hz:'不到长城非好汉。', py:'Bú dào Chángchéng fēi hǎohàn.', note:'famous saying', style:'casual' }
@@ -1241,12 +1248,12 @@ var SCENES = [
   { id:'shanghai', icon:'🌃', title:'Shanghai · Waterfront & Dumplings', day1:false, region:'east', hot:true, city:'上海', pic:['landmark','food'],
     desc:'Iconic waterfront and soup dumplings in Shanghai. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'The Bund is beautiful.', py:'Wàitān hěn piàoliang.', hz:'外滩很漂亮。',
+      { en:'The Bund is beautiful.',  py:'Wàitān hěn piàoliang.', hz:'外滩很漂亮。', pya:'外:wài|滩:tān|很:hěn|漂:piào|亮:liang',
         real:[
           { hz:'晚上去外滩逛逛？', py:'Wǎnshang qù Wàitān guàngguang?', note:'suggest an evening walk', style:'casual' },
           { hz:'外滩夜景绝了。', py:'Wàitān yèjǐng jué le!', note:'praise the night view', style:'casual' }
         ]},
-      { en:'Xiaolongbao is delicious.', py:'Xiǎolóngbāo hěn hǎochī.', hz:'小笼包很好吃。',
+      { en:'Xiaolongbao is delicious.',  py:'Xiǎolóngbāo hěn hǎochī.', hz:'小笼包很好吃。', pya:'小:xiǎo|笼:lóng|包:bāo|很:hěn|好:hǎo|吃:chī',
         real:[
           { hz:'来笼小笼包？', py:'Lái lóng xiǎolóngbāo?', note:'order a basket', style:'casual' },
           { hz:'这汤汁太鲜了。', py:'Zhè tāngzhī tài xiān le!', note:'praise the broth', style:'casual' }
@@ -1255,12 +1262,12 @@ var SCENES = [
   { id:'hangzhou', icon:'🌊', title:'Hangzhou · West Lake', day1:false, region:'east',  city:'杭州', pic:['landmark','food'],
     desc:'West Lake views and vinegar fish in Hangzhou. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'West Lake is beautiful.', py:'Xīhú hěn měi.', hz:'西湖很美。',
+      { en:'West Lake is beautiful.',  py:'Xīhú hěn měi.', hz:'西湖很美。', pya:'西:xī|湖:hú|很:hěn|美:měi',
         real:[
           { hz:'去西湖边走走？', py:'Qù Xīhú biān zǒuzou?', note:'suggest a lakeside walk', style:'casual' },
           { hz:'西湖骑行挺舒服。', py:'Xīhú qíxíng tǐng shūfu.', note:'cycling by the lake', style:'casual' }
         ]},
-      { en:'West Lake vinegar fish is delicious.', py:'Xīhú cùyú hěn hǎochī.', hz:'西湖醋鱼很好吃。',
+      { en:'West Lake vinegar fish is delicious.',  py:'Xīhú cùyú hěn hǎochī.', hz:'西湖醋鱼很好吃。', pya:'西:xī|湖:hú|醋:cù|鱼:yú|很:hěn|好:hǎo|吃:chī',
         real:[
           { hz:'尝尝西湖醋鱼？', py:'Chángchang Xīhú cùyú?', note:'invite to taste', style:'casual' },
           { hz:'这鱼酸酸甜甜。', py:'Zhè yú suānsuān tiántián.', note:'sweet and sour', style:'casual' }
@@ -1269,12 +1276,12 @@ var SCENES = [
   { id:'chongqing', icon:'🌶️', title:'Chongqing · Cliffs & Hotpot', day1:false, region:'west',  city:'重庆', pic:['landmark','food'],
     desc:'Cliff-side night views and fiery hotpot in Chongqing. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Hongyadong is magnificent.', py:'Hóngyádòng hěn zhuàngguān.', hz:'洪崖洞很壮观。',
+      { en:'Hongyadong is magnificent.',  py:'Hóngyádòng hěn zhuàngguān.', hz:'洪崖洞很壮观。', pya:'洪:hóng|崖:yá|洞:dòng|很:hěn|壮:zhuàng|观:guān',
         real:[
           { hz:'洪崖洞夜景必看。', py:'Hóngyádòng yèjǐng bì kàn.', note:'must-see night view', style:'casual' },
           { hz:'去洪崖洞打卡？', py:'Qù Hóngyádòng dǎkǎ?', note:'suggest a photo stop', style:'casual' }
         ]},
-      { en:'Chongqing hotpot is spicy.', py:'Chóngqìng huǒguō hěn là.', hz:'重庆火锅很辣。',
+      { en:'Chongqing hotpot is spicy.',  py:'Chóngqìng huǒguō hěn là.', hz:'重庆火锅很辣。', pya:'重:chóng|庆:qìng|火:huǒ|锅:guō|很:hěn|辣:là',
         real:[
           { hz:'吃重庆火锅去？', py:'Chī Chóngqìng huǒguō qù?', note:'invite to hotpot', style:'casual' },
           { hz:'这火锅辣得过瘾！', py:'Zhè huǒguō là de guòyǐn!', note:'spicy and satisfying', style:'casual' }
@@ -1283,12 +1290,12 @@ var SCENES = [
   { id:'chengdu', icon:'🐼', title:'Chengdu · Pandas & Hotpot', day1:false, region:'west', hot:true, city:'成都', pic:['landmark','food'],
     desc:'Giant pandas and numbing hotpot in Chengdu. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'I want to see giant pandas.', py:'Wǒ xiǎng kàn dàxióngmāo.', hz:'我想看大熊猫。',
+      { en:'I want to see giant pandas.',  py:'Wǒ xiǎng kàn dàxióngmāo.', hz:'我想看大熊猫。', pya:'我:wǒ|想:xiǎng|看:kàn|大:dà|熊:xióng|猫:māo',
         real:[
           { hz:'去熊猫基地？', py:'Qù xióngmāo jīdì?', note:'suggest the panda base', style:'casual' },
           { hz:'熊猫幼崽太可爱了。', py:'Xióngmāo yòuzǎi tài kěài le.', note:'cubs are adorable', style:'casual' }
         ]},
-      { en:'Chengdu hotpot is delicious.', py:'Chéngdū huǒguō hǎochī.', hz:'成都火锅好吃。',
+      { en:'Chengdu hotpot is delicious.',  py:'Chéngdū huǒguō hǎochī.', hz:'成都火锅好吃。', pya:'成:chéng|都:dū|火:huǒ|锅:guō|好:hǎo|吃:chī',
         real:[
           { hz:'整一顿成都火锅？', py:'Zhěng yí dùn Chéngdū huǒguō?', note:'go for a hotpot meal', style:'casual' },
           { hz:'成都火锅麻得舒服。', py:'Chéngdū huǒguō má de shūfu.', note:'numbingly good', style:'casual' }
@@ -1297,12 +1304,12 @@ var SCENES = [
   { id:'nanchang', icon:'🏯', title:'Nanchang · Pavilion & Soup', day1:false, region:'central',  city:'南昌', pic:['landmark','food'],
     desc:'A famous pavilion and jar soup in Nanchang. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Tengwang Pavilion is famous.', py:'Téngwánggé hěn yǒumíng.', hz:'滕王阁很有名。',
+      { en:'Tengwang Pavilion is famous.',  py:'Téngwánggé hěn yǒumíng.', hz:'滕王阁很有名。', pya:'滕:téng|王:wáng|阁:gé|很:hěn|有:yǒu|名:míng',
         real:[
           { hz:'滕王阁登高望远。', py:'Téngwánggé dēng gāo wàng yuǎn.', note:'climb for the view', style:'casual' },
           { hz:'滕王阁夜游不错。', py:'Téngwánggé yèyóu bùcuò.', note:'night visit is nice', style:'casual' }
         ]},
-      { en:'Nanchang jar soup is tasty.', py:'Nánchāng wǎguàn tāng hǎo hē.', hz:'南昌瓦罐汤好喝。',
+      { en:'Nanchang jar soup is tasty.',  py:'Nánchāng wǎguàn tāng hǎo hē.', hz:'南昌瓦罐汤好喝。', pya:'南:nán|昌:chāng|瓦:wǎ|罐:guàn|汤:tāng|好:hǎo|喝:hē',
         real:[
           { hz:'来碗瓦罐汤？', py:'Lái wǎn wǎguàn tāng?', note:'order a bowl', style:'casual' },
           { hz:'瓦罐汤鲜得很。', py:'Wǎguàn tāng xiān de hěn.', note:'the broth is fresh', style:'casual' }
@@ -1311,12 +1318,12 @@ var SCENES = [
   { id:'changsha', icon:'🍢', title:'Changsha · Isle & Tofu', day1:false, region:'central',  city:'长沙', pic:['landmark','food'],
     desc:'River isle and stinky tofu in Changsha. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Orange Isle is beautiful.', py:'Júzǐzhōu hěn měi.', hz:'橘子洲很美。',
+      { en:'Orange Isle is beautiful.',  py:'Júzǐzhōu hěn měi.', hz:'橘子洲很美。', pya:'橘:jú|子:zǐ|洲:zhōu|很:hěn|美:měi',
         real:[
           { hz:'橘子洲头看湘江。', py:'Júzǐzhōutóu kàn Xiāngjiāng.', note:'view the river', style:'casual' },
           { hz:'周末去橘子洲？', py:'Zhōumò qù Júzǐzhōu?', note:'suggest a weekend trip', style:'casual' }
         ]},
-      { en:'Changsha stinky tofu is delicious.', py:'Chángshā chòudòufu hǎochī.', hz:'长沙臭豆腐好吃。',
+      { en:'Changsha stinky tofu is delicious.',  py:'Chángshā chòudòufu hǎochī.', hz:'长沙臭豆腐好吃。', pya:'长:cháng|沙:shā|臭:chòu|豆:dòu|腐:fu|好:hǎo|吃:chī',
         real:[
           { hz:'尝尝臭豆腐？', py:'Chángchang chòudòufu?', note:'invite to try', style:'casual' },
           { hz:'闻着臭吃着香。', py:'Wénzhe chòu chīzhe xiāng.', note:'smells funky, tastes great', style:'casual' }
@@ -1325,12 +1332,12 @@ var SCENES = [
   { id:'xinjiang', icon:'🏔️', title:'Xinjiang · Landscapes & Lamb', day1:false, region:'west',  city:'新疆', pic:['landmark','food'],
     desc:'Vast landscapes and lamb skewers in Xinjiang. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Xinjiang is vast and beautiful.', py:'Xīnjiāng hěn dà hěn měi.', hz:'新疆很大很美。',
+      { en:'Xinjiang is vast and beautiful.',  py:'Xīnjiāng hěn dà hěn měi.', hz:'新疆很大很美。', pya:'新:xīn|疆:jiāng|很:hěn|大:dà|很:hěn|美:měi',
         real:[
           { hz:'天山雪景绝了。', py:'Tiānshān xuějǐng jué le!', note:'Tianshan snow view', style:'casual' },
           { hz:'喀纳斯像仙境。', py:'Kānàsī xiàng xiānjìng.', note:'Kanas like a fairyland', style:'casual' }
         ]},
-      { en:'Xinjiang lamb skewers are delicious.', py:'Xīnjiāng Kǎo yángròu chuàn hǎochī.', hz:'新疆烤羊肉串好吃。',
+      { en:'Xinjiang lamb skewers are delicious.',  py:'Xīnjiāng Kǎo yángròu chuàn hǎochī.', hz:'新疆烤羊肉串好吃。', pya:'新:xīn|疆:jiāng|烤:kǎo|羊:yáng|肉:ròu|串:chuàn|好:hǎo|吃:chī',
         real:[
           { hz:'来串烤羊肉？', py:'Lái chuàn kǎoyángròu?', note:'order a skewer', style:'casual' },
           { hz:'大盘鸡配皮带面。', py:'Dàpánjī pèi pídàimiàn.', note:'big-plate chicken with noodles', style:'casual' }
@@ -1339,12 +1346,12 @@ var SCENES = [
   { id:'shenzhen', icon:'🏙️', title:'Shenzhen · Skyline & Beef', day1:false, region:'south',  city:'深圳', pic:['landmark','food'],
     desc:'A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Shenzhen is modern.', py:'Shēnzhèn hěn xiàndài.', hz:'深圳很现代。',
+      { en:'Shenzhen is modern.',  py:'Shēnzhèn hěn xiàndài.', hz:'深圳很现代。', pya:'深:shēn|圳:zhèn|很:hěn|现:xiàn|代:dài',
         real:[
           { hz:'深圳节奏快。', py:'Shēnzhèn jiézòu kuài.', note:'fast-paced city', style:'casual' },
           { hz:'平安大厦够高。', py:'Píng ān dàshà gòu gāo.', note:'Ping An tower is tall', style:'casual' }
         ]},
-      { en:'Chaoshan beef hotpot is delicious.', py:'Cháoshàn niúròu huǒguō hǎochī.', hz:'潮汕牛肉火锅好吃。',
+      { en:'Chaoshan beef hotpot is delicious.',  py:'Cháoshàn niúròu huǒguō hǎochī.', hz:'潮汕牛肉火锅好吃。', pya:'潮:cháo|汕:shàn|牛:niú|肉:ròu|火:huǒ|锅:guō|好:hǎo|吃:chī',
         real:[
           { hz:'吃潮汕牛肉火锅？', py:'Chī Cháoshàn niúròu huǒguō?', note:'invite to beef hotpot', style:'casual' },
           { hz:'牛肉丸弹牙。', py:'Niúròu wán tányá.', note:'meatballs are bouncy', style:'casual' }
@@ -1353,12 +1360,12 @@ var SCENES = [
   { id:'guangzhou', icon:'🍵', title:'Guangzhou · Tower & Dim Sum', day1:false, region:'south', hot:true, city:'广州', pic:['landmark','food'],
     desc:'The slender tower and dim sum in Guangzhou. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Canton Tower is tall.', py:'Guǎngzhōu tǎ hěn gāo.', hz:'广州塔很高。',
+      { en:'Canton Tower is tall.',  py:'Guǎngzhōu tǎ hěn gāo.', hz:'广州塔很高。', pya:'广:guǎng|州:zhōu|塔:tǎ|很:hěn|高:gāo',
         real:[
           { hz:'小蛮腰夜景美。', py:'Xiǎományāo yèjǐng měi.', note:'slender-waist night view', style:'casual' },
           { hz:'登广州塔看全城。', py:'Dēng Guǎngzhōu tǎ kàn quánchéng.', note:'top for the skyline', style:'casual' }
         ]},
-      { en:'Guangzhou dim sum is delicious.', py:'Guǎngzhōu zǎochá hǎochī.', hz:'广州早茶好吃。',
+      { en:'Guangzhou dim sum is delicious.',  py:'Guǎngzhōu zǎochá hǎochī.', hz:'广州早茶好吃。', pya:'广:guǎng|州:zhōu|早:zǎo|茶:chá|好:hǎo|吃:chī',
         real:[
           { hz:'饮早茶去？', py:'Yǐn zǎochá qù?', note:'go for morning tea', style:'casual' },
           { hz:'虾饺烧鹅绝了。', py:'Xiājiǎo shāo é jué le!', note:'shrimp dumplings and roast goose', style:'casual' }
@@ -1367,12 +1374,12 @@ var SCENES = [
   { id:'xiamen', icon:'🏝️', title:'Xiamen · Car-free Isle', day1:false, region:'south',  city:'厦门', pic:['landmark','food'],
     desc:'A car-free island and shacha noodles in Xiamen. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Gulangyu is beautiful.', py:'Gǔlàngyǔ hěn piàoliang.', hz:'鼓浪屿很漂亮。',
+      { en:'Gulangyu is beautiful.',  py:'Gǔlàngyǔ hěn piàoliang.', hz:'鼓浪屿很漂亮。', pya:'鼓:gǔ|浪:làng|屿:yǔ|很:hěn|漂:piào|亮:liang',
         real:[
           { hz:'鼓浪屿散步很爽。', py:'Gǔlàngyǔ sànbù hěn shuǎng.', note:'strolling is great', style:'casual' },
           { hz:'坐船去鼓浪屿？', py:'Zuò chuán qù Gǔlàngyǔ?', note:'take a ferry', style:'casual' }
         ]},
-      { en:'Shacha noodles are delicious.', py:'Shāchá miàn hǎochī.', hz:'沙茶面好吃。',
+      { en:'Shacha noodles are delicious.',  py:'Shāchá miàn hǎochī.', hz:'沙茶面好吃。', pya:'沙:shā|茶:chá|面:miàn|好:hǎo|吃:chī',
         real:[
           { hz:'来碗沙茶面？', py:'Lái wǎn shāchá miàn?', note:'order a bowl', style:'casual' },
           { hz:'海蛎煎配沙茶。', py:'Hǎilìjiān pèi shāchá.', note:'oyster omelette with shacha', style:'casual' }
@@ -1381,12 +1388,12 @@ var SCENES = [
   { id:'haikou', icon:'🌴', title:'Haikou · Slow Island Life', day1:false, region:'south',  city:'海口', pic:['landmark','food'],
     desc:'Slow island life and chicken rice in Haikou. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Haikou is comfortable.', py:'Hǎikǒu hěn shūfu.', hz:'海口很舒服。',
+      { en:'Haikou is comfortable.',  py:'Hǎikǒu hěn shūfu.', hz:'海口很舒服。', pya:'海:hǎi|口:kǒu|很:hěn|舒:shū|服:fú',
         real:[
           { hz:'海口慢生活。', py:'Hǎikǒu màn shēnghuó.', note:'slow living', style:'casual' },
           { hz:'骑楼老街逛逛。', py:'Qílóu lǎojiē guàngguang.', note:'stroll the arcade street', style:'casual' }
         ]},
-      { en:'Hainan chicken rice is delicious.', py:'Hǎinán jīfàn hǎochī.', hz:'海南鸡饭好吃。',
+      { en:'Hainan chicken rice is delicious.',  py:'Hǎinán jīfàn hǎochī.', hz:'海南鸡饭好吃。', pya:'海:hǎi|南:nán|鸡:jī|饭:fàn|好:hǎo|吃:chī',
         real:[
           { hz:'吃海南鸡饭？', py:'Chī Hǎinán jīfàn?', note:'invite to chicken rice', style:'casual' },
           { hz:'清补凉消暑。', py:'Qīngbǔliáng xiāoshǔ.', note:'cooling dessert', style:'casual' }
@@ -1395,12 +1402,12 @@ var SCENES = [
   { id:'qingdao', icon:'🍺', title:'Qingdao · Sea & Beer', day1:false, region:'north',  city:'青岛', pic:['landmark','food'],
     desc:'Sea bridges and fresh beer in Qingdao. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Qingdao is beautiful.', py:'Qīngdǎo hěn měi.', hz:'青岛很美。',
+      { en:'Qingdao is beautiful.',  py:'Qīngdǎo hěn měi.', hz:'青岛很美。', pya:'青:qīng|岛:dǎo|很:hěn|美:měi',
         real:[
           { hz:'栈桥看海。', py:'Zhànqiáo kàn hǎi.', note:'see the sea from the pier', style:'casual' },
           { hz:'八大关红瓦绿树。', py:'Bādàguān hóngwǎ lǜshù.', note:'red tiles, green trees', style:'casual' }
         ]},
-      { en:'Tsingtao beer is delicious.', py:'Qīngdǎo píjiǔ hěn hǎohē.', hz:'青岛啤酒很好喝。',
+      { en:'Tsingtao beer is delicious.',  py:'Qīngdǎo píjiǔ hěn hǎohē.', hz:'青岛啤酒很好喝。', pya:'青:qīng|岛:dǎo|啤:pí|酒:jiǔ|很:hěn|好:hǎo|喝:hē',
         real:[
           { hz:'来杯青岛啤酒？', py:'Lái bēi Qīngdǎo píjiǔ?', note:'order a beer', style:'casual' },
           { hz:'原浆最鲜。', py:'Yuánjiāng zuì xiān.', note:'fresh draft is best', style:'casual' }
@@ -1409,12 +1416,12 @@ var SCENES = [
   { id:'xian', icon:'🗿', title:'Xi\'an · Terracotta Army', day1:false, region:'north', hot:true, city:'西安', pic:['landmark','food'],
     desc:'The Terracotta Army and roujiamo in Xi\'an. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'The Terracotta Army is magnificent.', py:'Bīngmǎyǒng hěn zhuàngguān.', hz:'兵马俑很壮观。',
+      { en:'The Terracotta Army is magnificent.',  py:'Bīngmǎyǒng hěn zhuàngguān.', hz:'兵马俑很壮观。', pya:'兵:bīng|马:mǎ|俑:yǒng|很:hěn|壮:zhuàng|观:guān',
         real:[
           { hz:'兵马俑震撼。', py:'Bīngmǎyǒng zhènhàn.', note:'awe-inspiring', style:'casual' },
           { hz:'去看兵马俑？', py:'Qù kàn Bīngmǎyǒng?', note:'suggest a visit', style:'casual' }
         ]},
-      { en:'Roujiamo is delicious.', py:'Ròujiāmó hǎochī.', hz:'肉夹馍好吃。',
+      { en:'Roujiamo is delicious.',  py:'Ròujiāmó hǎochī.', hz:'肉夹馍好吃。', pya:'肉:ròu|夹:jiá|馍:mó|好:hǎo|吃:chī',
         real:[
           { hz:'来个肉夹馍？', py:'Lái ge ròujiāmó?', note:'order one', style:'casual' },
           { hz:'凉皮肉夹馍绝配。', py:'Liángpí ròujiāmó jué pèi.', note:'cold noodles pair perfectly', style:'casual' }
@@ -1423,12 +1430,12 @@ var SCENES = [
   { id:'guilin', icon:'⛰️', title:'Guilin · Karst Peaks', day1:false, region:'west',  city:'桂林', pic:['landmark','food'],
     desc:'Karst peaks and rice noodles in Guilin. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Guilin scenery is beautiful.', py:'Guìlín shānshuǐ hěn měi.', hz:'桂林山水很美。',
+      { en:'Guilin scenery is beautiful.',  py:'Guìlín shānshuǐ hěn měi.', hz:'桂林山水很美。', pya:'桂:guì|林:lín|山:shān|水:shuǐ|很:hěn|美:měi',
         real:[
           { hz:'漓江坐竹筏。', py:'Líjiāng zuò zhúfá.', note:'bamboo raft on the river', style:'casual' },
           { hz:'桂林山水甲天下。', py:'Guìlín shānshuǐ jiǎ tiānxià.', note:'famous saying', style:'casual' }
         ]},
-      { en:'Guilin rice noodles are delicious.', py:'Guìlín mǐfěn hǎochī.', hz:'桂林米粉好吃。',
+      { en:'Guilin rice noodles are delicious.',  py:'Guìlín mǐfěn hǎochī.', hz:'桂林米粉好吃。', pya:'桂:guì|林:lín|米:mǐ|粉:fěn|好:hǎo|吃:chī',
         real:[
           { hz:'来碗桂林米粉？', py:'Lái wǎn Guìlín mǐfěn?', note:'order a bowl', style:'casual' },
           { hz:'卤水香。', py:'Lǔshuǐ xiāng.', note:'the broth is fragrant', style:'casual' }
@@ -1437,12 +1444,12 @@ var SCENES = [
   { id:'zhangjiajie', icon:'🧗', title:'Zhangjiajie · Pillars of Mist', day1:false, region:'central',  city:'张家界', pic:['landmark','food'],
     desc:'Misty quartz peaks and a local stew in Zhangjiajie. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Zhangjiajie is magical.', py:'Zhāngjiājiè hěn shénqí.', hz:'张家界很神奇。',
+      { en:'Zhangjiajie is magical.',  py:'Zhāngjiājiè hěn shénqí.', hz:'张家界很神奇。', pya:'张:zhāng|家:jiā|界:jiè|很:hěn|神:shén|奇:qí',
         real:[
           { hz:'天门山玻璃栈道。', py:'Tiānménshān bōli zhàndào.', note:'glass skywalk', style:'casual' },
           { hz:'阿凡达取景地。', py:'Āfándá qǔjǐng dì.', note:'Avatar filming site', style:'casual' }
         ]},
-      { en:'Sanxia guo is delicious.', py:'Sānxiàguō hǎochī.', hz:'三下锅好吃。',
+      { en:'Sanxia guo is delicious.',  py:'Sānxiàguō hǎochī.', hz:'三下锅好吃。', pya:'三:sān|下:xià|锅:guō|好:hǎo|吃:chī',
         real:[
           { hz:'尝尝三下锅？', py:'Chángchang sānxiàguō?', note:'invite to try', style:'casual' },
           { hz:'麻辣鲜香。', py:'Málà xiānxiāng.', note:'numbing, spicy, fresh, fragrant', style:'casual' }
@@ -1451,12 +1458,12 @@ var SCENES = [
   { id:'dali', icon:'💧', title:'Dali · Erhai Lake', day1:false, region:'west',  city:'大理', pic:['landmark','food'],
     desc:'Erhai Lake and roasted rushan in Dali. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Dali is beautiful.', py:'Dàlǐ hěn měi.', hz:'大理很美。',
+      { en:'Dali is beautiful.',  py:'Dàlǐ hěn měi.', hz:'大理很美。', pya:'大:dà|理:lǐ|很:hěn|美:měi',
         real:[
           { hz:'洱海边发呆。', py:'Ěrhǎi biān fādāi.', note:'zone out by the lake', style:'casual' },
           { hz:'苍山洱海。', py:'Cāngshān Ěrhǎi.', note:'mountain and lake', style:'casual' }
         ]},
-      { en:'Roasted rushan is delicious.', py:'Kǎo rǔshàn hǎochī.', hz:'烤乳扇好吃。',
+      { en:'Roasted rushan is delicious.',  py:'Kǎo rǔshàn hǎochī.', hz:'烤乳扇好吃。', pya:'烤:kǎo|乳:rǔ|扇:shàn|好:hǎo|吃:chī',
         real:[
           { hz:'尝尝烤乳扇？', py:'Chángchang kǎorǔshàn?', note:'invite to try', style:'casual' },
           { hz:'白族三道茶。', py:'Báizú sāndào chá.', note:'Bai three-course tea', style:'casual' }
@@ -1465,12 +1472,12 @@ var SCENES = [
   { id:'hongkong', icon:'🌆', title:'Hong Kong · Victoria Harbour', day1:false, region:'south', hot:true, city:'香港', pic:['landmark','food'],
     desc:'Victoria Harbour and milk tea in Hong Kong. Tap, listen, then say it 3 times.',
     phrases:[
-      { en:'Victoria Harbour is beautiful.', py:'Wéiduōlìyà gǎng hěn piàoliang.', hz:'维多利亚港很漂亮。',
+      { en:'Victoria Harbour is beautiful.',  py:'Wéiduōlìyà gǎng hěn piàoliang.', hz:'维多利亚港很漂亮。', pya:'维:wéi|多:duō|利:lì|亚:yà|港:gǎng|很:hěn|漂:piào|亮:liang',
         real:[
           { hz:'维港夜景必看。', py:'Wéigǎng yèjǐng bì kàn.', note:'must-see harbour night view', style:'casual' },
           { hz:'太平山顶看全港。', py:'Tàipíngshān dǐng kàn quángǎng.', note:'peak for the skyline', style:'casual' }
         ]},
-      { en:'Hong Kong milk tea is delicious.', py:'Xiānggǎng nǎichá hěn hǎohē.', hz:'香港奶茶好喝。',
+      { en:'Hong Kong milk tea is delicious.',  py:'Xiānggǎng nǎichá hěn hǎohē.', hz:'香港奶茶好喝。', pya:'香:xiāng|港:gǎng|奶:nǎi|茶:chá|好:hǎo|喝:hē',
         real:[
           { hz:'来杯丝袜奶茶？', py:'Lái bēi sīwà nǎichá?', note:'order silk-stocking milk tea', style:'casual' },
           { hz:'菠萝包配奶茶。', py:'Bōluóbāo pèi nǎichá.', note:'pineapple bun with milk tea', style:'casual' }
@@ -1494,10 +1501,10 @@ var TONE_LABEL = { 1:'1 flat', 2:'2 rising', 3:'3 dip', 4:'4 fall' };
    day 字段 = 归属第几天，只出「当天及以前」的题，不超前。 */
 var LISTEN_Q = [
   { syl:'ma', day:1, opts:[
-    { t:1, py:'mā', hz:'妈', mean:'mother',        audio:TONES[0].audio },
-    { t:2, py:'má', hz:'麻', mean:'hemp / numb',   audio:TONES[1].audio },
-    { t:3, py:'mǎ', hz:'马', mean:'horse',         audio:TONES[2].audio },
-    { t:4, py:'mà', hz:'骂', mean:'scold',         audio:TONES[3].audio }
+    { t:1, py:'mā', hz:'妈', pya:'妈:mā', mean:'mother',        audio:TONES[0].audio },
+    { t:2, py:'má', hz:'麻', pya:'麻:má', mean:'hemp / numb',   audio:TONES[1].audio },
+    { t:3, py:'mǎ', hz:'马', pya:'马:mǎ', mean:'horse',         audio:TONES[2].audio },
+    { t:4, py:'mà', hz:'骂', pya:'骂:mà', mean:'scold',         audio:TONES[3].audio }
   ]}
 ];
 
@@ -2116,6 +2123,7 @@ function endTour(){ lsSet('sinoky_tour','1'); renderHome(); }
 function tourHtml(){
   return '<div class="card"><div class="top"><h2>\u{1F44B} New here?</h2><span class="badge teal">60 SECONDS</span></div>'+
     '<p class="desc">Three steps \u2014 that is the whole app:</p>'+
+    '<div class="tour-steps"><div><b>New to Chinese?</b> Characters do not tell you how to say them \u2014 that is what the small letters above them are for (pinyin: <b>n\u01D0 h\u01CEo</b>). The little marks are tones: \u0101 \u00E1 \u01CE \u00E0 \u2014 four tones, four different words. Tap \u25B6 to hear any line; tap the turtle button for slow.</div></div>'+
     '<div class="tour-steps">'+
     '<div>1\uFE0F\u20E3 Tap a line below \u2192 listen, cover the Chinese, <b>say it out loud 3\u00D7</b>. Speaking is the whole point.</div>'+
     '<div>2\uFE0F\u20E3 Do one <b>Day</b> card a day \u2014 the streak keeps you coming back.</div>'+
@@ -2467,6 +2475,44 @@ function openScene(id, idx, from){
     }, 140);
   }
 }
+/* v0.3.55 零基础拼读脚手架（D）：句卡把句子拆成可点音节，点一下只听这一个字。
+   实测铁律：TTS 只能念汉字 —— 传带调拼音（"Nǐ"）返回静音，见 _internal/verify_syllable_tts.cjs。
+   汉字数与音节数不等时（儿化 / 音译 / 数字 / 标点）一律不渲染：宁可不显示，也绝不教错发音。 */
+function splitSyllables(hz, py){
+  if(!hz || !py) return null;
+  var zs = String(hz).replace(/[^一-龥]/g, '');
+  var ps = String(py).trim().split(/\s+/);
+  if(!zs.length || zs.length !== ps.length) return null;
+  var out = [];
+  for(var i=0;i<zs.length;i++) out.push({ zi: zs.charAt(i), py: ps[i] });
+  return out;
+}
+function sylHtml(pya, hz, py){
+  /* 首选 pya：构建期 gen-pinyin.js 用 pinyin-pro 生成的逐字表（"字:拼音|字:拼音"），
+     覆盖率 108/111。py 是词级连写（Xièxie / Xǐshǒujiān），按空格拆对不上汉字数，
+     只能用逐字表。没有 pya 才退回 splitSyllables，再不行就不渲染 —— 宁缺勿错。 */
+  var items = [];
+  if(pya){
+    String(pya).split('|').forEach(function(x){
+      var i = x.indexOf(':');
+      if(i < 1) return;
+      var zi = x.slice(0, i), p = x.slice(i + 1);
+      if(zi && p) items.push({ zi: zi, py: p });
+    });
+  }
+  if(!items.length && hz && py){
+    var ss = splitSyllables(hz, py);
+    if(ss) items = ss;
+  }
+  if(!items.length) return '';
+  var h = '<div class="syls">';
+  items.forEach(function(x){
+    h += '<button class="syl" onclick="event.stopPropagation();speak(\'' + x.zi.replace(/'/g,'') +
+         '\',this)" title="Hear just this one sound">' +
+         '<span class="syl-py">' + x.py + '</span><span class="syl-zi">' + x.zi + '</span></button>';
+  });
+  return h + '</div>';
+}
 function renderSceneList(){
   var done = S.phrases[curScene.id] || [];
   var html = '';
@@ -2476,8 +2522,8 @@ function renderSceneList(){
       phrasePic(curScene,i)+
       '<div class="p-row"><div><div class="p-en">'+p.en+'</div>'+
       '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="toggleZh('+i+')" id="zh-'+i+'" title="Tap to reveal / cover">'+
-      '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div></div>'+
-      '<div class="p-hint">'+(isDone?'✓ said out loud':'Tap to reveal · cover &amp; say it 3×')+'</div></div>'+
+      '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div>'+sylHtml(p.pya, p.hz, p.py)+'</div>'+
+      '<div class="p-hint">'+(isDone?'✓ said out loud':'Tap to reveal · <b>🐢 Slow</b> if too fast · cover &amp; say it 3×')+'</div></div>'+
       '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)">▶</button></div>'+
       '<div class="p-actions">'+
       '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Next tap: '+SPEEDS[0].tip+'">'+SPEEDS[0].label+'</button>'+
@@ -2559,7 +2605,7 @@ function toggleZh(i){
     var done = (S.phrases[curScene.id] || []).indexOf(i) > -1;
     hint.textContent = el.classList.contains('hidden')
       ? 'Covered — say it out loud, then tap to check'
-      : (done ? '✓ said out loud' : 'Tap again to cover · say it 3×');
+      : (done ? '✓ said out loud' : '🐢 Slow if too fast · tap again to cover · say it 3×');
   }
 }
 function markDone(i){
