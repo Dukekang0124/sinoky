@@ -152,6 +152,9 @@ nav button.on{color:var(--red)}
 .ss.bad{color:var(--red);border-color:rgba(230,57,70,.4);background:rgba(230,57,70,.12);text-decoration:line-through}
 .score-err{color:var(--red);font-size:12px;margin-top:10px;line-height:1.5}
 .score-load{color:var(--sub);font-size:12px;margin-top:10px}
+/* v0.3.58 评分错因明文行：移动端可见（旧版只在 title hover 里，手机上等于零反馈） */
+.score-fix{margin-top:8px;font-size:12.5px;color:var(--sub);line-height:1.6}
+.score-fix b{color:var(--txt)}
 /* ---------- flashcards (v0.2.0) ---------- */
 .fc-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 10px}
 .fc-prog{font-size:12px;color:var(--sub)}
@@ -520,6 +523,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
         <button class="btn ghost" onclick="go('home')">← Back</button>
       </div>
     </div>
+    <!-- v0.3.58 变调教学（竞品差距 #6）：内容级改动，零功能新增。零基础用户念 nǐ hǎo 被教成三声会当场困惑 -->
+    <div class="card" style="margin-top:14px">
+      <div class="top"><h2>Tone changes</h2><span class="badge teal">REAL SPEECH</span></div>
+      <p class="desc">Real speech bends the rules. Three changes locals actually make:</p>
+      <p class="desc"><b>3 + 3 → 2 + 3</b> · nǐ + hǎo → <b>ní hǎo</b> (hello) — two dipping tones in a row: the first one rises.</p>
+      <p class="desc"><b>yī → yì / yí</b> · before a 4th tone it reads <b>yí</b> (yíyàng 一样), before 1st/2nd/3rd it reads <b>yì</b> (yìtiān 一天).</p>
+      <p class="desc"><b>bù → bú</b> · before a 4th tone it reads <b>bú</b> (búshì 不是 = is not).</p>
+      <p class="desc" style="margin-top:8px">No need to memorize — just notice them when you hear them.</p>
+    </div>
   </section>
 
   <!-- PROGRESS -->
@@ -662,7 +674,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.57';
+var APP_VERSION = '0.3.58';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1697,6 +1709,7 @@ S.tone = S.tone || { right:0, total:0 };
 S.feat = S.feat || {};   /* v0.3.36 功能级使用统计 */
 S.dayDone = S.dayDone || {};  /* v0.3.47 {dayN:'YYYY-MM-DD'}；'' = 历史完成日期未知 */
 S.review = S.review || { d:'', n:0 };  /* v0.3.48 每日复习计数（跨天自动重置，不记历史） */
+S.rv = S.rv || {};  /* v0.3.58 SRS-lite 排程：'sceneid:idx' -> {b:桶0-4, d:最后说的日期}。真实学习进度，另一台设备需要同样排程 -> 随 S 上云（过 KV 写入宪法） */
 S.listen = S.listen || { d:'', n:0, r:0 };  /* v0.3.49 听辨成绩（跨天重置，只记当日答题数/对题数，不记历史） */
 S.lsent = S.lsent || { d:'', n:0, r:0 };  /* v0.3.51 听辨·句子层成绩（同 listen：跨天重置，只记当日） */
 seedDayDone();               /* 首次运行：把已完成的 Day 标成 ''，避免下次打卡记成今天 */
@@ -2178,16 +2191,38 @@ function fnv(s){
   h ^= h >>> 16;
   return h >>> 0;
 }
+/* v0.3.58 SRS-lite：到期优先。间隔阶梯 [1,2,4,8,16] 天（SM-2 式简化，零依赖，纯前端算）。
+   历史句子无 S.rv 记录 -> 视为到期（老用户自动进池，无需迁移）。无到期句 -> 退回全池稳定随机（旧行为）。 */
+var RV_GAP = [1,2,4,8,16];
+function dayDiff(a,b){ return Math.round((new Date(b) - new Date(a)) / 864e5); }
+function rvDue(it){
+  var m = (S.rv||{})[it.scene.id+':'+it.idx];
+  if(!m || !m.d) return true;
+  return dayDiff(m.d, today()) >= RV_GAP[Math.min(m.b||0, RV_GAP.length-1)];
+}
 function pickReview(k){
   var pool = reviewPool();
   if(!pool.length) return null;
-  return pool[fnv(today() + '#' + k) % pool.length];
+  var due = pool.filter(rvDue);
+  var base = due.length ? due : pool;   /* 到期优先：复习"要忘的"，而不是随机复读 */
+  return base[fnv(today() + '#' + k) % base.length];
 }
 var rvShown = false;   /* UI 游标：中文是否已揭示，纯内存，永不上云 */
 function reviewPeek(){ rvShown = !rvShown; renderHome(); }
 function reviewNext(){
   var d = today();
   if(!S.review || S.review.d !== d) S.review = { d:d, n:0 };
+  /* v0.3.58 SRS-lite：说完点 next -> 本条晋升一档（bucket+1，上限 16 天档），重记 lastSaid。
+     「说了」由用户自证——与旧行为一致（点 next 即计开口证据）。 */
+  var cur = pickReview(S.review.n||0);
+  if(cur){
+    S.rv = S.rv || {};
+    var key = cur.scene.id+':'+cur.idx;
+    var m = S.rv[key] || { b:0, d:d };
+    m.b = Math.min((m.b||0)+1, RV_GAP.length-1);
+    m.d = d;
+    S.rv[key] = m;
+  }
   S.review.n = (S.review.n||0) + 1;
   rvShown = false;
   saveState();          /* 复习计数 = 开口证据（真实学习行为），随进度上云 */
@@ -2625,11 +2660,19 @@ function toggleZh(i){
 function markDone(i){
   var arr = S.phrases[curScene.id] = S.phrases[curScene.id] || [];
   var at = arr.indexOf(i);
-  if(at === -1){ arr.push(i); saveState(); toast('Nice — now say it twice more out loud'); }
+  if(at === -1){
+    arr.push(i);
+    /* v0.3.58 SRS-lite：首次说完 -> 入排程（bucket 0，明天到期） */
+    S.rv = S.rv || {};
+    S.rv[curScene.id+':'+i] = { b:0, d:today() };
+    saveState(); toast('Nice — now say it twice more out loud');
+  }
   else {
     /* v0.3.35 M4：误点可撤销。旧实现只 push 不 pop，一次误点就永久污染
        Day 进度与场景进度条，且无法回退。 */
-    arr.splice(at, 1); saveState(); toast('Un-marked — say it again to count it');
+    arr.splice(at, 1);
+    if(S.rv) delete S.rv[curScene.id+':'+i];  /* v0.3.58：撤销 = 出排程，避免幽灵到期句 */
+    saveState(); toast('Un-marked — say it again to count it');
   }
   renderSceneList(); renderHome();
 }
@@ -2824,13 +2867,34 @@ async function sendScore(p, transcript, i){
   }
 }
 function renderScore(d){
+  /* v0.3.58：错因从 title(hover) 提升为明文行——手机上 hover 不存在，旧版错因等于没展示。
+     Worker 侧 errs 本就是声调级（tone/initial/final/neutral），此处只做英文人话翻译。 */
   var h = '<div class="score-card"><div class="score-overall">'+d.overall+'<span>'+d.verdict+'</span></div><div class="score-sylls">';
+  var fixes = [];
   (d.perSyll||[]).forEach(function(s){
     var ok = s.score>=0.99;
-    h += '<span class="ss '+(ok?'ok':'bad')+'" title="'+esc(s.errs&&s.errs.length?s.errs.join('/'):'✓')+'">'+esc(s.target)+'</span>';   /* v0.3.35 L4：识别文本转义 */
+    h += '<span class="ss '+(ok?'ok':'bad')+'">'+esc(s.target)+'</span>';
+    if(!ok) fixes.push({ t:s.target, u:s.user, errs:(s.errs&&s.errs.length?s.errs:['miss']) });
   });
-  h += '</div></div>';
+  h += '</div>';
+  if(fixes.length){
+    h += '<div class="score-fix">';
+    fixes.forEach(function(f){
+      var msgs = f.errs.map(errHuman).join(' \u00b7 ');
+      h += '<div><b>'+esc(f.t)+'</b> \u2192 you said <b>'+esc(f.u||'?')+'</b> \u00b7 '+esc(msgs)+'</div>';
+    });
+    h += '</div>';
+  }
+  h += '</div>';
   return h;
+}
+function errHuman(e){
+  if(e==='tone') return 'the tone was off';
+  if(e==='initial') return 'the first sound was off';
+  if(e==='final') return 'the vowel ending was off';
+  if(e==='neutral/tone mismatch') return 'neutral-tone mismatch';
+  if(e==='missing syllable') return 'this syllable was missing';
+  return e;
 }
 function finishScene(){
   var d = today();
