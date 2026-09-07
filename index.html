@@ -674,7 +674,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.58';
+var APP_VERSION = '0.3.59';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -2149,7 +2149,7 @@ function endTour(){ lsSet('sinoky_tour','1'); renderHome(); }
 function tourHtml(){
   return '<div class="card"><div class="top"><h2>\u{1F44B} New here?</h2><span class="badge teal">60 SECONDS</span></div>'+
     '<p class="desc">Three steps \u2014 that is the whole app:</p>'+
-    '<div class="tour-steps"><div><b>New to Chinese?</b> Characters do not tell you how to say them \u2014 that is what the small letters above them are for (pinyin: <b>n\u01D0 h\u01CEo</b>). The little marks are tones: \u0101 \u00E1 \u01CE \u00E0 \u2014 four tones, four different words. Tap \u25B6 to hear any line; tap the turtle button for slow.</div></div>'+
+    '<div class="tour-steps"><div><b>New to Chinese?</b> Characters do not tell you how to say them \u2014 that is what the small letters above them are for (pinyin: <b>n\u01D0 h\u01CEo</b>). The little marks are tones: \u0101 \u00E1 \u01CE \u00E0 \u2014 four tones, four different words. Tap \u25B6 to hear any line; tap 🐢 to slow it down — tap again for slower (0.5×, best for hearing the tones).</div></div>'+
     '<div class="tour-steps">'+
     '<div>1\uFE0F\u20E3 Tap a line below \u2192 listen, cover the Chinese, <b>say it out loud 3\u00D7</b>. Speaking is the whole point.</div>'+
     '<div>2\uFE0F\u20E3 Do one <b>Day</b> card a day \u2014 the streak keeps you coming back.</div>'+
@@ -2586,10 +2586,13 @@ function renderSceneList(){
   $('sc-finish').style.display = done.length===curScene.phrases.length ? 'block' : 'none';
 }
 /* v0.3.9 三档语速（I-012 洞察：老外"go deaf" —— 课本慢速听得懂，真实速听不懂）
-   连点按钮循环：Slow 0.7x → Normal 1.0x → Real 1.3x。
+   连点按钮循环：Slower 0.5x → Slow 0.7x → Normal 1.0x → Real 1.3x。
+   v0.3.59：真实用户反馈"make it slower to hear the tones" — 0.7x 对零基础仍太快，
+   听不出声调走向。加 0.5x 并放在第 1 档（点一下即最慢），不动 1.3x 真实速（I-012 的价值）。
    设计意图：用户连点三次就能听到同一句的三档速度对比，
    让耳朵从"课本耳"逐步过渡到"真实耳"，而不是只练标准慢速。 */
 var SPEEDS = [
+  { rate: 0.5, label: '🐢 Slower', tip: 'hear every tone' },
   { rate: 0.7, label: '🐢 Slow',   tip: 'learning speed' },
   { rate: 1.0, label: '▶ Normal',  tip: 'textbook speed' },
   { rate: 1.3, label: '🚀 Real',   tip: 'real-life speed' }
