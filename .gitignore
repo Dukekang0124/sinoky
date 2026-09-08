@@ -4,3 +4,10 @@ node_modules/
 *.log
 .dev.vars
 .env
+
+# v0.3.59 APK 构建（Capacitor）：android 与 www 均由 CI 临时生成，不入库
+# 理由：android/ 若入库会被 wrangler pages deploy 一并上传并公开暴露（Pages 只硬编码忽略 node_modules/.git）
+www/
+android/
+android/app/build/
+.gradle/

@@ -79,6 +79,11 @@ header img{width:34px;height:34px;border-radius:9px}
 .phrase.done{border-color:rgba(42,157,143,.5)}
 .p-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .p-en{font-size:14.5px;font-weight:600;line-height:1.4}
+  .p-hear{margin:2px 0 8px;border-left:3px solid #e63946;background:rgba(230,57,70,.06);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .p-hear .p-hz{color:#1b2430;font-weight:600}
+  .p-hear .p-py{color:#e63946}
+  .p-hear .spk{margin-left:auto}
+  .p-en.them{color:#e63946;font-weight:600}
 .p-zh{margin-top:8px;cursor:pointer}
 .p-hz{font-size:24px;font-weight:700;letter-spacing:1px}
 .p-py{font-size:14px;color:var(--teal);margin-top:3px}
@@ -675,7 +680,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.60';
+var APP_VERSION = '0.3.61';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1252,6 +1257,55 @@ var SCENES = [
      关键约定：day1:false 且【不标 day】——城市内容是 elective，只从 Home 卡片进，不进 Day 1-14 通关路径，
      否则 allDayPhrases() 会把它算进对应 Day 要求，导致已通关老用户进度回退（致命回归）。
      图（img 字段 + Home 带图渲染）在豆包出图齐后由九思补，本轮只落内容。 */
+  { id:'express', icon:'💬', title:'Express Yourself · They say, you answer', day1:false,
+    desc:'They say a line, you answer it — the real skill. Tap to hear their line, cover yours, then say your answer out loud. Score it to check.',
+    phrases:[
+      { en:"No thanks.", py:'Bù yào, xièxie.', hz:'不要，谢谢',
+        hear:{ hz:'你要袋子吗？', py:'Nǐ yào dài zi ma?', en:"Do you want a bag?" },
+        real:[ { hz:'不用了，谢谢', py:'Bù yòng le, xièxie', note:'natural', style:'casual' } ] },
+      { en:"No.", py:'Bú shì.', hz:'不是。',
+        hear:{ hz:'会员吗？', py:'Huì yuán ma?', en:"Are you a member?" },
+        real:[ { hz:'我不是会员', py:'Wǒ bú shì huì yuán', note:'casual', style:'casual' } ] },
+      { en:"Can I pay with WeChat?", py:'Wēi xìn kě yǐ ma?', hz:'微信可以吗？',
+        hear:{ hz:'一共十二块。', py:'Yí gòng shí èr kuài.', en:"That's 12 yuan." },
+        real:[ { hz:'我扫你', py:'Wǒ sǎo nǐ', note:'I will scan you', style:'casual' } ] },
+      { en:"Not spicy, thanks.", py:'Bú yào là, xièxie.', hz:'不要辣，谢谢。',
+        hear:{ hz:'你要不要辣？', py:'Nǐ yào bú yào là?', en:"Do you want it spicy?" },
+        real:[ { hz:'微辣就好', py:'Wēi là jiù hǎo', note:'mild is fine', style:'casual' } ] },
+      { en:"A cup of warm water.", py:'Yì bēi wēn shuǐ.', hz:'一杯温水。',
+        hear:{ hz:'喝点什么？', py:'Hē diǎn shén me?', en:"What to drink?" },
+        real:[ { hz:'白开水就行', py:'Bái kāi shuǐ jiù xíng', note:'casual', style:'casual' } ] },
+      { en:"Take away.", py:'Dài zǒu.', hz:'带走。',
+        hear:{ hz:'在这吃还是带走？', py:'Zài zhè chī hái shì dài zǒu?', en:"Eat here or take away?" },
+        real:[ { hz:'打包', py:'Dǎ bāo', note:'to-go', style:'casual' } ] },
+      { en:"I'm David.", py:'Wǒ jiào Dà wèi.', hz:'我叫大卫。',
+        hear:{ hz:'你叫什么名字？', py:'Nǐ jiào shén me míng zi?', en:"What's your name?" },
+        real:[ { hz:'我姓王，叫王明', py:'Wǒ xìng Wáng, jiào Wáng Míng', note:'polite', style:'polite' } ] },
+      { en:"I like communicating with people.", py:'Yīn wèi wǒ xǐ huan hé rén jiāo liú.', hz:'因为我喜欢和人交流。',
+        hear:{ hz:'你为什么想做这份工作？', py:'Nǐ wèi shén me xiǎng zuò zhè fèn gōng zuò?', en:"Why do you want this job?" },
+        real:[ { hz:'我觉得这份工作很有意义', py:'Wǒ jué de zhè fèn gōng zuò hěn yǒu yì yì', note:'polite', style:'polite' } ] },
+      { en:"No, thank you.", py:'Méi yǒu, xièxie.', hz:'没有，谢谢。',
+        hear:{ hz:'你有什么问题吗？', py:'Nǐ yǒu shén me wèn tí ma?', en:"Any questions?" },
+        real:[ { hz:'暂时没有，谢谢', py:'Zàn shí méi yǒu, xièxie', note:'polite', style:'polite' } ] },
+      { en:"To the train station.", py:'Qù huǒ chē zhàn.', hz:'去火车站。',
+        hear:{ hz:'去哪儿？', py:'Qù nǎr?', en:"Where to?" },
+        real:[ { hz:'麻烦去火车站', py:'Má fan qù huǒ chē zhàn', note:'polite', style:'polite' } ] },
+      { en:"No, the closer way is fine.", py:'Bù zǒu, jìn yì diǎn jiù xíng.', hz:'不走，近一点就行。',
+        hear:{ hz:'走高速吗？', py:'Zǒu gāo sù ma?', en:"Take the highway?" },
+        real:[ { hz:'不着急，近路就行', py:'Bù zháo jí, jìn lù jiù xíng', note:'casual', style:'casual' } ] },
+      { en:"Paying with WeChat.", py:'Wēi xìn fù.', hz:'微信付。',
+        hear:{ hz:'到了，二十八块。', py:'Dào le, èr shí bā kuài.', en:"We're here, 28 yuan." },
+        real:[ { hz:'我扫你', py:'Wǒ sǎo nǐ', note:'I will scan you', style:'casual' } ] },
+      { en:"I'm from America.", py:'Wǒ lái zì Měi guó.', hz:'我来自美国。',
+        hear:{ hz:'你来自哪里？', py:'Nǐ lái zì nǎ lǐ?', en:"Where are you from?" },
+        real:[ { hz:'我是美国人', py:'Wǒ shì Měi guó rén', note:'casual', style:'casual' } ] },
+      { en:"A little.", py:'Huì yì diǎn.', hz:'会一点。',
+        hear:{ hz:'你会说中文吗？', py:'Nǐ huì shuō Zhōng wén ma?', en:"Can you speak Chinese?" },
+        real:[ { hz:'刚学，还在练', py:'Gāng xué, hái zài liàn', note:'just started, still practicing', style:'casual' } ] },
+      { en:"I want to go hiking.", py:'Wǒ xiǎng qù pá shān.', hz:'我想去爬山。',
+        hear:{ hz:'周末有什么打算？', py:'Zhōu mò yǒu shén me dǎ suàn?', en:"Plans for the weekend?" },
+        real:[ { hz:'还没定', py:'Hái méi dìng', note:'not decided yet', style:'casual' } ] }
+    ]},
   { id:'beijing', icon:'🏯', title:'Beijing · Sights & Food', day1:false, region:'north', hot:true, city:'北京', pic:['landmark','food','landmark'],
     desc:'Famous sights and local food in Beijing. Tap a card, hear it, then say it 3 times.',
     phrases:[
@@ -2570,10 +2624,14 @@ function renderSceneList(){
     var isDone = done.indexOf(i) > -1;
     html += '<div class="phrase'+(isDone?' done':'')+'" id="ph-'+i+'">'+
       phrasePic(curScene,i)+
-      '<div class="p-row"><div><div class="p-en">'+p.en+'</div>'+
+      '<div class="p-row"><div>'+(p.hear
+        ? '<div class="p-en them">他们：'+p.hear.en+'</div>'
+          + '<div class="p-hear"><div class="p-hz">'+p.hear.hz+'</div><div class="p-py">'+p.hear.py+'</div>'
+          + '<button class="spk" onclick="speak(\''+p.hear.hz.replace(/'/g,'')+'\',this)">▶</button></div>'
+        : '<div class="p-en">'+p.en+'</div>')+
       '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="toggleZh('+i+')" id="zh-'+i+'" title="Tap to reveal / cover">'+
       '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div>'+sylHtml(p.pya, p.hz, p.py)+'</div>'+
-      '<div class="p-hint">'+(isDone?'✓ said out loud':'Tap to reveal · <b>🐢 Slow</b> if too fast · cover &amp; say it 3×')+'</div></div>'+
+      '<div class="p-hint">'+(isDone?'✓ said out loud':(p.hear?'他们说了「'+p.hear.hz+'」 — 你答：'+p.en+'（答完看 ✓）':'Tap to reveal · <b>🐢 Slow</b> if too fast · cover &amp; say it 3×'))+'</div></div>'+
       '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)">▶</button></div>'+
       '<div class="p-actions">'+
       '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Next tap: '+SPEEDS[0].tip+'">'+SPEEDS[0].label+'</button>'+
