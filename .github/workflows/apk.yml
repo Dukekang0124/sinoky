@@ -117,24 +117,24 @@ jobs:
           path: dist/*.apk
           if-no-files-found: error
 
+      - name: Push APK to dist branch (git-protocol reachable copy)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p pub
+          cp dist/*.apk pub/
+          cd pub
+          git init -q -b dist
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "apk v${{ steps.ver.outputs.version }} (${BUILD_TYPE})"
+          git push -q --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" dist:dist
+          echo "pushed to dist branch"
+
       - name: Attach APK to GitHub Release (tag builds only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.apk
           generate_release_notes: true
-
-      - name: Push APK to dist branch (git-protocol reachable copy)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          mkdir -p pub
-          cp dist/*.apk pub/
-          cd pub
-          git init -q -b dist
-          git add -A
-          git commit -q -m "apk v${{ steps.ver.outputs.version }} (${BUILD_TYPE})"
-          git push -q --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" dist:dist
-          echo "pushed to dist branch"
