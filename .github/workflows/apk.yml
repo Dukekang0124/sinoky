@@ -1,6 +1,11 @@
 name: Build Sinoky APK
 
+# 触发方式：
+# 1. push tag v* （发版流程：bump 版本 -> git tag v0.3.x -> git push --tags -> 自动出 debug APK 并挂到 GitHub Release）
+# 2. workflow_dispatch 手动（GitHub 网页 Actions 页触发，可选 debug/release）
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       buildType:
@@ -9,6 +14,12 @@ on:
         default: 'debug'
         type: choice
         options: [debug, release]
+
+permissions:
+  contents: write   # needed to create Release and upload APK on tag push
+
+env:
+  BUILD_TYPE: ${{ github.event.inputs.buildType || 'debug' }}
 
 jobs:
   build:
@@ -32,6 +43,15 @@ jobs:
 
       - name: Sync web assets into android
         run: npx cap sync android
+
+      - name: Inject mic/camera permissions (getUserMedia in WebView for ASR scoring)
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          grep -q "RECORD_AUDIO" $M || sed -i 's#<uses-permission android:name="android.permission.INTERNET"#<uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.INTERNET"#' $M
+          grep -o 'android.permission.[A-Z_]*' $M | sort -u
+
+      - name: Apply launcher icons (Nuonuo adaptive icons from repo apk-icons/)
+        run: cp -r apk-icons/* android/app/src/main/res/
 
       - name: Resolve version from index.html (single source of truth)
         id: ver
@@ -58,16 +78,16 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build debug APK
-        if: github.event.inputs.buildType == 'debug'
+        if: env.BUILD_TYPE == 'debug'
         run: cd android && ./gradlew assembleDebug --no-daemon
 
       - name: Build release APK (unsigned placeholder until keystore provided)
-        if: github.event.inputs.buildType == 'release'
+        if: env.BUILD_TYPE == 'release'
         run: cd android && ./gradlew assembleRelease --no-daemon
 
       - name: Rename & expose artifact
         run: |
-          T=${{ github.event.inputs.buildType }}
+          T=${BUILD_TYPE}
           if [ "$T" = "debug" ]; then SRC=android/app/build/outputs/apk/debug/app-debug.apk; else SRC=android/app/build/outputs/apk/release/app-release-unsigned.apk; fi
           mkdir -p dist
           cp "$SRC" "dist/Sinoky-v${{ steps.ver.outputs.version }}-$T.apk"
@@ -75,6 +95,13 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Sinoky-v${{ steps.ver.outputs.version }}-${{ github.event.inputs.buildType }}
+          name: Sinoky-v${{ steps.ver.outputs.version }}-${{ env.BUILD_TYPE }}
           path: dist/*.apk
           if-no-files-found: error
+
+      - name: Attach APK to GitHub Release (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
+          generate_release_notes: true
