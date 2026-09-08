@@ -550,7 +550,12 @@ export default {
         console.log('[FEEDBACK] no KV binding, payload =', JSON.stringify(rec));
         return json({ ok: true, stored: false });
       } catch (e) {
-        return json({ ok: false, error: String((e && e.message) || e) }, 500);
+        const em = String((e && e.message) || e);
+        /* v0.3.69: free-tier KV daily write limit reached. Tell the user truthfully instead of a generic 500. */
+        if (/KV put\(\) limit exceeded|limit exceeded for the day/i.test(em)) {
+          return json({ ok: false, error: em }, 429);
+        }
+        return json({ ok: false, error: em }, 500);
       }
     }
 

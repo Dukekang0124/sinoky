@@ -97,7 +97,8 @@ header img{width:34px;height:34px;border-radius:9px}
 .syl .syl-zi{display:block;font-size:16px;margin-top:1px}
 .syl.wait{opacity:.55}
 .p-zh.hidden .syls{filter:blur(7px);user-select:none;pointer-events:none}
-.spk{flex-shrink:0;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--teal);font-size:17px;cursor:pointer}
+.spk{flex-shrink:0;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--teal);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.spk svg{display:block}
 .spk.playing{background:rgba(127,179,176,.15);border-color:var(--teal)}
 .p-actions{display:flex;gap:8px;margin-top:11px;flex-wrap:nowrap}
 .p-actions .btn{margin-top:0;padding:9px 10px;font-size:12.5px;border-radius:10px;width:auto;flex:0 0 auto;min-width:0}
@@ -683,7 +684,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <p class="tone-q" id="tone-q">Tap a tone to hear it. Then try the quiz.</p>
       <div class="tone-big" id="tone-big"></div>
       <div class="tonebtns" id="tone-btns"></div>
-      <button class="btn primary" id="tone-play" onclick="playToneQ()">▶ Play the sound</button>
+      <button class="btn primary" id="tone-play" onclick="playToneQ()"><svg class="play-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:5px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg> Play the sound</button>
       <div class="tone-actions">
         <button class="btn ghost" id="tone-quiz" onclick="toneToggleQuiz()">🎯 Quiz me</button>
         <button class="btn ghost" id="tone-next" onclick="nextTone()" style="display:none">Next →</button>
@@ -842,7 +843,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.68';
+var APP_VERSION = '0.3.69';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2222,9 +2223,11 @@ function $(id){ return document.getElementById(id); }
 /* v0.3.66 把 raw 网络/JSON 解析错误翻译成人话，避免向用户展示 "Unexpected token '<'" /
    "Failed to fetch" 这类技术细节。统一返回中文短句。 */
 function humanizeApiErr(e, status){
+  var msg = ((e && e.message) || String(e || '')).toLowerCase();
+  /* v0.3.69: CF KV free tier 1000 writes/day can exhaust; be explicit so users don't think the app is broken. */
+  if(/kv put\(\) limit exceeded|limit exceeded for the day|quota exceeded/i.test(msg)) return '今日服务额度已用完，请明天再试';
   if(status === 429) return '服务繁忙，请稍后再试';
   if(status >= 500) return '服务异常，请稍后再试';
-  var msg = (e && e.message) || String(e || '');
   if(!msg) return '网络异常，请检查连接';
   if(/Unexpected token|SyntaxError|JSON\.parse|is not valid JSON/i.test(msg)) return '服务返回异常，请稍后再试';
   if(/Failed to fetch|NetworkError|net::|aborted|timeout|abort/i.test(msg)) return '网络异常，请检查连接';
@@ -2232,6 +2235,9 @@ function humanizeApiErr(e, status){
 }
 /* v0.3.66 记录 TTS 链最近一次失败的 HTTP status，让 speak() 最终兜底 toast 能区分
    429/500/网络错，而不是统一显示 "check your connection"。 */
+/* v0.3.69: high-contrast inline SVG play icons replace low-visibility ▶ unicode on dark backgrounds */
+var PLAY_ICON = '<svg class="play-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:5px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg>';
+var PLAY_ICON_SMALL = '<svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg>';
 var lastTtsStatus = 0;
 function toast(msg){
   var t = $('toast'); t.textContent = msg; t.classList.add('show');
@@ -2624,7 +2630,7 @@ function listenCardHtml(){
   var html = '<div class="card earcheck"><div class="top"><h2>👂 Ear check · today</h2>'+
     '<span class="badge'+(st.n>0?' teal':'')+'">'+(st.n>0 ? st.r+'/'+st.n+' right' : '1 sound')+'</span></div>'+
     '<p class="desc">Listen to the sound. Which tone do you hear?</p>'+
-    '<button class="ear-play" id="ear-play" onclick="listenPlay()">▶ Play the sound</button>'+
+    '<button class="ear-play" id="ear-play" onclick="listenPlay()">' + PLAY_ICON + ' Play the sound</button>'+
     '<div class="earbtns" id="ear-btns">';
   [1,2,3,4].forEach(function(n){
     var cls = 'earbtn';
@@ -2731,7 +2737,7 @@ function listenCardSHtml(){
   var html = '<div class="card earcheck"><div class="top"><h2>👂 Ear check · sentence</h2>'+
     '<span class="badge'+(st.n>0?' teal':'')+'">'+(st.n>0 ? st.r+'/'+st.n+' right' : 'listen')+'</span></div>'+
     '<p class="desc">Listen to the sentence. What does it mean?</p>'+
-    '<button class="ear-play" id="ears-play" onclick="listenSPlay(this)">▶ Play the sentence</button>'+
+    '<button class="ear-play" id="ears-play" onclick="listenSPlay(this)">' + PLAY_ICON + ' Play the sentence</button>'+
     '<div class="earbtns" id="ears-btns">';
   it.opts.forEach(function(t, i){
     var cls = 'earbtn';
@@ -2868,12 +2874,12 @@ function renderSceneList(){
       '<div class="p-row"><div>'+(p.hear
         ? '<div class="p-en them">他们：'+p.hear.en+'</div>'
           + '<div class="p-hear"><div class="p-hz">'+p.hear.hz+'</div><div class="p-py">'+p.hear.py+'</div>'
-          + '<button class="spk" onclick="speak(\''+p.hear.hz.replace(/'/g,'')+'\',this)">▶</button></div>'
+          + '<button class="spk" onclick="speak(\''+p.hear.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>'
         : '<div class="p-en">'+p.en+'</div>')+
       '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="toggleZh('+i+')" id="zh-'+i+'" title="Tap to reveal / cover">'+
       '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div>'+sylHtml(p.pya, p.hz, p.py)+'</div>'+
       '<div class="p-hint">'+(isDone?'✓ said out loud':(p.hear?'他们说了「'+p.hear.hz+'」 — 你答：'+p.en+'（答完看 ✓）':'Tap to reveal · <b>🐢 Slow</b> if too fast · cover &amp; say it 3×'))+'</div></div>'+
-      '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)">▶</button></div>'+
+      '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>'+
       '<div class="p-actions">'+
       '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Next tap: '+SPEEDS[0].tip+'">'+SPEEDS[0].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
@@ -2894,7 +2900,7 @@ function renderSceneList(){
 var SPEEDS = [
   { rate: 0.5, label: '🐢 Slower', tip: 'hear every tone' },
   { rate: 0.7, label: '🐢 Slow',   tip: 'learning speed' },
-  { rate: 1.0, label: '▶ Normal',  tip: 'textbook speed' },
+  { rate: 1.0, label: PLAY_ICON_SMALL + ' Normal',  tip: 'textbook speed' },
   { rate: 1.3, label: '🚀 Real',   tip: 'real-life speed' }
 ];
 var rateTimer = null;
@@ -3270,8 +3276,8 @@ function playToneAudio(t){
   try { a.pause(); } catch(e){}
   a.volume = 1;
   var btn = $('tone-play');
-  a.onplaying = function(){ if(btn){ btn.textContent = '▶ Play the sound'; } };
-  a.onended = function(){ if(btn){ btn.textContent = '▶ Play the sound'; } };
+  a.onplaying = function(){ if(btn){ btn.innerHTML = PLAY_ICON + ' Play the sound'; } };
+  a.onended = function(){ if(btn){ btn.innerHTML = PLAY_ICON + ' Play the sound'; } };
   a.onerror = function(){ if(btn){ btn.textContent = '↻ Tap to retry'; } };
   a.src = t.audio;
   if(btn){ btn.textContent = '… loading'; }
@@ -3471,7 +3477,7 @@ function fcStrokes(){
     box.innerHTML =
       '<div class="hw-stage" id="hw-stage"></div>' +
       '<div class="fc-actions">' +
-        '<button class="btn ghost" onclick="hwPlay()">▶ Play</button>' +
+        '<button class="btn ghost" onclick="hwPlay()">' + PLAY_ICON + ' Play</button>' +
         '<button class="btn ghost" onclick="hwQuiz()">✍️ Practise</button>' +
       '</div>' +
       '<div class="fc-hwmsg" id="hw-msg">Watch the order, then try writing it yourself.</div>';
@@ -3840,7 +3846,10 @@ function sendFB(btn){
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({ message: txt, cat: FB_CAT, v: APP_VERSION, errs: ERR_LOG })
   }).then(function(r){
-    if(!r.ok) throw { __status:r.status };
+    /* v0.3.69: pass response body text to humanizeApiErr so KV-quota messages reach the user. */
+    if(!r.ok){
+      return r.text().then(function(t){ throw { __status:r.status, message:t }; });
+    }
     var ct = r.headers.get('content-type') || '';
     if(ct.indexOf('application/json') < 0) throw { __status:r.status, __parse:true };
     return r.json();
@@ -4156,13 +4165,13 @@ function openDialog(id){
     h += '<div class="d-line '+l.who+'"><span class="who '+l.who+'">'+(l.who==='them'?'THEM':'YOU')+'</span>'+
       '<div class="body"><div class="py">'+l.py+'</div><div class="en">'+l.en+'</div>'+
       '<div class="hz hidden">'+l.hz+'</div>'+
-      '<button class="spk" onclick="speak(\''+l.hz.replace(/'/g,'')+'\',this)">▶</button></div></div>';
+      '<button class="spk" onclick="speak(\''+l.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div></div>';
   });
   h += '<div class="d-flip"><b>🔄 Role reversal — now YOU start.</b>'+
     '<div class="en">'+d.flip.prompt+'</div>'+
     '<div class="py">'+d.flip.py+'</div>'+
     '<div class="hz hidden">'+d.flip.hz+'</div>'+
-    '<button class="spk" onclick="speak(\''+d.flip.hz.replace(/'/g,'')+'\',this)">▶</button></div>';
+    '<button class="spk" onclick="speak(\''+d.flip.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>';
   h += '<div class="actions"><button class="btn primary" onclick="markDialog(\''+id+'\')">✅ Done</button>'+
     '<button class="btn ghost" onclick="replayDialog(\''+id+'\')">🔁 Replay</button>'+
     '<button class="btn ghost" onclick="toggleDialogHz()">👁 汉字</button></div></div>';
