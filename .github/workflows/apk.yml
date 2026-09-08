@@ -39,10 +39,12 @@ jobs:
         run: npm run build:web
 
       - name: Create android project (not committed — generated each run)
-        run: npx cap add android
+        run: |
+          rm -rf android
+          node ./node_modules/@capacitor/cli/bin/capacitor add android --verbose
 
       - name: Sync web assets into android
-        run: npx cap sync android
+        run: node ./node_modules/@capacitor/cli/bin/capacitor sync android --verbose
 
       - name: Inject mic/camera permissions (getUserMedia in WebView for ASR scoring)
         run: |
