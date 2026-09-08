@@ -643,7 +643,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #v-dialog .d-flip .en{font-size:13px;color:#8b93a7;margin-top:3px}
       #v-dialog .hz.hidden{display:none}
       #v-dialog .spk{color:#8b93a7;font-size:16px;cursor:pointer;background:none;border:none;padding-top:2px}
-      #v-dialog .actions{display:flex;gap:10px;margin-top:18px}
+      #v-dialog .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
     </style>
     <div id="dialog-list"></div>
     <div id="dialog-card" style="display:none"></div>
@@ -838,7 +838,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.63';
+var APP_VERSION = '0.3.64';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -860,7 +860,12 @@ var APP_VERSION = '0.3.63';
           style: casual 随意 / polite 礼貌 / formal 正式 / slang 俚语
           —— 标注语体是关键，老外最怕用错场合。 */
 /* v0.3.62 P0 场景卡片种子数据：多轮 THEM/YOU 对话流 + Role reversal。
-   来源：sinoky_scene_cards.html 4 张卡结构化。拼音优先、汉字默认隐藏（toggleDialogHz 展开）。
+   来源：sinoky_scene_cards.html 4 张卡结构化。
+   ★ 既定决策（v0.3.64 固化，相对原稿的有意偏离）：原稿设计笔记要求"严格不出现汉字"，
+     实际采用「拼音优先、汉字默认隐藏、可点 👁 展开（toggleDialogHz）」。
+     理由：① TTS 只能念汉字，hz 必须保留作 speak() 发音锚点；
+           ② 拼音优先+按需看字比硬禁字更利于真学（Edify 门：加内容而非加功能墙）。
+     故"严格不出现汉字"不作为硬约束；汉字为可选揭示，默认不显。
    hz 仅用于 speak() 发音锚点（TTS 只能念汉字）；py/en 默认显示。 */
 var DIALOGS = [
   { id:'d-meet', day:1, icon:'👋', title:'First Meeting', tag:['people','fun'],
@@ -4126,8 +4131,9 @@ function openDialog(id){
     '<div class="py">'+d.flip.py+'</div>'+
     '<div class="hz hidden">'+d.flip.hz+'</div>'+
     '<button class="spk" onclick="speak(\''+d.flip.hz.replace(/'/g,'')+'\',this)">▶</button></div>';
-  h += '<div class="actions"><button class="btn primary" onclick="markDialog(\''+id+'\')">✅ Done — unlock next</button>'+
-    '<button class="btn ghost" onclick="toggleDialogHz()">👁 Show characters</button></div></div>';
+  h += '<div class="actions"><button class="btn primary" onclick="markDialog(\''+id+'\')">✅ Done</button>'+
+    '<button class="btn ghost" onclick="replayDialog(\''+id+'\')">🔁 Replay</button>'+
+    '<button class="btn ghost" onclick="toggleDialogHz()">👁 汉字</button></div></div>';
   var dc=document.getElementById('dialog-card'); if(dc){ dc.innerHTML=h; dc.style.display='block'; }
   var dl=document.getElementById('dialog-list'); if(dl){ dl.style.display='none'; }
   var db=document.getElementById('dialog-back'); if(db){ db.style.display='block'; }
@@ -4135,6 +4141,39 @@ function openDialog(id){
 }
 function markDialog(id){ S.dialogs = S.dialogs||{}; S.dialogs[id]=true; saveState(); toast('✅ '+id+' done'); renderDialogList(); }
 function toggleDialogHz(){ var e=document.querySelectorAll('#dialog-card .hz'); for(var i=0;i<e.length;i++){ e[i].classList.toggle('hidden'); } }
+/* v0.3.64 A 方案：🔁 Replay 按钮——按对话顺序逐句朗读（THEM/YOU 主线 + 末尾 Role reversal）。
+   串联方式：复用每行/翻转的发音键作进度指示，轮询其 'playing' 类（start 加、end 移除）
+   判断本句是否播完，再播下一句。零侵入底层音频链（speak 用全局单例 AUDIO + 多音源兜底，无 ended 回调）。
+   TTS 全失败时 'playing' 不出现，~14s 超时自动跳下一句，不卡死。 */
+function replayDialog(id){
+  var card = document.getElementById('dialog-card'); if(!card) return;
+  var btns = [];
+  card.querySelectorAll('.d-line .spk').forEach(function(b){ btns.push(b); });
+  var fb = card.querySelector('.d-flip .spk'); if(fb) btns.push(fb);
+  if(!btns.length) return;
+  var i = 0;
+  function step(){
+    if(i >= btns.length) return;
+    var b = btns[i];
+    var box = b.closest('.d-line') || b.closest('.d-flip');
+    var hzEl = box ? box.querySelector('.hz') : null;
+    var txt = hzEl ? hzEl.textContent.trim() : '';
+    if(!txt){ i++; setTimeout(step, 100); return; }
+    speak(txt, b);
+    var phase = 0, guard = 0;
+    var t = setInterval(function(){
+      guard++;
+      if(phase === 0){
+        if(b.classList.contains('playing')){ phase = 1; }
+        else if(guard > 70){ clearInterval(t); i++; setTimeout(step, 300); }   /* ~14s 无声音→跳过 */
+      } else {
+        if(!b.classList.contains('playing')){ clearInterval(t); i++; setTimeout(step, 350); }
+        else if(guard > 240){ clearInterval(t); i++; setTimeout(step, 300); }  /* 兜底防卡 */
+      }
+    }, 200);
+  }
+  step();
+}
 
 </script>
 </body>
