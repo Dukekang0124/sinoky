@@ -437,6 +437,121 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   </header>
 
   <!-- HOME -->
+  <!-- ONBOARDING · v0.3.62：6 步首次引导（品牌→goal→level→麦克风预告→voice→Day1预览） -->
+  <section id="v-onboard" class="views">
+    <style>
+      #v-onboard{background:#0d0f12;color:#f2f4f7;display:flex;flex-direction:column;font-family:-apple-system,"SF Pro","Helvetica Neue",Arial,sans-serif}
+      #v-onboard .ob-screen{display:none;flex:1;padding:30px 24px 110px;overflow:auto}
+      #v-onboard .ob-screen.on{display:flex;flex-direction:column}
+      #v-onboard .ob-il{font-size:54px;margin:6px 0 18px}
+      #v-onboard h1{font-size:27px;line-height:1.25;letter-spacing:-.3px}
+      #v-onboard h1 .hl{color:#e63946}
+      #v-onboard p.ob-sub{color:#8b93a7;font-size:15px;line-height:1.55;margin-top:12px}
+      #v-onboard .ob-sp{flex:1}
+      #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+      #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
+      #v-onboard .ob-chip .emo{font-size:24px}
+      #v-onboard .ob-chip .t{font-size:14px;font-weight:600}
+      #v-onboard .ob-chip .d{font-size:11px;color:#8b93a7;line-height:1.35}
+      #v-onboard .ob-chip.on{border-color:#e63946;background:rgba(230,57,70,.12)}
+      #v-onboard .ob-chip.on::after{content:"✓";color:#e63946;font-weight:800;align-self:flex-end}
+      #v-onboard .ob-levels{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+      #v-onboard .ob-level{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:16px;cursor:pointer;transition:.2s}
+      #v-onboard .ob-level .row{display:flex;justify-content:space-between;align-items:center}
+      #v-onboard .ob-level .t{font-size:15px;font-weight:600}
+      #v-onboard .ob-level .d{font-size:12px;color:#8b93a7;margin-top:4px;line-height:1.4}
+      #v-onboard .ob-level .pill{font-size:11px;background:#2a2f3a;padding:3px 9px;border-radius:10px;color:#8b93a7}
+      #v-onboard .ob-level.on{border-color:#e63946;background:rgba(230,57,70,.12)}
+      #v-onboard .ob-level.on .pill{background:#e63946;color:#fff}
+      #v-onboard .ob-mic{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:26px}
+      #v-onboard .ob-ring{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(230,57,70,.25),transparent 70%);display:flex;align-items:center;justify-content:center;font-size:58px;border:2px solid rgba(230,57,70,.4)}
+      #v-onboard .ob-ring.live{border-color:#e63946;box-shadow:0 0 0 12px rgba(230,57,70,.12)}
+      #v-onboard .ob-ready{background:#1c2028;border:1px solid #2a2f3a;border-radius:22px;padding:22px;margin-top:6px}
+      #v-onboard .ob-ready .scene{font-size:13px;color:#e63946;font-weight:700;letter-spacing:.5px}
+      #v-onboard .ob-ready h2{font-size:22px;margin:8px 0 14px}
+      #v-onboard .ob-li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #2a2f3a;font-size:15px}
+      #v-onboard .ob-li:last-child{border:none}
+      #v-onboard .ob-li .num{color:#e63946;font-weight:800;min-width:18px}
+      #v-onboard .ob-li .py{color:#8b93a7;font-size:13px}
+      #v-onboard .ob-bar{position:absolute;bottom:0;left:0;right:0;padding:16px 22px calc(20px + env(safe-area-inset-bottom));background:linear-gradient(0deg,#0d0f12 60%,transparent);display:flex;flex-direction:column;gap:12px}
+      #v-onboard .ob-pager{display:flex;gap:6px;justify-content:center}
+      #v-onboard .ob-pager span{width:7px;height:7px;border-radius:50%;background:#2a2f3a}
+      #v-onboard .ob-pager span.on{background:#e63946;width:22px;border-radius:5px}
+      #v-onboard .ob-btn{width:100%;border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:700;background:#e63946;color:#fff;cursor:pointer;transition:.2s}
+      #v-onboard .ob-btn:hover{background:#ff6b70}
+      #v-onboard .ob-skip{text-align:center;font-size:13px;color:#8b93a7;cursor:pointer}
+    </style>
+    <div class="ob-screen on" data-step="1">
+      <div class="ob-il">🔑</div>
+      <h1>Stop memorizing <span class="hl">characters.</span><br>Start answering <span class="hl">people.</span></h1>
+      <p class="ob-sub">Sinoky is the key that unlocks real Chinese conversations — using only the words you'll actually say.</p>
+      <div class="ob-sp"></div>
+    </div>
+    <div class="ob-screen" data-step="2">
+      <div class="ob-il">🎯</div>
+      <h1>Why are you learning <span class="hl">Chinese?</span></h1>
+      <p class="ob-sub">Pick your main goal — we'll prioritize the scenes that matter to you.</p>
+      <div class="ob-chips">
+        <div class="ob-chip on" data-goal="travel"><span class="emo">🧳</span><span class="t">Travel</span><span class="d">Order food, ask directions, get around</span></div>
+        <div class="ob-chip" data-goal="work"><span class="emo">💼</span><span class="t">Work</span><span class="d">Meetings, emails, small talk</span></div>
+        <div class="ob-chip" data-goal="people"><span class="emo">💬</span><span class="t">Friends & Family</span><span class="d">Connect with the people you love</span></div>
+        <div class="ob-chip" data-goal="fun"><span class="emo">🎶</span><span class="t">Just for fun</span><span class="d">Culture, shows, understanding more</span></div>
+      </div>
+      <div class="ob-sp"></div>
+    </div>
+    <div class="ob-screen" data-step="3">
+      <div class="ob-il">📶</div>
+      <h1>What's your <span class="hl">Chinese level?</span></h1>
+      <p class="ob-sub">No judgment, no test. Just pick where you feel comfortable starting.</p>
+      <div class="ob-levels">
+        <div class="ob-level on" data-lv="beginner"><div class="row"><span class="t">🌱 Absolute beginner</span><span class="pill">Start here</span></div><div class="d">I know a few words, maybe "nǐ hǎo".</div></div>
+        <div class="ob-level" data-lv="survival"><div class="row"><span class="t">🌿 Some basics</span><span class="pill">Survival</span></div><div class="d">I can greet and order, but struggle after that.</div></div>
+        <div class="ob-level" data-lv="intermediate"><div class="row"><span class="t">🌳 I can get by</span><span class="pill">Intermediate</span></div><div class="d">I survive daily life, want to sound natural.</div></div>
+      </div>
+      <div class="ob-sp"></div>
+    </div>
+    <div class="ob-screen" data-step="4">
+      <div class="ob-mic">
+        <div class="ob-ring" id="obMicRing">🎙️</div>
+        <div>
+          <h1 style="font-size:24px">We need your <span class="hl">voice.</span></h1>
+          <p class="ob-sub" style="margin-top:10px">Sinoky listens as you speak and shows your tone curve in real time. Your voice stays on your device.</p>
+        </div>
+      </div>
+    </div>
+    <div class="ob-screen" data-step="5">
+      <div class="ob-il">🗣️</div>
+      <h1>Choose a <span class="hl">voice</span> to practice with.</h1>
+      <p class="ob-sub">You can change this anytime. We'll respond to you in this style.</p>
+      <div class="ob-levels">
+        <div class="ob-level on" data-vc="gentle"><div class="row"><span class="t">👩‍🏫 Gentle & clear</span><span class="pill">Recommended</span></div><div class="d">Slower pace, perfect for first words.</div></div>
+        <div class="ob-level" data-vc="standard"><div class="row"><span class="t">🧑 Standard</span><span class="pill">Natural</span></div><div class="d">Everyday speaking speed.</div></div>
+        <div class="ob-level" data-vc="cheerful"><div class="row"><span class="t">🧑‍🎤 Cheerful</span><span class="pill">Energetic</span></div><div class="d">Upbeat and encouraging.</div></div>
+        <div class="ob-level" data-vc="serious"><div class="row"><span class="t">🧓 Serious</span><span class="pill">Formal</span></div><div class="d">For work and polite settings.</div></div>
+      </div>
+      <div class="ob-sp"></div>
+    </div>
+    <div class="ob-screen" data-step="6">
+      <div class="ob-il">✨</div>
+      <h1>You're <span class="hl">all set.</span></h1>
+      <p class="ob-sub">Here's your first scene — Day 1 of 14. Let's answer people.</p>
+      <div class="ob-ready">
+        <div class="scene">SCENE · FIRST WORDS</div>
+        <h2>Someone says "你好" — what do you say back?</h2>
+        <div class="ob-li"><span class="num">1</span><span><span>你好</span><br><span class="py">nǐ hǎo — Hello</span></span></div>
+        <div class="ob-li"><span class="num">2</span><span><span>谢谢</span><br><span class="py">xièxie — Thanks (you'll hear this a lot)</span></span></div>
+        <div class="ob-li"><span class="num">3</span><span><span>我叫…</span><br><span class="py">wǒ jiào … — I'm called … (say your name!)</span></span></div>
+        <div class="ob-li"><span class="num">4</span><span><span>很高兴认识你</span><br><span class="py">hěn gāoxìng rènshi nǐ — Nice to meet you</span></span></div>
+      </div>
+      <div class="ob-sp"></div>
+    </div>
+    <div class="ob-bar">
+      <div class="ob-pager" id="obPager"></div>
+      <button class="ob-btn" id="obNext">Get started</button>
+      <div class="ob-skip" id="obSkip">Skip for now</div>
+    </div>
+  </section>
+
   <section id="v-home" class="views on">
     <div class="hero">
       <h1>Stop memorizing characters.<br><em>Start answering people.</em></h1>
@@ -490,7 +605,33 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <button class="btn ghost" id="sc-back" onclick="goBack()">← Back</button>
   </section>
 
-  <!-- CITIES · v0.3.44：城市从首页平铺收敛到此页（区域分组 + 搜索：英文 / 中文 / 拼音 id 均可匹配） -->
+  <!-- CITIES
+  <!-- DIALOG CARDS · v0.3.62：P0 场景卡片（多轮对话 + Role reversal，拼音优先零汉字） -->
+  <section id="v-dialog" class="views">
+    <style>
+      #v-dialog{background:#0d0f12;color:#f2f4f7;padding:16px;overflow:auto;font-family:-apple-system,"SF Pro",Arial,sans-serif}
+      #v-dialog .d-line{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #2a2f3a}
+      #v-dialog .d-line .who{min-width:44px;font-size:11px;font-weight:700;padding-top:2px}
+      #v-dialog .d-line .who.them{color:#4cc9f0}
+      #v-dialog .d-line .who.you{color:#e63946}
+      #v-dialog .d-line .body{flex:1}
+      #v-dialog .d-line .py{font-size:16px;font-weight:600;letter-spacing:.3px}
+      #v-dialog .d-line .en{font-size:12px;color:#8b93a7;margin-top:3px}
+      #v-dialog .d-line.you{border:1px solid rgba(230,57,70,.3);border-radius:12px;padding:14px;background:rgba(230,57,70,.06)}
+      #v-dialog .d-line.you .py{color:#ff6b70}
+      #v-dialog .d-flip{margin-top:16px;background:rgba(76,201,240,.08);border:1px dashed rgba(76,201,240,.4);border-radius:14px;padding:16px;font-size:14px}
+      #v-dialog .d-flip b{color:#4cc9f0}
+      #v-dialog .d-flip .py{font-size:16px;font-weight:600;margin-top:8px}
+      #v-dialog .d-flip .en{font-size:13px;color:#8b93a7;margin-top:3px}
+      #v-dialog .hz.hidden{display:none}
+      #v-dialog .spk{color:#8b93a7;font-size:16px;cursor:pointer;background:none;border:none;padding-top:2px}
+      #v-dialog .actions{display:flex;gap:10px;margin-top:18px}
+    </style>
+    <div id="dialog-list"></div>
+    <div id="dialog-card" style="display:none"></div>
+    <button class="btn ghost" id="dialog-back" style="display:none;margin-top:12px" onclick="renderDialogList()">← Back to cards</button>
+  </section>
+ · v0.3.44：城市从首页平铺收敛到此页（区域分组 + 搜索：英文 / 中文 / 拼音 id 均可匹配） -->
   <section id="v-cities" class="views">
     <div class="card">
       <div class="top"><h2>\ud83d\udccd All cities</h2><span class="badge" id="city-count"></span></div>
@@ -680,7 +821,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.61';
+var APP_VERSION = '0.3.62';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -701,7 +842,58 @@ var APP_VERSION = '0.3.61';
           真实对话大量使用语气词、儿化、省略，课本几乎不教。
           style: casual 随意 / polite 礼貌 / formal 正式 / slang 俚语
           —— 标注语体是关键，老外最怕用错场合。 */
+/* v0.3.62 P0 场景卡片种子数据：多轮 THEM/YOU 对话流 + Role reversal。
+   来源：sinoky_scene_cards.html 4 张卡结构化。拼音优先、汉字默认隐藏（toggleDialogHz 展开）。
+   hz 仅用于 speak() 发音锚点（TTS 只能念汉字）；py/en 默认显示。 */
+var DIALOGS = [
+  { id:'d-meet', day:1, icon:'👋', title:'First Meeting', tag:['people','fun'],
+    hook:'Someone says 你好 — this is your chance to answer like a real person.',
+    lines:[
+      {who:'them', hz:'你好！你叫什么名字？', py:'nǐ hǎo! nǐ jiào shénme míngzi?', en:'Hi! What\'s your name?'},
+      {who:'you',  hz:'我叫 ___，很高兴认识你。', py:'wǒ jiào ___, hěn gāoxìng rènshi nǐ.', en:"I'm ___, nice to meet you."},
+      {who:'them', hz:'你是哪国人？', py:'nǐ shì nǎ guó rén?', en:'Where are you from?'},
+      {who:'you',  hz:'我是美国人 / 英国人。', py:'wǒ shì Měiguó rén / Yīngguó rén.', en:'I\'m American / British.'}
+    ],
+    flip:{ prompt:'now they ask about your Chinese — answer honestly:',
+           hz:'刚开始学，请多关照。', py:'gāng kāishǐ xué, qǐng duō guānzhào.', en:'Just started, please be patient with me.' } },
+
+  { id:'d-store', day:2, icon:'🧳', title:'Convenience Store', tag:['travel'],
+    hook:'You walk in to buy a bottle of water. The cashier speaks first — answer them.',
+    lines:[
+      {who:'them', hz:'你好，要点什么？', py:'nǐ hǎo, yào diǎn shénme?', en:'Hi, what would you like?'},
+      {who:'you',  hz:'我要一瓶水，谢谢。', py:'wǒ yào yì píng shuǐ, xièxie.', en:"I'd like a bottle of water, thanks."},
+      {who:'them', hz:'好的。要常温的还是冰的？', py:'hǎo de. yào chángwēn de háishì bīng de?', en:'OK. Room temp or iced?'},
+      {who:'you',  hz:'冰的，谢谢。', py:'bīng de, xièxie.', en:'Iced, thanks.'}
+    ],
+    flip:{ prompt:'you walk in — break the ice first:',
+           hz:'你好，请问有热水吗？', py:'nǐ hǎo, qǐngwèn yǒu rè shuǐ ma?', en:'Hi, do you have hot water?' } },
+
+  { id:'d-food', day:4, icon:'🍜', title:'Ordering Food', tag:['travel'],
+    hook:'You\'re at a noodle shop. The waiter comes over. Keep it short and polite.',
+    lines:[
+      {who:'them', hz:'几位？', py:'jǐ wèi?', en:'How many people?'},
+      {who:'you',  hz:'两个人，谢谢。', py:'liǎng ge rén, xièxie.', en:'Two people, thanks.'},
+      {who:'them', hz:'想吃点什么？', py:'xiǎng chī diǎn shénme?', en:'What would you like to eat?'},
+      {who:'you',  hz:'一份牛肉面，一个蔬菜。', py:'yí fèn niúròu miàn, yí ge shūcài.', en:'One beef noodles, one vegetable dish.'}
+    ],
+    flip:{ prompt:'the waiter asks 要辣吗? (spicy?) — you say:',
+           hz:'不要太辣，一点点就好。', py:'bú yào tài là, yìdiǎndiǎn jiù hǎo.', en:'Not too spicy, just a little.' } },
+
+  { id:'d-taxi', day:6, icon:'🚕', title:'Taking a Taxi', tag:['travel'],
+    hook:'You get in. The driver needs to know where — give him the address in Chinese.',
+    lines:[
+      {who:'them', hz:'去哪儿？', py:'qù nǎr?', en:'Where to?'},
+      {who:'you',  hz:'请去火车站，谢谢。', py:'qǐng qù huǒchē zhàn, xièxie.', en:'To the train station, please. Thanks.'},
+      {who:'them', hz:'好的。走高速吗？', py:'hǎo de. zǒu gāosù ma?', en:'OK. Take the highway?'},
+      {who:'you',  hz:'不用，最近的路就行。', py:'bú yòng, zuìjìn de lù jiù xíng.', en:'No need, the shortest way is fine.'}
+    ],
+    flip:{ prompt:'suddenly you want to stop at a shop — say:',
+           hz:'师傅，前面请停一下，谢谢。', py:'shīfu, qiánmiàn qǐng tíng yíxià, xièxie.', en:'Driver, please stop up ahead.' } }
+];
+
+
 var SCENES = [
+
   { id:'arrival', icon:'🛬', title:'Arrival · First hours', day1:true,
     desc:'Your first few survival lines: greeting, price, destination, restroom, thanks. Tap a card to reveal, play the sound, then cover and say it 3 times.',
     phrases:[
@@ -2001,7 +2193,7 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
   /* v0.3.35 S1：离开场景视图时停止进行中的录音，避免麦克风在后台常开 */
   if(v !== 'scene' && typeof stopRecording === 'function') stopRecording();
-  ['home','scene','tone','prog','cards','sentences','reading','cities','days'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences','reading','cities','days','onboard','dialog'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
@@ -2012,6 +2204,7 @@ function go(v){
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
   if(v==='cities') renderCities();
+  if(v==='dialog') renderDialogList();
   if(v==='days') renderDays();
   if(v==='cards') renderNW();
   if(v==='sentences') renderSentStats();
@@ -2551,7 +2744,7 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -3837,11 +4030,95 @@ fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(f
 }).catch(function(){});
 
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
-renderHome();
+if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('home'); }
 /* v0.3.35 S3：存储被禁用时明确告诉用户"进度不会被保存"，而不是让他以为保存了 */
 if(!LS_OK) setTimeout(function(){ toast('Storage is blocked — progress will not be saved'); }, 1200);
 loadCards();
 loadSentences();
+
+
+/* ============ v0.3.62 ONBOARDING + DIALOG CARDS ============ */
+var obStep = 1; var obTotal = 6;
+var obGoal = 'travel';
+function renderOnboard(){
+  var scr = document.querySelectorAll('#v-onboard .ob-screen');
+  for(var i=0;i<scr.length;i++){ scr[i].classList.toggle('on', (+scr[i].getAttribute('data-step'))===obStep); }
+  var pg = document.getElementById('obPager');
+  if(pg){ pg.innerHTML=''; for(var k=1;k<=obTotal;k++){ var sp=document.createElement('span'); if(k===obStep) sp.className='on'; pg.appendChild(sp); } }
+  var nb = document.getElementById('obNext'); if(nb) nb.textContent = (obStep<obTotal) ? (obStep===1?'Get started':'Continue') : 'Start Day 1';
+  var sk = document.getElementById('obSkip'); if(sk) sk.style.visibility = (obStep===obTotal)?'hidden':'visible';
+  var ring = document.getElementById('obMicRing');
+  if(obStep===4){ if(ring) setTimeout(function(){ ring.classList.add('live'); },400); } else if(ring){ ring.classList.remove('live'); }
+}
+function finishOnboard(){
+  S.onboarded = true; S.goal = obGoal; saveState();
+  go('home');
+}
+(function bindOnboard(){
+  var nb=document.getElementById('obNext'); if(nb) nb.addEventListener('click', function(){
+    if(obStep<obTotal){ obStep++; renderOnboard(); } else { finishOnboard(); }
+  });
+  var sk=document.getElementById('obSkip'); if(sk) sk.addEventListener('click', function(){ if(obStep<obTotal){ obStep=obTotal; renderOnboard(); } });
+  document.querySelectorAll('#v-onboard .ob-chip').forEach(function(c){
+    c.addEventListener('click', function(){ c.parentNode.querySelectorAll('.ob-chip').forEach(function(x){x.classList.remove('on');}); c.classList.add('on'); obGoal=c.getAttribute('data-goal'); });
+  });
+  document.querySelectorAll('#v-onboard .ob-screen[data-step="3"] .ob-level').forEach(function(c){
+    c.addEventListener('click', function(){ c.parentNode.querySelectorAll('.ob-level').forEach(function(x){x.classList.remove('on');}); c.classList.add('on'); });
+  });
+  document.querySelectorAll('#v-onboard .ob-screen[data-step="5"] .ob-level').forEach(function(c){
+    c.addEventListener('click', function(){ c.parentNode.querySelectorAll('.ob-level').forEach(function(x){x.classList.remove('on');}); c.classList.add('on'); });
+  });
+})();
+
+function dialogBlockHtml(){
+  return '<div class="card"><div class="top"><h2>🗣️ Conversation Cards</h2><span class="badge">P0 · pinyin-first</span></div>'+
+    '<p class="desc">Real-life dialogues — they speak first, you answer. Pinyin by default, characters tap-to-reveal.</p>'+
+    '<button class="btn primary" onclick="go(\'dialog\')">Open conversation cards →</button></div>';
+}
+function renderDialogList(){
+  var goal = S.goal || 'travel';
+  var order = { travel:['d-store','d-food','d-taxi','d-meet'], work:['d-meet','d-food','d-store','d-taxi'],
+                people:['d-meet','d-store','d-food','d-taxi'], fun:['d-meet','d-store','d-food','d-taxi'] };
+  var ids = order[goal] || ['d-meet','d-store','d-food','d-taxi'];
+  var h = '<div class="card"><div class="top"><h2>🗣️ Conversation Cards</h2><span class="badge">P0 · '+goal+' first</span></div>'+
+    '<p class="desc">Pick a scene. They speak first — you answer. Then flip it: you start the talk.</p><div class="citygrid">';
+  ids.forEach(function(id){
+    var d = null; for(var i=0;i<DIALOGS.length;i++){ if(DIALOGS[i].id===id){ d=DIALOGS[i]; break; } } if(!d) return;
+    var done = S.dialogs && S.dialogs[id];
+    h += '<button class="cityrow'+(done?' done':'')+'" onclick="openDialog(\''+id+'\')">'+
+      '<span class="ci">'+d.icon+'</span><span class="cm"><span class="cn">'+d.title+'</span>'+
+      '<span class="cz">Day '+d.day+' · '+(done?'✓ done':'tap to practice')+'</span></span></button>';
+  });
+  h += '</div></div>';
+  var dl=document.getElementById('dialog-list'); if(dl){ dl.innerHTML=h; dl.style.display='block'; }
+  var dc=document.getElementById('dialog-card'); if(dc){ dc.style.display='none'; }
+  var db=document.getElementById('dialog-back'); if(db){ db.style.display='none'; }
+}
+function openDialog(id){
+  var d=null; for(var i=0;i<DIALOGS.length;i++){ if(DIALOGS[i].id===id){ d=DIALOGS[i]; break; } } if(!d) return;
+  var h = '<div class="card"><div class="top"><h2>'+d.icon+' '+d.title+'</h2><span class="badge">DAY '+d.day+'</span></div>'+
+    '<p class="desc">'+d.hook+'</p>';
+  d.lines.forEach(function(l){
+    h += '<div class="d-line '+l.who+'"><span class="who '+l.who+'">'+(l.who==='them'?'THEM':'YOU')+'</span>'+
+      '<div class="body"><div class="py">'+l.py+'</div><div class="en">'+l.en+'</div>'+
+      '<div class="hz hidden">'+l.hz+'</div>'+
+      '<button class="spk" onclick="speak(\''+l.hz.replace(/'/g,'')+'\',this)">▶</button></div></div>';
+  });
+  h += '<div class="d-flip"><b>🔄 Role reversal — now YOU start.</b>'+
+    '<div class="en">'+d.flip.prompt+'</div>'+
+    '<div class="py">'+d.flip.py+'</div>'+
+    '<div class="hz hidden">'+d.flip.hz+'</div>'+
+    '<button class="spk" onclick="speak(\''+d.flip.hz.replace(/'/g,'')+'\',this)">▶</button></div>';
+  h += '<div class="actions"><button class="btn primary" onclick="markDialog(\''+id+'\')">✅ Done — unlock next</button>'+
+    '<button class="btn ghost" onclick="toggleDialogHz()">👁 Show characters</button></div></div>';
+  var dc=document.getElementById('dialog-card'); if(dc){ dc.innerHTML=h; dc.style.display='block'; }
+  var dl=document.getElementById('dialog-list'); if(dl){ dl.style.display='none'; }
+  var db=document.getElementById('dialog-back'); if(db){ db.style.display='block'; }
+  window.scrollTo(0,0);
+}
+function markDialog(id){ S.dialogs = S.dialogs||{}; S.dialogs[id]=true; saveState(); toast('✅ '+id+' done'); renderDialogList(); }
+function toggleDialogHz(){ var e=document.querySelectorAll('#dialog-card .hz'); for(var i=0;i<e.length;i++){ e[i].classList.toggle('hidden'); } }
+
 </script>
 </body>
 </html>
