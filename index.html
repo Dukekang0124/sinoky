@@ -842,7 +842,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.66';
+var APP_VERSION = '0.3.67';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -2103,7 +2103,8 @@ function serverSpeak(text, btn, onFail, opts, attempt){
     (vInstruct ? '&instruct=' + encodeURIComponent(vInstruct) : ''), { method: 'GET' })
     .then(function(r){
       if(aborted) return null;
-      if(!r.ok) throw new Error('tts ' + r.status);
+      if(!r.ok){ lastTtsStatus = r.status; throw new Error('tts ' + r.status); }
+      lastTtsStatus = 0;
       return r.blob();
     })
     .then(function(b){
@@ -2199,7 +2200,9 @@ function speak(text, btn){
       if(btn) btn.title = 'Trying another voice source…';
       youdaoSpeak(text, btn, function(){
         webSpeak(text, btn, function(){
-          toast('Audio unavailable — check your connection');
+          /* v0.3.66 兜底文案人话化：避免暴露 raw "check your connection"，
+             用 humanizeApiErr 区分 429/500/网络错 */
+          toast('发音暂不可用 — ' + humanizeApiErr(null, lastTtsStatus || 0));
         });
       });
     }, { voice: ttsVoice, engine: ttsEngine, instruct: ttsInstruct });
@@ -2222,6 +2225,9 @@ function humanizeApiErr(e, status){
   if(/Failed to fetch|NetworkError|net::|aborted|timeout|abort/i.test(msg)) return '网络异常，请检查连接';
   return '网络异常，请稍后再试';
 }
+/* v0.3.66 记录 TTS 链最近一次失败的 HTTP status，让 speak() 最终兜底 toast 能区分
+   429/500/网络错，而不是统一显示 "check your connection"。 */
+var lastTtsStatus = 0;
 function toast(msg){
   var t = $('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); }, 2200);
