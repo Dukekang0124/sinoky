@@ -635,6 +635,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <span class="fb-cat" data-cat="mic">🎤 Mic issue</span>
     <span class="fb-cat" data-cat="confusing">🤔 Confusing</span>
     <span class="fb-cat" data-cat="idea">💡 Idea</span>
+    <span class="fb-cat" data-cat="wantline">💬 I want to say…</span>
     <span class="fb-cat" data-cat="other">✍️ Other</span>
   </div>
   <textarea id="fb-text" placeholder="e.g. The Score button stays on Listening… and never gives a result."></textarea>
@@ -674,7 +675,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.59';
+var APP_VERSION = '0.3.60';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -3671,6 +3672,14 @@ document.querySelectorAll('#fb-cats .fb-cat').forEach(function(el){
     document.querySelectorAll('#fb-cats .fb-cat').forEach(function(x){ x.classList.remove('on'); });
     el.classList.add('on');
     FB_CAT = el.getAttribute('data-cat');
+    /* v0.3.60：选中「我想说这句」时换提示语 —— 不给引导，用户只会留下一句"谢谢"，
+       拿不到真正想要的句子。写清楚"用英文描述你想表达的意思"，才能变成可补录的句库需求。 */
+    var ta = $('fb-text');
+    if(ta){
+      ta.placeholder = (FB_CAT === 'wantline')
+        ? "In English, what did you want to say? e.g. \"ask the taxi driver to wait 5 minutes\""
+        : "e.g. The Score button stays on Listening\u2026 and never gives a result.";
+    }
   };
 });
 
