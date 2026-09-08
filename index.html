@@ -237,7 +237,7 @@ nav button.on{color:var(--red)}
    之前正好压在底部导航的 Home / Cards 上（康哥发现）。
    可拖拽：touch-action:none 防止移动端拖动时页面跟着滚，
    位置存 localStorage（sinoky-fb-pos），双击可复位。 */
-#fb-open{position:fixed;left:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:60;
+#fb-open{position:fixed;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:60;
   background:rgba(42,157,143,.92);color:#fff;border:none;border-radius:20px;
   padding:9px 14px;font-size:12.5px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.35);
   cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
@@ -842,7 +842,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.65';
+var APP_VERSION = '0.3.66';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -2211,6 +2211,17 @@ function speak(text, btn){
 
 /* ---------- helpers ---------- */
 function $(id){ return document.getElementById(id); }
+/* v0.3.66 把 raw 网络/JSON 解析错误翻译成人话，避免向用户展示 "Unexpected token '<'" /
+   "Failed to fetch" 这类技术细节。统一返回中文短句。 */
+function humanizeApiErr(e, status){
+  if(status === 429) return '服务繁忙，请稍后再试';
+  if(status >= 500) return '服务异常，请稍后再试';
+  var msg = (e && e.message) || String(e || '');
+  if(!msg) return '网络异常，请检查连接';
+  if(/Unexpected token|SyntaxError|JSON\.parse|is not valid JSON/i.test(msg)) return '服务返回异常，请稍后再试';
+  if(/Failed to fetch|NetworkError|net::|aborted|timeout|abort/i.test(msg)) return '网络异常，请检查连接';
+  return '网络异常，请稍后再试';
+}
 function toast(msg){
   var t = $('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); }, 2200);
@@ -3016,13 +3027,14 @@ async function asrText(buf, target){
       body: buf
     });
     console.log('[ASR] http', r.status);
-    if(!r.ok) return { ok:false, status:r.status, err:'http ' + r.status };
-    var j = await r.json();
+    if(!r.ok) return { ok:false, status:r.status, err:humanizeApiErr(null, r.status) };
+    var j = await r.json().catch(function(e){ return { __parseErr: e.message }; });
+    if(j && j.__parseErr) return { ok:false, status:r.status, err:humanizeApiErr(j.__parseErr, r.status) };
     console.log('[ASR] body', JSON.stringify(j));
     return j && j.ok ? { ok:true, text:j.text || '', status:200 } : { ok:false, status:200, err:(j && j.error) || 'asr returned not-ok' };
   }catch(e){
     console.log('[ASR] fetch error', e && e.message);
-    return { ok:false, status:0, err:(e && e.message) || 'network error' };
+    return { ok:false, status:0, err:humanizeApiErr(e, 0) };
   }
 }
 async function scorePhrase(i){
@@ -3144,7 +3156,7 @@ async function sendScore(p, transcript, i){
     if(ns) ns.style.display='none';
   }catch(err){
     console.log('[SCORE] error', err.message);
-    box.innerHTML='<div class="score-err">Scoring service unreachable (needs an internet connection): '+err.message+'</div>';
+    box.innerHTML='<div class="score-err">Scoring failed — '+humanizeApiErr(err, 0)+'<br><small>Tap Score and hold the phone closer to your mouth, then tap Stop when you finish.</small></div>';
   }
 }
 function renderScore(d){
@@ -3816,15 +3828,20 @@ function sendFB(btn){
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({ message: txt, cat: FB_CAT, v: APP_VERSION, errs: ERR_LOG })
-  }).then(function(r){ return r.json(); })
+  }).then(function(r){
+    if(!r.ok) throw { __status:r.status };
+    var ct = r.headers.get('content-type') || '';
+    if(ct.indexOf('application/json') < 0) throw { __status:r.status, __parse:true };
+    return r.json();
+  })
     .then(function(j){
       if(j && j.ok){
         $('fb-text').value = '';
         closeFB();
         toast('Thanks! We read every message 🙏');
-      } else { toast('Send failed — please try again'); }
+      } else { toast('Send failed — ' + humanizeApiErr(null, 0) + (j && j.error ? '（' + j.error + '）' : '')); }
     })
-    .catch(function(){ toast('Send failed — check your connection'); })
+    .catch(function(e){ toast('Send failed — ' + humanizeApiErr(e, e && e.__status)); })
     .then(function(){ if(btn){ btn.disabled = false; btn.textContent = 'Send feedback'; } });
 }
 /* 反馈按钮可拖拽（v0.3.10 → v0.3.11 重写点击判定）
