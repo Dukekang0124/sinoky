@@ -109,7 +109,9 @@ function scoreSyllables(targetHz, userHz, py) {
      DO 实例，SQLite storage 强一致，计数原子准确。Worker sinoky-rl 部署在
      kang7108558 账号，namespace sinoky-rl_Counter，通过 API 绑到 Pages 项目（binding=RL）。
      免费额度 100k 请求/天，Sinoky 体量零成本。 */
-const ALLOWED_ORIGINS = ['https://sinoky.pages.dev'];
+/* v0.3.68: 加 Capacitor 原生壳 Origin —— APK WebView 页面源是 https://localhost(Android)
+   / capacitor://localhost(iOS)，不加会被 guardApi 403 拒掉 */
+const ALLOWED_ORIGINS = ['https://sinoky.pages.dev', 'https://localhost', 'capacitor://localhost'];
 // 自定义域名（如 https://sinoky.com）上线后，同源访问会由 sameHost 自动放行，无需加进此白名单；
 // 此数组仅用于放行「非同源但合法的第三方站」（一般留空）。
 const RATE_WINDOW = 60_000;   // 滑动窗口 60 秒

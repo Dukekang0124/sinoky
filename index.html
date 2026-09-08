@@ -842,7 +842,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.67';
+var APP_VERSION = '0.3.68';
+/* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
+   会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
+   三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
+   原生壳下所有 API 改指生产域；Web(PWA) 保持相对路径不变。 */
+var API_BASE = (location.hostname === 'localhost' && (location.protocol === 'https:' || location.protocol === 'capacitor:')) ? 'https://sinoky.pages.dev/' : '';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -1909,9 +1914,9 @@ async function pushProfile(useBeacon){
     /* v0.3.39 写入节流：pagehide/后台时普通 fetch 会被浏览器丢弃，sendBeacon 在 unload 最可靠；
        常态仍走 fetch（便于拿到响应）。两条路径后端都有脏检查，未变化不落 KV。 */
     if(useBeacon && navigator.sendBeacon){
-      try{ if(navigator.sendBeacon('api/profile', new Blob([body], { type:'application/json' }))) return true; }catch(e){}
+      try{ if(navigator.sendBeacon(API_BASE+'api/profile', new Blob([body], { type:'application/json' }))) return true; }catch(e){}
     }
-    const r = await fetch('api/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body });
+    const r = await fetch(API_BASE+'api/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body });
     let ok = false;
     try{ const j = await r.json(); ok = !!(j && j.ok); }catch(e){ ok = !!r.ok; }
     /* v0.3.41 同步结果必须可感知。写入失败（最常见是 KV 每日 1000 写配额耗尽）时标脏留痕，
@@ -1947,7 +1952,7 @@ function buildStat(){
 }
 async function pullProfile(){
   try{
-    const r = await fetch('api/profile?uid=' + encodeURIComponent(UID));
+    const r = await fetch(API_BASE+'api/profile?uid=' + encodeURIComponent(UID));
     const j = await r.json();
     if(j.ok && j.state && (j.state._ts||0) > (S._ts||0)){
       S = Object.assign(loadState(), j.state);
@@ -1967,7 +1972,7 @@ if(!UID){
 /* v0.3.31 启动：向后端注册设备 uid（保持前后端口径一致），并拉云端进度合并（云端 _ts 新则覆盖） */
 (async function bootSync(){
   try{
-    const r = await fetch('api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ uid: UID }) });
+    const r = await fetch(API_BASE+'api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ uid: UID }) });
     const j = await r.json();
     if(j.ok && j.uid && j.uid !== UID){ UID = j.uid; lsSet('sinoky_uid', UID); }
   }catch(e){ /* 离线忽略，本地 uid 照常工作 */ }
@@ -2098,7 +2103,7 @@ function serverSpeak(text, btn, onFail, opts, attempt){
   }
   /* 用 GET 而非 POST：文本→音频是确定性映射，Worker 返回 immutable 缓存头，
      同一句第二次点播直接命中浏览器缓存（零延迟、零失败）。 */
-  fetch('api/tts?text=' + encodeURIComponent(String(text).slice(0, 300)) +
+  fetch(API_BASE+'api/tts?text=' + encodeURIComponent(String(text).slice(0, 300)) +
     '&voice=' + encodeURIComponent(vVoice) + '&engine=' + encodeURIComponent(vEngine) +
     (vInstruct ? '&instruct=' + encodeURIComponent(vInstruct) : ''), { method: 'GET' })
     .then(function(r){
@@ -3026,7 +3031,7 @@ async function asrText(buf, target){
   /* 返回 {ok, text, status, err} —— 不再静默吞错，方便上层给出具体原因 */
   try{
     console.log('[ASR] sending', buf.byteLength, 'bytes, target=', target);
-    var url = 'api/asr?target=' + encodeURIComponent(target);
+    var url = API_BASE+'api/asr?target=' + encodeURIComponent(target);
     var r = await fetch(url, {
       method:'POST',
       headers:{ 'Content-Type':'audio/wav' },
@@ -3147,7 +3152,7 @@ async function sendScore(p, transcript, i){
   box.innerHTML='<div class="score-load">Scoring…</div>';
   console.log('[SCORE] →', '/score', JSON.stringify({target:p.hz, user:transcript}));
   try{
-    var res = await fetch('api/score', {
+    var res = await fetch(API_BASE+'api/score', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({target:p.hz, user:transcript})
     });
@@ -3830,7 +3835,7 @@ function sendFB(btn){
   var txt = ($('fb-text').value || '').trim();
   if(!txt){ toast('Please write a short message first'); return; }
   if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
-  fetch('api/feedback', {
+  fetch(API_BASE+'api/feedback', {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({ message: txt, cat: FB_CAT, v: APP_VERSION, errs: ERR_LOG })
@@ -4064,7 +4069,7 @@ function copyText(t, okMsg){
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(function(){});
 }
-fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(function(j){
+if(API_BASE==='')fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(function(j){
   /* v0.3.35 M6：改为顶部常驻、可点击的横幅。
      旧实现是 2.2 秒就消失且不可点的 toast，用户根本不知道"refresh"该怎么操作
      （PWA 里既不能下拉刷新也没人知道要重装）→ 长期停留在旧版。 */
