@@ -41,7 +41,7 @@ jobs:
       - name: Create android project (not committed — generated each run)
         run: |
           rm -rf android
-          node ./node_modules/@capacitor/cli/bin/capacitor add android --verbose > cap_add.log 2>&1 || echo "CAP_FAILED=1" >> "$GITHUB_ENV"
+          node ./node_modules/@capacitor/cli/bin/capacitor add android > cap_add.log 2>&1 || echo "CAP_FAILED=1" >> "$GITHUB_ENV"
           # cap add 自带 sync（copy web assets + update plugins），此处只验证产物
           test -f android/app/build.gradle || {
             echo "::error::log-size:$(wc -c < cap_add.log 2>/dev/null || echo NOFILE)"
