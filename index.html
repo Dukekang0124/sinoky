@@ -49,6 +49,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh}
 .wrap{max-width:520px;margin:0 auto;padding:0 16px 90px}
+body:has(#v-onboard.views.on) .wrap{padding-bottom:0}
 header{display:flex;align-items:center;gap:10px;padding:18px 0 6px}
 header img{width:34px;height:34px;border-radius:9px}
 .brand{font-size:21px;font-weight:800;letter-spacing:.3px}
@@ -440,14 +441,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- ONBOARDING · v0.3.62：6 步首次引导（品牌→goal→level→麦克风预告→voice→Day1预览） -->
   <section id="v-onboard" class="views">
     <style>
-      #v-onboard{background:#0d0f12;color:#f2f4f7;display:flex;flex-direction:column;font-family:-apple-system,"SF Pro","Helvetica Neue",Arial,sans-serif}
-      #v-onboard .ob-screen{display:none;flex:1;padding:30px 24px 110px;overflow:auto}
-      #v-onboard .ob-screen.on{display:flex;flex-direction:column}
+      #v-onboard{background:#0d0f12;color:#f2f4f7;position:fixed;top:0;left:0;width:100%;height:100dvh;min-height:100dvh;z-index:100;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);font-family:-apple-system,"SF Pro","Helvetica Neue",Arial,sans-serif}
+      #v-onboard.views.on{display:flex;flex-direction:column}
+      #v-onboard .ob-screen{display:none;flex:1;min-height:0;padding:30px 24px 140px;overflow:auto}
+      #v-onboard .ob-screen.on{display:flex;flex-direction:column;min-height:0}
       #v-onboard .ob-il{font-size:54px;margin:6px 0 18px}
       #v-onboard h1{font-size:27px;line-height:1.25;letter-spacing:-.3px}
       #v-onboard h1 .hl{color:#e63946}
       #v-onboard p.ob-sub{color:#8b93a7;font-size:15px;line-height:1.55;margin-top:12px}
-      #v-onboard .ob-sp{flex:1}
+      #v-onboard .ob-sp{flex:0 0 auto;min-height:0}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -480,6 +482,22 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #v-onboard .ob-btn{width:100%;border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:700;background:#e63946;color:#fff;cursor:pointer;transition:.2s}
       #v-onboard .ob-btn:hover{background:#ff6b70}
       #v-onboard .ob-skip{text-align:center;font-size:13px;color:#8b93a7;cursor:pointer}
+      @media (max-height: 700px){
+        #v-onboard .ob-screen{padding:20px 20px 120px}
+        #v-onboard .ob-il{font-size:42px;margin:4px 0 10px}
+        #v-onboard h1{font-size:22px;letter-spacing:-.2px}
+        #v-onboard p.ob-sub{font-size:14px;margin-top:8px;line-height:1.45}
+        #v-onboard .ob-chip{padding:10px 10px;border-radius:12px}
+        #v-onboard .ob-chip .emo{font-size:20px}
+        #v-onboard .ob-level{padding:10px 12px;border-radius:12px}
+        #v-onboard .ob-level .t{font-size:14px}
+        #v-onboard .ob-level .d{font-size:11px;line-height:1.35}
+        #v-onboard .ob-ready{padding:14px;border-radius:16px}
+        #v-onboard .ob-ready h2{font-size:18px;margin:6px 0 10px}
+        #v-onboard .ob-li{padding:8px 0;font-size:14px}
+        #v-onboard .ob-bar{padding:12px 20px calc(16px + env(safe-area-inset-bottom))}
+        #v-onboard .ob-btn{padding:13px;font-size:15px}
+      }
     </style>
     <div class="ob-screen on" data-step="1">
       <div class="ob-il">🔑</div>
@@ -605,7 +623,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <button class="btn ghost" id="sc-back" onclick="goBack()">← Back</button>
   </section>
 
-  <!-- CITIES
+  <!-- CITIES · v0.3.44：城市从首页平铺收敛到此页（区域分组 + 搜索：英文 / 中文 / 拼音 id 均可匹配） -->
   <!-- DIALOG CARDS · v0.3.62：P0 场景卡片（多轮对话 + Role reversal，拼音优先零汉字） -->
   <section id="v-dialog" class="views">
     <style>
@@ -631,7 +649,6 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div id="dialog-card" style="display:none"></div>
     <button class="btn ghost" id="dialog-back" style="display:none;margin-top:12px" onclick="renderDialogList()">← Back to cards</button>
   </section>
- · v0.3.44：城市从首页平铺收敛到此页（区域分组 + 搜索：英文 / 中文 / 拼音 id 均可匹配） -->
   <section id="v-cities" class="views">
     <div class="card">
       <div class="top"><h2>\ud83d\udccd All cities</h2><span class="badge" id="city-count"></span></div>
@@ -821,7 +838,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.62';
+var APP_VERSION = '0.3.63';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
@@ -4030,6 +4047,7 @@ fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(f
 }).catch(function(){});
 
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
+var obStep = 1, obTotal = 6, obGoal = 'travel';
 if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('home'); }
 /* v0.3.35 S3：存储被禁用时明确告诉用户"进度不会被保存"，而不是让他以为保存了 */
 if(!LS_OK) setTimeout(function(){ toast('Storage is blocked — progress will not be saved'); }, 1200);
@@ -4038,8 +4056,7 @@ loadSentences();
 
 
 /* ============ v0.3.62 ONBOARDING + DIALOG CARDS ============ */
-var obStep = 1; var obTotal = 6;
-var obGoal = 'travel';
+/* obStep/obTotal/obGoal initialized before boot gate */
 function renderOnboard(){
   var scr = document.querySelectorAll('#v-onboard .ob-screen');
   for(var i=0;i<scr.length;i++){ scr[i].classList.toggle('on', (+scr[i].getAttribute('data-step'))===obStep); }
