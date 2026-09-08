@@ -617,6 +617,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div class="card">
       <div class="top"><h2 id="sc-title"></h2><span class="badge">SAY IT</span><span class="badge teal">NO SCORE YET</span></div>
       <p class="desc" id="sc-desc"></p>
+      <div class="scene-hero" id="sc-hero"></div>
       <div class="pbar"><i id="sc-bar" style="width:0%"></i></div>
       <p class="noscore">🗣️ Blind-speak mode — we don't score your pronunciation yet. Just cover and say it 3×.</p>
       <!-- v0.3.8 隐私说明：老外（尤其欧洲 GDPR 用户）对录音敏感，
@@ -627,6 +628,17 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <button class="btn primary" id="sc-finish" style="display:none" onclick="finishScene()">I completed today's challenge 🎉</button>
     <button class="btn ghost" id="sc-back" onclick="goBack()">← Back</button>
   </section>
+
+  <style>
+    .scene-hero-img{width:100%;border-radius:14px;margin:4px 0 10px;display:block}
+    .badge-card .badge-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+    .badge-cell{flex:1;min-width:62px;text-align:center;opacity:.32;filter:grayscale(1)}
+    .badge-cell.on{opacity:1;filter:none}
+    .badge-cell img{width:62px;height:62px;object-fit:contain}
+    .badge-cell span{display:block;font-size:11px;color:var(--sub);margin-top:4px}
+    .banner-card{padding:0;overflow:hidden;cursor:pointer}
+    .banner-card img{width:100%;display:block;border-radius:14px}
+  </style>
 
   <!-- CITIES · v0.3.44：城市从首页平铺收敛到此页（区域分组 + 搜索：英文 / 中文 / 拼音 id 均可匹配） -->
   <!-- DIALOG CARDS · v0.3.62：P0 场景卡片（多轮对话 + Role reversal，拼音优先零汉字） -->
@@ -843,7 +855,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.69';
+var APP_VERSION = '0.3.70';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -851,6 +863,7 @@ var APP_VERSION = '0.3.69';
 var API_BASE = (location.hostname === 'localhost' && (location.protocol === 'https:' || location.protocol === 'capacitor:')) ? 'https://sinoky.pages.dev/' : '';
 /* ⚠️⚠️ 改版本必须同步三处，否则会触发"永动机"式骚扰（这个坑已经犯了两次！）：
    index.html 的 APP_VERSION / version.json 的 version / sw.js 的 CACHE。
+  当前版本：v0.3.70（A1 情景图 / A13 徽章 / A14 Banner / A9 图标 接入）。
    第1次 v0.3.3~v0.3.7：只改后两处，index.html 停在 0.3.2。
    第2次 v0.3.23~v0.3.31：只改 version.json，APP_VERSION 与 sw CACHE 停在 0.3.22 长达 9 个版本
      → 生产环境老外每次打开都弹 'New version available — refresh!'，刷新无效（拿回的还是
@@ -2306,6 +2319,32 @@ function cityThumbHtml(sc){
     sc.icon + '\'"></span>';
 }
 
+/* v0.3.70 情景图 + 徽章 + Banner 接入（豆包 A1/A13/A14 素材） */
+var SCENE_IMG_ON = true;
+var SCENE_HERO = { hotel:1, food:1, transport:1, arrival:1 };
+function sceneHeroHtml(sc){
+  if(!SCENE_IMG_ON || !SCENE_HERO[sc.id]) return '';
+  return '<img class="scene-hero-img" src="assets/scenes/' + sc.id + '_hero.webp" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+}
+function badgeGalleryHtml(){
+  var said = 0; Object.keys(S.phrases||{}).forEach(function(k){ said += (S.phrases[k]||[]).length; });
+  var tonePerfect = (S.tone && S.tone.total>0 && S.tone.right===S.tone.total);
+  var defs = [
+    { id:'first-speak', t:'First speak',  on: said>0 },
+    { id:'streak3',     t:'3-day streak', on: (S.streak||0)>=3 },
+    { id:'streak7',     t:'7-day streak', on: (S.streak||0)>=7 },
+    { id:'streak14',    t:'14-day streak',on: (S.streak||0)>=14 },
+    { id:'perfect',     t:'Perfect tone', on: tonePerfect }
+  ];
+  var cards = defs.map(function(d){
+    return '<div class="badge-cell'+(d.on?' on':'')+'"><img src="assets/badges/'+d.id+'_256.webp" alt="'+d.t+'" loading="lazy" onerror="this.parentNode.style.visibility=\'hidden\'"><span>'+d.t+'</span></div>';
+  }).join('');
+  return '<div class="card badge-card"><div class="top"><h2>🏅 Your badges</h2><span class="badge">collect them all</span></div><div class="badge-row">'+cards+'</div></div>';
+}
+function bannerHtml(){
+  return '<div class="card banner-card" onclick="go(\'home\')"><img src="assets/banner/square.webp" alt="Sinoky" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>';
+}
+
 function cityRowHtml(sc, from){
   var d = cityDoneN(sc), tot = sc.phrases.length, fin = d >= tot;
   return '<button class="cityrow'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\',undefined,\''+from+'\')">'+
@@ -2798,7 +2837,7 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml() + dialogBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml() + dialogBlockHtml() + badgeGalleryHtml() + bannerHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -2811,6 +2850,7 @@ function openScene(id, idx, from){
   curScene = SCENES.filter(function(s){ return s.id===id; })[0];
   $('sc-title').textContent = curScene.icon+' '+curScene.title;
   $('sc-desc').textContent = curScene.desc;
+  var hero = document.getElementById('sc-hero'); if(hero) hero.innerHTML = sceneHeroHtml(curScene);
   $('sc-finish').style.display = 'none';
   renderSceneList();
   go('scene');
