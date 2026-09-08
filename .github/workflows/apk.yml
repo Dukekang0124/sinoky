@@ -1,0 +1,80 @@
+name: Build Sinoky APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildType:
+        description: 'debug (no signing needed) or release (needs keystore secrets)'
+        required: true
+        default: 'debug'
+        type: choice
+        options: [debug, release]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build web assets into www/
+        run: npm run build:web
+
+      - name: Create android project (not committed — generated each run)
+        run: npx cap add android
+
+      - name: Sync web assets into android
+        run: npx cap sync android
+
+      - name: Resolve version from index.html (single source of truth)
+        id: ver
+        run: |
+          V=$(node -e "const h=require('fs').readFileSync('index.html','utf8');const m=h.match(/var APP_VERSION = '([\d.]+)'/);process.stdout.write(m[1])")
+          IFS='.' read -r MA MI PA <<< "$V"
+          CODE=$((MA*10000 + MI*100 + PA))
+          echo "version=$V" >> $GITHUB_OUTPUT
+          echo "code=$CODE" >> $GITHUB_OUTPUT
+          echo "versionName/versionCode = $V / $CODE"
+
+      - name: Stamp versionName & versionCode
+        run: |
+          sed -i "s/versionCode 1/versionCode ${{ steps.ver.outputs.code }}/" android/app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"${{ steps.ver.outputs.version }}\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Grant gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        if: github.event.inputs.buildType == 'debug'
+        run: cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: Build release APK (unsigned placeholder until keystore provided)
+        if: github.event.inputs.buildType == 'release'
+        run: cd android && ./gradlew assembleRelease --no-daemon
+
+      - name: Rename & expose artifact
+        run: |
+          T=${{ github.event.inputs.buildType }}
+          if [ "$T" = "debug" ]; then SRC=android/app/build/outputs/apk/debug/app-debug.apk; else SRC=android/app/build/outputs/apk/release/app-release-unsigned.apk; fi
+          mkdir -p dist
+          cp "$SRC" "dist/Sinoky-v${{ steps.ver.outputs.version }}-$T.apk"
+          ls -lh dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sinoky-v${{ steps.ver.outputs.version }}-${{ github.event.inputs.buildType }}
+          path: dist/*.apk
+          if-no-files-found: error

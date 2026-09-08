@@ -1,0 +1,21 @@
+{
+  "appId": "app.sinoky.pwa",
+  "appName": "Sinoky",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "loggingBehavior": "none",
+  "android": {
+    "allowMixedContent": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#141a24",
+      "showSpinner": false
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "sinoky",
+  "version": "0.3.59",
+  "description": "Sinoky - Speak Chinese where it matters. (single-file PWA + Capacitor APK)",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "cap:add": "npm run build:web && npx cap add android",
+    "cap:sync": "npm run build:web && npx cap sync android",
+    "apk:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dukekang0124/sinoky.git"
+  },
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/Dukekang0124/sinoky#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1"
+  },
+  "private": true
+}
