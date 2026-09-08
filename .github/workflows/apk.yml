@@ -29,7 +29,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'   # Capacitor CLI 8.x requires Node >= 22 (fatal otherwise)
           cache: 'npm'
 
       - name: Install deps
