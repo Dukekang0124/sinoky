@@ -467,6 +467,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .rv-mode i{font-style:normal;font-size:11.5px;color:var(--sub)}
       .rv-item{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
       .rv-meta{font-size:11.5px;color:var(--sub);margin-bottom:8px}
+      .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+      .hub{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;font-family:inherit;color:var(--txt)}
+      .hub .ic{font-size:22px}
+      .hub b{font-size:14px}
+      .hub i{font-style:normal;font-size:11.5px;color:var(--sub);line-height:1.35}
+      .setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+      .setrow:last-of-type{border-bottom:none}
+      .setctl{display:flex;gap:8px;align-items:center}
+      .setctl .btn.on, .btn.ghost.on{border-color:var(--red);color:var(--red)}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -603,19 +612,6 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <div class="stat"><div class="n" id="st-phrases">0</div><div class="l">🗣️ Phrases said</div></div>
       <div class="stat"><div class="n" id="st-tone">—</div><div class="l">🎯 Tone accuracy</div></div>
     </div>
-    <div class="voicebar" id="voicebar">
-      <span class="vb-label">🔊 Voice</span>
-      <div class="vb-group" id="vb-voice">
-        <button type="button" data-v="zh-CN-XiaoxiaoNeural" class="on" onclick="setVoice('zh-CN-XiaoxiaoNeural',this)">Female</button>
-        <button type="button" data-v="zh-CN-YunxiNeural" onclick="setVoice('zh-CN-YunxiNeural',this)">Male</button>
-      </div>
-      <div class="vb-group" id="vb-engine">
-        <button type="button" data-e="edge" class="on" onclick="setEngine('edge',this)">Standard</button>
-        <button type="button" data-e="cosy" data-emotion="happy" onclick="setEmotion('happy',this)">Cheerful</button>
-        <button type="button" data-e="cosy" data-emotion="serious" onclick="setEmotion('serious',this)">Serious</button>
-        <button type="button" data-e="cosy" data-emotion="gentle" onclick="setEmotion('gentle',this)">Gentle</button>
-      </div>
-    </div>
     <div id="home-scenes"></div>
     <!-- v0.3.44 Phase 0：Tone Gym 卡与底部导航 🎵 Tones 重复、Share 卡与 foot 的 Share 重复，
          均已移除（省约 340px）。可发现性由底部导航与 foot 承担，不是砍功能。 -->
@@ -743,7 +739,75 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
 
+<section id="v-practice" class="views">
+    <div class="card"><div class="top"><h2>🎯 Practice</h2><span class="badge">pick a skill</span></div>
+      <p class="desc">Train one skill at a time. Everything you say is scored.</p>
+      <div class="hub-grid">
+        <button class="hub" onclick="go('cards')"><span class="ic">🗂️</span><b>Character cards</b><i>HSK1 deck, tap to hear</i></button>
+        <button class="hub" onclick="go('reading')"><span class="ic">📖</span><b>Read &amp; lookup</b><i>Paste text, get pinyin</i></button>
+        <button class="hub" onclick="go('sentences')"><span class="ic">💬</span><b>Sentences</b><i>Saved lines for review</i></button>
+        <button class="hub" onclick="startTone()"><span class="ic">🎵</span><b>Tone training</b><i>See your tone curve</i></button>
+      </div></div>
+    <button class="btn ghost" onclick="go('home')">← Back</button>
+  </section>
+
+  <section id="v-explore" class="views">
+    <div class="card"><div class="top"><h2>🧭 Explore</h2><span class="badge">content library</span></div>
+      <p class="desc">All the places and situations you can practise.</p>
+      <div class="hub-grid">
+        <button class="hub" onclick="go('days')"><span class="ic">📅</span><b>14-day path</b><i>Scenes by day</i></button>
+        <button class="hub" onclick="go('cities')"><span class="ic">📍</span><b>Cities</b><i>Lines by destination</i></button>
+        <button class="hub" onclick="go('dialog')"><span class="ic">🗣️</span><b>Conversations</b><i>Full back-and-forth</i></button>
+        <button class="hub" onclick="go('review')"><span class="ic">🔁</span><b>Smart review</b><i>Spaced repetition</i></button>
+      </div></div>
+    <button class="btn ghost" onclick="go('home')">← Back</button>
+  </section>
+
+  <section id="v-me" class="views">
+    <div class="card">
+      <div class="top"><h2>👤 Me</h2><span class="badge" id="me-ver">v</span></div>
+      <p class="desc">Your profile, streaks and settings.</p>
+      <div class="streakrow" id="me-stats"></div>
+      <div class="hub-grid" style="margin-top:12px">
+        <button class="hub" onclick="go('settings')"><span class="ic">⚙️</span><b>Settings</b><i>Language · voice · updates</i></button>
+        <button class="hub" onclick="go('prog')"><span class="ic">🏅</span><b>Badges &amp; progress</b><i>What you have earned</i></button>
+      </div>
+    </div>
+    <div id="me-banner"></div>
+    <button class="btn ghost" onclick="go('home')">← Back</button>
+  </section>
+
+  <section id="v-settings" class="views">
+    <div class="card"><div class="top"><h2>⚙️ Settings</h2></div>
+      <p class="desc">Interface language, voice, and updates.</p>
+      <div class="setrow"><span>Interface language</span>
+        <span class="setctl">
+          <button class="btn ghost" id="lang-en" onclick="setLang('en')">English</button>
+          <button class="btn ghost" id="lang-zh" onclick="setLang('zh')">中文</button>
+        </span></div>
+      <div class="setrow"><span>Voice</span></div>
+    <div class="voicebar" id="voicebar">
+      <span class="vb-label">🔊 Voice</span>
+      <div class="vb-group" id="vb-voice">
+        <button type="button" data-v="zh-CN-XiaoxiaoNeural" class="on" onclick="setVoice('zh-CN-XiaoxiaoNeural',this)">Female</button>
+        <button type="button" data-v="zh-CN-YunxiNeural" onclick="setVoice('zh-CN-YunxiNeural',this)">Male</button>
+      </div>
+      <div class="vb-group" id="vb-engine">
+        <button type="button" data-e="edge" class="on" onclick="setEngine('edge',this)">Standard</button>
+        <button type="button" data-e="cosy" data-emotion="happy" onclick="setEmotion('happy',this)">Cheerful</button>
+        <button type="button" data-e="cosy" data-emotion="serious" onclick="setEmotion('serious',this)">Serious</button>
+        <button type="button" data-e="cosy" data-emotion="gentle" onclick="setEmotion('gentle',this)">Gentle</button>
+      </div>
+    </div>
+      <div class="setrow"><span>Version</span><span class="setctl"><b id="set-ver">—</b>
+        <button class="btn ghost" onclick="checkUpdate()">Check update</button></span></div>
+      <div class="rd-hint" id="set-updhint">Current version is shown above. Tap check to compare with the server.</div>
+    </div>
+    <button class="btn ghost" onclick="go('me')">← Back</button>
+  </section>
+
   <section id="v-prog" class="views">
+    <div id="prog-badges"></div>
     <div class="card">
       <div class="top"><h2>Your progress</h2></div>
       <p class="desc">Last 14 days — red means you completed a challenge.</p>
@@ -818,13 +882,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   </section>
 </div>
 
+<!-- Nono companion: 全站浮标位（v0.5.0 仅预留归属；视觉与交互后续单独推进） -->
+<div id="nono-dock" style="display:none"></div>
+
 <nav>
   <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
-  <button id="nav-cards" onclick="go('cards')"><span class="ic">🗂️</span>Cards</button>
-  <button id="nav-reading" onclick="go('reading')"><span class="ic">📖</span>Read</button>
-  <button id="nav-sentences" onclick="go('sentences')"><span class="ic">💬</span>Sentences</button>
-  <button id="nav-tone" onclick="startTone()"><span class="ic">🎵</span>Tones</button>
-  <button id="nav-prog" onclick="go('prog')"><span class="ic">📈</span>Progress</button>
+  <button id="nav-practice" onclick="go('practice')"><span class="ic">🎯</span>Practice</button>
+  <button id="nav-explore" onclick="go('explore')"><span class="ic">🧭</span>Explore</button>
+  <button id="nav-prog" onclick="go('prog')"><span class="ic">📊</span>Progress</button>
+  <button id="nav-me" onclick="go('me')"><span class="ic">👤</span>Me</button>
 </nav>
 <div class="toast" id="toast"></div>
 <div id="updatebar"></div>
@@ -883,7 +949,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.4.0';
+var APP_VERSION = '0.5.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2345,7 +2411,7 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
   /* v0.3.35 S1：离开场景视图时停止进行中的录音，避免麦克风在后台常开 */
   if(v !== 'scene' && typeof stopRecording === 'function') stopRecording();
-  ['home','scene','tone','prog','cards','sentences','reading','cities','days','onboard','dialog','review'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences','reading','cities','days','onboard','dialog','review','practice','explore','me','settings'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
@@ -2353,9 +2419,11 @@ function go(v){
   if(v==='tone'||v==='cards'||v==='reading'||v==='sentences'||v==='prog'){
     S.feat = S.feat || {}; S.feat[v] = (S.feat[v]||0)+1; saveStateLocal();   /* v0.3.40：埋点计数只写本地，随真实进度或会话结束 flush 上云（recordStat 是 max 幂等，批量上报不丢数据） */
   }
-  if(v==='prog') renderProgress();
+  if(v==='prog'){ renderProgress(); var pb=$('prog-badges'); if(pb && typeof badgeGalleryHtml==='function') pb.innerHTML = badgeGalleryHtml(); }
   if(v==='home') renderHome();
   if(v==='review') renderReview();
+  if(v==='me') renderMe();
+  if(v==='settings') renderSettings();
   if(v==='cities') renderCities();
   if(v==='dialog') renderDialogList();
   if(v==='days') renderDays();
@@ -2949,6 +3017,51 @@ function renderReview(){
   box.innerHTML = h;
 }
 
+function renderMe(){
+  try{
+    var said=0; Object.keys(S.phrases||{}).forEach(function(k){ said += (S.phrases[k]||[]).length; });
+    var tone = (S.tone && S.tone.total) ? Math.round(100*S.tone.right/S.tone.total)+'%' : '\u2014';
+    var el=$('me-stats');
+    if(el) el.innerHTML = '<div class="stat"><div class="n">'+(S.streak||0)+'</div><div class="l">'+"\uD83D\uDD25"+' Day streak</div></div>'+
+      '<div class="stat"><div class="n">'+said+'</div><div class="l">'+"\uD83D\uDDE3\uFE0F"+' Phrases said</div></div>'+
+      '<div class="stat"><div class="n">'+tone+'</div><div class="l">'+"\uD83C\uDFAF"+' Tone accuracy</div></div>';
+    var v=$('me-ver'); if(v) v.textContent = 'v'+APP_VERSION;
+    var b=$('me-banner'); if(b && typeof bannerHtml==='function') b.innerHTML = bannerHtml();
+  }catch(e){}
+}
+function renderSettings(){
+  try{
+    var v=$('set-ver'); if(v) v.textContent = 'v'+APP_VERSION;
+    var lang = S.lang || 'en';
+    ['lang-en','lang-zh'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.toggle('on', id==='lang-'+lang); });
+    applyLang();
+  }catch(e){}
+}
+function setLang(l){
+  S.lang = l; if(typeof saveState==='function') saveState();
+  ['lang-en','lang-zh'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.toggle('on', id==='lang-'+l); });
+  applyLang();
+}
+function applyLang(){
+  var zh = (S.lang||'en')==='zh';
+  var en = { 'nav-home':'Home','nav-practice':'Practice','nav-explore':'Explore','nav-prog':'Progress','nav-me':'Me' };
+  var cn = { 'nav-home':"\u9996\u9875",'nav-practice':"\u7EC3\u4E60",'nav-explore':"\u63A2\u7D22",'nav-prog':"\u8FDB\u5EA6",'nav-me':"\u6211\u7684" };
+  Object.keys(en).forEach(function(id){
+    var b=document.getElementById(id); if(!b) return;
+    var ic=b.querySelector('span.ic');
+    if(ic) b.innerHTML = ic.outerHTML + (zh?cn[id]:en[id]);
+  });
+}
+async function checkUpdate(){
+  var hint=$('set-updhint'); if(!hint) return;
+  try{
+    hint.textContent='Checking\u2026';
+    var r=await fetch('version.json?t='+Date.now()); var j=await r.json();
+    var latest=j.version||APP_VERSION;
+    hint.textContent = (latest===APP_VERSION) ? ('Up to date (v'+APP_VERSION+')') : ('New version available: v'+latest+' \u2014 reload the page to update.');
+  }catch(e){ hint.textContent='Could not check for updates (offline?). Current: v'+APP_VERSION; }
+}
+
 function renderHome(){
   $('st-streak').textContent = S.streak;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -2988,7 +3101,7 @@ function renderHome(){
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml() + dialogBlockHtml() + badgeGalleryHtml() + bannerHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
