@@ -479,6 +479,22 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .seg{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:10px 0}
       .seg button{flex:1;background:none;border:none;border-radius:9px;padding:8px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit}
       .seg button.on{background:rgba(230,57,70,.12);color:var(--red)}
+      /* ---- Nono companion ---- */
+      #nono-dock{position:fixed;right:12px;bottom:78px;z-index:60;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+      #nono-fab{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.35);padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+      #nono-fab img{width:40px;height:40px;border-radius:50%}
+      #nono-fab.bump{animation:nonoBump 1.1s ease}
+      @keyframes nonoBump{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+      #nono-panel{width:min(78vw,300px);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden}
+      .np-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+      .np-head img{width:34px;height:34px;border-radius:50%}
+      .np-head b{font-size:13.5px}
+      .np-acts{margin-left:auto;display:flex;gap:4px}
+      .np-acts button{background:none;border:none;color:var(--sub);font-size:15px;cursor:pointer;padding:2px 6px}
+      .np-body{padding:12px;font-size:13.5px;line-height:1.55}
+      .np-foot{padding:0 12px 12px;display:flex;gap:8px;flex-wrap:wrap}
+      .np-foot button{background:var(--red);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+      .np-foot button.ghost{background:none;border:1px solid var(--line);color:var(--txt)}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -774,6 +790,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <div class="hub-grid" style="margin-top:12px">
         <button class="hub" onclick="go('settings')"><span class="ic">⚙️</span><b>Settings</b><i>Language · voice · updates</i></button>
         <button class="hub" onclick="go('prog')"><span class="ic">🏅</span><b>Badges &amp; progress</b><i>What you have earned</i></button>
+        <button class="hub" onclick="nonoOpen()"><span class="ic">🐼</span><b>Bring Nono back</b><i>Your panda companion</i></button>
       </div>
     </div>
     <div id="me-banner"></div>
@@ -886,7 +903,23 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 </div>
 
 <!-- Nono companion: 全站浮标位（v0.5.0 仅预留归属；视觉与交互后续单独推进） -->
-<div id="nono-dock" style="display:none"></div>
+<div id="nono-dock">
+  <div id="nono-panel" style="display:none">
+    <div class="np-head">
+      <img id="nono-pose" src="assets/mascot/like.webp" alt="Nono">
+      <b>Nono</b>
+      <span class="np-acts">
+        <button onclick="nonoMin()" title="Minimise">–</button>
+        <button onclick="nonoClose()" title="Hide for today">✕</button>
+      </span>
+    </div>
+    <div class="np-body" id="nono-msg"></div>
+    <div class="np-foot" id="nono-acts"></div>
+  </div>
+  <button id="nono-fab" onclick="nonoToggle()" aria-label="Nono companion">
+    <img src="assets/mascot/cheer.webp" alt="Nono">
+  </button>
+</div>
 
 <nav>
   <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
@@ -952,7 +985,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.5.1';
+var APP_VERSION = '0.6.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3080,6 +3113,156 @@ function switchListen(n, btn){
   if(tabs) [].forEach.call(tabs.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
   if(btn) btn.classList.add('on');
 }
+
+
+/* ================= v0.6.0 Nono（诺诺）全站陪伴 =================
+   只读状态 + 包装监听，不改动任何业务函数体；不打断录音/播放。
+   姿态素材：assets/mascot/{cheer,like,think,sorry}.webp（A4，已入库）       */
+var NONO = { seen: {}, lastShow: 0, idleT: null, closed: false, streakSeen: 0 };
+try { NONO.closed = !!JSON.parse(localStorage.getItem('sinoky_nono') || '{}').closedToday; } catch (e) {}
+
+function nonoPose(n) { var el = document.getElementById('nono-pose'); if (el) el.src = 'assets/mascot/' + n + '.webp'; }
+function nonoBusy() {
+  /* 录音中或音频播放中不主动打扰 */
+  try { if (window.scRec && scRec.state === 'recording') return true; } catch (e) {}
+  try { var a = document.querySelector('audio'); if (a && !a.paused) return true; } catch (e) {}
+  return false;
+}
+function nonoDaily() {
+  var today = new Date().toISOString().slice(0, 10);
+  var d = {}; try { d = JSON.parse(localStorage.getItem('sinoky_nono_day') || '{}'); } catch (e) {}
+  if (d.day !== today) { d = { day: today, n: 0 }; }
+  return d;
+}
+function nonoShown(id) {
+  if (NONO.seen[id]) return true;
+  NONO.seen[id] = 1; return false;
+}
+function nonoShow(msg, opt) {
+  opt = opt || {};
+  var panel = document.getElementById('nono-panel');
+  if (!panel || NONO.closed) return;
+  if (opt.once && nonoShown(opt.id || msg)) return;
+  var d = nonoDaily();
+  if (d.n >= 4) return;                       /* 每日主动气泡上限 */
+  if (nonoBusy()) return;                     /* 录音/播放中不打扰 */
+  d.n++; try { localStorage.setItem('sinoky_nono_day', JSON.stringify(d)); } catch (e) {}
+  nonoPose(opt.pose || 'like');
+  document.getElementById('nono-msg').innerHTML = msg;
+  var acts = '';
+  (opt.actions || []).forEach(function (a) {
+    acts += '<button class="' + (a.ghost ? 'ghost' : '') + '" onclick="' + a.fn + '">' + a.t + '</button>';
+  });
+  document.getElementById('nono-acts').innerHTML = acts;
+  panel.style.display = 'block';
+  NONO.lastShow = Date.now();
+  var fab = document.getElementById('nono-fab');
+  if (fab) { fab.classList.add('bump'); setTimeout(function () { fab.classList.remove('bump'); }, 1200); }
+}
+function nonoMin() { var p = document.getElementById('nono-panel'); if (p) p.style.display = 'none'; }
+function nonoClose() {
+  nonoMin();
+  NONO.closed = true;
+  try { localStorage.setItem('sinoky_nono', JSON.stringify({ closedToday: true, at: Date.now() })); } catch (e) {}
+}
+function nonoOpen() { NONO.closed = false; try { localStorage.removeItem('sinoky_nono'); } catch (e) {} nonoContextGreet(true); }
+function nonoToggle() {
+  var p = document.getElementById('nono-panel');
+  if (!p) return;
+  if (p.style.display === 'none') { NONO.closed = false; nonoContextGreet(true); } else { nonoMin(); }
+}
+function nonoView() { var on = document.querySelector('.views.on'); return on ? on.id.replace('v-', '') : 'home'; }
+
+/* 语境感知：根据当前视图 + 状态决定说什么 */
+function nonoContextGreet(manual) {
+  var v = nonoView(), said = 0;
+  if (manual) {
+    /* 用户主动点击必须给反馈：优先于 once/到期提醒，避免"点了没反应" */
+    var line = (typeof NONO.pickLine === 'function') ? NONO.pickLine() : null;
+    nonoShow(line
+      ? ("Let's practise: <b>" + line.hz + "</b><br><span style='color:var(--sub)'>" + line.py + "</span><br>" + (line.en || ''))
+      : "Tap Practice and say a line out loud - I'll listen. <b>" + "试试看！" + "</b>",
+      { pose: 'like', actions: line ? [{ t: 'Hear it', fn: 'nonoSay()' }, { t: 'I will say it', fn: "go('practice')" }] : [{ t: 'Go practise', fn: "go('practice')" }] });
+    return;
+  }
+  Object.keys(S.phrases || {}).forEach(function (k) { said += (S.phrases[k] || []).length; });
+  var due = 0; try { if (typeof revQueue === 'function') due = revQueue().length; } catch (e) {}
+
+  if (v === 'home' && said === 0) {
+    nonoShow("Hi, I'm Nono 🐼 Your first line today: <b>你好</b> (nǐ hǎo). Tap it and say it out loud.",
+      { pose: 'like', id: 'first', once: true, actions: [{ t: "Start Day 1", fn: "go('days')" }] });
+    return;
+  }
+  if (v === 'home' && due >= 3) {
+    nonoShow(due + " lines are about to slip away. <b>复习一下？</b> Five minutes now saves relearning later.",
+      { pose: 'think', id: 'due' + due, once: true, actions: [{ t: "Review now", fn: "go('review')" }, { t: 'Later', fn: 'nonoMin()', ghost: true }] });
+    return;
+  }
+  if (v === 'cards') {
+    nonoShow("This is your HSK1 deck — tap a character to hear it, then say it back. <b>听一听，说一说。</b>",
+      { pose: 'think', id: 'c_cards', once: true });
+    return;
+  }
+  if (v === 'tone') {
+    nonoShow("Say the word and I'll draw your tone curve. <b>慢慢来</b> — slow is fine, clear is better.",
+      { pose: 'think', id: 'c_tone', once: true });
+    return;
+  }
+  if (v === 'cities') {
+    nonoShow("Pick a city and learn the few lines that actually come up there. <b>你去哪儿？</b>",
+      { pose: 'like', id: 'c_cities', once: true });
+    return;
+  }
+  if (v === 'review') {
+    nonoShow("Spaced repetition: say it before you peek. <b>先说，再看。</b>", { pose: 'think', id: 'c_review', once: true });
+    return;
+  }
+  if (v === 'me' || v === 'settings') {
+    nonoShow("You can change the voice, language and check updates here. <b>需要帮忙吗？</b>", { pose: 'like', id: 'c_me', once: true });
+    return;
+  }
+}
+
+/* ---- 包装监听（不改原函数体）：评分完成 / 失败 → 鼓励或安慰 ---- */
+(function () {
+  if (typeof window.renderScore !== 'function') return;
+  var orig = window.renderScore;
+  window.renderScore = function (d) {
+    var out = orig.apply(this, arguments);
+    try {
+      var sc = (d && (d.overall != null ? d.overall : d.score)) || 0;
+      if (sc >= 70) nonoShow("Nice! <b>很好</b> — that sounded natural.", { pose: 'cheer', id: 'cheer' + sc, once: false });
+      else if (sc > 0) nonoShow("Close! Try slower — <b>慢慢来，再说一次。</b>", { pose: 'sorry', id: 'low' + sc, once: false });
+    } catch (e) {}
+    return out;
+  };
+})();
+
+/* ---- 空闲提示（40s 无操作） ---- */
+function nonoResetIdle() {
+  if (NONO.idleT) clearTimeout(NONO.idleT);
+  NONO.idleT = setTimeout(function () {
+    if (NONO.closed || nonoBusy()) return;
+    var v = nonoView();
+    if (v === 'home') nonoShow("Want to try one line? <b>练一句？</b>", { pose: 'think', id: 'idle', once: true });
+  }, 40000);
+}
+['click', 'touchstart', 'keydown', 'scroll'].forEach(function (ev) {
+  window.addEventListener(ev, nonoResetIdle, { passive: true });
+});
+
+/* ---- 视图切换后触发语境提示 ---- */
+(function () {
+  var origGo = window.go;
+  if (typeof origGo !== 'function') return;
+  window.go = function (v) {
+    var out = origGo.apply(this, arguments);
+    try { setTimeout(function () { if (!NONO.closed) nonoContextGreet(false); }, 400); } catch (e) {}
+    return out;
+  };
+})();
+window.addEventListener('load', function () { setTimeout(function () { nonoResetIdle(); }, 1200); });
+
 
 function renderHome(){
   $('st-streak').textContent = S.streak;
