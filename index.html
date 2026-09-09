@@ -1048,7 +1048,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.11.2';
+var APP_VERSION = '0.12.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3235,36 +3235,132 @@ async function checkApkUpdate(){
     if(!j.apk || !j.apk.versionCode || !j.apk.url) return null;
     var local = await getLocalApkVersionCode();
     if(j.apk.versionCode > local){
-      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url };
+      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url, md5: j.apk.md5||'', size: j.apk.size||0 };
     }
   }catch(e){}
   return null;
 }
+/* v0.12.0：横幅关闭记忆——用户关过的版本不再打扰（apk/web 双通道共用存储） */
+function updStoreGet(){ try{ return JSON.parse(localStorage.getItem('sinoky_upd')||'{}'); }catch(e){ return {}; } }
+function updStoreSet(o){ try{ localStorage.setItem('sinoky_upd', JSON.stringify(o)); }catch(e){} }
 function showApkUpdateBar(apk){
+  var st = updStoreGet();
+  if(st.apkDismissed === apk.versionCode) return;
   var bar = document.getElementById('updatebar');
   if(!bar) return;
-  bar.textContent = 'New app v'+(apk.version||apk.versionCode)+' — tap to update';
+  bar.innerHTML = 'New app v'+(apk.version||apk.versionCode)+' — tap to update';
+  var x = document.createElement('span');
+  x.textContent = '×';
+  x.setAttribute('style','position:absolute;top:0;right:0;line-height:1;padding:10px 14px;cursor:pointer;font-size:1.1rem;');
+  x.onclick = function(e){
+    e.stopPropagation();
+    st.apkDismissed = apk.versionCode; updStoreSet(st);
+    bar.style.display = 'none';
+  };
+  bar.appendChild(x);
   bar.style.display = 'block';
   bar.onclick = function(){ startApkUpdate(apk); };
   toast('⬆️ New app v'+(apk.version||apk.versionCode)+' available — tap the banner to update');
 }
+/* v0.12.0：更新进度浮层——百分比进度条 + 弱网停滞琥珀提示 + 取消/重试。
+   老插件（无进度事件）自动退化：无事件时 watchdog 不启用，resolve 即完成。 */
+function updOverlay(){
+  var ov = document.getElementById('upd-ov');
+  if(ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'upd-ov';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;';
+  ov.innerHTML = '<div style="background:var(--bg,#fff);color:var(--text,#222);max-width:360px;width:100%;border-radius:16px;padding:20px;">'
+    + '<div style="font-size:1rem;font-weight:600;margin-bottom:12px;">⬇️ Downloading update…</div>'
+    + '<div style="height:8px;background:var(--border,#ddd);border-radius:4px;overflow:hidden;margin-bottom:10px;">'
+    + '<div id="upd-ov-bar" style="height:100%;width:0;background:var(--accent,#e63946);transition:width .3s;"></div></div>'
+    + '<div id="upd-ov-txt" style="font-size:.82rem;color:var(--text-sec,#666);text-align:center;min-height:2.4em;line-height:1.5;">Preparing download…</div>'
+    + '<div style="display:flex;gap:10px;margin-top:12px;">'
+    + '<button id="upd-ov-cancel" style="flex:1;padding:10px;border:1px solid var(--border,#ccc);border-radius:10px;background:transparent;color:var(--text-sec,#666);font-size:.9rem;cursor:pointer;">Cancel</button>'
+    + '<button id="upd-ov-retry" style="flex:1;padding:10px;border:none;border-radius:10px;background:var(--accent,#e63946);color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;display:none;">Retry</button>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+  document.getElementById('upd-ov-cancel').onclick = function(){
+    try{
+      var pc = Capacitor.Plugins && Capacitor.Plugins.UpdatePlugin;
+      if(pc && pc.cancelDownload) pc.cancelDownload();
+    }catch(e){}
+    ov.style.display = 'none';
+    clearInterval(UPD.watch);
+  };
+  return ov;
+}
+var UPD = { lastT: 0, bound: false, gotEvt: false, watch: null };
 async function startApkUpdate(apk){
-  try{
-    var p = Capacitor.Plugins && Capacitor.Plugins.UpdatePlugin;
-    if(!p || !p.downloadAndInstall){ toast('Update not supported in this build'); return; }
-    toast('Downloading update…');
-    await p.downloadAndInstall({ url: apk.url });
-    toast('Update downloaded — installing…');
-  }catch(e){
-    var m = (e&&e.message) ? String(e.message) : String(e);
-    if(m.indexOf('install_permission_required') >= 0){
-      toast('ℹ️ Allow "Install unknown apps" for Sinoky in the opened page, then tap update again');
-    } else {
-      toast('⚠️ Update failed: ' + m.slice(0, 90));
+  var p = Capacitor.Plugins && Capacitor.Plugins.UpdatePlugin;
+  if(!p || !p.downloadAndInstall){ toast('Update not supported in this build'); return; }
+  var ov = updOverlay();
+  var bar = document.getElementById('upd-ov-bar');
+  var txt = document.getElementById('upd-ov-txt');
+  var cancelBtn = document.getElementById('upd-ov-cancel');
+  var retryBtn = document.getElementById('upd-ov-retry');
+  cancelBtn.style.display = ''; retryBtn.style.display = 'none';
+  ov.style.display = 'flex';
+  bar.style.width = '0'; bar.removeAttribute('data-done');
+  txt.textContent = 'Preparing download…'; txt.style.color = '';
+  UPD.gotEvt = false; UPD.lastT = Date.now();
+  if(p.addListener && !UPD.bound){
+    UPD.bound = true;
+    try{
+      p.addListener('updateProgress', function(s){
+        UPD.gotEvt = true;
+        var b = document.getElementById('upd-ov-bar'), t = document.getElementById('upd-ov-txt');
+        if(!b || !t) return;
+        if(s && s.status === 'complete'){
+          b.style.width = '100%'; b.setAttribute('data-done','1');
+          t.textContent = 'Download verified — installing…'; t.style.color = '';
+          return;
+        }
+        UPD.lastT = Date.now();
+        var pc = (s && s.percent) || 0;
+        b.style.width = pc + '%';
+        t.textContent = pc + '% — keep the app in the foreground'; t.style.color = '';
+      });
+    }catch(e){}
+  }
+  /* 弱网停滞 watchdog：仅在收到过进度事件的新插件上启用；8 秒无新事件→琥珀提示 */
+  clearInterval(UPD.watch);
+  UPD.watch = setInterval(function(){
+    if(!UPD.gotEvt) return;
+    var b = document.getElementById('upd-ov-bar'), t = document.getElementById('upd-ov-txt');
+    if(!t || !b || b.getAttribute('data-done')) return;
+    if(Date.now() - UPD.lastT > 8000){
+      t.textContent = 'Network is slow — download not advancing. Keep the app open, still trying…';
+      t.style.color = '#d98800';
     }
+  }, 2000);
+  try{
+    await p.downloadAndInstall({ url: apk.url, md5: apk.md5 || '', size: apk.size || 0 });
+    clearInterval(UPD.watch);
+    if(bar) bar.style.width = '100%';
+    if(txt){ txt.textContent = 'Installer opened — please confirm in the system dialog'; txt.style.color = ''; }
+    setTimeout(function(){ ov.style.display = 'none'; }, 4000);
+  }catch(e){
+    clearInterval(UPD.watch);
+    var m = (e && e.message) ? String(e.message) : String(e);
+    if(txt){
+      if(m.indexOf('install_permission_required') >= 0){
+        txt.textContent = 'ℹ️ Allow "Install unknown apps" for Sinoky in the opened page, then tap update again';
+        txt.style.color = '';
+      } else if(m.indexOf('cancelled') >= 0){
+        txt.textContent = 'Update cancelled';
+        txt.style.color = '';
+      } else {
+        txt.textContent = '⚠️ Update failed: ' + m.slice(0, 120);
+        txt.style.color = '';
+        retryBtn.style.display = '';
+        cancelBtn.style.display = 'none';
+        retryBtn.onclick = function(){ ov.style.display = 'none'; startApkUpdate(apk); };
+      }
+    }
+    toast('Update issue — see details on screen');
   }
 }
-
 function toggleMoreScenes(){
   var box = document.getElementById('more-scenes'), btn = document.getElementById('more-scenes-btn');
   if(!box || !btn) return;
@@ -5140,9 +5236,17 @@ fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.js
     try{ var apk=await checkApkUpdate(); if(apk){ showApkUpdateBar(apk); return; } }catch(e){}
   }
   if(j.version && j.version !== APP_VERSION){
+    /* v0.12.0：网页刷新横幅带关闭记忆——关过的版本不再弹 */
+    var stw = updStoreGet();
+    if(stw.webDismissed === j.version) return;
     var bar = $('updatebar');
     if(bar){
-      bar.textContent = 'New version ' + j.version + ' — tap to refresh';
+      bar.innerHTML = 'New version ' + j.version + ' — tap to refresh';
+      var xw = document.createElement('span');
+      xw.textContent = '×';
+      xw.setAttribute('style','position:absolute;top:0;right:0;line-height:1;padding:10px 14px;cursor:pointer;font-size:1.1rem;');
+      xw.onclick = function(ev){ ev.stopPropagation(); stw.webDismissed = j.version; updStoreSet(stw); bar.style.display = 'none'; };
+      bar.appendChild(xw);
       bar.style.display = 'block';
       bar.onclick = function(){ try{ location.reload(true); }catch(e){ location.reload(); } };
     }

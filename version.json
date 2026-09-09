@@ -1,10 +1,12 @@
 {
-  "version": "0.11.2",
-  "updated": "2026-09-09",
-  "note": "修复：更新下载安装前自动检查并引导「安装未知应用」授权；下载/安装失败不再静默，屏幕提示具体原因。",
+  "version": "0.12.0",
+  "updated": "2026-09-10",
+  "note": "v0.12.0：更新机制补强——下载改应用内直链全量下载（弃 DownloadManager，规避 CF Pages 无断点续传导致的弱网/切后台中断）；新增下载进度条、弱网停滞提示、取消/重试；下载完成自动校验 APK 魔数与 MD5（假包直接拒绝）；更新横幅支持关闭记忆。",
   "apk": {
-    "versionCode": 1102,
-    "version": "0.11.2",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.11.2-release.apk"
+    "versionCode": 1200,
+    "version": "0.12.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.12.0-release.apk",
+    "md5": "",
+    "size": 0
   }
 }

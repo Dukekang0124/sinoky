@@ -63,11 +63,8 @@ jobs:
           cat > "$PKGDIR/UpdatePlugin.java" <<'EOF'
           package app.sinoky.pwa;
 
-          import android.app.DownloadManager;
-          import android.content.BroadcastReceiver;
           import android.content.Context;
           import android.content.Intent;
-          import android.content.IntentFilter;
           import android.content.pm.PackageInfo;
           import android.net.Uri;
           import android.os.Build;
@@ -79,9 +76,26 @@ jobs:
           import com.getcapacitor.PluginMethod;
           import com.getcapacitor.annotation.CapacitorPlugin;
           import java.io.File;
+          import java.io.FileInputStream;
+          import java.io.FileOutputStream;
+          import java.io.InputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import java.security.MessageDigest;
 
+          /**
+           * v0.12.0: in-app HTTP direct full download (replaces DownloadManager).
+           * Why: Cloudflare Pages does not support Range requests, so DownloadManager
+           * downloads die mid-way on weak networks / when the app goes to background
+           * (real-device verified). A plain HttpURLConnection full download is immune.
+           * Adds: progress events, cancel, and PK-magic + MD5 + size verification before
+           * install (guards against HTML-fallback fake APK served with HTTP 200).
+           */
           @CapacitorPlugin(name = "UpdatePlugin")
           public class UpdatePlugin extends Plugin {
+
+            private volatile boolean downloading = false;
+            private volatile boolean cancelled = false;
 
             @PluginMethod
             public void getAppVersionCode(PluginCall call) {
@@ -100,12 +114,20 @@ jobs:
             }
 
             @PluginMethod
+            public void cancelDownload(PluginCall call) {
+              cancelled = true;
+              call.resolve();
+            }
+
+            @PluginMethod
             public void downloadAndInstall(final PluginCall call) {
               final String url = call.getString("url");
               if (url == null || url.length() == 0) { call.reject("url required"); return; }
+              final String md5 = call.getString("md5");
+              Integer sizeInt = call.getInt("size");
+              final long expectSize = (sizeInt != null && sizeInt > 0) ? sizeInt : 0L;
               final Context ctx = getContext();
               // v0.11.2: Android 8+ requires the per-app "install unknown apps" grant.
-              // Without it, ACTION_INSTALL_PACKAGE throws and the installer never shows.
               if (Build.VERSION.SDK_INT >= 26 && !ctx.getPackageManager().canRequestPackageInstalls()) {
                 try {
                   Intent si = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
@@ -119,63 +141,117 @@ jobs:
                 call.reject("install_permission_required");
                 return;
               }
-              try {
-                DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url));
-                req.setTitle("Sinoky update");
-                req.setDescription("Downloading update");
-                req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-                req.setDestinationInExternalFilesDir(ctx, Environment.DIRECTORY_DOWNLOADS, "sinoky-update.apk");
-                final DownloadManager dm = (DownloadManager) ctx.getSystemService(Context.DOWNLOAD_SERVICE);
-                final long dlId = dm.enqueue(req);
-
-                BroadcastReceiver receiver = new BroadcastReceiver() {
-                  @Override
-                  public void onReceive(Context c, Intent intent) {
-                    long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                    if (id != dlId) return;
+              if (downloading) { call.reject("download_in_progress"); return; }
+              downloading = true;
+              cancelled = false;
+              final File out = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "sinoky-update.apk");
+              new Thread(new Runnable() {
+                @Override
+                public void run() {
+                  try {
+                    HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+                    conn.setConnectTimeout(15000);
+                    conn.setReadTimeout(30000);
+                    conn.setInstanceFollowRedirects(true);
+                    conn.connect();
+                    int http = conn.getResponseCode();
+                    if (http < 200 || http >= 300) {
+                      downloading = false;
+                      conn.disconnect();
+                      call.reject("download failed: HTTP " + http);
+                      return;
+                    }
+                    long total = conn.getContentLength();
+                    if (expectSize > 0 && total > 0 && Math.abs(total - expectSize) > 1024) {
+                      downloading = false;
+                      conn.disconnect();
+                      call.reject("size mismatch: expected " + expectSize + ", got " + total + " (new APK may not be live yet, retry later)");
+                      return;
+                    }
+                    InputStream in = conn.getInputStream();
+                    FileOutputStream fos = new FileOutputStream(out);
+                    MessageDigest dig = null;
                     try {
-                      // v0.11.2: verify download status — surface failures instead of silence
-                      DownloadManager.Query q = new DownloadManager.Query().setFilterById(dlId);
-                      android.database.Cursor cur = dm.query(q);
-                      if (cur != null && cur.moveToFirst()) {
-                        int status = cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
-                        if (status != DownloadManager.STATUS_SUCCESSFUL) {
-                          int reason = cur.getInt(cur.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
-                          android.widget.Toast.makeText(ctx, "Update download failed (status=" + status + " reason=" + reason + ")", android.widget.Toast.LENGTH_LONG).show();
-                          return;
+                      if (md5 != null && md5.trim().length() == 32) dig = MessageDigest.getInstance("MD5");
+                    } catch (Exception ex) { dig = null; }
+                    byte[] buf = new byte[65536];
+                    long done = 0;
+                    int lastPct = -1;
+                    long lastEvt = 0;
+                    int n;
+                    while ((n = in.read(buf)) > 0) {
+                      if (cancelled) {
+                        try { fos.close(); in.close(); conn.disconnect(); } catch (Exception ex) {}
+                        out.delete();
+                        downloading = false;
+                        call.reject("cancelled");
+                        return;
+                      }
+                      fos.write(buf, 0, n);
+                      if (dig != null) dig.update(buf, 0, n);
+                      done += n;
+                      if (total > 0) {
+                        int pct = (int) (done * 100 / total);
+                        long now = System.currentTimeMillis();
+                        if (pct != lastPct && now - lastEvt > 400) {
+                          lastPct = pct;
+                          lastEvt = now;
+                          JSObject st = new JSObject();
+                          st.put("status", "downloading");
+                          st.put("percent", pct);
+                          st.put("downloaded", done);
+                          st.put("total", total);
+                          notifyListeners("updateProgress", st);
                         }
                       }
-                      if (cur != null) cur.close();
-                      File f = new File(ctx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "sinoky-update.apk");
-                      android.widget.Toast.makeText(ctx, "Download complete — starting installer", android.widget.Toast.LENGTH_LONG).show();
-                      Intent install = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-                      if (Build.VERSION.SDK_INT >= 24) {
-                        Uri apkUri = FileProvider.getUriForFile(ctx, ctx.getPackageName() + ".fileprovider", f);
-                        install.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                        install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-                      } else {
-                        install.setDataAndType(Uri.fromFile(f), "application/vnd.android.package-archive");
-                        install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                      }
-                      ctx.startActivity(install);
-                    } catch (Exception ex) {
-                      // v0.11.2: never silent — show the real reason on screen
-                      android.widget.Toast.makeText(ctx, "Install launch failed: " + ex.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-                    } finally {
-                      try { ctx.unregisterReceiver(this); } catch (Exception ex) {}
                     }
+                    try { fos.close(); in.close(); conn.disconnect(); } catch (Exception ex) {}
+                    // Sanity: a real APK must start with PK magic bytes. Cloudflare Pages
+                    // serves index.html with HTTP 200 for not-yet-published /apk/ paths;
+                    // this check rejects such HTML fallbacks instead of installing them.
+                    FileInputStream fis = new FileInputStream(out);
+                    byte[] head = new byte[4];
+                    int hn = fis.read(head);
+                    fis.close();
+                    if (hn < 4 || head[0] != 0x50 || head[1] != 0x4B || head[2] != 0x03 || head[3] != 0x04) {
+                      out.delete();
+                      downloading = false;
+                      call.reject("not a valid APK file (magic mismatch) - the update package may not be live yet, try again later");
+                      return;
+                    }
+                    if (dig != null) {
+                      StringBuilder sb = new StringBuilder();
+                      for (byte b : dig.digest()) sb.append(String.format("%02x", b));
+                      if (!sb.toString().equalsIgnoreCase(md5.trim())) {
+                        out.delete();
+                        downloading = false;
+                        call.reject("md5 mismatch: got " + sb.substring(0, 8) + "... (download corrupted)");
+                        return;
+                      }
+                    }
+                    JSObject fin = new JSObject();
+                    fin.put("status", "complete");
+                    notifyListeners("updateProgress", fin);
+                    android.widget.Toast.makeText(ctx, "Download verified - starting installer", android.widget.Toast.LENGTH_LONG).show();
+                    Intent install = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+                    if (Build.VERSION.SDK_INT >= 24) {
+                      Uri apkUri = FileProvider.getUriForFile(ctx, ctx.getPackageName() + ".fileprovider", out);
+                      install.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                      install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    } else {
+                      install.setDataAndType(Uri.fromFile(out), "application/vnd.android.package-archive");
+                      install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    }
+                    ctx.startActivity(install);
+                    downloading = false;
+                    call.resolve();
+                  } catch (Exception e) {
+                    downloading = false;
+                    try { out.delete(); } catch (Exception ex) {}
+                    call.reject("download failed: " + e.getMessage());
                   }
-                };
-                IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-                if (Build.VERSION.SDK_INT >= 33) {
-                  ctx.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
-                } else {
-                  ctx.registerReceiver(receiver, filter);
                 }
-                call.resolve();
-              } catch (Exception e) {
-                call.reject("download failed: " + e.getMessage());
-              }
+              }).start();
             }
           }
           EOF
@@ -295,7 +371,23 @@ jobs:
           CODE=${{ steps.ver.outputs.code }}
           mkdir -p www/apk
           cp dist/Sinoky-v${V}-release.apk www/apk/Sinoky-v${V}-release.apk
-          node -e "const fs=require('fs');const p='www/version.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.apk={versionCode:Number(process.argv[1]),version:process.argv[2],url:'https://sinoky.pages.dev/apk/Sinoky-v'+process.argv[2]+'-release.apk'};fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');console.log('www/version.json apk=',JSON.stringify(j.apk))" "$CODE" "$V"
+          MD5=$(md5sum "www/apk/Sinoky-v${V}-release.apk" | cut -d' ' -f1)
+          SIZE=$(stat -c%s "www/apk/Sinoky-v${V}-release.apk")
+          node -e "const fs=require('fs');const p=process.argv[5];const j=JSON.parse(fs.readFileSync(p,'utf8'));j.apk={versionCode:Number(process.argv[1]),version:process.argv[2],url:'https://sinoky.pages.dev/apk/Sinoky-v'+process.argv[2]+'-release.apk',md5:process.argv[3],size:Number(process.argv[4])};fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');console.log('injected apk (md5+size) into',p,JSON.stringify(j.apk))" "$CODE" "$V" "$MD5" "$SIZE" www/version.json
+          node -e "const fs=require('fs');const p=process.argv[5];const j=JSON.parse(fs.readFileSync(p,'utf8'));j.apk={versionCode:Number(process.argv[1]),version:process.argv[2],url:'https://sinoky.pages.dev/apk/Sinoky-v'+process.argv[2]+'-release.apk',md5:process.argv[3],size:Number(process.argv[4])};fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');console.log('injected apk (md5+size) into',p,JSON.stringify(j.apk))" "$CODE" "$V" "$MD5" "$SIZE" version.json
+          npx --yes wrangler@3 pages deploy www --project-name=sinoky --branch=main
+          echo "published https://sinoky.pages.dev/apk/Sinoky-v${V}-release.apk (md5=${MD5:0:8}... size=$SIZE)"
+          # v0.12.0 治本：md5/size 回写仓库根 version.json——此后 push main 的 deploy
+          # 永远携带完整 apk 元数据，不再覆盖掉 CI 注入结果；发布窗口期由前端
+          # PK 魔数 + MD5 校验兜底（假包被拒并提示稍后重试，不可能装上坏包）。
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.json
+          if git diff --cached --quiet; then
+            echo "root version.json already in sync"
+          else
+            git commit -q -m "[skip ci] sync apk metadata v${V} (md5+size)" && git push -q origin HEAD:main && echo "pushed apk metadata sync to main" || echo "::warning::could not push version.json sync (main may have moved)"
+          fi
           npx --yes wrangler@3 pages deploy www --project-name=sinoky --branch=main
           echo "published https://sinoky.pages.dev/apk/Sinoky-v${V}-release.apk"
 
