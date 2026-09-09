@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 48 48">
+  <!-- A11 Cards: stacked phrase cards | 2px @48-grid, round, #eef2f7, 10% padding -->
+  <g fill="none" stroke="#eef2f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="11.0" y="9.0" width="20" height="27" rx="3"/>
+    <rect x="17.0" y="13.0" width="20" height="27" rx="3"/>
+    <path d="M22 21.5 h10 M22 26.5 h10 M22 31.5 h6"/>
+  </g>
+</svg>

@@ -128,6 +128,7 @@ header img{width:34px;height:34px;border-radius:9px}
 nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,36,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:9}
 nav button{flex:1;background:none;border:none;color:var(--sub);font-size:10.5px;padding:9px 0 11px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:3px;align-items:center}
 nav button .ic{font-size:19px}
+nav button .ic-img{width:22px;height:22px;object-fit:contain;margin-bottom:1px}
 nav button.on{color:var(--red)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:var(--red);color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
 .toast.show{opacity:1}
@@ -432,6 +433,10 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .dayitem.done .st{color:var(--teal)}
 .dayempty{font-size:12px;color:var(--sub);padding:6px 2px}
 .daylink{margin-top:9px;width:100%;background:none;border:none;color:var(--teal);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
+/* v0.10.0：A8 开屏 splash —— 首屏品牌图，app 初始化后淡出 */
+#splash{position:fixed;inset:0;z-index:9999;background:#141a24;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease}
+#splash.hide{opacity:0;pointer-events:none}
+#splash img{width:auto;height:78vh;max-width:92vw;object-fit:contain;border-radius:18px}
 </style>
 </head>
 <body>
@@ -472,6 +477,16 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
       .hub{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;font-family:inherit;color:var(--txt)}
       .hub .ic{font-size:22px}
+      .hub .ic-img{width:26px;height:26px;object-fit:contain}
+      .sc-thumb{width:100%;height:96px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:var(--bg2)}
+      .sr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+      .sr-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer}
+      .sr-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+      .sr-cap{padding:10px 12px 12px}
+      .sr-hz{font-size:15px;font-weight:700}
+      .sr-py{font-size:12px;color:var(--teal);margin-top:2px}
+      .sr-en{font-size:11.5px;color:var(--sub);margin-top:2px}
+      .sr-card .spk{position:absolute;top:8px;right:8px;width:34px;height:34px;background:rgba(20,26,36,.72);border:1px solid var(--line)}
       .hub b{font-size:14px}
       .hub i{font-style:normal;font-size:11.5px;color:var(--sub);line-height:1.35}
       .setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
@@ -795,10 +810,11 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div class="card"><div class="top"><h2>🎯 Practice</h2><span class="badge">pick a skill</span></div>
       <p class="desc">Train one skill at a time. Everything you say is scored.</p>
       <div class="hub-grid">
-        <button class="hub" onclick="go('cards')"><span class="ic">🗂️</span><b>Character cards</b><i>HSK1 deck, tap to hear</i></button>
-        <button class="hub" onclick="go('reading')"><span class="ic">📖</span><b>Read &amp; lookup</b><i>Paste text, get pinyin</i></button>
-        <button class="hub" onclick="go('sentences')"><span class="ic">💬</span><b>Sentences</b><i>Saved lines for review</i></button>
-        <button class="hub" onclick="startTone()"><span class="ic">🎵</span><b>Tone training</b><i>See your tone curve</i></button>
+        <button class="hub" onclick="go('cards')"><img class="ic-img" src="assets/icons/cards.svg" alt=""><b>Character cards</b><i>HSK1 deck, tap to hear</i></button>
+        <button class="hub" onclick="go('reading')"><img class="ic-img" src="assets/icons/read.svg" alt=""><b>Read &amp; lookup</b><i>Paste text, get pinyin</i></button>
+        <button class="hub" onclick="go('sentences')"><img class="ic-img" src="assets/icons/sentences.svg" alt=""><b>Sentences</b><i>Saved lines for review</i></button>
+        <button class="hub" onclick="startTone()"><img class="ic-img" src="assets/icons/tones.svg" alt=""><b>Tone training</b><i>See your tone curve</i></button>
+        <button class="hub" onclick="go('scenes-read')"><img class="ic-img" src="assets/icons/read.svg" alt=""><b>Scene reading</b><i>Learn from pictures</i></button>
       </div></div>
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
@@ -815,6 +831,14 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
 
+  <section id="v-scenes-read" class="views">
+    <div class="card"><div class="top"><h2>📖 Scene reading</h2><span class="badge">A3</span></div>
+      <p class="desc">Read real-life Chinese from pictures. Tap a card to enlarge and hear it.</p>
+      <div class="sr-grid" id="sr-grid"></div>
+    </div>
+    <button class="btn ghost" onclick="go('home')">← Back</button>
+  </section>
+
   <section id="v-me" class="views">
     <div class="card">
       <div class="top"><h2>👤 Me</h2><span class="badge" id="me-ver">v</span></div>
@@ -822,9 +846,10 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <div class="streakrow" id="me-stats"></div>
       <div class="hub-grid" style="margin-top:12px">
         <button class="hub" onclick="go('settings')"><span class="ic">⚙️</span><b>Settings</b><i>Language · voice · updates</i></button>
-        <button class="hub" onclick="go('prog')"><span class="ic">🏅</span><b>Badges &amp; progress</b><i>What you have earned</i></button>
+        <button class="hub" onclick="go('prog')"><img class="ic-img" src="assets/icons/progress.svg" alt=""><b>Badges &amp; progress</b><i>What you have earned</i></button>
         <button class="hub" onclick="nonoOpen()"><span class="ic">🐼</span><b>Bring Nono back</b><i>Your panda companion</i></button>
       </div>
+      <button class="btn primary" style="margin-top:12px" onclick="shareSinoky()">🔗 Share Sinoky</button>
     </div>
     <div id="me-banner"></div>
     <button class="btn ghost" onclick="go('home')">← Back</button>
@@ -958,13 +983,14 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 </div>
 
 <nav>
-  <button id="nav-home" class="on" onclick="go('home')"><span class="ic">🏠</span>Home</button>
+  <button id="nav-home" class="on" onclick="go('home')"><img class="ic-img" src="assets/icons/home.svg" alt="Home">Home</button>
   <button id="nav-practice" onclick="go('practice')"><span class="ic">🎯</span>Practice</button>
   <button id="nav-explore" onclick="go('explore')"><span class="ic">🧭</span>Explore</button>
-  <button id="nav-prog" onclick="go('prog')"><span class="ic">📊</span>Progress</button>
+  <button id="nav-prog" onclick="go('prog')"><img class="ic-img" src="assets/icons/progress.svg" alt="Progress">Progress</button>
   <button id="nav-me" onclick="go('me')"><span class="ic">👤</span>Me</button>
 </nav>
 <div class="toast" id="toast"></div>
+<div id="splash"><img src="assets/splash/a8_9x16.webp" alt="Sinoky" onerror="this.parentNode.remove()"></div>
 <div id="updatebar"></div>
 <div class="rd-pop" id="rd-pop" role="dialog" aria-label="Word details"></div>
 <div id="rd-mask"></div>
@@ -1021,7 +1047,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.9.0';
+var APP_VERSION = '0.10.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -1102,6 +1128,38 @@ var DIALOGS = [
            hz:'师傅，前面请停一下，谢谢。', py:'shīfu, qiánmiàn qǐng tíng yíxià, xièxie.', en:'Driver, please stop up ahead.' } }
 ];
 
+
+/* v0.10.0：A2 场景卡缩略图映射（不碰 SCENES 数组，避免大改动风险）。
+   值 = assets/scenes/thumbs/{值}_1x1_{512|1024}.webp 的文件名（intro 仅 1024）。
+   仅接"明确对应"的场景，牵强的不接（onerror 兜底，场景卡保持纯文字）。 */
+var SCENE_THUMB = {
+  'hotel':'hotel', 'meeting':'meeting', 'd-taxi':'taxi',
+  'food':'restaurant', 'd-food':'restaurant',
+  'transport':'subway', 'shopping':'supermarket', 'd-store':'supermarket',
+  'scene_day8_coffee_shop':'cafe', 'scene_day10_pharmacy':'clinic',
+  'arrival':'airport', 'self-intro':'intro'
+};
+
+/* v0.10.0：A3 场景阅读 —— 6 张场景图 + 配文，点开朗读。 */
+var READ_ITEMS = [
+  { img:'assets/read/breakfast.webp', hz:'你吃早餐了吗？', py:'Nǐ chī zǎocān le ma?', en:'Did you eat breakfast?' },
+  { img:'assets/read/commute.webp', hz:'我坐地铁上班。', py:'Wǒ zuò dìtiě shàngbān.', en:'I take the subway to work.' },
+  { img:'assets/read/doctor.webp', hz:'我有点不舒服。', py:'Wǒ yǒudiǎn bù shūfu.', en:'I feel a bit unwell.' },
+  { img:'assets/read/friends.webp', hz:'周末和朋友吃饭。', py:'Zhōumò hé péngyou chīfàn.', en:'Weekend dinner with friends.' },
+  { img:'assets/read/market.webp', hz:'菜市场很热闹。', py:'Càishìchǎng hěn rènao.', en:'The food market is lively.' },
+  { img:'assets/read/travel.webp', hz:'我想去旅行。', py:'Wǒ xiǎng qù lǚxíng.', en:'I want to travel.' }
+];
+function renderScenesRead(){
+  var g = document.getElementById('sr-grid'); if(!g) return;
+  g.innerHTML = READ_ITEMS.map(function(it, i){
+    return '<div class="sr-card" onclick="openRead('+i+')">'+
+      '<img src="'+it.img+'" alt="" loading="lazy" onerror="this.style.opacity=0.22">'+
+      '<button class="spk" onclick="event.stopPropagation();speak(\''+it.hz.replace(/'/g,'')+'\',this)"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button>'+
+      '<div class="sr-cap"><div class="sr-hz">'+it.hz+'</div><div class="sr-py">'+it.py+'</div><div class="sr-en">'+it.en+'</div></div>'+
+      '</div>';
+  }).join('');
+}
+function openRead(i){ var it = READ_ITEMS[i]; if(it) speak(it.hz); }
 
 var SCENES = [
 
@@ -2483,7 +2541,7 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
   /* v0.3.35 S1：离开场景视图时停止进行中的录音，避免麦克风在后台常开 */
   if(v !== 'scene' && typeof stopRecording === 'function') stopRecording();
-  ['home','scene','tone','prog','cards','sentences','reading','cities','days','onboard','dialog','review','practice','explore','me','settings'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences','reading','scenes-read','cities','days','onboard','dialog','review','practice','explore','me','settings'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
@@ -2494,6 +2552,7 @@ function go(v){
   if(v==='prog'){ renderProgress(); var pb=$('prog-badges'); if(pb && typeof badgeGalleryHtml==='function') pb.innerHTML = badgeGalleryHtml();
     var pw=$('prog-weak'); if(pw && typeof weakLinesHtml==='function') pw.innerHTML = weakLinesHtml();
     try{ nonoWatchBadges(); }catch(e){} }
+  if(v==='scenes-read'){ renderScenesRead(); }
   if(v==='home'){ renderHome(); try{ nonoDailyLine(); nonoGraduation(); }catch(e){} }
   if(v==='review') renderReview();
   if(v==='me') renderMe();
@@ -3682,7 +3741,9 @@ function renderHome(){
     if(isCity(sc)) return;
     var doneN = (S.phrases[sc.id]||[]).length;
     var pct = Math.round(100*doneN/sc.phrases.length);
-    var card = '<div class="card"><div class="top"><h2>'+sc.icon+' '+sc.title+'</h2>'+
+    var card = '<div class="card">'+
+      (SCENE_THUMB[sc.id] ? '<img class="sc-thumb" loading="lazy" src="assets/scenes/thumbs/'+SCENE_THUMB[sc.id]+'_1x1_'+(SCENE_THUMB[sc.id]==='intro'?'1024':'512')+'.webp" alt="" onerror="this.remove()">' : '')+
+      '<div class="top"><h2>'+sc.icon+' '+sc.title+'</h2>'+
       (pct===100 ? '<span class="badge teal">DONE ✓</span>' : '<span class="badge">DAILY</span>')+
       '</div><p class="desc">'+sc.desc+'</p>'+
       '<div class="pbar"><i style="width:'+pct+'%"></i></div>'+
@@ -4981,6 +5042,23 @@ function copyText(t, okMsg){
     navigator.clipboard.writeText(t).then(function(){ toast(okMsg); }).catch(function(){ fallbackCopy(t); });
   } else { fallbackCopy(t); }
 }
+/* v0.10.0：A7 分享 —— Web Share 分享 A7 卡片图 + 文案 + 链接；不支持时复制链接兜底。 */
+function shareSinoky(){
+  var url = (location.origin + location.pathname) || 'https://sinoky.pages.dev';
+  var text = 'Sinoky — speak real-life Chinese from day 1. Practise with Nono the panda 🐼.';
+  var data = { title:'Sinoky', text:text, url:url };
+  if(!navigator.share){ copyText(url, 'Link copied — share it anywhere'); return; }
+  /* 尝试带 A7 分享卡片图（dark-square），失败则退化为仅分享文案+链接 */
+  fetch('assets/share/dark-square.webp').then(function(r){ return r.blob(); }).then(function(b){
+    var file = new File([b], 'sinoky-share.webp', { type:'image/webp' });
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      return navigator.share({ files:[file], title:'Sinoky', text:text, url:url });
+    }
+    return navigator.share(data);
+  }).catch(function(){
+    return navigator.share(data).catch(function(){});
+  }).catch(function(){});
+}
 
 /* ---------- pwa: sw register + version check ---------- */
 if('serviceWorker' in navigator){
@@ -5003,6 +5081,8 @@ if(API_BASE==='')fetch('version.json?t='+Date.now()).then(function(r){ return r.
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
 var obStep = 1, obTotal = 6, obGoal = 'travel';
 if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('home'); }
+/* v0.10.0：A8 开屏 splash —— 初始化完成后淡出 */
+setTimeout(function(){ var s=document.getElementById('splash'); if(s){ s.classList.add('hide'); setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 520); } }, 420);
 /* v0.3.35 S3：存储被禁用时明确告诉用户"进度不会被保存"，而不是让他以为保存了 */
 if(!LS_OK) setTimeout(function(){ toast('Storage is blocked — progress will not be saved'); }, 1200);
 loadCards();

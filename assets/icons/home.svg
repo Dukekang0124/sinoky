@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 48 48">
+  <!-- Sinoky A11 linear icon: Home | 2px stroke @48-grid, round caps/joins, #eef2f7, 10% padding -->
+  <g fill="none" stroke="#eef2f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7.2 23.4 L24 8.4 L40.8 23.4"/>
+    <path d="M12.0 21.6 V38.4 a1.2 1.2 0 0 0 1.2 1.2 H34.8 a1.2 1.2 0 0 0 1.2 -1.2 V21.6"/>
+    <path d="M20.4 39.6 V29.4 h7.2 v10.2"/>
+  </g>
+</svg>
