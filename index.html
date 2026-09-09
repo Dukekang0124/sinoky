@@ -1019,7 +1019,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.8.0';
+var APP_VERSION = '0.9.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2651,9 +2651,11 @@ function dayItemHtml(it, i){
   }
 }
 function dayPhraseRow(it, i){
-  return '<button class="dayitem'+(daySaid(it.x)?' done':'')+'" onclick="openScene(\''+it.x.scene.id+'\','+it.x.idx+',\'days\')">'+
+  return '<div class="dayitem'+(daySaid(it.x)?' done':'')+'" onclick="openScene(\''+it.x.scene.id+'\','+it.x.idx+',\'days\')">'+
     '<span class="num">'+(i+1)+'</span><span>'+it.x.p.en+'</span>'+
-    '<span class="st">'+(daySaid(it.x)?'\u2713 done':'Start')+'</span></button>';
+    '<span class="st">'+(daySaid(it.x)?'\u2713 done':'Start')+'</span>'+
+    '<button class="jab" onclick="event.stopPropagation();nonoPracticeLine(\''+it.x.scene.id+'\','+it.x.idx+')" title="Practise with Nono">🐼</button>'+
+  '</div>';
 }
 function toggleDay(n){
   if(dayState(n) === 'locked') return;   /* 未解锁的天不可展开 */
@@ -3084,6 +3086,7 @@ function renderReview(){
       '<div class="rv-acts">'+
         '<button class="btn primary" onclick="revMark(\''+k+'\',true,'+REV_PASS[mode]+')">Got it</button>'+
         '<button class="btn ghost" onclick="revMark(\''+k+'\',false,40)">Missed it</button>'+
+        '<button class="btn ghost" style="flex:0 0 auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+it.scene.id+'\','+it.idx+')">🐼</button>'+
       '</div></div>';
   });
   box.innerHTML = h;
@@ -3515,6 +3518,16 @@ function nonoPracticeLine(sceneId, idx){
   nonoStartPracticeWith(line);
   nonoState('idle');
 }
+function nonoPracticeDialog(id, idx){
+  var d=null; for(var i=0;i<DIALOGS.length;i++){ if(DIALOGS[i].id===id){ d=DIALOGS[i]; break; } }
+  if(!d || !d.lines[idx]) return;
+  var l = d.lines[idx];
+  NONO.closed = false;
+  var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
+  var msg = document.getElementById('nono-msg'); if(msg) msg.innerHTML = 'Let us say this one together. <b>跟我读</b>';
+  nonoStartPracticeWith({ hz: l.hz, py: l.py||'', en: l.en||'', key: 'dialog#'+id+'#'+idx, scene: 'dialog' });
+  nonoState('idle');
+}
 var TONE_TIP = {
   1: 'Tone 1 is flat and high — hold it steady, like a held note. <b>一声要平</b>',
   2: 'Tone 2 rises, like saying "what?" in English. <b>二声往上扬</b>',
@@ -3611,9 +3624,15 @@ function weakLinesHtml(){
   keys.sort(function(a,b){ return weak[b]-weak[a]; });
   var items = [];
   keys.slice(0, 8).forEach(function(k){
-    var parts = k.split('#'), sc = null;
-    (window.SCENES||[]).forEach(function(x){ if(x.id === parts[0]) sc = x; });
-    var ph = sc && sc.phrases && sc.phrases[parseInt(parts[1],10)];
+    var parts = k.split('#'), ph = null;
+    if (parts[0] === 'dialog'){
+      var dd=null; for(var i=0;i<DIALOGS.length;i++){ if(DIALOGS[i].id===parts[1]){ dd=DIALOGS[i]; break; } }
+      var dl = dd && dd.lines[parseInt(parts[2],10)];
+      if (dl && dl.hz) ph = { hz: dl.hz, py: dl.py||'', en: dl.en||'' };
+    } else {
+      var sc = null; (window.SCENES||[]).forEach(function(x){ if(x.id === parts[0]) sc = x; });
+      ph = sc && sc.phrases && sc.phrases[parseInt(parts[1],10)];
+    }
     if (!ph || !ph.hz) return;
     items.push('<div class="weak-row">'+
       '<div class="wr-txt"><b>'+ph.hz+'</b><span>'+(ph.py||'')+'</span></div>'+
@@ -5046,11 +5065,14 @@ function openDialog(id){
   var d=null; for(var i=0;i<DIALOGS.length;i++){ if(DIALOGS[i].id===id){ d=DIALOGS[i]; break; } } if(!d) return;
   var h = '<div class="card"><div class="top"><h2>'+d.icon+' '+d.title+'</h2><span class="badge">DAY '+d.day+'</span></div>'+
     '<p class="desc">'+d.hook+'</p>';
-  d.lines.forEach(function(l){
+  d.lines.forEach(function(l, idx){
     h += '<div class="d-line '+l.who+'"><span class="who '+l.who+'">'+(l.who==='them'?'THEM':'YOU')+'</span>'+
       '<div class="body"><div class="py">'+l.py+'</div><div class="en">'+l.en+'</div>'+
       '<div class="hz hidden">'+l.hz+'</div>'+
-      '<button class="spk" onclick="speak(\''+l.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div></div>';
+      '<div style="display:flex;gap:8px;align-items:center">'+
+      '<button class="spk" onclick="speak(\''+l.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button>'+
+      '<button class="jab" title="Practise with Nono" onclick="nonoPracticeDialog(\''+id+'\','+idx+')">🐼</button>'+
+      '</div></div></div>';
   });
   h += '<div class="d-flip"><b>🔄 Role reversal — now YOU start.</b>'+
     '<div class="en">'+d.flip.prompt+'</div>'+
