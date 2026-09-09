@@ -3493,6 +3493,7 @@ function nonoStartPracticeWith(line){
   NONO_LINE = line;
   var box = document.getElementById('nono-practice');
   if(box){
+    box.style.display = 'block';
     box.innerHTML = '<div class="np-line"><div class="hz">'+line.hz+'</div><div class="py">'+(line.py||'')+'</div>'+
       (line.en? '<div class="en">'+line.en+'</div>':'')+'</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
