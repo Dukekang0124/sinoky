@@ -1,12 +1,12 @@
 {
-  "version": "0.12.0",
+  "version": "0.13.0",
   "updated": "2026-09-10",
-  "note": "v0.12.0：更新机制补强——下载改应用内直链全量下载（弃 DownloadManager，规避 CF Pages 无断点续传导致的弱网/切后台中断）；新增下载进度条、弱网停滞提示、取消/重试；下载完成自动校验 APK 魔数与 MD5（假包直接拒绝）；更新横幅支持关闭记忆。",
+  "note": "v0.13.0：课程扩容至 30 天——新增 Day 15-30 进阶场景 16 个（64 句，逐字拼音构建期生成）；修复 Day 8-14 每日打卡缺 day 标记的存量缺陷（P1/P2 全部短语挂 day）；勋章墙新增 Survivor/Tone master/Graduate/100-day streak 四枚；设置页新增品牌卡。",
   "apk": {
-    "versionCode": 1200,
-    "version": "0.12.0",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.12.0-release.apk",
-    "md5": "bf21be69416f395e89b2c444a98c0526",
-    "size": 23493789
+    "versionCode": 1300,
+    "version": "0.13.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.13.0-release.apk",
+    "md5": "",
+    "size": 0
   }
 }

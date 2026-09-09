@@ -877,6 +877,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
         <button type="button" data-e="cosy" data-emotion="gentle" onclick="setEmotion('gentle',this)">Gentle</button>
       </div>
     </div>
+      <div class="setrow"><span>About</span><span class="setctl" style="text-align:right;line-height:1.5"><b>Sinoky</b> · Your Chinese journey<br><small style="color:var(--text-sec)">Stop memorizing characters. Start answering people.</small></span></div>
       <div class="setrow"><span>Version</span><span class="setctl"><b id="set-ver">—</b>
         <button class="btn ghost" onclick="checkUpdate()">Check update</button></span></div>
       <div class="rd-hint" id="set-updhint">Current version is shown above. Tap check to compare with the server.</div>
@@ -1048,7 +1049,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.12.0';
+var APP_VERSION = '0.13.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2025,62 +2026,206 @@ var SCENES = [
           { hz:'菠萝包配奶茶。', py:'Bōluóbāo pèi nǎichá.', note:'pineapple bun with milk tea', style:'casual' }
         ]}
     ]},
+    /* v0.13.0 P2 进阶场景 Day 15-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day15_see_doctor', icon:'🏥', title:"At the Doctor", adv:true, day:15,
+    desc:"Describe what hurts, understand the prescription.",
+    phrases:[
+        { day:15, en:"What's wrong with you?", hz:"你怎么了？", py:"Nǐ zěnme le?", pya:"你:nǐ|怎:zěn|么:me|了:le", real:[], who:'them' },
+        { day:15, en:"I have a stomachache.", hz:"我肚子疼。", py:"Wǒ dùzi téng.", pya:"我:wǒ|肚:dù|子:zǐ|疼:téng", real:[], who:'you', kw:["肚子疼"] },
+        { day:15, en:"When did it start?", hz:"什么时候开始的？", py:"Shénme shíhou kāishǐ de?", pya:"什:shén|么:me|时:shí|候:hòu|开:kāi|始:shǐ|的:de", real:[], who:'them' },
+        { day:15, en:"Last night.", hz:"昨天晚上。", py:"Zuótiān wǎnshang.", pya:"昨:zuó|天:tiān|晚:wǎn|上:shàng", real:[], who:'you', kw:["昨天","晚上"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 16-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day16_at_the_bar', icon:'🍻', title:"At the Bar", adv:true, day:16,
+    desc:"Order a drink, make small talk, learn to say no.",
+    phrases:[
+        { day:16, en:"What do you want to drink?", hz:"你要喝什么？", py:"Nǐ yào hē shénme?", pya:"你:nǐ|要:yào|喝:hē|什:shén|么:me", real:[], who:'them' },
+        { day:16, en:"A beer, please.", hz:"来杯啤酒。", py:"Lái bēi píjiǔ.", pya:"来:lái|杯:bēi|啤:pí|酒:jiǔ", real:[], who:'you', kw:["啤酒"] },
+        { day:16, en:"Do you come here often?", hz:"你经常来这儿吗？", py:"Nǐ jīngcháng lái zhèr ma?", pya:"你:nǐ|经:jīng|常:cháng|来:lái|这:zhè|儿:ér|吗:ma", real:[], who:'them' },
+        { day:16, en:"First time here.", hz:"第一次来。", py:"Dì-yī cì lái.", pya:"第:dì|一:yī|次:cì|来:lái", real:[], who:'you', kw:["第一次"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 17-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day17_apartment_hunting', icon:'🏠', title:"Apartment Hunting", adv:true, day:17,
+    desc:"Describe what you need, ask about rent.",
+    phrases:[
+        { day:17, en:"How big do you want to rent?", hz:"你想租多大的？", py:"Nǐ xiǎng zū duō dà de?", pya:"你:nǐ|想:xiǎng|租:zū|多:duō|大:dà|的:de", real:[], who:'them' },
+        { day:17, en:"One bedroom, one living room.", hz:"一室一厅。", py:"Yī shì yī tīng.", pya:"一:yí|室:shì|一:yì|厅:tīng", real:[], who:'you', kw:["一室一厅"] },
+        { day:17, en:"Has AC and washing machine.", hz:"有空调和洗衣机。", py:"Yǒu kōngtiáo hé xǐyījī.", pya:"有:yǒu|空:kōng|调:tiáo|和:hé|洗:xǐ|衣:yī|机:jī", real:[], who:'them' },
+        { day:17, en:"How much is the rent?", hz:"租金多少钱？", py:"Zūjīn duōshao qián?", pya:"租:zū|金:jīn|多:duō|少:shǎo|钱:qián", real:[], who:'you', kw:["租金"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 18-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day18_hair_salon', icon:'💇', title:"Hair Salon", adv:true, day:18,
+    desc:"Communicate how you want your hair cut.",
+    phrases:[
+        { day:18, en:"How do you want it cut?", hz:"你想怎么剪？", py:"Nǐ xiǎng zěnme jiǎn?", pya:"你:nǐ|想:xiǎng|怎:zěn|么:me|剪:jiǎn", real:[], who:'them' },
+        { day:18, en:"Cut it a bit shorter.", hz:"剪短一点。", py:"Jiǎn duǎn yìdiǎnr.", pya:"剪:jiǎn|短:duǎn|一:yì|点:diǎn", real:[], who:'you', kw:["剪短"] },
+        { day:18, en:"Want to thin it out?", hz:"要打薄吗？", py:"Yào dǎbáo ma?", pya:"要:yào|打:dǎ|薄:báo|吗:ma", real:[], who:'them' },
+        { day:18, en:"No need, thanks.", hz:"不用，谢谢。", py:"Bú yòng, xièxie.", pya:"不:bú|用:yòng|谢:xiè|谢:xiè", real:[], who:'you', kw:["不用"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 19-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day19_bank_account', icon:'🏦', title:"Bank Account", adv:true, day:19,
+    desc:"Handle formal procedures with confidence.",
+    phrases:[
+        { day:19, en:"What business do you want to handle?", hz:"你要办什么业务？", py:"Nǐ yào bàn shénme yèwù?", pya:"你:nǐ|要:yào|办:bàn|什:shén|么:me|业:yè|务:wù", real:[], who:'them' },
+        { day:19, en:"I want to open an account.", hz:"我想开个账户。", py:"Wǒ xiǎng kāi ge zhànghù.", pya:"我:wǒ|想:xiǎng|开:kāi|个:gè|账:zhàng|户:hù", real:[], who:'you', kw:["开账户"] },
+        { day:19, en:"Please show your passport.", hz:"请出示你的护照。", py:"Qǐng chūshì nǐ de hùzhào.", pya:"请:qǐng|出:chū|示:shì|你:nǐ|的:de|护:hù|照:zhào", real:[], who:'them' },
+        { day:19, en:"Here you go.", hz:"给你。", py:"Gěi nǐ.", pya:"给:gěi|你:nǐ", real:[], who:'you', kw:["给你"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 20-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day20_phone_repair', icon:'📱', title:"Phone Repair", adv:true, day:20,
+    desc:"Describe the problem, understand the timeline.",
+    phrases:[
+        { day:20, en:"What's wrong?", hz:"怎么了？", py:"Zěnme le?", pya:"怎:zěn|么:me|了:le", real:[], who:'them' },
+        { day:20, en:"The screen is cracked.", hz:"屏幕碎了。", py:"Píngmù suì le.", pya:"屏:píng|幕:mù|碎:suì|了:le", real:[], who:'you', kw:["屏幕","碎了"] },
+        { day:20, en:"When will it be fixed?", hz:"什么时候修好？", py:"Shénme shíhou xiū hǎo?", pya:"什:shén|么:me|时:shí|候:hòu|修:xiū|好:hǎo", real:[], who:'them' },
+        { day:20, en:"About one hour.", hz:"大概一小时。", py:"Dàgài yì xiǎoshí.", pya:"大:dà|概:gài|一:yì|小:xiǎo|时:shí", real:[], who:'you', kw:["大概","小时"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 21-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day21_birthday_party', icon:'🎉', title:"Birthday Party", adv:true, day:21,
+    desc:"Receive wishes and express warm replies.",
+    phrases:[
+        { day:21, en:"Happy birthday!", hz:"生日快乐！", py:"Shēngrì kuàilè!", pya:"生:shēng|日:rì|快:kuài|乐:lè", real:[], who:'them' },
+        { day:21, en:"Thank you!", hz:"谢谢！", py:"Xièxie!", pya:"谢:xiè|谢:xiè", real:[], who:'you', kw:["谢谢"] },
+        { day:21, en:"Make a wish!", hz:"许个愿吧！", py:"Xǔ ge yuàn ba!", pya:"许:xǔ|个:gè|愿:yuàn|吧:ba", real:[], who:'them' },
+        { day:21, en:"Hope everyone is happy.", hz:"希望大家都开心。", py:"Xīwàng dàjiā dōu kāixīn.", pya:"希:xī|望:wàng|大:dà|家:jiā|都:dōu|开:kāi|心:xīn", real:[], who:'you', kw:["希望","开心"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 22-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day22_high_speed_rail', icon:'🚄', title:"High-Speed Rail", adv:true, day:22,
+    desc:"Buy tickets and handle travel changes.",
+    phrases:[
+        { day:22, en:"Where to?", hz:"去哪里？", py:"Qù nǎlǐ?", pya:"去:qù|哪:nǎ|里:lǐ", real:[], who:'them' },
+        { day:22, en:"To Shanghai.", hz:"去上海。", py:"Qù Shànghǎi.", pya:"去:qù|上:shàng|海:hǎi", real:[], who:'you', kw:["上海"] },
+        { day:22, en:"What time to depart?", hz:"几点出发？", py:"Jǐ diǎn chūfā?", pya:"几:jǐ|点:diǎn|出:chū|发:fā", real:[], who:'them' },
+        { day:22, en:"2 PM.", hz:"下午两点。", py:"Xiàwǔ liǎng diǎn.", pya:"下:xià|午:wǔ|两:liǎng|点:diǎn", real:[], who:'you', kw:["下午","两点"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 23-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day23_parent_teacher_meeting', icon:'🏫', title:"Parent-Teacher Meeting", adv:true, day:23,
+    desc:"Talk about your child with the teacher.",
+    phrases:[
+        { day:23, en:"Your child is very smart.", hz:"你的孩子很聪明。", py:"Nǐ de háizi hěn cōngming.", pya:"你:nǐ|的:de|孩:hái|子:zi|很:hěn|聪:cōng|明:ming", real:[], who:'them' },
+        { day:23, en:"Thank you, teacher.", hz:"谢谢老师。", py:"Xièxie lǎoshī.", pya:"谢:xiè|谢:xiè|老:lǎo|师:shī", real:[], who:'you', kw:["谢谢","老师"] },
+        { day:23, en:"What subject does he like?", hz:"他喜欢什么科目？", py:"Tā xǐhuan shénme kēmù?", pya:"他:tā|喜:xǐ|欢:huan|什:shén|么:me|科:kē|目:mù", real:[], who:'them' },
+        { day:23, en:"He likes math.", hz:"他喜欢数学。", py:"Tā xǐhuan shùxué.", pya:"他:tā|喜:xǐ|欢:huan|数:shù|学:xué", real:[], who:'you', kw:["喜欢","数学"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 24-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day24_at_the_gym', icon:'💪', title:"At the Gym", adv:true, day:24,
+    desc:"Talk about fitness and find a buddy.",
+    phrases:[
+        { day:24, en:"Do you exercise regularly?", hz:"你经常锻炼吗？", py:"Nǐ jīngcháng duànliàn ma?", pya:"你:nǐ|经:jīng|常:cháng|锻:duàn|炼:liàn|吗:ma", real:[], who:'them' },
+        { day:24, en:"Three times a week.", hz:"每周三次。", py:"Měi zhōu sān cì.", pya:"每:měi|周:zhōu|三:sān|次:cì", real:[], who:'you', kw:["每周","三次"] },
+        { day:24, en:"What sport do you like most?", hz:"你最喜欢什么运动？", py:"Nǐ zuì xǐhuan shénme yùndòng?", pya:"你:nǐ|最:zuì|喜:xǐ|欢:huan|什:shén|么:me|运:yùn|动:dòng", real:[], who:'them' },
+        { day:24, en:"Running and swimming.", hz:"跑步和游泳。", py:"Pǎobù hé yóuyǒng.", pya:"跑:pǎo|步:bù|和:hé|游:yóu|泳:yǒng", real:[], who:'you', kw:["跑步","游泳"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 25-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day25_cultural_discussion', icon:'🎭', title:"Cultural Discussion", adv:true, day:25,
+    desc:"Share opinions and understand metaphors.",
+    phrases:[
+        { day:25, en:"What do you think of Chinese culture?", hz:"你觉得中国文化怎么样？", py:"Nǐ juéde Zhōngguó wénhuà zěnmeyàng?", pya:"你:nǐ|觉:jué|得:de|中:zhōng|国:guó|文:wén|化:huà|怎:zěn|么:me|样:yàng", real:[], who:'them' },
+        { day:25, en:"Very interesting.", hz:"很有意思。", py:"Hěn yǒu yìsi.", pya:"很:hěn|有:yǒu|意:yì|思:sī", real:[], who:'you', kw:["有意思"] },
+        { day:25, en:"What do you like most?", hz:"你最喜欢什么？", py:"Nǐ zuì xǐhuan shénme?", pya:"你:nǐ|最:zuì|喜:xǐ|欢:huan|什:shén|么:me", real:[], who:'them' },
+        { day:25, en:"Chinese food.", hz:"中国菜。", py:"Zhōngguó cài.", pya:"中:zhōng|国:guó|菜:cài", real:[], who:'you', kw:["中国菜"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 26-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day26_online_shopping_return', icon:'🛒', title:"Online Shopping Return", adv:true, day:26,
+    desc:"Complain and negotiate a resolution.",
+    phrases:[
+        { day:26, en:"Why do you want to return?", hz:"为什么要退货？", py:"Wèishéme yào tuì huò?", pya:"为:wèi|什:shén|么:me|要:yào|退:tuì|货:huò", real:[], who:'them' },
+        { day:26, en:"The size is wrong.", hz:"尺码不对。", py:"Chǐmǎ bú duì.", pya:"尺:chǐ|码:mǎ|不:bú|对:duì", real:[], who:'you', kw:["尺码","不对"] },
+        { day:26, en:"Can you exchange?", hz:"可以换货吗？", py:"Kěyǐ huàn huò ma?", pya:"可:kě|以:yǐ|换:huàn|货:huò|吗:ma", real:[], who:'them' },
+        { day:26, en:"I want a refund.", hz:"我要退款。", py:"Wǒ yào tuìkuǎn.", pya:"我:wǒ|要:yào|退:tuì|款:kuǎn", real:[], who:'you', kw:["退款"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 27-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day27_academic_lecture', icon:'🎓', title:"Academic Lecture", adv:true, day:27,
+    desc:"Ask questions and join the discussion.",
+    phrases:[
+        { day:27, en:"Do you have questions?", hz:"你有问题吗？", py:"Nǐ yǒu wèntí ma?", pya:"你:nǐ|有:yǒu|问:wèn|题:tí|吗:ma", real:[], who:'them' },
+        { day:27, en:"How is this theory applied?", hz:"这个理论怎么应用？", py:"Zhè ge lǐlùn zěnme yìngyòng?", pya:"这:zhè|个:ge|理:lǐ|论:lùn|怎:zěn|么:me|应:yìng|用:yòng", real:[], who:'you', kw:["理论","应用"] },
+        { day:27, en:"Very good question.", hz:"很好的问题。", py:"Hěn hǎo de wèntí.", pya:"很:hěn|好:hǎo|的:de|问:wèn|题:tí", real:[], who:'them' },
+        { day:27, en:"Thanks for the explanation.", hz:"谢谢解答。", py:"Xièxie jiědá.", pya:"谢:xiè|谢:xiè|解:jiě|答:dá", real:[], who:'you', kw:["谢谢","解答"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 28-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day28_business_negotiation', icon:'💼', title:"Business Negotiation", adv:true, day:28,
+    desc:"Persuade, compromise, and close the deal.",
+    phrases:[
+        { day:28, en:"Can the price be lower?", hz:"价格能再低一点吗？", py:"Jiàgé néng zài dī yìdiǎnr ma?", pya:"价:jià|格:gé|能:néng|再:zài|低:dī|一:yì|点:diǎn|吗:ma", real:[], who:'them' },
+        { day:28, en:"Lowest 20% off.", hz:"最低八折。", py:"Zuì dī bā zhé.", pya:"最:zuì|低:dī|八:bā|折:zhé", real:[], who:'you', kw:["八折"] },
+        { day:28, en:"Deal!", hz:"成交！", py:"Chéngjiāo!", pya:"成:chéng|交:jiāo", real:[], who:'them' },
+        { day:28, en:"Pleased to cooperate.", hz:"很高兴合作。", py:"Hěn gāoxìng hézuò.", pya:"很:hěn|高:gāo|兴:xìng|合:hé|作:zuò", real:[], who:'you', kw:["合作"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 29-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day29_deep_relationships', icon:'❤️', title:"Deep Relationships", adv:true, day:29,
+    desc:"Express feelings and handle close moments.",
+    phrases:[
+        { day:29, en:"I really care about you.", hz:"我真的很在乎你。", py:"Wǒ zhēn de hěn zàihū nǐ.", pya:"我:wǒ|真:zhēn|的:de|很:hěn|在:zài|乎:hū|你:nǐ", real:[], who:'them' },
+        { day:29, en:"Me too.", hz:"我也是。", py:"Wǒ yě shì.", pya:"我:wǒ|也:yě|是:shì", real:[], who:'you', kw:["也是"] },
+        { day:29, en:"Will you be with me?", hz:"你愿意和我在一起吗？", py:"Nǐ yuànyì hé wǒ zài yìqǐ ma?", pya:"你:nǐ|愿:yuàn|意:yì|和:hé|我:wǒ|在:zài|一:yì|起:qǐ|吗:ma", real:[], who:'them' },
+        { day:29, en:"I'm willing.", hz:"我愿意。", py:"Wǒ yuànyì.", pya:"我:wǒ|愿:yuàn|意:yì", real:[], who:'you', kw:["愿意"] }
+    ]},
+  /* v0.13.0 P2 进阶场景 Day 30-30（DevKit v3.1.0 数据，pya 构建期生成，音频 TTS 先行） */
+  { id:'scene_day30_final_challenge', icon:'🌟', title:"Final Challenge", adv:true, day:30,
+    desc:"Free conversation — no script, just speak.",
+    phrases:[
+        { day:30, en:"Congratulations on completing 30 days!", hz:"恭喜你完成了30天的挑战！", py:"Gōngxǐ nǐ wánchéng le sānshí tiān de tiǎozhàn!", pya:"恭:gōng|喜:xǐ|你:nǐ|完:wán|成:chéng|了:le|天:tiān|的:de|挑:tiǎo|战:zhàn", real:[], who:'them' },
+        { day:30, en:"Thank you for your help!", hz:"谢谢你的帮助！", py:"Xièxie nǐ de bāngzhù!", pya:"谢:xiè|谢:xiè|你:nǐ|的:de|帮:bāng|助:zhù", real:[], who:'you', kw:["谢谢","帮助"] },
+        { day:30, en:"Can you speak Chinese now?", hz:"你现在能说中文了吗？", py:"Nǐ xiànzài néng shuō Zhōngwén le ma?", pya:"你:nǐ|现:xiàn|在:zài|能:néng|说:shuō|中:zhōng|文:wén|了:le|吗:ma", real:[], who:'them' },
+        { day:30, en:"Of course I can!", hz:"当然可以！", py:"Dāngrán kěyǐ!", pya:"当:dāng|然:rán|可:kě|以:yǐ", real:[], who:'you', kw:["当然"] }
+    ]},
   /* v0.4.0 P1 进阶场景 Day 8-14（豆包交付数据，pya 构建期生成） */
   { id:'scene_day8_coffee_shop', icon:'☕', title:'Coffee Shop Chat', adv:true, day:8,
     desc:'You\'re waiting for your coffee. Someone next to you starts a chat — keep it light.',
     phrases:[
-        { en:'Are you also here to study Chinese?', hz:'你也是来学中文的吗？', py:'nǐ yě shì lái xué Zhōngwén de ma?', pya:'你:nǐ|也:yě|是:shì|来:lái|学:xué|中:zhōng|文:wén|的:de|吗:ma', real:[], who:'them' },
-        { en:'Yes, I just started. How about you?', hz:'对，我刚开始学。你呢？', py:'duì, wǒ gāng kāishǐ xué. nǐ ne?', pya:'对:duì|我:wǒ|刚:gāng|开:kāi|始:shǐ|学:xué|你:nǐ|呢:ne', real:[], who:'you', kw:['对','刚开始','你呢'] },
-        { en:'I\'ve studied for a year, it\'s quite interesting.', hz:'我学了一年了，还挺有意思的。', py:'wǒ xué le yì nián le, hái tǐng yǒu yìsi de.', pya:'我:wǒ|学:xué|了:le|一:yī|年:nián|了:le|还:hái|挺:tǐng|有:yǒu|意:yì|思:si|的:de', real:[], who:'them' },
-        { en:'Keep it up! Your Chinese is very good.', hz:'加油！你中文说得很好。', py:'jiāyóu! nǐ Zhōngwén shuō de hěn hǎo.', pya:'加:jiā|油:yóu|你:nǐ|中:zhōng|文:wén|说:shuō|得:dé|很:hěn|好:hǎo', real:[], who:'you', kw:['加油','很好'] }
+        { day:8, en:'Are you also here to study Chinese?', hz:'你也是来学中文的吗？', py:'nǐ yě shì lái xué Zhōngwén de ma?', pya:'你:nǐ|也:yě|是:shì|来:lái|学:xué|中:zhōng|文:wén|的:de|吗:ma', real:[], who:'them' },
+        { day:8, en:'Yes, I just started. How about you?', hz:'对，我刚开始学。你呢？', py:'duì, wǒ gāng kāishǐ xué. nǐ ne?', pya:'对:duì|我:wǒ|刚:gāng|开:kāi|始:shǐ|学:xué|你:nǐ|呢:ne', real:[], who:'you', kw:['对','刚开始','你呢'] },
+        { day:8, en:'I\'ve studied for a year, it\'s quite interesting.', hz:'我学了一年了，还挺有意思的。', py:'wǒ xué le yì nián le, hái tǐng yǒu yìsi de.', pya:'我:wǒ|学:xué|了:le|一:yī|年:nián|了:le|还:hái|挺:tǐng|有:yǒu|意:yì|思:si|的:de', real:[], who:'them' },
+        { day:8, en:'Keep it up! Your Chinese is very good.', hz:'加油！你中文说得很好。', py:'jiāyóu! nǐ Zhōngwén shuō de hěn hǎo.', pya:'加:jiā|油:yóu|你:nǐ|中:zhōng|文:wén|说:shuō|得:dé|很:hěn|好:hǎo', real:[], who:'you', kw:['加油','很好'] }
     ]},
   { id:'scene_day9_job_interview', icon:'💼', title:'Job Interview', adv:true, day:9,
     desc:'First question of the interview. Stay calm and answer clearly.',
     phrases:[
-        { en:'Please briefly introduce yourself.', hz:'请简单介绍一下你自己。', py:'qǐng jiǎndān jièshào yíxià nǐ zìjǐ.', pya:'请:qǐng|简:jiǎn|单:dān|介:jiè|绍:shào|一:yī|下:xià|你:nǐ|自:zì|己:jǐ', real:[], who:'them' },
-        { en:'My name is ___, I\'m from ___, and I work in ___.', hz:'我叫___，来自___，做___工作。', py:'wǒ jiào ___, lái zì ___, zuò ___ gōngzuò.', pya:'我:wǒ|叫:jiào|来:lái|自:zì|做:zuò|工:gōng|作:zuò', real:[], who:'you', kw:['我叫','来自','工作'] },
-        { en:'Why do you want to work at our company?', hz:'你为什么想在我们公司工作？', py:'nǐ wèishéme xiǎng zài wǒmen gōngsī gōngzuò?', pya:'你:nǐ|为:wèi|什:shén|么:me|想:xiǎng|在:zài|我:wǒ|们:men|公:gōng|司:sī|工:gōng|作:zuò', real:[], who:'them' },
-        { en:'Because ___.', hz:'因为___。', py:'yīnwèi ___.', pya:'因:yīn|为:wèi', real:[], who:'you' }
+        { day:9, en:'Please briefly introduce yourself.', hz:'请简单介绍一下你自己。', py:'qǐng jiǎndān jièshào yíxià nǐ zìjǐ.', pya:'请:qǐng|简:jiǎn|单:dān|介:jiè|绍:shào|一:yī|下:xià|你:nǐ|自:zì|己:jǐ', real:[], who:'them' },
+        { day:9, en:'My name is ___, I\'m from ___, and I work in ___.', hz:'我叫___，来自___，做___工作。', py:'wǒ jiào ___, lái zì ___, zuò ___ gōngzuò.', pya:'我:wǒ|叫:jiào|来:lái|自:zì|做:zuò|工:gōng|作:zuò', real:[], who:'you', kw:['我叫','来自','工作'] },
+        { day:9, en:'Why do you want to work at our company?', hz:'你为什么想在我们公司工作？', py:'nǐ wèishéme xiǎng zài wǒmen gōngsī gōngzuò?', pya:'你:nǐ|为:wèi|什:shén|么:me|想:xiǎng|在:zài|我:wǒ|们:men|公:gōng|司:sī|工:gōng|作:zuò', real:[], who:'them' },
+        { day:9, en:'Because ___.', hz:'因为___。', py:'yīnwèi ___.', pya:'因:yīn|为:wèi', real:[], who:'you' }
     ]},
   { id:'scene_day10_pharmacy', icon:'💊', title:'At the Pharmacy', adv:true, day:10,
     desc:'You\'re not feeling well. Communicate your symptoms clearly.',
     phrases:[
-        { en:'What\'s wrong? Where does it hurt?', hz:'怎么了？哪里不舒服？', py:'zěnme le? nǎlǐ bù shūfu?', pya:'怎:zěn|么:me|了:le|哪:nǎ|里:lǐ|不:bù|舒:shū|服:fú', real:[], who:'them' },
-        { en:'I have a headache and a slight fever.', hz:'我头疼，还有点发烧。', py:'wǒ tóu téng, hái yǒudiǎn fāshāo.', pya:'我:wǒ|头:tóu|疼:téng|还:hái|有:yǒu|点:diǎn|发:fā|烧:shāo', real:[], who:'you', kw:['头疼','发烧'] },
-        { en:'How long? Any allergies?', hz:'多久了？有没有过敏？', py:'duō jiǔ le? yǒu méiyǒu guòmǐn?', pya:'多:duō|久:jiǔ|了:le|有:yǒu|没:méi|有:yǒu|过:guò|敏:mǐn', real:[], who:'them' },
-        { en:'Two days, no allergies.', hz:'两天了，没有过敏。', py:'liǎng tiān le, méiyǒu guòmǐn.', pya:'两:liǎng|天:tiān|了:le|没:méi|有:yǒu|过:guò|敏:mǐn', real:[], who:'you', kw:['两天','没有'] }
+        { day:10, en:'What\'s wrong? Where does it hurt?', hz:'怎么了？哪里不舒服？', py:'zěnme le? nǎlǐ bù shūfu?', pya:'怎:zěn|么:me|了:le|哪:nǎ|里:lǐ|不:bù|舒:shū|服:fú', real:[], who:'them' },
+        { day:10, en:'I have a headache and a slight fever.', hz:'我头疼，还有点发烧。', py:'wǒ tóu téng, hái yǒudiǎn fāshāo.', pya:'我:wǒ|头:tóu|疼:téng|还:hái|有:yǒu|点:diǎn|发:fā|烧:shāo', real:[], who:'you', kw:['头疼','发烧'] },
+        { day:10, en:'How long? Any allergies?', hz:'多久了？有没有过敏？', py:'duō jiǔ le? yǒu méiyǒu guòmǐn?', pya:'多:duō|久:jiǔ|了:le|有:yǒu|没:méi|有:yǒu|过:guò|敏:mǐn', real:[], who:'them' },
+        { day:10, en:'Two days, no allergies.', hz:'两天了，没有过敏。', py:'liǎng tiān le, méiyǒu guòmǐn.', pya:'两:liǎng|天:tiān|了:le|没:méi|有:yǒu|过:guò|敏:mǐn', real:[], who:'you', kw:['两天','没有'] }
     ]},
   { id:'scene_day11_making_friends', icon:'💬', title:'Making Friends', adv:true, day:11,
     desc:'At a language exchange meetup. Someone wants to be your friend.',
     phrases:[
-        { en:'Can we add each other on WeChat?', hz:'我们可以加个微信吗？', py:'wǒmen kěyǐ jiā ge Wēixìn ma?', pya:'我:wǒ|们:men|可:kě|以:yǐ|加:jiā|个:gè|微:wēi|信:xìn|吗:ma', real:[], who:'them' },
-        { en:'Sure! My WeChat ID is ___.', hz:'好啊！我的微信号是___。', py:'hǎo a! wǒ de Wēixìn hào shì ___.', pya:'好:hǎo|啊:a|我:wǒ|的:de|微:wēi|信:xìn|号:hào|是:shì', real:[], who:'you', kw:['好啊','微信'] },
-        { en:'Do you have any plans for the weekend?', hz:'你周末有什么计划？', py:'nǐ zhōumò yǒu shénme jìhuà?', pya:'你:nǐ|周:zhōu|末:mò|有:yǒu|什:shén|么:me|计:jì|划:huà', real:[], who:'them' },
-        { en:'I want to walk in the park. Want to join?', hz:'我想去公园走走，一起吗？', py:'wǒ xiǎng qù gōngyuán zǒuzou, yìqǐ ma?', pya:'我:wǒ|想:xiǎng|去:qù|公:gōng|园:yuán|走:zǒu|走:zǒu|一:yì|起:qǐ|吗:ma', real:[], who:'you', kw:['公园','一起'] }
+        { day:11, en:'Can we add each other on WeChat?', hz:'我们可以加个微信吗？', py:'wǒmen kěyǐ jiā ge Wēixìn ma?', pya:'我:wǒ|们:men|可:kě|以:yǐ|加:jiā|个:gè|微:wēi|信:xìn|吗:ma', real:[], who:'them' },
+        { day:11, en:'Sure! My WeChat ID is ___.', hz:'好啊！我的微信号是___。', py:'hǎo a! wǒ de Wēixìn hào shì ___.', pya:'好:hǎo|啊:a|我:wǒ|的:de|微:wēi|信:xìn|号:hào|是:shì', real:[], who:'you', kw:['好啊','微信'] },
+        { day:11, en:'Do you have any plans for the weekend?', hz:'你周末有什么计划？', py:'nǐ zhōumò yǒu shénme jìhuà?', pya:'你:nǐ|周:zhōu|末:mò|有:yǒu|什:shén|么:me|计:jì|划:huà', real:[], who:'them' },
+        { day:11, en:'I want to walk in the park. Want to join?', hz:'我想去公园走走，一起吗？', py:'wǒ xiǎng qù gōngyuán zǒuzou, yìqǐ ma?', pya:'我:wǒ|想:xiǎng|去:qù|公:gōng|园:yuán|走:zǒu|走:zǒu|一:yì|起:qǐ|吗:ma', real:[], who:'you', kw:['公园','一起'] }
     ]},
   { id:'scene_day12_bargaining', icon:'🏪', title:'Market Bargaining', adv:true, day:12,
     desc:'You\'re at a street market. The vendor names a price — negotiate like a local.',
     phrases:[
-        { en:'This is 50 kuai, very cheap!', hz:'这个五十块，很便宜的！', py:'zhège wǔshí kuài, hěn piányi de!', pya:'这:zhè|个:ge|五:wǔ|十:shí|块:kuài|很:hěn|便:pián|宜:yi|的:de', real:[], who:'them' },
-        { en:'Too expensive, 30 kuai OK?', hz:'太贵了，三十块行吗？', py:'tài guì le, sānshí kuài xíng ma?', pya:'太:tài|贵:guì|了:le|三:sān|十:shí|块:kuài|行:xíng|吗:ma', real:[], who:'you', kw:['太贵','三十','行吗'] },
-        { en:'No no, minimum 45.', hz:'不行不行，最少四十五。', py:'bù xíng bù xíng, zuì shǎo sìshíwǔ.', pya:'不:bù|行:xíng|不:bù|行:xíng|最:zuì|少:shǎo|四:sì|十:shí|五:wǔ', real:[], who:'them' },
-        { en:'OK, 40 kuai, deal!', hz:'好吧，四十块，成交！', py:'hǎo ba, sìshí kuài, chéngjiāo!', pya:'好:hǎo|吧:ba|四:sì|十:shí|块:kuài|成:chéng|交:jiāo', real:[], who:'you', kw:['好吧','四十','成交'] }
+        { day:12, en:'This is 50 kuai, very cheap!', hz:'这个五十块，很便宜的！', py:'zhège wǔshí kuài, hěn piányi de!', pya:'这:zhè|个:ge|五:wǔ|十:shí|块:kuài|很:hěn|便:pián|宜:yi|的:de', real:[], who:'them' },
+        { day:12, en:'Too expensive, 30 kuai OK?', hz:'太贵了，三十块行吗？', py:'tài guì le, sānshí kuài xíng ma?', pya:'太:tài|贵:guì|了:le|三:sān|十:shí|块:kuài|行:xíng|吗:ma', real:[], who:'you', kw:['太贵','三十','行吗'] },
+        { day:12, en:'No no, minimum 45.', hz:'不行不行，最少四十五。', py:'bù xíng bù xíng, zuì shǎo sìshíwǔ.', pya:'不:bù|行:xíng|不:bù|行:xíng|最:zuì|少:shǎo|四:sì|十:shí|五:wǔ', real:[], who:'them' },
+        { day:12, en:'OK, 40 kuai, deal!', hz:'好吧，四十块，成交！', py:'hǎo ba, sìshí kuài, chéngjiāo!', pya:'好:hǎo|吧:ba|四:sì|十:shí|块:kuài|成:chéng|交:jiāo', real:[], who:'you', kw:['好吧','四十','成交'] }
     ]},
   { id:'scene_day13_giving_compliments', icon:'⭐', title:'Giving Compliments', adv:true, day:13,
     desc:'Your Chinese friend cooked for you. Say something nice — it goes a long way.',
     phrases:[
-        { en:'Have a taste, not sure if it\'s good.', hz:'尝尝看，不知道好不好吃。', py:'chángchang kàn, bù zhīdào hǎobù hǎochī.', pya:'尝:cháng|尝:cháng|看:kàn|不:bù|知:zhī|道:dào|好:hǎo|不:bù|好:hǎo|吃:chī', real:[], who:'them' },
-        { en:'So delicious! You\'re amazing at cooking.', hz:'太好吃了！你做饭真厉害。', py:'tài hǎochī le! nǐ zuòfàn zhēn lìhai.', pya:'太:tài|好:hǎo|吃:chī|了:le|你:nǐ|做:zuò|饭:fàn|真:zhēn|厉:lì|害:hài', real:[], who:'you', kw:['好吃','厉害'] },
-        { en:'Really? Come over more often then!', hz:'真的吗？那以后经常来吃！', py:'zhēn de ma? nà yǐhòu jīngcháng lái chī!', pya:'真:zhēn|的:de|吗:ma|那:nà|以:yǐ|后:hòu|经:jīng|常:cháng|来:lái|吃:chī', real:[], who:'them' },
-        { en:'Definitely! Thanks for having me.', hz:'一定！谢谢你的招待。', py:'yídìng! xièxie nǐ de zhāodài.', pya:'一:yí|定:dìng|谢:xiè|谢:xiè|你:nǐ|的:de|招:zhāo|待:dài', real:[], who:'you', kw:['一定','谢谢'] }
+        { day:13, en:'Have a taste, not sure if it\'s good.', hz:'尝尝看，不知道好不好吃。', py:'chángchang kàn, bù zhīdào hǎobù hǎochī.', pya:'尝:cháng|尝:cháng|看:kàn|不:bù|知:zhī|道:dào|好:hǎo|不:bù|好:hǎo|吃:chī', real:[], who:'them' },
+        { day:13, en:'So delicious! You\'re amazing at cooking.', hz:'太好吃了！你做饭真厉害。', py:'tài hǎochī le! nǐ zuòfàn zhēn lìhai.', pya:'太:tài|好:hǎo|吃:chī|了:le|你:nǐ|做:zuò|饭:fàn|真:zhēn|厉:lì|害:hài', real:[], who:'you', kw:['好吃','厉害'] },
+        { day:13, en:'Really? Come over more often then!', hz:'真的吗？那以后经常来吃！', py:'zhēn de ma? nà yǐhòu jīngcháng lái chī!', pya:'真:zhēn|的:de|吗:ma|那:nà|以:yǐ|后:hòu|经:jīng|常:cháng|来:lái|吃:chī', real:[], who:'them' },
+        { day:13, en:'Definitely! Thanks for having me.', hz:'一定！谢谢你的招待。', py:'yídìng! xièxie nǐ de zhāodài.', pya:'一:yí|定:dìng|谢:xiè|谢:xiè|你:nǐ|的:de|招:zhāo|待:dài', real:[], who:'you', kw:['一定','谢谢'] }
     ]},
   { id:'scene_day14_final_challenge', icon:'🏆', title:'Day 14: Real Conversation', adv:true, day:14,
     desc:'It\'s been 14 days. Now have a full, unscripted conversation from start to finish.',
     phrases:[
-        { en:'Hey, long time no see! How\'ve you been?', hz:'嗨，好久不见！最近怎么样？', py:'hāi, hǎojiǔ bújiàn! zuìjìn zěnme yàng?', pya:'嗨:hāi|好:hǎo|久:jiǔ|不:bú|见:jiàn|最:zuì|近:jìn|怎:zěn|么:me|样:yàng', real:[], who:'them' },
-        { en:'Pretty good! I\'m learning Chinese, made a lot of progress.', hz:'还不错！我在学中文，进步了很多。', py:'hái búcuò! wǒ zài xué Zhōngwén, jìnbù le hěn duō.', pya:'还:hái|不:bú|错:cuò|我:wǒ|在:zài|学:xué|中:zhōng|文:wén|进:jìn|步:bù|了:le|很:hěn|多:duō', real:[], who:'you', kw:['还不错','学中文','进步'] },
-        { en:'Really? Then let\'s speak Chinese!', hz:'真的吗？那我们说中文吧！', py:'zhēn de ma? nà wǒmen shuō Zhōngwén ba!', pya:'真:zhēn|的:de|吗:ma|那:nà|我:wǒ|们:men|说:shuō|中:zhōng|文:wén|吧:ba', real:[], who:'them' },
-        { en:'Sure! I\'m not very fluent yet, but I\'ll try my best!', hz:'好啊，虽然我还不太流利，但我会努力的！', py:'hǎo a, suīrán wǒ hái bú tài liúlì, dàn wǒ huì nǔlì de!', pya:'好:hǎo|啊:a|虽:suī|然:rán|我:wǒ|还:hái|不:bù|太:tài|流:liú|利:lì|但:dàn|我:wǒ|会:huì|努:nǔ|力:lì|的:de', real:[], who:'you', kw:['好啊','努力'] }
+        { day:14, en:'Hey, long time no see! How\'ve you been?', hz:'嗨，好久不见！最近怎么样？', py:'hāi, hǎojiǔ bújiàn! zuìjìn zěnme yàng?', pya:'嗨:hāi|好:hǎo|久:jiǔ|不:bú|见:jiàn|最:zuì|近:jìn|怎:zěn|么:me|样:yàng', real:[], who:'them' },
+        { day:14, en:'Pretty good! I\'m learning Chinese, made a lot of progress.', hz:'还不错！我在学中文，进步了很多。', py:'hái búcuò! wǒ zài xué Zhōngwén, jìnbù le hěn duō.', pya:'还:hái|不:bú|错:cuò|我:wǒ|在:zài|学:xué|中:zhōng|文:wén|进:jìn|步:bù|了:le|很:hěn|多:duō', real:[], who:'you', kw:['还不错','学中文','进步'] },
+        { day:14, en:'Really? Then let\'s speak Chinese!', hz:'真的吗？那我们说中文吧！', py:'zhēn de ma? nà wǒmen shuō Zhōngwén ba!', pya:'真:zhēn|的:de|吗:ma|那:nà|我:wǒ|们:men|说:shuō|中:zhōng|文:wén|吧:ba', real:[], who:'them' },
+        { day:14, en:'Sure! I\'m not very fluent yet, but I\'ll try my best!', hz:'好啊，虽然我还不太流利，但我会努力的！', py:'hǎo a, suīrán wǒ hái bú tài liúlì, dàn wǒ huì nǔlì de!', pya:'好:hǎo|啊:a|虽:suī|然:rán|我:wǒ|还:hái|不:bù|太:tài|流:liú|利:lì|但:dàn|我:wǒ|会:huì|努:nǔ|力:lì|的:de', real:[], who:'you', kw:['好啊','努力'] }
     ]},
 ];
 
@@ -2128,7 +2273,25 @@ var DAYS = [
   { n:11, t:'Hotel & a place to stay', topic:'getting-around', items:[], d:'Check in, get the Wi-Fi, fix the AC. A roof with no drama.' },
   { n:12, t:'Small talk', topic:'social', items:[],             d:'Weather, food, weekend plans \u2014 the glue of every conversation.' },
   { n:13, t:'Keep it going', topic:'social', items:[],          d:'Replies that keep a conversation alive: really? me too, no way!' },
-  { n:14, t:'Out with friends', topic:'food', items:[],       d:'Dinners, drinks, invitations \u2014 the fun part of learning a language.' }
+  { n:14, t:'Out with friends', topic:'food', items:[],       d:'Dinners, drinks, invitations \u2014 the fun part of learning a language.' },
+  /* v0.13.0 P2 课程扩容：Day 15-30（DevKit v3.1.0，topic=DevKit category） */
+    { n:15, t:'At the Doctor', topic:'survival', items:[], d:'Describe what hurts, understand the prescription.' },
+    { n:16, t:'At the Bar', topic:'social', items:[], d:'Order a drink, make small talk, learn to say no.' },
+    { n:17, t:'Apartment Hunting', topic:'travel', items:[], d:'Describe what you need, ask about rent.' },
+    { n:18, t:'Hair Salon', topic:'survival', items:[], d:'Communicate how you want your hair cut.' },
+    { n:19, t:'Bank Account', topic:'business', items:[], d:'Handle formal procedures with confidence.' },
+    { n:20, t:'Phone Repair', topic:'survival', items:[], d:'Describe the problem, understand the timeline.' },
+    { n:21, t:'Birthday Party', topic:'social', items:[], d:'Receive wishes and express warm replies.' },
+    { n:22, t:'High-Speed Rail', topic:'travel', items:[], d:'Buy tickets and handle travel changes.' },
+    { n:23, t:'Parent-Teacher Meeting', topic:'social', items:[], d:'Talk about your child with the teacher.' },
+    { n:24, t:'At the Gym', topic:'social', items:[], d:'Talk about fitness and find a buddy.' },
+    { n:25, t:'Cultural Discussion', topic:'social', items:[], d:'Share opinions and understand metaphors.' },
+    { n:26, t:'Online Shopping Return', topic:'business', items:[], d:'Complain and negotiate a resolution.' },
+    { n:27, t:'Academic Lecture', topic:'business', items:[], d:'Ask questions and join the discussion.' },
+    { n:28, t:'Business Negotiation', topic:'business', items:[], d:'Persuade, compromise, and close the deal.' },
+    { n:29, t:'Deep Relationships', topic:'social', items:[], d:'Express feelings and handle close moments.' },
+    { n:30, t:'Final Challenge', topic:'social', items:[], d:'Free conversation — no script, just speak.' }
+
 ];
 
 function allDayPhrases(){
@@ -2622,7 +2785,12 @@ function badgeGalleryHtml(){
     { id:'streak3',     t:'3-day streak', on: (S.streak||0)>=3 },
     { id:'streak7',     t:'7-day streak', on: (S.streak||0)>=7 },
     { id:'streak14',    t:'14-day streak',on: (S.streak||0)>=14 },
-    { id:'perfect',     t:'Perfect tone', on: tonePerfect }
+    { id:'perfect',     t:'Perfect tone', on: tonePerfect },
+    /* v0.13.0 gamification 扩展（DevKit gamification.json 口径）：判定读现有 S，图片未到位自动隐藏 */
+    { id:'survivor',    t:'Survivor · Day 6',  on: isDayDone(6) },
+    { id:'tone-master', t:'Tone master',       on: (S.tone && S.tone.total >= 20 && S.tone.right / S.tone.total >= 0.9) },
+    { id:'graduate',    t:'Graduate · Day 30', on: isDayDone(30) },
+    { id:'centurion',   t:'100-day streak',    on: (S.streak || 0) >= 100 }
   ];
   var cards = defs.map(function(d){
     return '<div class="badge-cell'+(d.on?' on':'')+'" data-badge="'+d.id+'"><img src="assets/badges/'+d.id+'_256.webp" alt="'+d.t+'" loading="lazy" onerror="this.parentNode.style.visibility=\'hidden\'"><span>'+d.t+'</span></div>';
