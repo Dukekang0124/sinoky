@@ -455,6 +455,11 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #v-onboard h1 .hl{color:#e63946}
       #v-onboard p.ob-sub{color:#8b93a7;font-size:15px;line-height:1.55;margin-top:12px}
       #v-onboard .ob-sp{flex:0 0 auto;min-height:0}
+      #v-onboard .ob-il img{display:block;width:min(74vw,280px);border-radius:20px;margin:0 auto}
+      #v-onboard .ob-mascot{display:block;width:130px;margin:0 auto 8px}
+      #v-onboard .ob-steps{display:flex;gap:8px;justify-content:center;margin:2px 0 14px}
+      #v-onboard .ob-steps img{width:23%;max-width:96px;border-radius:12px}
+      .empty-ill{display:block;width:130px;margin:0 auto 10px;border-radius:14px;opacity:.92}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -505,7 +510,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       }
     </style>
     <div class="ob-screen on" data-step="1">
-      <div class="ob-il">🔑</div>
+      <div class="ob-il" data-fb="🔑"><img src="assets/onboard/main.webp" alt="" onerror="this.parentNode.textContent=this.parentNode.getAttribute('data-fb')"></div>
       <h1>Stop memorizing <span class="hl">characters.</span><br>Start answering <span class="hl">people.</span></h1>
       <p class="ob-sub">Sinoky is the key that unlocks real Chinese conversations — using only the words you'll actually say.</p>
       <div class="ob-sp"></div>
@@ -555,7 +560,13 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <div class="ob-sp"></div>
     </div>
     <div class="ob-screen" data-step="6">
-      <div class="ob-il">✨</div>
+      <img class="ob-mascot" src="assets/mascot/cheer.webp" alt="" onerror="this.remove()">
+      <div class="ob-steps">
+        <img src="assets/onboard/step1-pinyin.webp" alt="" loading="lazy" onerror="this.remove()">
+        <img src="assets/onboard/step2-listen.webp" alt="" loading="lazy" onerror="this.remove()">
+        <img src="assets/onboard/step3-speak.webp" alt="" loading="lazy" onerror="this.remove()">
+        <img src="assets/onboard/step4-score.webp" alt="" loading="lazy" onerror="this.remove()">
+      </div>
       <h1>You're <span class="hl">all set.</span></h1>
       <p class="ob-sub">Here's your first scene — Day 1 of 14. Let's answer people.</p>
       <div class="ob-ready">
@@ -751,7 +762,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <span class="fc-prog" id="fc-prog">Loading…</span>
       <span class="fc-prog" id="fc-saved">★ 0 saved</span>
     </div>
-    <div class="fc-wrap" id="fc-wrap"><div class="fc-empty">Loading the HSK1 deck…</div></div>
+    <div class="fc-wrap" id="fc-wrap"><div class="fc-empty"><img class="empty-ill" src="assets/empty/network.webp" alt="" onerror="this.remove()">Loading the HSK1 deck…</div></div>
     <div class="card" style="margin-top:14px">
       <div class="top"><h2>Saved words</h2><span class="badge teal" id="nw-count">0</span></div>
       <p class="desc">Characters you starred for later review. Tap the speaker to hear one again.</p>
@@ -855,7 +866,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.71';
+var APP_VERSION = '0.3.72';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2384,7 +2395,7 @@ function renderCities(){
   }
   $('city-count').textContent = cityList().length + ' CITIES';
   if(!list.length){
-    h = '<div class="cityempty">No city matches \u201c'+escHtml(q)+'\u201d.<br>Try Beijing, \u6210\u90fd or chengdu.</div>';
+    h = '<div class="cityempty"><img class="empty-ill" src="assets/empty/general.webp" alt="" onerror="this.remove()">No city matches \u201c'+escHtml(q)+'\u201d.<br>Try Beijing, \u6210\u90fd or chengdu.</div>';
   } else if(q){
     h += '<div class="region-h">'+list.length+' RESULT'+(list.length>1?'S':'')+'</div>';
     list.forEach(function(sc){ h += cityRowHtml(sc, 'cities'); });
@@ -2454,7 +2465,7 @@ function dayRowHtml(n){
     h += '<div class="dayitems">';
     var items = it.map(function(x){ return {type:'phrase', x:x}; });   /* 现有 p.day 逻辑包成 items[] 形态 */
     var body = items.map(dayItemHtml).join('');
-    h += body || '<div class="dayempty">No lines in this day yet.</div>';
+    h += body || '<div class="dayempty"><img class="empty-ill" src="assets/empty/study.webp" alt="" onerror="this.remove()">No lines in this day yet.</div>';
     h += '</div>';
   }
   return h;
@@ -3411,7 +3422,7 @@ function loadCards(){
     })
     .catch(function(){
       $('fc-prog').textContent = '';
-      $('fc-wrap').innerHTML = '<div class="fc-empty">Could not load the card deck.<br>Reconnect and reopen the app to try again.</div>';
+      $('fc-wrap').innerHTML = '<div class="fc-empty"><img class="empty-ill" src="assets/empty/network.webp" alt="" onerror="this.remove()">Could not load the card deck.<br>Reconnect and reopen the app to try again.</div>';
     });
 }
 function renderCard(){
