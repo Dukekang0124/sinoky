@@ -305,9 +305,11 @@ nav button.on{color:var(--red)}
    零基础用户不用自己挑场景，按 arrival→self-intro→emergency 三步走 */
 .day1{background:linear-gradient(135deg,rgba(230,57,70,.10),rgba(127,179,176,.10));border-color:rgba(230,57,70,.30)}
 .day1-steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.day1-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
-  background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;
+.day1-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;position:relative;
+  background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 40px 11px 13px;
   font-size:14px;font-weight:600;color:var(--fg);cursor:pointer}
+.day1-step .panda-practice{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--fg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;padding:0}
+.day1-step .panda-practice:hover{background:var(--red);color:#fff;border-color:var(--red)}
 .day1-step .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
   display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
 .day1-step .st{margin-left:auto;font-size:11px;color:var(--sub);font-weight:500}
@@ -3660,9 +3662,10 @@ function renderHome(){
     '<p class="desc">'+cdInfo.d+' Tap a line to open it — play, cover, say it 3×.</p>'+
     '<div class="day1-steps">';
   cItems.forEach(function(x,i){
-    d1 += '<button class="day1-step'+(daySaid(x)?' done':'')+'" onclick="openScene(\''+x.scene.id+'\','+x.idx+')">'+
+    var pandaBtn = '<button class="panda-practice" onclick="event.stopPropagation();nonoPracticeLine(\''+x.scene.id+'\','+x.idx+')" title="Practise with Nono">🐼</button>';
+    d1 += '<div class="day1-step'+(daySaid(x)?' done':'')+'" onclick="openScene(\''+x.scene.id+'\','+x.idx+')">'+
       '<span class="num">'+(i+1)+'</span><span>'+x.p.en+'</span>'+
-      '<span class="st">'+(daySaid(x)?'✓ done':'Start')+'</span></button>';
+      '<span class="st">'+(daySaid(x)?'✓ done':'Start')+'</span>'+pandaBtn+'</div>';
   });
   var lastDone = 0, lastDate = '';
   for (var dn = 1; dn <= DAYS.length; dn++) { var dv = (S.dayDone||{})[dn]; if (dv) { lastDone = dn; lastDate = dayDoneLabel(dn); } }
