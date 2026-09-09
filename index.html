@@ -476,6 +476,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .setrow:last-of-type{border-bottom:none}
       .setctl{display:flex;gap:8px;align-items:center}
       .setctl .btn.on, .btn.ghost.on{border-color:var(--red);color:var(--red)}
+      .seg{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:10px 0}
+      .seg button{flex:1;background:none;border:none;border-radius:9px;padding:8px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit}
+      .seg button.on{background:rgba(230,57,70,.12);color:var(--red)}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -949,7 +952,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.5.0';
+var APP_VERSION = '0.5.1';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3062,6 +3065,22 @@ async function checkUpdate(){
   }catch(e){ hint.textContent='Could not check for updates (offline?). Current: v'+APP_VERSION; }
 }
 
+function toggleMoreScenes(){
+  var box = document.getElementById('more-scenes'), btn = document.getElementById('more-scenes-btn');
+  if(!box || !btn) return;
+  var open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? btn.textContent.replace('\u25b4','\u25be').replace('Hide','Show') : btn.textContent.replace('\u25be','\u25b4').replace('Show','Hide');
+}
+function switchListen(n, btn){
+  var p1 = document.getElementById('listen-pane-1'), p2 = document.getElementById('listen-pane-2');
+  if(p1) p1.style.display = (n===1) ? '' : 'none';
+  if(p2) p2.style.display = (n===2) ? '' : 'none';
+  var tabs = document.getElementById('listen-tabs');
+  if(tabs) [].forEach.call(tabs.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
+  if(btn) btn.classList.add('on');
+}
+
 function renderHome(){
   $('st-streak').textContent = S.streak;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -3089,19 +3108,33 @@ function renderHome(){
     (lastDate ? '<div class="day-finish-date" style="margin-top:6px;font-size:12.5px;font-weight:600;color:#0a8f6e">✅ Day '+lastDone+' finished on '+lastDate+'</div>' : '')+
     '<button class="daylink" onclick="go(\'days\')">See all '+DAYS.length+' days →</button></div>';
 
-  var html = '';
+  /* v0.5.1：场景默认只展开 4 张，其余折叠（能力完整保留，一键展开） */
+  var html = '', moreHtml = '', scN = 0;
   SCENES.forEach(function(sc){
-    if(isCity(sc)) return;   /* v0.3.44：城市不再平铺进首页，收敛到下方城市区（详见 cityBlockHtml） */
+    if(isCity(sc)) return;
     var doneN = (S.phrases[sc.id]||[]).length;
     var pct = Math.round(100*doneN/sc.phrases.length);
-    html += '<div class="card"><div class="top"><h2>'+sc.icon+' '+sc.title+'</h2>'+
+    var card = '<div class="card"><div class="top"><h2>'+sc.icon+' '+sc.title+'</h2>'+
       (pct===100 ? '<span class="badge teal">DONE ✓</span>' : '<span class="badge">DAILY</span>')+
       '</div><p class="desc">'+sc.desc+'</p>'+
       '<div class="pbar"><i style="width:'+pct+'%"></i></div>'+
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
       (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
+    if(scN < 4){ html += card; } else { moreHtml += card; }
+    scN++;
   });
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenCardHtml() + listenCardSHtml() + html + cityBlockHtml() + dialogBlockHtml();
+  if(moreHtml){
+    html += '<div id="more-scenes" style="display:none">'+moreHtml+'</div>'+
+      '<button class="daylink" id="more-scenes-btn" onclick="toggleMoreScenes()">Show '+(scN-4)+' more scenes ▾</button>';
+  }
+  /* v0.5.1：两张听力卡合并为一张 + 分段 Tab（内容都保留，只是同一位置切换） */
+  var listenTabs = '<div class="seg" id="listen-tabs">'+
+    '<button class="on" onclick="switchListen(1,this)">Sentences</button>'+
+    '<button onclick="switchListen(2,this)">Scenes</button></div>';
+  var listenBlock = listenTabs +
+    '<div id="listen-pane-1">'+listenCardHtml()+'</div>'+
+    '<div id="listen-pane-2" style="display:none">'+listenCardSHtml()+'</div>';
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
