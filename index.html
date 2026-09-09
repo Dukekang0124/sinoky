@@ -495,6 +495,31 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .np-foot{padding:0 12px 12px;display:flex;gap:8px;flex-wrap:wrap}
       .np-foot button{background:var(--red);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
       .np-foot button.ghost{background:none;border:1px solid var(--line);color:var(--txt)}
+      /* ---- Nono 状态：聆听/思考/说话 ---- */
+      #nono-pose.st-listening{animation:npListen 1s infinite}
+      #nono-pose.st-thinking{animation:npThink 1.6s infinite}
+      #nono-pose.st-speaking{animation:npSpeak .6s infinite}
+      @keyframes npListen{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+      @keyframes npThink{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+      @keyframes npSpeak{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+      .np-state{font-size:11.5px;color:var(--sub);margin-top:2px}
+      /* ---- 跟读练习区 ---- */
+      .np-line{background:rgba(127,179,176,.10);border:1px solid rgba(127,179,176,.30);border-radius:12px;padding:10px;margin-bottom:10px}
+      .np-line .hz{font-size:20px;font-weight:600}
+      .np-line .py{font-size:12.5px;color:var(--teal);margin-top:2px}
+      .np-line .en{font-size:11.5px;color:var(--sub);margin-top:2px}
+      .np-bars{margin:10px 0}
+      .np-bar{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);margin-bottom:5px}
+      .np-bar span.w{flex:0 0 44px}
+      .np-bar i{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden;display:block}
+      .np-bar i u{display:block;height:100%;background:var(--teal)}
+      .np-bar b{flex:0 0 30px;text-align:right;color:var(--txt)}
+      .np-syl{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+      .np-syl span{padding:3px 7px;border-radius:8px;font-size:12.5px;border:1px solid var(--line)}
+      .np-syl span.ok{background:rgba(127,179,176,.18);border-color:var(--teal)}
+      .np-syl span.bad{background:rgba(230,57,70,.14);border-color:var(--red)}
+      .np-fix{font-size:11.5px;color:var(--sub);line-height:1.6}
+      .np-rec{display:flex;align-items:center;gap:6px;color:var(--red);font-size:12px;font-weight:600}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -914,6 +939,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       </span>
     </div>
     <div class="np-body" id="nono-msg"></div>
+    <div class="np-body" id="nono-practice" style="display:none;padding-top:0"></div>
+    <div class="np-body" id="nono-state" style="display:none;padding-top:0"></div>
     <div class="np-foot" id="nono-acts"></div>
   </div>
   <button id="nono-fab" onclick="nonoToggle()" aria-label="Nono companion">
@@ -985,7 +1012,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.6.0';
+var APP_VERSION = '0.7.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3177,12 +3204,8 @@ function nonoView() { var on = document.querySelector('.views.on'); return on ? 
 function nonoContextGreet(manual) {
   var v = nonoView(), said = 0;
   if (manual) {
-    /* 用户主动点击必须给反馈：优先于 once/到期提醒，避免"点了没反应" */
-    var line = (typeof NONO.pickLine === 'function') ? NONO.pickLine() : null;
-    nonoShow(line
-      ? ("Let's practise: <b>" + line.hz + "</b><br><span style='color:var(--sub)'>" + line.py + "</span><br>" + (line.en || ''))
-      : "Tap Practice and say a line out loud - I'll listen. <b>" + "试试看！" + "</b>",
-      { pose: 'like', actions: line ? [{ t: 'Hear it', fn: 'nonoSay()' }, { t: 'I will say it', fn: "go('practice')" }] : [{ t: 'Go practise', fn: "go('practice')" }] });
+    /* 用户主动点击必须给反馈：直接进入跟读练习（C7） */
+    nonoStartPractice();
     return;
   }
   Object.keys(S.phrases || {}).forEach(function (k) { said += (S.phrases[k] || []).length; });
@@ -3262,6 +3285,204 @@ function nonoResetIdle() {
   };
 })();
 window.addEventListener('load', function () { setTimeout(function () { nonoResetIdle(); }, 1200); });
+
+
+
+/* ============ v0.7.0 Nono：跟读判分（C7）+ 角色状态机 + 个性化记忆 ============ */
+var NONO_REC = null, NONO_MS = 0, NONO_LINE = null, NONO_STREAM = null;
+
+/* 角色状态：idle / listening / thinking / speaking / cheer / sorry */
+function nonoState(st){
+  var pose = document.getElementById('nono-pose'), stEl = document.getElementById('nono-state');
+  if(!pose) return;
+  pose.className = '';
+  var map = { listening:['think','Nono is listening…'], thinking:['think','Nono is thinking…'],
+              speaking:['like','Nono is speaking…'], cheer:['cheer','Nono is happy!'], sorry:['sorry','Nono is helping…'] };
+  var m = map[st];
+  if(m){ pose.src = 'assets/mascot/' + m[0] + '.webp'; pose.classList.add('st-' + st);
+         if(stEl){ stEl.style.display='block'; stEl.innerHTML='<div class="np-state">'+m[1]+'</div>'; } }
+  else { pose.src = 'assets/mascot/like.webp'; if(stEl) stEl.style.display='none'; }
+}
+
+/* 按当前视图挑一句适合练习的中文 */
+NONO.pickLine = function(){
+  var v = nonoView(), pool = [];
+  function push(sc){ (sc.phrases||[]).forEach(function(ph,i){ if(ph.hz) pool.push({ hz:ph.hz, py:ph.py||'', en:ph.en||'', key:sc.id+'#'+i, scene:sc.id }); }); }
+  if(v === 'scene' && window.curScene) { push(curScene); }
+  else {
+    var pref = (v === 'cities') ? 'beijing' : (v === 'review' ? null : null);
+    SCENES.forEach(function(sc){
+      if(isCity(sc) && v !== 'cities') return;
+      if(pref && sc.id !== pref) return;
+      push(sc);
+    });
+  }
+  if(!pool.length) return null;
+  /* 个性化：优先挑"老出错"的句子（weak 记录） */
+  var weak = (S.nono && S.nono.weak) || {};
+  var bad = pool.filter(function(l){ return (weak[l.key]||0) >= 2; });
+  var arr = bad.length ? bad : pool;
+  return arr[Math.floor(Math.random()*arr.length)];
+};
+function nonoSay(){
+  if(!NONO_LINE) return;
+  nonoState('speaking');
+  if(typeof speak === 'function') speak(NONO_LINE.hz);
+  setTimeout(function(){ nonoState('idle'); }, 2600);
+}
+
+/* 录音：复用现有 blobToWav(16k) + asrText() */
+async function nonoRecord(){
+  var p = document.getElementById('nono-practice');
+  if(!NONO_LINE) return;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined'){
+    if(p) p.innerHTML = '<div class="np-fix">Recording is not supported in this browser. Use Chrome or Edge.</div>';
+    return;
+  }
+  try{
+    NONO_STREAM = await navigator.mediaDevices.getUserMedia({ audio:true });
+    var chunks = [];
+    var rec = new MediaRecorder(NONO_STREAM);
+    NONO_REC = rec;
+    rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = async function(){
+      try{ NONO_STREAM.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+      NONO_STREAM = null; NONO_REC = null;
+      nonoState('thinking');
+      if(p) p.innerHTML = '<div class="np-fix">Nono is listening back… one moment.</div>';
+      try{
+        var blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+        var wav = await blobToWav(blob);
+        await nonoGrade(wav);
+      }catch(e){
+        nonoState('sorry');
+        if(p) p.innerHTML = '<div class="np-fix">That did not work — ' + (e && e.message ? e.message : 'unknown error') + '. Try once more?</div>';
+      }
+    };
+    rec.start();
+    NONO_MS = Date.now();
+    nonoState('listening');
+    if(p) p.innerHTML = '<div class="np-rec">● Recording… tap stop when you finish</div>' +
+      '<button class="btn ghost" style="margin-top:8px;width:100%" onclick="nonoStop()">⏹ Stop</button>';
+  }catch(e){
+    nonoState('sorry');
+    if(p) p.innerHTML = '<div class="np-fix">Microphone blocked. Allow it in your browser, then try again.</div>';
+  }
+}
+function nonoStop(){ try{ if(NONO_REC && NONO_REC.state !== 'inactive') NONO_REC.stop(); }catch(e){} }
+
+/* 评分：asrText → api/score → 三维反馈 + 鼓励点评 */
+async function nonoGrade(wav){
+  var p = document.getElementById('nono-practice');
+  var line = NONO_LINE;
+  var a = await asrText(wav, line.hz);
+  if(!a.ok){
+    nonoState('sorry');
+    if(p) p.innerHTML = '<div class="np-fix">' + (a.err || ('ASR error ' + (a.status||''))) + '<br>Try again a little louder.</div>' +
+      '<button class="btn ghost" style="margin-top:8px;width:100%" onclick="nonoRecord()">🎙️ Try again</button>';
+    return;
+  }
+  var r = await fetch(API_BASE + 'api/score', {
+    method:'POST', headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ target: line.hz, user: a.text || '' })
+  });
+  var d = await r.json().catch(function(){ return {}; });
+  if(!r.ok || d.error){ nonoState('sorry'); if(p) p.innerHTML = '<div class="np-fix">'+(d.error||('score error '+r.status))+'</div>'; return; }
+
+  /* 三维：准确度(接口) / 完整度(音节命中) / 流利度(语速估算) */
+  var syll = d.perSyll || [];
+  var hit = syll.filter(function(x){ return x.user && x.user !== '?'; }).length;
+  var acc = Math.round(d.overall || 0);
+  var comp = syll.length ? Math.round(100*hit/syll.length) : acc;
+  var dur = Math.max(0.6, (Date.now() - NONO_MS)/1000);
+  var han = (line.hz.match(/[\u4e00-\u9fff]/g) || []).length || 1;
+  var rate = han/dur;                       /* 字/秒 */
+  var flu = Math.max(0, Math.min(100, Math.round(100 - Math.abs(rate-3.2)*22)));  /* 3.2字/秒为自然语速中位 */
+
+  /* 记录学习数据（只写 S.nono，不动现有统计） */
+  S.nono = S.nono || { n:0, best:0, last:null, weak:{}, sum:0 };
+  S.nono.n++; S.nono.sum += acc; S.nono.best = Math.max(S.nono.best||0, acc);
+  S.nono.last = { key:line.key, score:acc, at:new Date().toISOString().slice(0,10) };
+  syll.forEach(function(x){ if(!(x.score>=0.99)){ S.nono.weak[line.key] = (S.nono.weak[line.key]||0)+1; } });
+  if(typeof saveState === 'function') saveState();
+
+  /* 诺诺风格点评 */
+  var verdict = d.verdict || '';
+  var comment;
+  if(acc >= 85) comment = "That was clear and natural — <b>说得很好！</b>";
+  else if(acc >= 70) comment = "Good! A few tones to polish — <b>不错，再练一次</b>";
+  else if(acc >= 45) comment = "You are close. Slow down and shape each tone — <b>慢慢来</b>";
+  else comment = "Let's do it together: hear it, then say it — <b>跟我一起说</b>";
+
+  /* 错误音节与声调提示 */
+  var fixes = [];
+  syll.forEach(function(x){ if(!(x.score>=0.99)) fixes.push(x); });
+
+  var weakNote = '';
+  if((S.nono.weak[line.key]||0) >= 2) weakNote = '<div class="np-fix" style="margin-top:6px">This line has tripped you up a few times — that is exactly why Nono picked it. <b>我们再来一次。</b></div>';
+
+  var h = '<div class="np-line"><div class="hz">'+line.hz+'</div><div class="py">'+(line.py||'')+'</div>'+
+    (line.en? '<div class="en">'+line.en+'</div>':'')+'</div>'+
+    '<div class="np-bars">'+
+      bar('Accuracy', acc) + bar('Complete', comp) + bar('Fluency', flu) +
+    '</div>'+
+    (syll.length ? '<div class="np-syl">'+ syll.map(function(x){
+        return '<span class="'+((x.score>=0.99)?'ok':'bad')+'">'+ (x.target||'') +'</span>'; }).join('') +'</div>' : '')+
+    (fixes.length ? '<div class="np-fix">'+ fixes.slice(0,4).map(function(f){
+        return '<b>'+(f.target||'')+'</b> → you said <b>'+(f.user||'?')+'</b> · '+((f.errs||[]).join(' · ')||'try again');
+      }).join('<br>') +'</div>' : '')+
+    weakNote +
+    '<div class="np-fix" style="margin-top:8px">'+comment+(verdict?' <span style="color:var(--sub)">('+verdict+')</span>':'')+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
+      '<button onclick="nonoSay()">🔊 Hear Nono</button>'+
+      '<button class="ghost" onclick="nonoRecord()">🎙️ Again</button>'+
+      '<button class="ghost" onclick="nonoNewLine()">🔄 New line</button>'+
+    '</div>'+
+    '<div class="np-fix" style="margin-top:6px;color:var(--sub)">Fluency is estimated from your speaking speed (~3.2 chars/s is natural).</div>';
+
+  if(p) p.innerHTML = h;
+  nonoState(acc >= 70 ? 'cheer' : 'sorry');
+  setTimeout(function(){ nonoState('idle'); }, 2000);
+}
+function bar(label, v){
+  return '<div class="np-bar"><span class="w">'+label+'</span><i><u style="width:'+Math.max(0,Math.min(100,v))+'%"></u></i><b>'+v+'</b></div>';
+}
+
+/* 面板内开始一次跟读练习 */
+function nonoStartPractice(){
+  var line = NONO.pickLine();
+  if(!line){ nonoShow("No lines yet — pick a scene first. <b>先选一个场景。</b>", { pose:'think' }); return; }
+  NONO_LINE = line;
+  var box = document.getElementById('nono-practice');
+  var msg = document.getElementById('nono-msg');
+  if(msg) msg.innerHTML = "Let's practise together. Hear it, then say it — <b>先听，再说。</b>";
+  if(box){
+    box.style.display = 'block';
+    box.innerHTML = '<div class="np-line"><div class="hz">'+line.hz+'</div><div class="py">'+(line.py||'')+'</div>'+
+      (line.en? '<div class="en">'+line.en+'</div>':'')+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button onclick="nonoSay()">🔊 Hear Nono</button>'+
+        '<button class="ghost" onclick="nonoRecord()">🎙️ I will say it</button>'+
+        '<button class="ghost" onclick="nonoNewLine()">🔄 New line</button>'+
+      '</div>';
+  }
+  nonoShow("Practice with me — <b>跟我读</b>", { pose:'like' });
+  var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
+}
+function nonoNewLine(){ var l = NONO.pickLine(); if(l){ NONO_LINE = l; nonoStartPracticeWith(l); } }
+function nonoStartPracticeWith(line){
+  NONO_LINE = line;
+  var box = document.getElementById('nono-practice');
+  if(box){
+    box.innerHTML = '<div class="np-line"><div class="hz">'+line.hz+'</div><div class="py">'+(line.py||'')+'</div>'+
+      (line.en? '<div class="en">'+line.en+'</div>':'')+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button onclick="nonoSay()">🔊 Hear Nono</button>'+
+        '<button class="ghost" onclick="nonoRecord()">🎙️ I will say it</button>'+
+        '<button class="ghost" onclick="nonoNewLine()">🔄 New line</button>'+
+      '</div>';
+  }
+}
 
 
 function renderHome(){
