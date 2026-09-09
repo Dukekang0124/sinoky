@@ -23,7 +23,7 @@ jobs:
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
-          apiToken: ${{ inputs.cf_token != "" && inputs.cf_token || secrets.CLOUDFLARE_API_TOKEN }}
+          apiToken: "${{ inputs.cf_token != '' && inputs.cf_token || secrets.CLOUDFLARE_API_TOKEN }}"
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: sinoky
           directory: .
