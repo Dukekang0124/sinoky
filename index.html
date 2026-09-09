@@ -1012,7 +1012,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.7.0';
+var APP_VERSION = '0.7.1';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3173,6 +3173,7 @@ function nonoShow(msg, opt) {
   var d = nonoDaily();
   if (d.n >= 4) return;                       /* 每日主动气泡上限 */
   if (nonoBusy()) return;                     /* 录音/播放中不打扰 */
+  if (opt.priority === 'result') NONO.lockUntil = Date.now() + 2500;   /* 结果优先，防被功能说明覆盖 */
   d.n++; try { localStorage.setItem('sinoky_nono_day', JSON.stringify(d)); } catch (e) {}
   nonoPose(opt.pose || 'like');
   document.getElementById('nono-msg').innerHTML = msg;
@@ -3280,7 +3281,11 @@ function nonoResetIdle() {
   if (typeof origGo !== 'function') return;
   window.go = function (v) {
     var out = origGo.apply(this, arguments);
-    try { setTimeout(function () { if (!NONO.closed) nonoContextGreet(false); }, 400); } catch (e) {}
+    try { setTimeout(function () {
+      if (NONO.closed) return;
+      if (Date.now() < (NONO.lockUntil || 0)) return;   /* 刚出过结果反馈，不抢 */
+      nonoContextGreet(false);
+    }, 400); } catch (e) {}
     return out;
   };
 })();
@@ -3485,6 +3490,43 @@ function nonoStartPracticeWith(line){
 }
 
 
+
+/* ============ v0.7.1 N1/N2 扩展点位 ============ */
+function nonoPracticeLine(sceneId, idx){
+  var sc = null;
+  (window.SCENES || []).forEach(function(x){ if(x.id === sceneId) sc = x; });
+  var ph = sc && sc.phrases && sc.phrases[idx];
+  if(!ph || !ph.hz) return;
+  NONO.closed = false;
+  var line = { hz: ph.hz, py: ph.py || '', en: ph.en || '', key: sceneId + '#' + idx, scene: sceneId };
+  var panel = document.getElementById('nono-panel');
+  if(panel) panel.style.display = 'block';
+  var msg = document.getElementById('nono-msg');
+  if(msg) msg.innerHTML = 'Let us say this one together. <b>跟我读</b>';
+  nonoStartPracticeWith(line);
+  nonoState('idle');
+}
+var TONE_TIP = {
+  1: 'Tone 1 is flat and high — hold it steady, like a held note. <b>一声要平</b>',
+  2: 'Tone 2 rises, like saying "what?" in English. <b>二声往上扬</b>',
+  3: 'Tone 3 dips low first, then rises — keep it low and slow. <b>三声先降后升</b>',
+  4: 'Tone 4 is short and falls sharply, like saying "no!" <b>四声短促下降</b>'
+};
+function nonoToneTip(ok, picked, correct, hz){
+  if(NONO.closed) return;
+  var tip = TONE_TIP[correct] || '';
+  var msg = ok
+    ? ('You heard that right — tone ' + correct + '. <b>听得很准！</b> ' + tip)
+    : ('You picked tone ' + picked + ', but it was tone ' + correct + '. ' + tip);
+  var acts = [{ t: 'Hear tone ' + correct, fn: 'nonoHearTone(' + correct + ')' }];
+  if(!ok) acts.push({ t: 'OK', fn: 'nonoMin()', ghost: true });
+  nonoShow(msg, { pose: ok ? 'cheer' : 'sorry', actions: acts, priority: 'result' });
+}
+function nonoHearTone(n){
+  try { if (typeof playToneAudio === 'function' && window.TONES) playToneAudio(TONES[n - 1]); } catch (e) {}
+}
+
+
 function renderHome(){
   $('st-streak').textContent = S.streak;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -3624,6 +3666,7 @@ function renderSceneList(){
       '<div class="p-actions">'+
       '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Next tap: '+SPEEDS[0].tip+'">'+SPEEDS[0].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
+         '<button class="btn ghost" style="flex:0 0 auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+curScene.id+'\','+i+')">🐼</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
       '</div>' + realHtml(i, p) + '<div class="score-result" id="score-'+i+'"></div></div>';
   });
@@ -4073,6 +4116,8 @@ function answerTone(n){
     ? '<b>✓ '+TONE_LABEL[toneQ.t]+'.</b> '+toneQ.hz+' ('+toneQ.py+') = '+toneQ.mean
     : '<b style="color:var(--red)">✗ You picked tone '+n+'.</b> That was tone '+toneQ.t+'. '+toneQ.hz+' ('+toneQ.py+') = '+toneQ.mean;
   $('tone-next').style.display = '';
+  /* v0.7.1 N2：判分后诺诺给出针对性纠音建议（不改判分逻辑） */
+  try { if (typeof nonoToneTip === 'function') nonoToneTip(ok, n, toneQ.t, toneQ.hz); } catch (e) {}
   toneTimer = setTimeout(function(){ $('tone-next').style.display = 'none'; toneNewQuiz(); }, ok ? 1800 : 3000);
 }
 
