@@ -1,10 +1,10 @@
 {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "updated": "2026-09-09",
-  "note": "应用内更新上线：APK壳支持检测+下载+安装（固定签名，此后升级走应用内）；A1-A14素材全量已接。视频宣传(V2-V5)暂停。",
+  "note": "修复：App 内每次启动自动检测新版本并弹横幅提醒安装（此前 App 内不触发）；Check update 反馈增强。",
   "apk": {
-    "versionCode": 1100,
-    "version": "0.11.0",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.11.0-release.apk"
+    "versionCode": 1101,
+    "version": "0.11.1",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.11.1-release.apk"
   }
 }

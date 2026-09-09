@@ -1048,7 +1048,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.11.0';
+var APP_VERSION = '0.11.1';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3202,12 +3202,18 @@ async function checkUpdate(){
     if(apk){
       hint.textContent='New app version v'+(apk.version||apk.versionCode)+' available — download & install.';
       if(btn){ btn.style.display='inline-block'; btn.onclick=function(){ startApkUpdate(apk); }; }
+      toast('⬆️ New app v'+(apk.version||apk.versionCode)+' — tap Download to update');
     } else if(latest!==APP_VERSION){
       hint.textContent='New version available: v'+latest+' — reload the page to update.';
+      toast('New web version v'+latest+' — reload the page to update');
     } else {
       hint.textContent='Up to date (v'+APP_VERSION+')';
+      toast('✅ You are up to date (v'+APP_VERSION+')');
     }
-  }catch(e){ hint.textContent='Could not check for updates (offline?). Current: v'+APP_VERSION; }
+  }catch(e){
+    hint.textContent='Could not check for updates (offline?). Current: v'+APP_VERSION;
+    toast('⚠️ Update check failed — check your connection');
+  }
 }
 
 /* v0.11.0 应用内更新：APK 壳版本检测 + 原生桥下载安装 */
@@ -3240,6 +3246,7 @@ function showApkUpdateBar(apk){
   bar.textContent = 'New app v'+(apk.version||apk.versionCode)+' — tap to update';
   bar.style.display = 'block';
   bar.onclick = function(){ startApkUpdate(apk); };
+  toast('⬆️ New app v'+(apk.version||apk.versionCode)+' available — tap the banner to update');
 }
 async function startApkUpdate(apk){
   try{
@@ -5117,7 +5124,8 @@ function shareSinoky(){
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(function(){});
 }
-if(API_BASE==='')fetch('version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(async function(j){
+/* v0.11.1：去掉 API_BASE==='' 门——原生壳 API_BASE 非空，此前整个自动检测（网页刷新横幅+APK 更新横幅）在 App 内从不执行 */
+fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(async function(j){
   /* v0.3.35 M6：改为顶部常驻、可点击的横幅。
      旧实现是 2.2 秒就消失且不可点的 toast，用户根本不知道"refresh"该怎么操作
      （PWA 里既不能下拉刷新也没人知道要重装）→ 长期停留在旧版。 */
