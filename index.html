@@ -460,6 +460,13 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #v-onboard .ob-steps{display:flex;gap:8px;justify-content:center;margin:2px 0 14px}
       #v-onboard .ob-steps img{width:23%;max-width:96px;border-radius:12px}
       .empty-ill{display:block;width:130px;margin:0 auto 10px;border-radius:14px;opacity:.92}
+      .rv-modes{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+      .rv-mode{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+      .rv-mode .rv-ic{font-size:20px}
+      .rv-mode b{flex:1;font-size:13.5px}
+      .rv-mode i{font-style:normal;font-size:11.5px;color:var(--sub)}
+      .rv-item{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+      .rv-meta{font-size:11.5px;color:var(--sub);margin-bottom:8px}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -726,6 +733,16 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   </section>
 
   <!-- PROGRESS -->
+  <section id="v-review" class="views">
+    <div class="card">
+      <div class="top"><h2>\u{1F501} Smart review</h2><span class="badge" id="rv-count">0</span></div>
+      <p class="desc">Spaced repetition (1→3→7→15→30 days). Say the line in the scene, then mark it — that decides when you see it again.</p>
+      <div id="rv-modes"></div>
+      <div id="rv-queue"></div>
+    </div>
+    <button class="btn ghost" onclick="go('home')">← Back</button>
+  </section>
+
   <section id="v-prog" class="views">
     <div class="card">
       <div class="top"><h2>Your progress</h2></div>
@@ -866,7 +883,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.3.74';
+var APP_VERSION = '0.4.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -1810,7 +1827,64 @@ var SCENES = [
           { hz:'来杯丝袜奶茶？', py:'Lái bēi sīwà nǎichá?', note:'order silk-stocking milk tea', style:'casual' },
           { hz:'菠萝包配奶茶。', py:'Bōluóbāo pèi nǎichá.', note:'pineapple bun with milk tea', style:'casual' }
         ]}
-    ]}
+    ]},
+  /* v0.4.0 P1 进阶场景 Day 8-14（豆包交付数据，pya 构建期生成） */
+  { id:'scene_day8_coffee_shop', icon:'☕', title:'Coffee Shop Chat', adv:true, day:8,
+    desc:'You\'re waiting for your coffee. Someone next to you starts a chat — keep it light.',
+    phrases:[
+        { en:'Are you also here to study Chinese?', hz:'你也是来学中文的吗？', py:'nǐ yě shì lái xué Zhōngwén de ma?', pya:'你:nǐ|也:yě|是:shì|来:lái|学:xué|中:zhōng|文:wén|的:de|吗:ma', real:[], who:'them' },
+        { en:'Yes, I just started. How about you?', hz:'对，我刚开始学。你呢？', py:'duì, wǒ gāng kāishǐ xué. nǐ ne?', pya:'对:duì|我:wǒ|刚:gāng|开:kāi|始:shǐ|学:xué|你:nǐ|呢:ne', real:[], who:'you', kw:['对','刚开始','你呢'] },
+        { en:'I\'ve studied for a year, it\'s quite interesting.', hz:'我学了一年了，还挺有意思的。', py:'wǒ xué le yì nián le, hái tǐng yǒu yìsi de.', pya:'我:wǒ|学:xué|了:le|一:yī|年:nián|了:le|还:hái|挺:tǐng|有:yǒu|意:yì|思:si|的:de', real:[], who:'them' },
+        { en:'Keep it up! Your Chinese is very good.', hz:'加油！你中文说得很好。', py:'jiāyóu! nǐ Zhōngwén shuō de hěn hǎo.', pya:'加:jiā|油:yóu|你:nǐ|中:zhōng|文:wén|说:shuō|得:dé|很:hěn|好:hǎo', real:[], who:'you', kw:['加油','很好'] }
+    ]},
+  { id:'scene_day9_job_interview', icon:'💼', title:'Job Interview', adv:true, day:9,
+    desc:'First question of the interview. Stay calm and answer clearly.',
+    phrases:[
+        { en:'Please briefly introduce yourself.', hz:'请简单介绍一下你自己。', py:'qǐng jiǎndān jièshào yíxià nǐ zìjǐ.', pya:'请:qǐng|简:jiǎn|单:dān|介:jiè|绍:shào|一:yī|下:xià|你:nǐ|自:zì|己:jǐ', real:[], who:'them' },
+        { en:'My name is ___, I\'m from ___, and I work in ___.', hz:'我叫___，来自___，做___工作。', py:'wǒ jiào ___, lái zì ___, zuò ___ gōngzuò.', pya:'我:wǒ|叫:jiào|来:lái|自:zì|做:zuò|工:gōng|作:zuò', real:[], who:'you', kw:['我叫','来自','工作'] },
+        { en:'Why do you want to work at our company?', hz:'你为什么想在我们公司工作？', py:'nǐ wèishéme xiǎng zài wǒmen gōngsī gōngzuò?', pya:'你:nǐ|为:wèi|什:shén|么:me|想:xiǎng|在:zài|我:wǒ|们:men|公:gōng|司:sī|工:gōng|作:zuò', real:[], who:'them' },
+        { en:'Because ___.', hz:'因为___。', py:'yīnwèi ___.', pya:'因:yīn|为:wèi', real:[], who:'you' }
+    ]},
+  { id:'scene_day10_pharmacy', icon:'💊', title:'At the Pharmacy', adv:true, day:10,
+    desc:'You\'re not feeling well. Communicate your symptoms clearly.',
+    phrases:[
+        { en:'What\'s wrong? Where does it hurt?', hz:'怎么了？哪里不舒服？', py:'zěnme le? nǎlǐ bù shūfu?', pya:'怎:zěn|么:me|了:le|哪:nǎ|里:lǐ|不:bù|舒:shū|服:fú', real:[], who:'them' },
+        { en:'I have a headache and a slight fever.', hz:'我头疼，还有点发烧。', py:'wǒ tóu téng, hái yǒudiǎn fāshāo.', pya:'我:wǒ|头:tóu|疼:téng|还:hái|有:yǒu|点:diǎn|发:fā|烧:shāo', real:[], who:'you', kw:['头疼','发烧'] },
+        { en:'How long? Any allergies?', hz:'多久了？有没有过敏？', py:'duō jiǔ le? yǒu méiyǒu guòmǐn?', pya:'多:duō|久:jiǔ|了:le|有:yǒu|没:méi|有:yǒu|过:guò|敏:mǐn', real:[], who:'them' },
+        { en:'Two days, no allergies.', hz:'两天了，没有过敏。', py:'liǎng tiān le, méiyǒu guòmǐn.', pya:'两:liǎng|天:tiān|了:le|没:méi|有:yǒu|过:guò|敏:mǐn', real:[], who:'you', kw:['两天','没有'] }
+    ]},
+  { id:'scene_day11_making_friends', icon:'💬', title:'Making Friends', adv:true, day:11,
+    desc:'At a language exchange meetup. Someone wants to be your friend.',
+    phrases:[
+        { en:'Can we add each other on WeChat?', hz:'我们可以加个微信吗？', py:'wǒmen kěyǐ jiā ge Wēixìn ma?', pya:'我:wǒ|们:men|可:kě|以:yǐ|加:jiā|个:gè|微:wēi|信:xìn|吗:ma', real:[], who:'them' },
+        { en:'Sure! My WeChat ID is ___.', hz:'好啊！我的微信号是___。', py:'hǎo a! wǒ de Wēixìn hào shì ___.', pya:'好:hǎo|啊:a|我:wǒ|的:de|微:wēi|信:xìn|号:hào|是:shì', real:[], who:'you', kw:['好啊','微信'] },
+        { en:'Do you have any plans for the weekend?', hz:'你周末有什么计划？', py:'nǐ zhōumò yǒu shénme jìhuà?', pya:'你:nǐ|周:zhōu|末:mò|有:yǒu|什:shén|么:me|计:jì|划:huà', real:[], who:'them' },
+        { en:'I want to walk in the park. Want to join?', hz:'我想去公园走走，一起吗？', py:'wǒ xiǎng qù gōngyuán zǒuzou, yìqǐ ma?', pya:'我:wǒ|想:xiǎng|去:qù|公:gōng|园:yuán|走:zǒu|走:zǒu|一:yì|起:qǐ|吗:ma', real:[], who:'you', kw:['公园','一起'] }
+    ]},
+  { id:'scene_day12_bargaining', icon:'🏪', title:'Market Bargaining', adv:true, day:12,
+    desc:'You\'re at a street market. The vendor names a price — negotiate like a local.',
+    phrases:[
+        { en:'This is 50 kuai, very cheap!', hz:'这个五十块，很便宜的！', py:'zhège wǔshí kuài, hěn piányi de!', pya:'这:zhè|个:ge|五:wǔ|十:shí|块:kuài|很:hěn|便:pián|宜:yi|的:de', real:[], who:'them' },
+        { en:'Too expensive, 30 kuai OK?', hz:'太贵了，三十块行吗？', py:'tài guì le, sānshí kuài xíng ma?', pya:'太:tài|贵:guì|了:le|三:sān|十:shí|块:kuài|行:xíng|吗:ma', real:[], who:'you', kw:['太贵','三十','行吗'] },
+        { en:'No no, minimum 45.', hz:'不行不行，最少四十五。', py:'bù xíng bù xíng, zuì shǎo sìshíwǔ.', pya:'不:bù|行:xíng|不:bù|行:xíng|最:zuì|少:shǎo|四:sì|十:shí|五:wǔ', real:[], who:'them' },
+        { en:'OK, 40 kuai, deal!', hz:'好吧，四十块，成交！', py:'hǎo ba, sìshí kuài, chéngjiāo!', pya:'好:hǎo|吧:ba|四:sì|十:shí|块:kuài|成:chéng|交:jiāo', real:[], who:'you', kw:['好吧','四十','成交'] }
+    ]},
+  { id:'scene_day13_giving_compliments', icon:'⭐', title:'Giving Compliments', adv:true, day:13,
+    desc:'Your Chinese friend cooked for you. Say something nice — it goes a long way.',
+    phrases:[
+        { en:'Have a taste, not sure if it\'s good.', hz:'尝尝看，不知道好不好吃。', py:'chángchang kàn, bù zhīdào hǎobù hǎochī.', pya:'尝:cháng|尝:cháng|看:kàn|不:bù|知:zhī|道:dào|好:hǎo|不:bù|好:hǎo|吃:chī', real:[], who:'them' },
+        { en:'So delicious! You\'re amazing at cooking.', hz:'太好吃了！你做饭真厉害。', py:'tài hǎochī le! nǐ zuòfàn zhēn lìhai.', pya:'太:tài|好:hǎo|吃:chī|了:le|你:nǐ|做:zuò|饭:fàn|真:zhēn|厉:lì|害:hài', real:[], who:'you', kw:['好吃','厉害'] },
+        { en:'Really? Come over more often then!', hz:'真的吗？那以后经常来吃！', py:'zhēn de ma? nà yǐhòu jīngcháng lái chī!', pya:'真:zhēn|的:de|吗:ma|那:nà|以:yǐ|后:hòu|经:jīng|常:cháng|来:lái|吃:chī', real:[], who:'them' },
+        { en:'Definitely! Thanks for having me.', hz:'一定！谢谢你的招待。', py:'yídìng! xièxie nǐ de zhāodài.', pya:'一:yí|定:dìng|谢:xiè|谢:xiè|你:nǐ|的:de|招:zhāo|待:dài', real:[], who:'you', kw:['一定','谢谢'] }
+    ]},
+  { id:'scene_day14_final_challenge', icon:'🏆', title:'Day 14: Real Conversation', adv:true, day:14,
+    desc:'It\'s been 14 days. Now have a full, unscripted conversation from start to finish.',
+    phrases:[
+        { en:'Hey, long time no see! How\'ve you been?', hz:'嗨，好久不见！最近怎么样？', py:'hāi, hǎojiǔ bújiàn! zuìjìn zěnme yàng?', pya:'嗨:hāi|好:hǎo|久:jiǔ|不:bú|见:jiàn|最:zuì|近:jìn|怎:zěn|么:me|样:yàng', real:[], who:'them' },
+        { en:'Pretty good! I\'m learning Chinese, made a lot of progress.', hz:'还不错！我在学中文，进步了很多。', py:'hái búcuò! wǒ zài xué Zhōngwén, jìnbù le hěn duō.', pya:'还:hái|不:bú|错:cuò|我:wǒ|在:zài|学:xué|中:zhōng|文:wén|进:jìn|步:bù|了:le|很:hěn|多:duō', real:[], who:'you', kw:['还不错','学中文','进步'] },
+        { en:'Really? Then let\'s speak Chinese!', hz:'真的吗？那我们说中文吧！', py:'zhēn de ma? nà wǒmen shuō Zhōngwén ba!', pya:'真:zhēn|的:de|吗:ma|那:nà|我:wǒ|们:men|说:shuō|中:zhōng|文:wén|吧:ba', real:[], who:'them' },
+        { en:'Sure! I\'m not very fluent yet, but I\'ll try my best!', hz:'好啊，虽然我还不太流利，但我会努力的！', py:'hǎo a, suīrán wǒ hái bú tài liúlì, dàn wǒ huì nǔlì de!', pya:'好:hǎo|啊:a|虽:suī|然:rán|我:wǒ|还:hái|不:bù|太:tài|流:liú|利:lì|但:dàn|我:wǒ|会:huì|努:nǔ|力:lì|的:de', real:[], who:'you', kw:['好啊','努力'] }
+    ]},
 ];
 
 /* tone gym: minimal pair "ma" — 4 tones, 4 meanings */
@@ -2271,7 +2345,7 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
   /* v0.3.35 S1：离开场景视图时停止进行中的录音，避免麦克风在后台常开 */
   if(v !== 'scene' && typeof stopRecording === 'function') stopRecording();
-  ['home','scene','tone','prog','cards','sentences','reading','cities','days','onboard','dialog'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences','reading','cities','days','onboard','dialog','review'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
@@ -2281,6 +2355,7 @@ function go(v){
   }
   if(v==='prog') renderProgress();
   if(v==='home') renderHome();
+  if(v==='review') renderReview();
   if(v==='cities') renderCities();
   if(v==='dialog') renderDialogList();
   if(v==='days') renderDays();
@@ -2581,23 +2656,19 @@ function reviewNext(){
   renderHome();
 }
 function reviewCardHtml(){
-  var pool = reviewPool();
-  if(pool.length < 3) return '';       /* 说过的不满 3 句 → 新用户不打扰 */
-  var n = reviewToday(), it = pickReview(n);
-  if(!it) return '';
-  return '<div class="card review"><div class="top"><h2>\u{1F501} Review \u00B7 today</h2>'+
-    '<span class="badge'+(n>0?' teal':'')+'">'+(n>0 ? n+' done' : '1 line')+'</span></div>'+
-    '<p class="desc">You said this one before. <b>Say it out loud before you peek.</b></p>'+
-    '<button class="rv-line" onclick="openScene(\''+it.scene.id+'\','+it.idx+')">'+
-    '<span class="rv-en">'+esc(it.p.en)+'</span>'+
-    '<span class="rv-hz'+(rvShown?'':' blur')+'">'+esc(it.p.hz)+'</span></button>'+
-    '<button class="rv-peek" onclick="reviewPeek()">'+
-    (rvShown?'\u{1F441}\uFE0F Hide Chinese':'\u{1F441}\uFE0F Show Chinese')+'</button>'+
-    '<div class="rv-acts">'+
-    '<button class="btn primary" onclick="openScene(\''+it.scene.id+'\','+it.idx+')">'+
-    '\u{1F50A} Play &amp; say 3\u00D7</button>'+
-    '<button class="btn ghost" onclick="reviewNext()">\u2713 Said it \u00B7 next</button>'+
-    '</div></div>';
+  var q = revQueue();
+  if(!q.length) return '';
+  var byMode = {random_recall:0, role_reversal:0, speed_run:0};
+  q.forEach(function(it){ byMode[revModeOf(it)] = (byMode[revModeOf(it)]||0)+1; });
+  return '<div class="card review"><div class="top"><h2>\u{1F501} Smart review</h2>'+
+    '<span class="badge teal">'+q.length+' due</span></div>'+
+    '<p class="desc">Spaced repetition picks what you are about to forget. Three modes, three bars.</p>'+
+    '<div class="rv-modes">'+
+    '<div class="rv-mode"><span class="rv-ic">\u{1F500}</span><b>Random recall</b><i>'+(byMode.random_recall||0)+' due · 60%</i></div>'+
+    '<div class="rv-mode"><span class="rv-ic">\u{1F504}</span><b>Role reversal</b><i>'+(byMode.role_reversal||0)+' due · 70%</i></div>'+
+    '<div class="rv-mode"><span class="rv-ic">\u{26A1}</span><b>Speed run</b><i>'+(byMode.speed_run||0)+' due · 80%</i></div>'+
+    '</div>'+
+    '<button class="btn primary" onclick="go(\'review\')">Start review →</button></div>';
 }
 
 /* ---------- v0.3.49 听辨卡（Ear check）----------
@@ -2807,6 +2878,75 @@ function listenCardSHtml(){
       '</div>';
   }
   return html + '</div>';
+}
+
+
+/* ============ v0.4.0 复习引擎：简化 SM-2（1→3→7→15→30 天）+ 三模式 ============
+   判分沿用场景页现有 ASR 链路（不重造录音），本模块负责"排什么题"与"记结果"。 */
+var REV_IV = [1,3,7,15,30];
+var REV_PASS = { random_recall:60, role_reversal:70, speed_run:80 };
+function revKey(sc, idx){ return sc.id + '#' + idx; }
+function revModeOf(it){
+  var d = it.day || 0;
+  if(d === 14) return 'speed_run';
+  if(d % 5 === 0) return 'role_reversal';
+  return 'random_recall';
+}
+function revState(k){
+  S.rev = S.rev || {};
+  if(!S.rev[k]) S.rev[k] = { ef:2.5, reps:0, iv:1, due:'' };
+  return S.rev[k];
+}
+function revQueue(){
+  var out = [], todayStr = today();
+  SCENES.forEach(function(sc){
+    (sc.phrases||[]).forEach(function(p, idx){
+      if(!(S.phrases && S.phrases[sc.id] && S.phrases[sc.id].indexOf(idx) >= 0)) return; /* 只复习说过的 */
+      var st = revState(revKey(sc, idx));
+      if(!st.due || st.due <= todayStr) out.push({ scene:sc, idx:idx, p:p, st:st, mode:revModeOf({day:sc.day}) });
+    });
+  });
+  /* 稳定排序：到期越久越靠前（同键恒定顺序，避免每次刷新乱跳） */
+  out.sort(function(a,b){ return (a.st.due||'').localeCompare(b.st.due||'') || (a.scene.id+a.idx).localeCompare(b.scene.id+b.idx); });
+  return out;
+}
+function revSchedule(k, passed, score){
+  var st = revState(k);
+  if(passed){
+    st.reps = Math.min(st.reps + 1, REV_IV.length - 1);
+    st.iv = REV_IV[st.reps];
+    var q = score >= 90 ? 5 : (score >= 80 ? 4 : (score >= 70 ? 3 : 2));
+    st.ef = Math.max(1.3, Math.min(2.5, st.ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))));
+  } else {
+    st.reps = 0; st.iv = 1;                        /* 答错 → 次日重来 */
+    st.ef = Math.max(1.3, st.ef - 0.2);
+  }
+  var d = new Date(Date.now() + st.iv * 86400000);
+  st.due = d.toISOString().slice(0,10);
+  st.last = score;
+  saveState();
+}
+function revMark(k, passed, score){ revSchedule(k, passed, score); renderReview(); }
+function renderReview(){
+  var q = revQueue(), box = $('rv-queue'), cnt = $('rv-count');
+  if(cnt) cnt.textContent = q.length + ' due';
+  if(!box) return;
+  if(!q.length){ box.innerHTML = '<div class="dayempty"><img class="empty-ill" src="assets/empty/study.webp" alt="" onerror="this.remove()">Nothing due today — go learn a new line.</div>'; return; }
+  var h = '';
+  q.slice(0, 12).forEach(function(it){
+    var k = revKey(it.scene, it.idx), mode = it.mode;
+    var label = mode === 'speed_run' ? '\u{26A1} Speed run · 80%' : (mode === 'role_reversal' ? '\u{1F504} Role reversal · 70%' : '\u{1F500} Random recall · 60%');
+    h += '<div class="rv-item">'+
+      '<div class="rv-meta">'+label+' · next in '+(it.st.iv||1)+'d</div>'+
+      '<button class="rv-line" onclick="openScene(\''+it.scene.id+'\','+it.idx+')">'+
+        '<span class="rv-en">'+esc(it.p.en)+'</span>'+
+        '<span class="rv-hz">'+esc(it.p.hz)+'</span></button>'+
+      '<div class="rv-acts">'+
+        '<button class="btn primary" onclick="revMark(\''+k+'\',true,'+REV_PASS[mode]+')">Got it</button>'+
+        '<button class="btn ghost" onclick="revMark(\''+k+'\',false,40)">Missed it</button>'+
+      '</div></div>';
+  });
+  box.innerHTML = h;
 }
 
 function renderHome(){
