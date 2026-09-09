@@ -1,10 +1,10 @@
 {
-  "version": "0.11.1",
+  "version": "0.11.2",
   "updated": "2026-09-09",
-  "note": "修复：App 内每次启动自动检测新版本并弹横幅提醒安装（此前 App 内不触发）；Check update 反馈增强。",
+  "note": "修复：更新下载安装前自动检查并引导「安装未知应用」授权；下载/安装失败不再静默，屏幕提示具体原因。",
   "apk": {
-    "versionCode": 1101,
-    "version": "0.11.1",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.11.1-release.apk"
+    "versionCode": 1102,
+    "version": "0.11.2",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.11.2-release.apk"
   }
 }

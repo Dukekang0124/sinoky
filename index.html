@@ -1048,7 +1048,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.11.1';
+var APP_VERSION = '0.11.2';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3255,7 +3255,14 @@ async function startApkUpdate(apk){
     toast('Downloading update…');
     await p.downloadAndInstall({ url: apk.url });
     toast('Update downloaded — installing…');
-  }catch(e){ toast('Update failed: '+(e&&e.message?e.message:e)); }
+  }catch(e){
+    var m = (e&&e.message) ? String(e.message) : String(e);
+    if(m.indexOf('install_permission_required') >= 0){
+      toast('ℹ️ Allow "Install unknown apps" for Sinoky in the opened page, then tap update again');
+    } else {
+      toast('⚠️ Update failed: ' + m.slice(0, 90));
+    }
+  }
 }
 
 function toggleMoreScenes(){
