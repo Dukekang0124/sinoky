@@ -154,11 +154,25 @@ jobs:
             grep -q "registerPlugin(UpdatePlugin" $MA || sed -i 's#super.onCreate(savedInstanceState)#registerPlugin(UpdatePlugin::class.java)\n        super.onCreate(savedInstanceState)#' $MA
           elif [ -f "$PKGDIR/MainActivity.java" ]; then
             MA="$PKGDIR/MainActivity.java"
-            grep -q "registerPlugin(UpdatePlugin.class)" $MA || sed -i 's#super.onCreate(savedInstanceState);#registerPlugin(UpdatePlugin.class);\n        super.onCreate(savedInstanceState);#' $MA
+            cat > "$MA" <<'MAEOF'
+            package app.sinoky.pwa;
+
+            import android.os.Bundle;
+            import com.getcapacitor.BridgeActivity;
+
+            public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                registerPlugin(UpdatePlugin.class);
+                super.onCreate(savedInstanceState);
+              }
+            }
+          MAEOF
           else
             echo "::error::MainActivity not found in $PKGDIR"; ls -la "$PKGDIR"; exit 1
           fi
-          grep -n "registerPlugin" $MA
+          echo "--- $MA ---"; cat $MA
+          grep -n "registerPlugin" $MA || { echo "::error::registerPlugin inject failed"; exit 1; }
           FP=android/app/src/main/res/xml/file_paths.xml
           if [ -f "$FP" ]; then
             grep -q "ext_download" $FP || sed -i 's#</paths>#  <external-files-path name="ext_download" path="Download/" />\n</paths>#' $FP
