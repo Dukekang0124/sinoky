@@ -149,8 +149,15 @@ jobs:
             }
           }
           EOF
-          MA="$PKGDIR/MainActivity.java"
-          grep -q "registerPlugin(UpdatePlugin.class)" $MA || sed -i 's#super.onCreate(savedInstanceState);#registerPlugin(UpdatePlugin.class);\n        super.onCreate(savedInstanceState);#' $MA
+          if [ -f "$PKGDIR/MainActivity.kt" ]; then
+            MA="$PKGDIR/MainActivity.kt"
+            grep -q "registerPlugin(UpdatePlugin" $MA || sed -i 's#super.onCreate(savedInstanceState)#registerPlugin(UpdatePlugin::class.java)\n        super.onCreate(savedInstanceState)#' $MA
+          elif [ -f "$PKGDIR/MainActivity.java" ]; then
+            MA="$PKGDIR/MainActivity.java"
+            grep -q "registerPlugin(UpdatePlugin.class)" $MA || sed -i 's#super.onCreate(savedInstanceState);#registerPlugin(UpdatePlugin.class);\n        super.onCreate(savedInstanceState);#' $MA
+          else
+            echo "::error::MainActivity not found in $PKGDIR"; ls -la "$PKGDIR"; exit 1
+          fi
           grep -n "registerPlugin" $MA
           FP=android/app/src/main/res/xml/file_paths.xml
           if [ -f "$FP" ]; then
