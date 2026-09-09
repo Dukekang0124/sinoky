@@ -520,6 +520,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .np-syl span.bad{background:rgba(230,57,70,.14);border-color:var(--red)}
       .np-fix{font-size:11.5px;color:var(--sub);line-height:1.6}
       .np-rec{display:flex;align-items:center;gap:6px;color:var(--red);font-size:12px;font-weight:600}
+      .weak-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+      .weak-row:last-child{border-bottom:none}
+      .wr-txt{flex:1;display:flex;flex-direction:column}
+      .wr-txt b{font-size:14.5px}
+      .wr-txt span{font-size:11.5px;color:var(--sub)}
+      .wr-n{flex:0 0 auto;font-size:11.5px;color:var(--red);font-weight:700}
       #v-onboard .ob-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
       #v-onboard .ob-chip{background:#1c2028;border:1px solid #2a2f3a;border-radius:16px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
       #v-onboard .ob-chip .emo{font-size:24px}
@@ -853,6 +859,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 
   <section id="v-prog" class="views">
     <div id="prog-badges"></div>
+    <div id="prog-weak"></div>
     <div class="card">
       <div class="top"><h2>Your progress</h2></div>
       <p class="desc">Last 14 days — red means you completed a challenge.</p>
@@ -1012,7 +1019,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.7.1';
+var APP_VERSION = '0.8.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2482,8 +2489,10 @@ function go(v){
   if(v==='tone'||v==='cards'||v==='reading'||v==='sentences'||v==='prog'){
     S.feat = S.feat || {}; S.feat[v] = (S.feat[v]||0)+1; saveStateLocal();   /* v0.3.40：埋点计数只写本地，随真实进度或会话结束 flush 上云（recordStat 是 max 幂等，批量上报不丢数据） */
   }
-  if(v==='prog'){ renderProgress(); var pb=$('prog-badges'); if(pb && typeof badgeGalleryHtml==='function') pb.innerHTML = badgeGalleryHtml(); }
-  if(v==='home') renderHome();
+  if(v==='prog'){ renderProgress(); var pb=$('prog-badges'); if(pb && typeof badgeGalleryHtml==='function') pb.innerHTML = badgeGalleryHtml();
+    var pw=$('prog-weak'); if(pw && typeof weakLinesHtml==='function') pw.innerHTML = weakLinesHtml();
+    try{ nonoWatchBadges(); }catch(e){} }
+  if(v==='home'){ renderHome(); try{ nonoDailyLine(); nonoGraduation(); }catch(e){} }
   if(v==='review') renderReview();
   if(v==='me') renderMe();
   if(v==='settings') renderSettings();
@@ -2554,7 +2563,7 @@ function badgeGalleryHtml(){
     { id:'perfect',     t:'Perfect tone', on: tonePerfect }
   ];
   var cards = defs.map(function(d){
-    return '<div class="badge-cell'+(d.on?' on':'')+'"><img src="assets/badges/'+d.id+'_256.webp" alt="'+d.t+'" loading="lazy" onerror="this.parentNode.style.visibility=\'hidden\'"><span>'+d.t+'</span></div>';
+    return '<div class="badge-cell'+(d.on?' on':'')+'" data-badge="'+d.id+'"><img src="assets/badges/'+d.id+'_256.webp" alt="'+d.t+'" loading="lazy" onerror="this.parentNode.style.visibility=\'hidden\'"><span>'+d.t+'</span></div>';
   }).join('');
   return '<div class="card badge-card"><div class="top"><h2>🏅 Your badges</h2><span class="badge">collect them all</span></div><div class="badge-row">'+cards+'</div></div>';
 }
@@ -3524,6 +3533,96 @@ function nonoToneTip(ok, picked, correct, hz){
 }
 function nonoHearTone(n){
   try { if (typeof playToneAudio === 'function' && window.TONES) playToneAudio(TONES[n - 1]); } catch (e) {}
+}
+
+
+
+/* ============ v0.8.0 P1 + N9 ============ */
+
+/* P1-1 每日一句：每天首次进 Home 给一句，形成仪式感 */
+function nonoDailyLine(){
+  var today = new Date().toISOString().slice(0,10);
+  var rec = {};
+  try { rec = JSON.parse(localStorage.getItem('sinoky_nono_daily') || '{}'); } catch(e){}
+  if (rec.day === today) return;                  /* 今天已给过 */
+  var line = (typeof NONO.pickLine === 'function') ? NONO.pickLine() : null;
+  if (!line) return;
+  try { localStorage.setItem('sinoky_nono_daily', JSON.stringify({ day: today, key: line.key })); } catch(e){}
+  nonoShow('Your line for today: <b>' + line.hz + '</b><br><span style="color:var(--sub)">' + (line.py||'') + '</span><br>' + (line.en||'') +
+    '<br><span style="color:var(--sub)">Say it out loud once, then go about your day.</span>',
+    { pose:'like', priority:'result', actions:[
+      { t:'Hear Nono', fn:'nonoPracticeKey(\'' + line.key + '\')'},
+      { t:'Later', fn:'nonoMin()', ghost:true }
+    ] });
+}
+function nonoPracticeKey(key){
+  var parts = String(key).split('#');
+  var sc = null;
+  (window.SCENES||[]).forEach(function(x){ if(x.id === parts[0]) sc = x; });
+  var idx = parseInt(parts[1], 10);
+  var ph = sc && sc.phrases && sc.phrases[idx];
+  if(!ph) return;
+  NONO.closed = false;
+  var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
+  var msg = document.getElementById('nono-msg');
+  if(msg) msg.innerHTML = 'Let us say this one together. <b>跟我读</b>';
+  nonoStartPracticeWith({ hz: ph.hz, py: ph.py||'', en: ph.en||'', key: key, scene: parts[0] });
+  nonoState('idle');
+}
+
+/* P1-2 徽章解锁庆祝：对比已解锁集合，新增即庆祝 */
+function nonoWatchBadges(){
+  try{
+    var on = {};
+    document.querySelectorAll('#prog-badges .badge-cell.on[data-badge]').forEach(function(el){ on[el.getAttribute('data-badge')] = 1; });
+    var prev = {};
+    try { prev = JSON.parse(localStorage.getItem('sinoky_badges_on') || '{}'); } catch(e){}
+    var fresh = Object.keys(on).filter(function(k){ return !prev[k]; });
+    try { localStorage.setItem('sinoky_badges_on', JSON.stringify(on)); } catch(e){}
+    if (fresh.length && !NONO.closed){
+      var names = fresh.join(', ');
+      nonoShow('New badge unlocked: <b>' + names + '</b> 🏅 — that is real progress. <b>你做到了！</b>',
+        { pose:'cheer', priority:'result', actions:[{ t:'See badges', fn:"go('prog')" }, { t:'Thanks', fn:'nonoMin()', ghost:true }] });
+    }
+  }catch(e){}
+}
+
+/* P1-3 14 天毕业节点 */
+function nonoGraduation(){
+  try{
+    if (typeof isDayDone !== 'function' || typeof DAYS === 'undefined') return;
+    var done = 0;
+    for (var i=1;i<=DAYS.length;i++){ if (isDayDone(i)) done++; }
+    if (done < DAYS.length) return;
+    var flag = false;
+    try { flag = !!JSON.parse(localStorage.getItem('sinoky_graduated') || 'false'); } catch(e){}
+    if (flag) return;
+    try { localStorage.setItem('sinoky_graduated', 'true'); } catch(e){}
+    nonoShow('You finished all ' + DAYS.length + ' days. 🎓 You can now answer people, not just memorise words. <b>毕业了！</b>',
+      { pose:'cheer', priority:'result', actions:[{ t:'Keep practising', fn:"go('review')" }, { t:'OK', fn:'nonoMin()', ghost:true }] });
+  }catch(e){}
+}
+
+/* N9 易错句清单（Progress 页）：来自 S.nono.weak */
+function weakLinesHtml(){
+  var weak = (S.nono && S.nono.weak) || {};
+  var keys = Object.keys(weak).filter(function(k){ return weak[k] >= 1; });
+  if (!keys.length) return '';
+  keys.sort(function(a,b){ return weak[b]-weak[a]; });
+  var items = [];
+  keys.slice(0, 8).forEach(function(k){
+    var parts = k.split('#'), sc = null;
+    (window.SCENES||[]).forEach(function(x){ if(x.id === parts[0]) sc = x; });
+    var ph = sc && sc.phrases && sc.phrases[parseInt(parts[1],10)];
+    if (!ph || !ph.hz) return;
+    items.push('<div class="weak-row">'+
+      '<div class="wr-txt"><b>'+ph.hz+'</b><span>'+(ph.py||'')+'</span></div>'+
+      '<span class="wr-n">'+weak[k]+'×</span>'+
+      '<button class="btn ghost" onclick="nonoPracticeKey(\''+k+'\')">🐼</button></div>');
+  });
+  if (!items.length) return '';
+  return '<div class="card"><div class="top"><h2>🐼 Your tricky lines</h2><span class="badge">from Nono</span></div>'+
+    '<p class="desc">Lines you missed while practising with Nono. Tap 🐼 to drill one.</p>'+items.join('')+'</div>';
 }
 
 
