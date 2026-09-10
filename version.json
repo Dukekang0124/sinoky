@@ -1,14 +1,15 @@
 {
-  "version": "0.13.1",
+  "version": "0.14.0",
   "updated": "2026-09-10",
-  "note": [
-    "v0.13.1：修复应用内更新必失败的问题——v0.12.0/v0.13.0 的原生下载完成提示在后台线程调用 Toast 直接崩溃（Can't toast on a thread that has not called Looper.prepare()），导致下载校验成功后仍报失败并丢弃更新包；现全部提示改走主线程且任何提示失败不中断安装。同时新增：检测到新版本自动弹出更新对话框（含版本说明与下载按钮，点 Download 直接开始下载安装）。"
-  ],
+  "note": "v0.14.0：界面多语言上线——新增中文（全量）与西班牙语（核心，beta）界面，首次启动自动跟随系统语言，可在设置中随时切换；所有菜单、设置、弹窗、下载进度与提示信息均已本地化，新增内容自动跟随所选语言。同日：修复应用内更新必失败（Toast 线程崩溃）、新增自动更新弹窗。",
   "apk": {
-    "versionCode": 1301,
-    "version": "0.13.1",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.13.1-release.apk",
-    "md5": "d087c50d5b0f57f1d24fbff5de20bd25",
-    "size": 23501981
-  }
+    "versionCode": 1400,
+    "version": "0.14.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.0-release.apk",
+    "md5": "",
+    "size": 0
+  },
+  "noteEn": [
+    "v0.14.0: The app now speaks your language — full Chinese and core Spanish (beta) interface translations. First launch auto-detects your system language; switch anytime in Settings. All menus, dialogs, download progress and messages are localized, and new screens follow your language automatically. Also today: fixed the in-app update failure (native toast crash) and added the auto update dialog."
+  ]
 }

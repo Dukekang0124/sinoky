@@ -860,8 +860,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <p class="desc">Interface language, voice, and updates.</p>
       <div class="setrow"><span>Interface language</span>
         <span class="setctl">
-          <button class="btn ghost" id="lang-en" onclick="setLang('en')">English</button>
-          <button class="btn ghost" id="lang-zh" onclick="setLang('zh')">中文</button>
+          <div id="lang-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          <div style="font-size:.72rem;color:var(--text-sec,#888);margin-top:6px;">More languages coming · 更多语言陆续支持</div>
         </span></div>
       <div class="setrow"><span>Voice</span></div>
     <div class="voicebar" id="voicebar">
@@ -1049,7 +1049,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.13.1';
+var APP_VERSION = '0.14.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2698,6 +2698,7 @@ var PLAY_ICON = '<svg class="play-icon" viewBox="0 0 24 24" width="18" height="1
 var PLAY_ICON_SMALL = '<svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg>';
 var lastTtsStatus = 0;
 function toast(msg){
+  msg = T(msg);
   var t = $('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); }, 2200);
 }
@@ -3337,26 +3338,92 @@ function renderMe(){
 function renderSettings(){
   try{
     var v=$('set-ver'); if(v) v.textContent = 'v'+APP_VERSION;
-    var lang = S.lang || 'en';
-    ['lang-en','lang-zh'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.toggle('on', id==='lang-'+lang); });
-    applyLang();
+    renderLangList();
+    applyI18n(document.body);
   }catch(e){}
 }
-function setLang(l){
-  S.lang = l; if(typeof saveState==='function') saveState();
-  ['lang-en','lang-zh'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.toggle('on', id==='lang-'+l); });
-  applyLang();
+/* ===== v0.14.0 i18n：原文即 key 的运行时翻译层 =====
+   字典外置 langs/{lang}.json（en 即原文，无需包）。
+   覆盖三层：①静态 HTML 文本节点（applyI18n TreeWalker）②动态渲染（MutationObserver 自动跟随）③动态提示（toast/nonoShow 入口内 T()）。
+   新增 UI 铁律：英文原文写进字典即可被翻译；拼接句请拆「常量段 + 变量」。 */
+var LANGS = { en: 'English', zh: '中文', es: 'Español' };
+var LANG_PACK = {};
+var LANG_REV = {};      /* 译文 → 原文（切回/换语言时还原用） */
+var _lastAppliedLang = null;
+function curLang(){ return S.lang || 'en'; }
+function T(s){
+  var d = LANG_PACK[curLang()];
+  return (d && Object.prototype.hasOwnProperty.call(d, s)) ? d[s] : s;
 }
-function applyLang(){
-  var zh = (S.lang||'en')==='zh';
-  var en = { 'nav-home':'Home','nav-practice':'Practice','nav-explore':'Explore','nav-prog':'Progress','nav-me':'Me' };
-  var cn = { 'nav-home':"\u9996\u9875",'nav-practice':"\u7EC3\u4E60",'nav-explore':"\u63A2\u7D22",'nav-prog':"\u8FDB\u5EA6",'nav-me':"\u6211\u7684" };
-  Object.keys(en).forEach(function(id){
-    var b=document.getElementById(id); if(!b) return;
-    var ic=b.querySelector('span.ic');
-    if(ic) b.innerHTML = ic.outerHTML + (zh?cn[id]:en[id]);
+function loadLangPack(l, cb){
+  if (l === 'en' || LANG_PACK[l]) { if (cb) cb(); return; }
+  fetch((API_BASE||'') + 'langs/' + l + '.json?t=' + APP_VERSION, { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : {}; })
+    .then(function(j){ LANG_PACK[l] = j || {}; LANG_REV[l] = {}; Object.keys(LANG_PACK[l]).forEach(function(k){ LANG_REV[l][LANG_PACK[l][k]] = k; }); if (cb) cb(); })
+    .catch(function(){ LANG_PACK[l] = {}; if (cb) cb(); });
+}
+function applyI18n(root){
+  var l = curLang();
+  var pack = (l === 'en') ? {} : LANG_PACK[l];   /* en=原文：空字典，仅做反向还原 */
+  if (!pack) { loadLangPack(l, function(){ applyI18n(root); }); return; }
+  root = root || document.body;
+  if (!root || !root.querySelectorAll) return;
+  try {
+    var prevPack = (_lastAppliedLang && LANG_REV[_lastAppliedLang]) ? LANG_REV[_lastAppliedLang] : null;
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    var nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach(function(n){
+      var s = (n.nodeValue || '').trim();
+      if (!s) return;
+      if (Object.prototype.hasOwnProperty.call(pack, s) && pack[s] !== s) { n.nodeValue = pack[s]; return; }
+      /* 当前文本是上一种语言的译文 → 先还原原文，再套新语言（支持 zh↔es↔en 任意切换） */
+      if (prevPack && Object.prototype.hasOwnProperty.call(prevPack, s)) {
+        var orig = prevPack[s];
+        n.nodeValue = (Object.prototype.hasOwnProperty.call(pack, orig) && pack[orig] !== orig) ? pack[orig] : orig;
+      }
+    });
+    _lastAppliedLang = l;
+    root.querySelectorAll('[placeholder],[aria-label]').forEach(function(el){
+      ['placeholder', 'aria-label'].forEach(function(at){
+        var v = el.getAttribute(at);
+        if (v && Object.prototype.hasOwnProperty.call(pack, v)) el.setAttribute(at, pack[v]);
+      });
+    });
+  } catch (e) {}
+}
+var _i18nTimer = null, _i18nObs = null;
+function ensureI18nObserver(){
+  if (_i18nObs || !window.MutationObserver) return;
+  _i18nObs = new MutationObserver(function(){
+    if (curLang() === 'en') return;
+    clearTimeout(_i18nTimer);
+    _i18nTimer = setTimeout(function(){ applyI18n(document.body); }, 400);
+  });
+  _i18nObs.observe(document.body, { childList: true, subtree: true });
+}
+function setLang(l){
+  if (!LANGS[l]) return;
+  S.lang = l; if (typeof saveState === 'function') saveState();
+  loadLangPack(l, function(){ applyI18n(document.body); });
+  renderLangList();
+}
+function applyLang(){ applyI18n(document.body); }  /* 兼容旧调用点 */
+function renderLangList(){
+  var box = document.getElementById('lang-list');
+  if (!box) return;
+  var cur = curLang();
+  box.innerHTML = '';
+  Object.keys(LANGS).forEach(function(l){
+    var b = document.createElement('button');
+    b.className = 'btn ghost' + (l === cur ? ' on' : '');
+    b.style.cssText = 'padding:8px 14px;';
+    b.textContent = LANGS[l];
+    b.onclick = function(){ setLang(l); };
+    box.appendChild(b);
   });
 }
+/* ===== end i18n ===== */
 async function checkUpdate(){
   var hint=$('set-updhint'); var btn=$('set-apkupdate');
   if(!hint) return;
@@ -3403,7 +3470,7 @@ async function checkApkUpdate(){
     if(!j.apk || !j.apk.versionCode || !j.apk.url) return null;
     var local = await getLocalApkVersionCode();
     if(j.apk.versionCode > local){
-      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url, md5: j.apk.md5||'', size: j.apk.size||0, note: (j.apk.note || j.note || '') };
+      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url, md5: j.apk.md5||'', size: j.apk.size||0, note: (j.apk.note || j.note || ''), noteEn: (j.apk.noteEn || j.noteEn || '') };
     }
   }catch(e){}
   return null;
@@ -3416,18 +3483,20 @@ function showApkUpdateDialog(apk){
   var ov = document.createElement('div');
   ov.id = 'apk-upd-ov';
   ov.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
-  var noteHtml = apk.note ? ('<div style="background:var(--card,#f5f5f5);border-radius:10px;padding:12px;margin:12px 0 14px;">'
-    + '<div style="font-size:.75rem;color:var(--accent,#e63946);font-weight:600;margin-bottom:4px">What\'s new</div>'
-    + '<div style="font-size:.85rem;line-height:1.55;max-height:180px;overflow-y:auto;-webkit-overflow-scrolling:touch">' + apk.note + '</div></div>') : '';
+  var _noteRaw = (curLang() === 'zh') ? (apk.note || '') : (apk.noteEn || apk.note || '');
+  var _noteTxt = Array.isArray(_noteRaw) ? _noteRaw.join('<br>') : _noteRaw;
+  var noteHtml = _noteTxt ? ('<div style="background:var(--card,#f5f5f5);border-radius:10px;padding:12px;margin:12px 0 14px;">'
+    + '<div style="font-size:.75rem;color:var(--accent,#e63946);font-weight:600;margin-bottom:4px">' + T("What's new") + '</div>'
+    + '<div style="font-size:.85rem;line-height:1.55;max-height:180px;overflow-y:auto;-webkit-overflow-scrolling:touch">' + _noteTxt + '</div></div>') : '';
   ov.innerHTML = '<div style="background:var(--bg,#fff);color:var(--text,#222);max-width:400px;width:100%;border-radius:16px;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 12px 40px rgba(0,0,0,.5);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;">'
     + '<span id="apk-upd-x" style="position:absolute;top:8px;right:12px;font-size:1.3rem;line-height:1;cursor:pointer;padding:4px 6px;">×</span>'
     + '<div style="font-size:1.5rem;margin-bottom:6px;">🆕</div>'
-    + '<div style="font-size:1.05rem;font-weight:700;margin-bottom:2px;">New version ' + (apk.version || ('v' + apk.versionCode)) + '</div>'
-    + (apk.size ? '<div style="font-size:.75rem;color:var(--text-sec,#666);margin-bottom:4px;">Install package ≈ ' + (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') + ' · verified by MD5</div>' : '')
+    + '<div style="font-size:1.05rem;font-weight:700;margin-bottom:2px;">' + T('New version') + ' ' + (apk.version || ('v' + apk.versionCode)) + '</div>'
+    + (apk.size ? '<div style="font-size:.75rem;color:var(--text-sec,#666);margin-bottom:4px;">' + T('Install package ≈ ') + (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') + T(' · verified by MD5') + '</div>' : '')
     + noteHtml
     + '<div style="display:flex;gap:10px;margin-top:6px;">'
-    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--border,#ccc);border-radius:10px;background:transparent;color:var(--text-sec,#666);font-size:.95rem;cursor:pointer;">Not now</button>'
-    + '<button id="apk-upd-now" style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--accent,#e63946);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">⬇️ Download</button>'
+    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--border,#ccc);border-radius:10px;background:transparent;color:var(--text-sec,#666);font-size:.95rem;cursor:pointer;">' + T('Not now') + '</button>'
+    + '<button id="apk-upd-now" style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--accent,#e63946);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">⬇️ ' + T('Download') + '</button>'
     + '</div></div>';
   document.body.appendChild(ov);
   function dismiss(){
@@ -3498,10 +3567,11 @@ async function startApkUpdate(apk){
   var txt = document.getElementById('upd-ov-txt');
   var cancelBtn = document.getElementById('upd-ov-cancel');
   var retryBtn = document.getElementById('upd-ov-retry');
+  cancelBtn.textContent = T('Cancel'); retryBtn.textContent = T('Retry');
   cancelBtn.style.display = ''; retryBtn.style.display = 'none';
   ov.style.display = 'flex';
   bar.style.width = '0'; bar.removeAttribute('data-done');
-  txt.textContent = 'Preparing download…'; txt.style.color = '';
+  txt.textContent = T('Preparing download…'); txt.style.color = '';
   UPD.gotEvt = false; UPD.lastT = Date.now();
   if(p.addListener && !UPD.bound){
     UPD.bound = true;
@@ -3512,13 +3582,13 @@ async function startApkUpdate(apk){
         if(!b || !t) return;
         if(s && s.status === 'complete'){
           b.style.width = '100%'; b.setAttribute('data-done','1');
-          t.textContent = 'Download verified — installing…'; t.style.color = '';
+          t.textContent = T('Download verified — installing…'); t.style.color = '';
           return;
         }
         UPD.lastT = Date.now();
         var pc = (s && s.percent) || 0;
         b.style.width = pc + '%';
-        t.textContent = pc + '% — keep the app in the foreground'; t.style.color = '';
+        t.textContent = pc + '% — ' + T('keep the app in the foreground'); t.style.color = '';
       });
     }catch(e){}
   }
@@ -3529,7 +3599,7 @@ async function startApkUpdate(apk){
     var b = document.getElementById('upd-ov-bar'), t = document.getElementById('upd-ov-txt');
     if(!t || !b || b.getAttribute('data-done')) return;
     if(Date.now() - UPD.lastT > 8000){
-      t.textContent = 'Network is slow — download not advancing. Keep the app open, still trying…';
+      t.textContent = T('Network is slow — download not advancing. Keep the app open, still trying…');
       t.style.color = '#d98800';
     }
   }, 2000);
@@ -3537,17 +3607,17 @@ async function startApkUpdate(apk){
     await p.downloadAndInstall({ url: apk.url, md5: apk.md5 || '', size: apk.size || 0 });
     clearInterval(UPD.watch);
     if(bar) bar.style.width = '100%';
-    if(txt){ txt.textContent = 'Installer opened — please confirm in the system dialog'; txt.style.color = ''; }
+    if(txt){ txt.textContent = T('Installer opened — please confirm in the system dialog'); txt.style.color = ''; }
     setTimeout(function(){ ov.style.display = 'none'; }, 4000);
   }catch(e){
     clearInterval(UPD.watch);
     var m = (e && e.message) ? String(e.message) : String(e);
     if(txt){
       if(m.indexOf('install_permission_required') >= 0){
-        txt.textContent = 'ℹ️ Allow "Install unknown apps" for Sinoky in the opened page, then tap update again';
+        txt.textContent = T('ℹ️ Allow "Install unknown apps" for Sinoky in the opened page, then tap update again');
         txt.style.color = '';
       } else if(m.indexOf('cancelled') >= 0){
-        txt.textContent = 'Update cancelled';
+        txt.textContent = T('Update cancelled');
         txt.style.color = '';
       } else {
         txt.textContent = '⚠️ Update failed: ' + m.slice(0, 120);
@@ -3557,7 +3627,7 @@ async function startApkUpdate(apk){
         retryBtn.onclick = function(){ ov.style.display = 'none'; startApkUpdate(apk); };
       }
     }
-    toast('Update issue — see details on screen');
+    toast(T('Update issue — see details on screen'));
   }
 }
 function toggleMoreScenes(){
@@ -5455,6 +5525,14 @@ fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.js
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
 var obStep = 1, obTotal = 6, obGoal = 'travel';
 if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('home'); }
+/* v0.14.0 i18n 启动：首次按系统语言初始化（zh/es→对应语言，其余 en），已选则跟随用户 */
+if (!S.lang) {
+  var _nl = (navigator.language || 'en').toLowerCase();
+  S.lang = (_nl.indexOf('zh') === 0) ? 'zh' : (_nl.indexOf('es') === 0) ? 'es' : 'en';
+  saveStateLocal();
+}
+loadLangPack(S.lang, function(){ applyI18n(document.body); });
+ensureI18nObserver();
 /* v0.10.0：A8 开屏 splash —— 初始化完成后淡出 */
 setTimeout(function(){ var s=document.getElementById('splash'); if(s){ s.classList.add('hide'); setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 520); } }, 420);
 /* v0.3.35 S3：存储被禁用时明确告诉用户"进度不会被保存"，而不是让他以为保存了 */

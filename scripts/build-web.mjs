@@ -10,7 +10,7 @@ const src = path.join(root, '..');           // sinoky-app/
 const out = path.join(src, 'www');
 
 // 需要进包的目录 / 文件（其余一律不带）
-const DIRS = ['assets', 'audio', 'data', 'icons', 'vendor'];
+const DIRS = ['assets', 'audio', 'data', 'icons', 'vendor', 'langs'];
 const FILES = [
   'index.html', 'sw.js', 'version.json', 'manifest.webmanifest',
   'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'robots.txt', 'sitemap.xml', '_headers'
