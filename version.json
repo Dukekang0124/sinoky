@@ -6,8 +6,8 @@
     "versionCode": 1403,
     "version": "0.14.3",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.3-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "6ee961efcc4ca4a5205704dcc64b0818",
+    "size": 23551571
   },
   "noteEn": [
     "v0.14.3: i18n round two — 69 more dynamic strings (recording, scoring, progress, cards, tones, sentence builder, dictionary, feedback) now translatable in 6 languages; 38 concatenated strings converted to placeholder templates; title attributes are now translated too; download page fallback link follows the release version."
