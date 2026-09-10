@@ -1056,6 +1056,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       </span>
     </div>
     <div class="np-body" id="nono-msg"></div>
+    <div class="np-body" id="nono-modes"></div>
+    <div class="np-body nono-chat" id="nono-chat" style="display:none"></div>
     <div class="np-body" id="nono-practice" style="display:none;padding-top:0"></div>
     <div class="np-body" id="nono-state" style="display:none;padding-top:0"></div>
     <div class="np-foot" id="nono-acts"></div>
@@ -1130,7 +1132,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.6';
+var APP_VERSION = '0.14.7';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -4217,7 +4219,7 @@ async function nonoRecord(){
       try{
         var blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
         var wav = await blobToWav(blob);
-        await nonoGrade(wav);
+        if(NONO.mode === 'chat'){ await nonoChatSend(wav); } else { await nonoGrade(wav); }
       }catch(e){
         nonoState('sorry');
         if(p) p.innerHTML = '<div class="np-fix">That did not work — ' + (e && e.message ? e.message : 'unknown error') + '. Try once more?</div>';
@@ -4234,6 +4236,114 @@ async function nonoRecord(){
   }
 }
 function nonoStop(){ try{ if(NONO_REC && NONO_REC.state !== 'inactive') NONO_REC.stop(); }catch(e){} }
+
+/* ===== v0.14.7 诺诺自由聊天（GLM-4-Flash 主用 + Workers AI 兜底，状态在端上）===== */
+function nonoModeChips(){
+  var el = document.getElementById('nono-modes'); if(!el) return;
+  el.innerHTML = '<button class="nm-chip'+(NONO.mode==='practice'?' on':'')+'" onclick="nonoStartPractice()">🎙️ 跟读练习</button>'+
+    '<button class="nm-chip'+(NONO.mode==='chat'?' on':'')+'" onclick="nonoStartChat()">💬 自由聊天</button>';
+}
+function nonoModeMenu(){
+  nonoState('idle');
+  var pm = document.getElementById('nono-practice'); if(pm) pm.style.display='none';
+  var pc = document.getElementById('nono-chat'); if(pc){ pc.style.display='none'; pc.innerHTML=''; }
+  var st = document.getElementById('nono-state'); if(st) st.style.display='none';
+  var msg = document.getElementById('nono-msg');
+  if(msg) msg.innerHTML = "Hi, I'm Nono 🐼 Want to <b>practise a line</b> or <b>just chat in Chinese</b>?";
+  var acts = document.getElementById('nono-acts');
+  if(acts) acts.innerHTML = '<button class="ghost" onclick="nonoStartPractice()">🎙️ 跟读练习</button><button class="ghost" onclick="nonoStartChat()">💬 自由聊天</button>';
+  nonoModeChips();
+  var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
+}
+function nonoStartChat(){ NONO.mode = 'chat'; nonoChatOpen(); }
+function nonoChatOpen(){
+  nonoModeChips();
+  var pm = document.getElementById('nono-practice'); if(pm) pm.style.display='block';
+  var pc = document.getElementById('nono-chat'); if(pc){ pc.style.display='flex'; pc.innerHTML=''; }
+  var msg = document.getElementById('nono-msg');
+  if(msg) msg.innerHTML = "跟诺诺随便聊点中文吧 — 按住说话，或点 ✏️ 打字。";
+  var st = document.getElementById('nono-state'); if(st) st.style.display='none';
+  (S.nonoChat||[]).forEach(function(h){ nonoChatBubble(h.r==='user'?'you':'nono', h.t); });
+  nonoChatControls();
+  nonoState('idle');
+  var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
+  if(!S.nonoChat || !S.nonoChat.length){
+    var opening = '嗨，我是诺诺！我们随便聊点中文吧？你想聊什么？';
+    nonoChatBubble('nono', opening);
+    S.nonoChat = S.nonoChat || [];
+    S.nonoChat.push({ r:'assistant', t: opening });
+    if(typeof saveState==='function') saveState();
+    nonoState('speaking');
+    if(typeof speak==='function') speak(opening);
+    setTimeout(function(){ if(NONO.mode==='chat') nonoState('idle'); }, 2600);
+  }
+}
+function nonoChatControls(){
+  var pm = document.getElementById('nono-practice'); if(!pm) return;
+  pm.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button onclick="nonoRecord()">🎙️ 按住说话</button>'+
+    '<button class="ghost" onclick="nonoChatTextToggle()">✏️ 打字</button></div>'+
+    '<div id="nono-txt" style="display:none;margin-top:8px"><input id="nono-input" style="width:100%;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)" placeholder="用中文打字…" />'+
+    '<button class="ghost" style="margin-top:6px;width:100%" onclick="nonoChatSendText()">发送</button></div>';
+}
+function nonoChatTextToggle(){
+  var t = document.getElementById('nono-txt'); if(!t) return;
+  t.style.display = t.style.display==='none' ? 'block' : 'none';
+  if(t.style.display==='block'){ var i = document.getElementById('nono-input'); if(i) i.focus(); }
+}
+async function nonoChatSendText(){
+  var i = document.getElementById('nono-input'); if(!i) return;
+  var txt = (i.value||'').trim(); if(!txt) return;
+  i.value = '';
+  await nonoChatReply(txt);
+}
+function nonoChatBubble(who, text){
+  var pc = document.getElementById('nono-chat'); if(!pc) return;
+  var d = document.createElement('div');
+  d.className = 'nc-bub ' + (who==='you' ? 'nc-you' : who==='nono' ? 'nc-nono' : 'nc-sys');
+  d.textContent = text;
+  pc.appendChild(d);
+  pc.scrollTop = pc.scrollHeight;
+}
+async function nonoChatSend(wav){
+  nonoState('thinking');
+  var a = await asrText(wav, '');
+  if(!a.ok){
+    nonoState('sorry');
+    nonoChatBubble('', (a.err || '没听清，再试试？'));
+    nonoChatControls();
+    return;
+  }
+  var userText = (a.text||'').trim();
+  if(!userText){ nonoState('sorry'); nonoChatControls(); return; }
+  await nonoChatReply(userText);
+}
+async function nonoChatReply(userText){
+  nonoChatBubble('you', userText);
+  nonoState('thinking');
+  try{
+    var hist = (S.nonoChat||[]).slice(-12);
+    var resp = await fetch(API_BASE+'api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: UID, hist: hist, text: userText })
+    });
+    var d = await resp.json().catch(function(){ return {}; });
+    var reply = (resp.ok && d.reply) ? d.reply : '诺诺有点累了，待会再聊 😴';
+    S.nonoChat = S.nonoChat || [];
+    S.nonoChat.push({ r:'user', t: userText });
+    S.nonoChat.push({ r:'assistant', t: reply });
+    if(S.nonoChat.length > 40) S.nonoChat = S.nonoChat.slice(-40);
+    if(typeof saveState==='function') saveState();
+    nonoChatBubble('nono', reply);
+    nonoState('speaking');
+    if(typeof speak==='function') speak(reply);
+    setTimeout(function(){ if(NONO.mode==='chat') nonoState('idle'); }, 2600);
+  }catch(e){
+    nonoState('sorry');
+    nonoChatBubble('nono', '诺诺有点累了，待会再聊 😴');
+  }
+  nonoChatControls();
+}
 
 /* 评分：asrText → api/score → 三维反馈 + 鼓励点评 */
 async function nonoGrade(wav){
@@ -4320,6 +4430,9 @@ function bar(label, v){
 
 /* 面板内开始一次跟读练习 */
 function nonoStartPractice(){
+  NONO.mode = 'practice';
+  nonoModeChips();
+  var pc = document.getElementById('nono-chat'); if(pc) pc.style.display = 'none';
   var line = NONO.pickLine();
   if(!line){ nonoShow("No lines yet — pick a scene first. <b>先选一个场景。</b>", { pose:'think' }); return; }
   NONO_LINE = line;

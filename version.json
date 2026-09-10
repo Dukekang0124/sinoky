@@ -1,15 +1,15 @@
 {
-  "version": "0.14.6",
+  "version": "0.14.7",
   "updated": "2026-09-10",
-  "note": "v0.14.6：吸收竞品能力——A 声调纠音闭环（红色音节标「应为 X 声」+ 错因补期望调值）；B 分级阅读升级（READ_ITEMS 词级切分、点词查义浮层、拼音显隐、卡拉OK 跟读评分）；C SRS 错误驱动复习（低分加权提前召回、说对升桶）；E 课程地图式进度（城市=地标，done=点亮，进度环）；F 连续打卡宽容不惩罚 + 徽章绑定场景通关（first_city/explorer/map_master）。",
+  "note": "v0.14.7：诺诺自由对话——点诺诺选「💬 自由聊天」即可与诺诺用中文自由聊天。GLM-4-Flash 主用（中文最顺、首响最快）+ Workers AI Qwen 兜底，状态在端上跨会话续聊；语音主路径（按住说话），文本输入无障碍兜底；双模型降级 + 温柔文案不阻塞练功。",
   "apk": {
-    "versionCode": 1406,
-    "version": "0.14.6",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.6-release.apk",
-    "md5": "5982afc6652aa7fb087e62491859f12e",
-    "size": 23881111
+    "versionCode": 1407,
+    "version": "0.14.7",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.7-release.apk",
+    "md5": "00000000000000000000000000000000",
+    "size": 0
   },
   "noteEn": [
-    "v0.14.6: competitor absorption — (A) syllable-level tone feedback marks which char's tone was off with expected tone label; (B) graded reader with tap-to-define words, pinyin toggle, karaoke follow-along scoring; (C) error-driven SRS review pulls low-score lines forward and promotes correct ones; (E) city map progress (landmark = scene, lit when done, progress ring); (F) forgiving streak (1 missed day freezes, no reset) plus scene-completion badges (first_city / explorer / map_master)."
+    "v0.14.7: Nono free chat — tap Nono and choose '💬 Chat' to talk freely in Chinese. GLM-4-Flash primary (best Chinese, fastest first token) with Workers AI Qwen fallback; conversation state stays on-device and resumes across sessions; voice-first (hold to speak) with text-input accessibility fallback; two-model degradation plus a gentle message that never blocks practice."
   ]
 }

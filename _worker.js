@@ -516,6 +516,7 @@ export default {
         const items = [];
         for (const k of list.keys) {
           if (k.name.startsWith('rl:')) continue; // 跳过速率限制计数器，不污染反馈视图
+          if (k.name.startsWith('chat:')) continue; // 跳过诺诺聊天埋点，不污染反馈视图
           const v = await env.FEEDBACK.get(k.name);
           if (v) { try { items.push(JSON.parse(v)); } catch (e) { items.push({ raw: v }); } }
         }

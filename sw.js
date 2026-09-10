@@ -1,5 +1,5 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.14.6';
+var CACHE = 'sinoky-v0.14.7';
 var ASSETS = [
   './',
   './index.html',
