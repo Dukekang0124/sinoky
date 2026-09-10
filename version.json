@@ -3,10 +3,10 @@
   "updated": "2026-09-10",
   "note": "v0.14.4：勋章/进度后端部署到 Pages Function（/api/badges、/api/users/*），App 勋章墙可同步服务端解锁；补齐缺失勋章图（survivor/tone-master/graduate/centurion/reversal-king/real-world/polyglot-path）；官网落地页 /landing 上线；修复 centurion/tone_master 的 badge id 映射。",
   "apk": {
-    "versionCode": 1404,
-    "version": "0.14.4",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.4-release.apk",
-    "md5": "af07245f681822a5d3fb910a6ed1f6a8",
+    "versionCode": 1405,
+    "version": "0.14.5",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.5-release.apk",
+    "md5": "8bdc8a15308afb43387a382921f91d71",
     "size": 23839597
   },
   "noteEn": [
