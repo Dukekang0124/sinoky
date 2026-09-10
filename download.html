@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Download Sinoky — Android App</title>
+<style>
+  :root{ --bg:#0d0d10; --card:#17171c; --text:#f2f2f2; --sec:#9a9aa3; --accent:#e63946; --border:#2a2a31; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
+        min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px 16px calc(24px + env(safe-area-inset-bottom)); }
+  .box{ max-width:420px; width:100%; }
+  .logo{ font-size:2rem; font-weight:800; letter-spacing:.5px; }
+  .logo span{ color:var(--accent); }
+  .tag{ color:var(--sec); font-size:.9rem; margin:6px 0 22px; line-height:1.5; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
+  .ver{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .ver b{ font-size:1.15rem; }
+  .ver small{ color:var(--sec); }
+  .note{ color:var(--sec); font-size:.82rem; line-height:1.55; margin-top:8px; max-height:150px; overflow-y:auto; }
+  .dl{ display:block; text-align:center; background:var(--accent); color:#fff; text-decoration:none; font-weight:700;
+       font-size:1.05rem; padding:16px; border-radius:12px; margin:4px 0 18px; }
+  .dl:active{ filter:brightness(.9); }
+  .dl small{ display:block; font-weight:400; font-size:.75rem; opacity:.85; margin-top:2px; }
+  ol{ margin:10px 0 0 18px; color:var(--sec); font-size:.85rem; line-height:1.8; }
+  .warn{ background:rgba(230,57,70,.1); border:1px solid rgba(230,57,70,.35); color:#ffb3b9; border-radius:10px;
+         padding:10px 12px; font-size:.8rem; line-height:1.5; margin-top:12px; }
+  .foot{ color:var(--sec); font-size:.72rem; text-align:center; margin-top:18px; line-height:1.6; }
+  .wechat{ display:none; background:rgba(217,136,0,.12); border:1px solid rgba(217,136,0,.4); color:#f0c060;
+           border-radius:10px; padding:10px 12px; font-size:.8rem; line-height:1.5; margin-bottom:16px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">Sinoky<span>.</span></div>
+  <div class="tag">Speak Chinese where it matters. Get the Android app for offline practice &amp; one-tap updates.</div>
+
+  <div class="wechat" id="wechatTip">
+    ⚠️ You are in an in-app browser (WeChat?). Tap ⋯ (top-right) → <b>Open in system browser</b>, then tap Download.
+  </div>
+
+  <div class="card">
+    <div class="ver"><b id="v">Sinoky Android</b><small id="sz"></small></div>
+    <div class="note" id="note">Loading latest version…</div>
+  </div>
+
+  <a class="dl" id="dl" href="#" download>⬇️ Download latest APK<small id="dlsz">tap to start download</small></a>
+
+  <div class="card">
+    <b style="font-size:.9rem">Install in 3 steps</b>
+    <ol>
+      <li>Tap <b>Download</b> above and wait for the file.</li>
+      <li>Open the downloaded file. If asked, allow <b>Install unknown apps</b> for your browser.</li>
+      <li>Tap <b>Install</b>. Your learning data is kept.</li>
+    </ol>
+    <div class="warn">After this one-time install, the app updates itself: new versions pop up automatically inside the app with a one-tap Download button.</div>
+  </div>
+
+  <div class="foot">© 2026 Sinoky · Your data stays on your device<br>Already installed? Open Sinoky → Me → Settings → Check update</div>
+</div>
+<script>
+(function(){
+  var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+  var isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  if (isWeChat || (isMobile && /MiuiBrowser|HeyTapBrowser|VivoBrowser|HuaweiBrowser/i.test(navigator.userAgent))) {
+    document.getElementById('wechatTip').style.display = 'block';
+  }
+  function fmt(b){ return b >= 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB'; }
+  fetch('version.json?t=' + Date.now(), { cache:'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      var a = j.apk || {};
+      var ver = a.version || j.version || '';
+      document.getElementById('v').textContent = 'Sinoky Android v' + ver;
+      if (a.size) {
+        document.getElementById('sz').textContent = fmt(a.size);
+        document.getElementById('dlsz').textContent = 'APK · ' + fmt(a.size);
+      }
+      if (a.url) document.getElementById('dl').href = a.url;
+      var note = a.note || j.note || '';
+      if (note) document.getElementById('note').textContent = note;
+    })
+    .catch(function(){
+      document.getElementById('note').textContent = 'Could not load version info — the Download button still points to the latest build.';
+      document.getElementById('dl').href = 'https://sinoky.pages.dev/apk/Sinoky-v0.13.1-release.apk';
+    });
+})();
+</script>
+</body>
+</html>
