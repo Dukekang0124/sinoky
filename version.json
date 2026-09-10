@@ -1,11 +1,13 @@
 {
-  "version": "0.13.0",
+  "version": "0.13.1",
   "updated": "2026-09-10",
-  "note": "v0.13.0：课程扩容至 30 天——新增 Day 15-30 进阶场景 16 个（64 句，逐字拼音构建期生成）；修复 Day 8-14 每日打卡缺 day 标记的存量缺陷（P1/P2 全部短语挂 day）；勋章墙新增 Survivor/Tone master/Graduate/100-day streak 四枚；设置页新增品牌卡。",
+  "note": [
+    "v0.13.1：修复应用内更新必失败的问题——v0.12.0/v0.13.0 的原生下载完成提示在后台线程调用 Toast 直接崩溃（Can't toast on a thread that has not called Looper.prepare()），导致下载校验成功后仍报失败并丢弃更新包；现全部提示改走主线程且任何提示失败不中断安装。同时新增：检测到新版本自动弹出更新对话框（含版本说明与下载按钮，点 Download 直接开始下载安装）。"
+  ],
   "apk": {
-    "versionCode": 1300,
-    "version": "0.13.0",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.13.0-release.apk",
+    "versionCode": 1301,
+    "version": "0.13.1",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.13.1-release.apk",
     "md5": "",
     "size": 0
   }

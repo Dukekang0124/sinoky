@@ -1049,7 +1049,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.13.0';
+var APP_VERSION = '0.13.1';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3403,10 +3403,41 @@ async function checkApkUpdate(){
     if(!j.apk || !j.apk.versionCode || !j.apk.url) return null;
     var local = await getLocalApkVersionCode();
     if(j.apk.versionCode > local){
-      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url, md5: j.apk.md5||'', size: j.apk.size||0 };
+      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url, md5: j.apk.md5||'', size: j.apk.size||0, note: (j.apk.note || j.note || '') };
     }
   }catch(e){}
   return null;
+}
+/* v0.13.1：检测到新版自动弹出更新对话框（含下载按钮），替代"只出横幅"的弱提示 */
+function showApkUpdateDialog(apk){
+  var st = updStoreGet();
+  if(st.apkDismissed === apk.versionCode){ showApkUpdateBar(apk); return; }
+  if(document.getElementById('apk-upd-ov')) return;
+  var ov = document.createElement('div');
+  ov.id = 'apk-upd-ov';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
+  var noteHtml = apk.note ? ('<div style="background:var(--card,#f5f5f5);border-radius:10px;padding:12px;margin:12px 0 14px;">'
+    + '<div style="font-size:.75rem;color:var(--accent,#e63946);font-weight:600;margin-bottom:4px">What\'s new</div>'
+    + '<div style="font-size:.85rem;line-height:1.55;max-height:180px;overflow-y:auto;-webkit-overflow-scrolling:touch">' + apk.note + '</div></div>') : '';
+  ov.innerHTML = '<div style="background:var(--bg,#fff);color:var(--text,#222);max-width:400px;width:100%;border-radius:16px;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 12px 40px rgba(0,0,0,.5);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;">'
+    + '<span id="apk-upd-x" style="position:absolute;top:8px;right:12px;font-size:1.3rem;line-height:1;cursor:pointer;padding:4px 6px;">×</span>'
+    + '<div style="font-size:1.5rem;margin-bottom:6px;">🆕</div>'
+    + '<div style="font-size:1.05rem;font-weight:700;margin-bottom:2px;">New version ' + (apk.version || ('v' + apk.versionCode)) + '</div>'
+    + (apk.size ? '<div style="font-size:.75rem;color:var(--text-sec,#666);margin-bottom:4px;">Install package ≈ ' + (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') + ' · verified by MD5</div>' : '')
+    + noteHtml
+    + '<div style="display:flex;gap:10px;margin-top:6px;">'
+    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--border,#ccc);border-radius:10px;background:transparent;color:var(--text-sec,#666);font-size:.95rem;cursor:pointer;">Not now</button>'
+    + '<button id="apk-upd-now" style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--accent,#e63946);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">⬇️ Download</button>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+  function dismiss(){
+    st.apkDismissed = apk.versionCode; updStoreSet(st);
+    ov.remove();
+    /* Not now = 本版本完全静默（弹窗/横幅都不再自动出现），settings 手动 Check update 始终可用 */
+  }
+  document.getElementById('apk-upd-later').onclick = dismiss;
+  document.getElementById('apk-upd-x').onclick = dismiss;
+  document.getElementById('apk-upd-now').onclick = function(){ ov.remove(); startApkUpdate(apk); };
 }
 /* v0.12.0：横幅关闭记忆——用户关过的版本不再打扰（apk/web 双通道共用存储） */
 function updStoreGet(){ try{ return JSON.parse(localStorage.getItem('sinoky_upd')||'{}'); }catch(e){ return {}; } }
@@ -5401,7 +5432,7 @@ fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.js
      旧实现是 2.2 秒就消失且不可点的 toast，用户根本不知道"refresh"该怎么操作
      （PWA 里既不能下拉刷新也没人知道要重装）→ 长期停留在旧版。 */
   if(typeof Capacitor!=='undefined' && Capacitor.isNativePlatform()){
-    try{ var apk=await checkApkUpdate(); if(apk){ showApkUpdateBar(apk); return; } }catch(e){}
+    try{ var apk=await checkApkUpdate(); if(apk){ showApkUpdateDialog(apk); return; } }catch(e){}
   }
   if(j.version && j.version !== APP_VERSION){
     /* v0.12.0：网页刷新横幅带关闭记忆——关过的版本不再弹 */

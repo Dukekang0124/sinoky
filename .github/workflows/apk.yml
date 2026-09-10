@@ -97,6 +97,22 @@ jobs:
             private volatile boolean downloading = false;
             private volatile boolean cancelled = false;
 
+              /* v0.13.1: Toast must run on a Looper (main) thread. v0.12.0-v0.13.0 called
+                 Toast from the download worker thread -> killed the update right after a
+                 successful download. Post to main and never let a toast break the flow. */
+              private static void toastSafe(final Context ctx, final String msg) {
+                try {
+                  new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                      try {
+                        android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_LONG).show();
+                      } catch (Exception e) {}
+                    }
+                  });
+                } catch (Exception e) {}
+              }
+
             @PluginMethod
             public void getAppVersionCode(PluginCall call) {
               try {
@@ -134,9 +150,9 @@ jobs:
                       Uri.parse("package:" + ctx.getPackageName()));
                   si.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                   ctx.startActivity(si);
-                  android.widget.Toast.makeText(ctx, "Please allow Install unknown apps, then tap update again", android.widget.Toast.LENGTH_LONG).show();
+                  toastSafe(ctx, "Please allow Install unknown apps, then tap update again");
                 } catch (Exception ex) {
-                  android.widget.Toast.makeText(ctx, "Grant install permission in Settings > Apps > Sinoky", android.widget.Toast.LENGTH_LONG).show();
+                  toastSafe(ctx, "Grant install permission in Settings > Apps > Sinoky");
                 }
                 call.reject("install_permission_required");
                 return;
@@ -232,7 +248,7 @@ jobs:
                     JSObject fin = new JSObject();
                     fin.put("status", "complete");
                     notifyListeners("updateProgress", fin);
-                    android.widget.Toast.makeText(ctx, "Download verified - starting installer", android.widget.Toast.LENGTH_LONG).show();
+                    toastSafe(ctx, "Download verified - starting installer");
                     Intent install = new Intent(Intent.ACTION_INSTALL_PACKAGE);
                     if (Build.VERSION.SDK_INT >= 24) {
                       Uri apkUri = FileProvider.getUriForFile(ctx, ctx.getPackageName() + ".fileprovider", out);
@@ -242,7 +258,16 @@ jobs:
                       install.setDataAndType(Uri.fromFile(out), "application/vnd.android.package-archive");
                       install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     }
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                  try {
                     ctx.startActivity(install);
+                  } catch (Exception ex) {
+                    toastSafe(ctx, "Install launch failed: " + ex.getMessage());
+                  }
+                }
+              });
                     downloading = false;
                     call.resolve();
                   } catch (Exception e) {
