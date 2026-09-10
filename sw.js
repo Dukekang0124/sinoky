@@ -1,5 +1,5 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.14.0';
+var CACHE = 'sinoky-v0.14.1';
 var ASSETS = [
   './',
   './index.html',
@@ -7,7 +7,7 @@ var ASSETS = [
   './version.json',
   './data/flashcards.hsk1.json',
   './data/connect-templates.json',
-  './langs/zh.json', './langs/es.json',
+  './langs/zh.json', './langs/es.json', './langs/ru.json', './langs/vi.json', './langs/id.json', './langs/th.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/favicon-32.png',

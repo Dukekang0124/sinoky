@@ -1049,7 +1049,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.0';
+var APP_VERSION = '0.14.1';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3346,7 +3346,7 @@ function renderSettings(){
    字典外置 langs/{lang}.json（en 即原文，无需包）。
    覆盖三层：①静态 HTML 文本节点（applyI18n TreeWalker）②动态渲染（MutationObserver 自动跟随）③动态提示（toast/nonoShow 入口内 T()）。
    新增 UI 铁律：英文原文写进字典即可被翻译；拼接句请拆「常量段 + 变量」。 */
-var LANGS = { en: 'English', zh: '中文', es: 'Español' };
+var LANGS = { en: 'English', zh: '中文', es: 'Español', ru: 'Русский', vi: 'Tiếng Việt', id: 'Bahasa Indonesia', th: 'ไทย' };
 var LANG_PACK = {};
 var LANG_REV = {};      /* 译文 → 原文（切回/换语言时还原用） */
 var _lastAppliedLang = null;
@@ -5528,7 +5528,7 @@ if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('hom
 /* v0.14.0 i18n 启动：首次按系统语言初始化（zh/es→对应语言，其余 en），已选则跟随用户 */
 if (!S.lang) {
   var _nl = (navigator.language || 'en').toLowerCase();
-  S.lang = (_nl.indexOf('zh') === 0) ? 'zh' : (_nl.indexOf('es') === 0) ? 'es' : 'en';
+  S.lang = (_nl.indexOf('zh') === 0) ? 'zh' : (_nl.indexOf('es') === 0) ? 'es' : (_nl.indexOf('ru') === 0) ? 'ru' : (_nl.indexOf('vi') === 0) ? 'vi' : (_nl.indexOf('id') === 0) ? 'id' : (_nl.indexOf('th') === 0) ? 'th' : 'en';
   saveStateLocal();
 }
 loadLangPack(S.lang, function(){ applyI18n(document.body); });
