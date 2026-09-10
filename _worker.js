@@ -80,12 +80,16 @@ function scoreSyllables(targetHz, userHz, py) {
   for (let i = 0; i < n; i++) {
     const t = tArr[i], u = uArr[i];
     if (!t || !u) {
-      perSyll.push({ target: t || '—', user: u || '—', score: 0, errs: ['missing syllable'] });
+      const tp = t ? parsePy(t) : { tone: 0 }, up = u ? parsePy(u) : { tone: 0 };
+      perSyll.push({ target: t || '—', user: u || '—', score: 0, errs: ['missing syllable'], tExp: tp.tone, tGot: up.tone, toneOk: false });
       continue;
     }
-    const r = cmp(parsePy(t), parsePy(u));
+    const tp = parsePy(t), up = parsePy(u);
+    const r = cmp(tp, up);
     total += r.score;
-    perSyll.push({ target: t, user: u, score: r.score, errs: r.errs });
+    /* 声调闭环(A)：标记声调是否对，并给出期望/实测调值，前端据此标「应为 X 声」 */
+    const toneErr = r.errs.indexOf('tone') >= 0 || r.errs.indexOf('neutral/tone mismatch') >= 0;
+    perSyll.push({ target: t, user: u, score: r.score, errs: r.errs, tExp: tp.tone, tGot: up.tone, toneOk: !toneErr });
   }
   const overall = n ? Math.round((total / n) * 100) : 0;
   // verdict 必须英文 —— 目标用户是不懂中文的外国学习者，中文输出即缺陷

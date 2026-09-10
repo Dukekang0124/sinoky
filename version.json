@@ -1,15 +1,15 @@
 {
-  "version": "0.14.5",
+  "version": "0.14.6",
   "updated": "2026-09-10",
-  "note": "v0.14.4：勋章/进度后端部署到 Pages Function（/api/badges、/api/users/*），App 勋章墙可同步服务端解锁；补齐缺失勋章图（survivor/tone-master/graduate/centurion/reversal-king/real-world/polyglot-path）；官网落地页 /landing 上线；修复 centurion/tone_master 的 badge id 映射。",
+  "note": "v0.14.6：吸收竞品能力——A 声调纠音闭环（红色音节标「应为 X 声」+ 错因补期望调值）；B 分级阅读升级（READ_ITEMS 词级切分、点词查义浮层、拼音显隐、卡拉OK 跟读评分）；C SRS 错误驱动复习（低分加权提前召回、说对升桶）；E 课程地图式进度（城市=地标，done=点亮，进度环）；F 连续打卡宽容不惩罚 + 徽章绑定场景通关（first_city/explorer/map_master）。",
   "apk": {
-    "versionCode": 1405,
-    "version": "0.14.5",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.5-release.apk",
+    "versionCode": 1406,
+    "version": "0.14.6",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.6-release.apk",
     "md5": "8bdc8a15308afb43387a382921f91d71",
     "size": 23839597
   },
   "noteEn": [
-    "v0.14.5: release SOP first-use acceptance — version strings synced across index/sw/version.json/download; re-validated badge generator (gen_badges.py, idempotent) and Playwright smoke test (25/25); no functional change, in-package web identical to v0.14.4."
+    "v0.14.6: competitor absorption — (A) syllable-level tone feedback marks which char's tone was off with expected tone label; (B) graded reader with tap-to-define words, pinyin toggle, karaoke follow-along scoring; (C) error-driven SRS review pulls low-score lines forward and promotes correct ones; (E) city map progress (landmark = scene, lit when done, progress ring); (F) forgiving streak (1 missed day freezes, no reset) plus scene-completion badges (first_city / explorer / map_master)."
   ]
 }

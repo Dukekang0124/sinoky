@@ -88,6 +88,13 @@ header img{width:34px;height:34px;border-radius:9px}
 .p-zh{margin-top:8px;cursor:pointer}
 .p-hz{font-size:24px;font-weight:700;letter-spacing:1px}
 .p-py{font-size:14px;color:var(--teal);margin-top:3px}
+/* [吸收D] 声调色彩：拼音按声调上色，帮老外一眼区分四声（Edify 辅助——看准→说准→多说）。
+   仅作用于拼音展示文本，不改发音/数据；轻声(无标调符号)→ .py-t0 灰。!important 覆盖各容器色。 */
+.py-t1{color:#e8455f!important}
+.py-t2{color:#e8910c!important}
+.py-t3{color:#2f9e44!important}
+.py-t4{color:#1c7ed6!important}
+.py-t0{color:#9aa4b2!important}
 .p-zh.hidden .p-hz,.p-zh.hidden .p-py{filter:blur(7px);user-select:none}
 .p-hint{font-size:10.5px;color:var(--sub);margin-top:5px}
 /* v0.3.55 零基础拼读：句卡音节拆分，点一个音节只听这一个字 */
@@ -163,6 +170,8 @@ nav button.on{color:var(--red)}
 /* v0.3.58 评分错因明文行：移动端可见（旧版只在 title hover 里，手机上等于零反馈） */
 .score-fix{margin-top:8px;font-size:12.5px;color:var(--sub);line-height:1.6}
 .score-fix b{color:var(--txt)}
+/* v0.14.6 A 声调纠音闭环：红色音节上标「应为 X 声」（覆盖 .ss.bad 的删除线，避免标注被划掉） */
+.tone-err{display:block;font-style:normal;font-size:10px;line-height:1.2;color:var(--red);text-decoration:none;margin-top:2px}
 /* ---------- flashcards (v0.2.0) ---------- */
 .fc-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 10px}
 .fc-prog{font-size:12px;color:var(--sub)}
@@ -402,6 +411,39 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .cityrow .cd{font-size:11.5px;font-weight:700;color:var(--sub);white-space:nowrap}
 .cityrow.done .cd{color:var(--teal)}
 .cityempty{text-align:center;color:var(--sub);font-size:13.5px;padding:28px 0;line-height:1.7}
+/* v0.14.6 E：课程地图式进度 —— 城市=地标，done=点亮，进度环（间接动机增强） */
+.mapgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:12px}
+.mapnode{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 4px 9px;
+  cursor:pointer;font-family:inherit;color:var(--txt);text-align:center;
+  transition:transform .12s ease,border-color .2s ease,background .2s ease,box-shadow .25s ease}
+.mapnode:active{transform:scale(.97)}
+.mapnode .micon{position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center;margin-bottom:1px}
+.mapnode .mthumb{width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;font-size:21px;line-height:1}
+.mapnode .mthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.mapnode .mname{font-size:12px;font-weight:700;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapnode .mcity{font-size:10.5px;color:var(--sub)}
+.mapnode.done{background:rgba(0,201,167,.12);border-color:rgba(0,201,167,.5);
+  box-shadow:0 0 0 1px rgba(0,201,167,.3),0 7px 20px -9px rgba(0,201,167,.65)}
+.mapnode.done .mname{color:var(--teal)}
+.mapnode .mcheck{position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;
+  background:var(--teal);color:#06281f;font-size:11px;font-weight:800;display:none;
+  align-items:center;justify-content:center;border:2px solid var(--bg2)}
+.mapnode.done .mcheck{display:flex}
+.mpring{position:absolute;inset:0;width:52px;height:52px}
+.mpring-bg{fill:none;stroke:var(--line);stroke-width:3}
+.mpring-fg{fill:none;stroke:#00c9a7;stroke-width:3;stroke-linecap:round;
+  stroke-dasharray:97.39;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .45s ease}
+.mapnode.done .mpring-fg{stroke:var(--teal)}
+/* 城市页行内小进度环 */
+.rowring{width:34px;height:34px;flex:none}
+.rowring-bg{fill:none;stroke:var(--line);stroke-width:4}
+.rowring-fg{fill:none;stroke:var(--teal);stroke-width:4;stroke-linecap:round;
+  stroke-dasharray:97.39;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .4s ease}
+.cityrow .cd{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--sub);white-space:nowrap}
+.cityrow .cd .cd-n{min-width:30px;text-align:right}
+.cityrow.done .cd{color:var(--teal)}
 
 /* v0.3.45 图片管线：句子配图（16:9）+ 城市页缩略图。
    图缺失时 onerror 隐藏容器/回退 emoji，布局不留空位。 */
@@ -487,6 +529,23 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .sr-py{font-size:12px;color:var(--teal);margin-top:2px}
       .sr-en{font-size:11.5px;color:var(--sub);margin-top:2px}
       .sr-card .spk{position:absolute;top:8px;right:8px;width:34px;height:34px;background:rgba(20,26,36,.72);border:1px solid var(--line)}
+      /* v0.14.6 B 分级阅读升级：reader 弹层 + 词块 + 释义浮层 + 卡拉OK 高亮 */
+      .reader{position:fixed;inset:0;background:rgba(12,16,24,.72);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+      .reader.on{display:flex}
+      .reader-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
+      .reader-box img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;background:var(--card)}
+      .reader-words{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+      .rword{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;text-align:center;transition:transform .12s,border-color .12s}
+      .rword .rhz{font-size:16px;font-weight:700}
+      .rword .rpy{font-size:11.5px;color:var(--teal);margin-top:2px}
+      .rword.py-hide .rpy{display:none}
+      .rword.cur{border-color:var(--t2);box-shadow:0 0 0 2px rgba(42,157,143,.35);transform:translateY(-2px)}
+      .rword.pop .rpop{display:block}
+      .rpop{display:none;position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12px;color:var(--txt);white-space:nowrap;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+      .rpop b{color:var(--t2)}
+      .reader-ctrls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+      .reader-ctrls .btn{flex:1 1 auto;font-size:13px}
+      .reader-score{margin-top:10px}
       .hub b{font-size:14px}
       .hub i{font-style:normal;font-size:11.5px;color:var(--sub);line-height:1.35}
       .setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
@@ -842,6 +901,25 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
 
+  <!-- v0.14.6 B 分级阅读升级：reader 弹层（点词查义 / 拼音显隐 / 跟读评分 / 卡拉OK 高亮） -->
+  <div class="reader" id="reader" onclick="if(event.target===this)closeReader()">
+    <div class="reader-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b style="font-size:15px">📖 Reader</b>
+        <button class="btn ghost" style="padding:6px 10px" onclick="closeReader()">✕</button>
+      </div>
+      <img id="reader-img" src="" alt="">
+      <div class="reader-words" id="reader-words"></div>
+      <div class="reader-ctrls">
+        <button class="btn" onclick="readerHear()">🔊 Hear</button>
+        <button class="btn" id="reader-follow-btn" onclick="readerFollow()">▶ Follow along</button>
+        <button class="btn record" id="reader-rec-btn" onclick="readerScore()">🎤 Read &amp; score</button>
+        <button class="btn ghost" onclick="toggleReaderPy()">👁 Pinyin</button>
+      </div>
+      <div class="reader-score score-result" id="reader-score" style="display:block"></div>
+    </div>
+  </div>
+
   <section id="v-me" class="views">
     <div class="card">
       <div class="top"><h2>👤 Me</h2><span class="badge" id="me-ver">v</span></div>
@@ -1052,7 +1130,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.5';
+var APP_VERSION = '0.14.6';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -1147,24 +1225,119 @@ var SCENE_THUMB = {
 
 /* v0.10.0：A3 场景阅读 —— 6 张场景图 + 配文，点开朗读。 */
 var READ_ITEMS = [
-  { img:'assets/read/breakfast.webp', hz:'你吃早餐了吗？', py:'Nǐ chī zǎocān le ma?', en:'Did you eat breakfast?' },
-  { img:'assets/read/commute.webp', hz:'我坐地铁上班。', py:'Wǒ zuò dìtiě shàngbān.', en:'I take the subway to work.' },
-  { img:'assets/read/doctor.webp', hz:'我有点不舒服。', py:'Wǒ yǒudiǎn bù shūfu.', en:'I feel a bit unwell.' },
-  { img:'assets/read/friends.webp', hz:'周末和朋友吃饭。', py:'Zhōumò hé péngyou chīfàn.', en:'Weekend dinner with friends.' },
-  { img:'assets/read/market.webp', hz:'菜市场很热闹。', py:'Càishìchǎng hěn rènao.', en:'The food market is lively.' },
-  { img:'assets/read/travel.webp', hz:'我想去旅行。', py:'Wǒ xiǎng qù lǚxíng.', en:'I want to travel.' }
+  { img:'assets/read/breakfast.webp', hz:'你吃早餐了吗？', py:'Nǐ chī zǎocān le ma?', en:'Did you eat breakfast?',
+    words:[{hz:'你',py:'nǐ',en:'you'},{hz:'吃',py:'chī',en:'eat'},{hz:'早餐',py:'zǎocān',en:'breakfast'},{hz:'了',py:'le',en:'(done)'},{hz:'吗',py:'ma',en:'(question)'}] },
+  { img:'assets/read/commute.webp', hz:'我坐地铁上班。', py:'Wǒ zuò dìtiě shàngbān.', en:'I take the subway to work.',
+    words:[{hz:'我',py:'wǒ',en:'I'},{hz:'坐',py:'zuò',en:'take / sit'},{hz:'地铁',py:'dìtiě',en:'subway'},{hz:'上班',py:'shàngbān',en:'go to work'}] },
+  { img:'assets/read/doctor.webp', hz:'我有点不舒服。', py:'Wǒ yǒudiǎn bù shūfu.', en:'I feel a bit unwell.',
+    words:[{hz:'我',py:'wǒ',en:'I'},{hz:'有点',py:'yǒudiǎn',en:'a bit'},{hz:'不',py:'bù',en:'not'},{hz:'舒服',py:'shūfu',en:'comfortable'}] },
+  { img:'assets/read/friends.webp', hz:'周末和朋友吃饭。', py:'Zhōumò hé péngyou chīfàn.', en:'Weekend dinner with friends.',
+    words:[{hz:'周末',py:'zhōumò',en:'weekend'},{hz:'和',py:'hé',en:'with'},{hz:'朋友',py:'péngyou',en:'friend'},{hz:'吃饭',py:'chīfàn',en:'eat a meal'}] },
+  { img:'assets/read/market.webp', hz:'菜市场很热闹。', py:'Càishìchǎng hěn rènao.', en:'The food market is lively.',
+    words:[{hz:'菜市场',py:'càishìchǎng',en:'food market'},{hz:'很',py:'hěn',en:'very'},{hz:'热闹',py:'rènao',en:'lively'}] },
+  { img:'assets/read/travel.webp', hz:'我想去旅行。', py:'Wǒ xiǎng qù lǚxíng.', en:'I want to travel.',
+    words:[{hz:'我',py:'wǒ',en:'I'},{hz:'想',py:'xiǎng',en:'want'},{hz:'去',py:'qù',en:'go'},{hz:'旅行',py:'lǚxíng',en:'travel'}] }
 ];
 function renderScenesRead(){
   var g = document.getElementById('sr-grid'); if(!g) return;
   g.innerHTML = READ_ITEMS.map(function(it, i){
-    return '<div class="sr-card" onclick="openRead('+i+')">'+
+    return '<div class="sr-card" onclick="openReader('+i+')">'+
       '<img src="'+it.img+'" alt="" loading="lazy" onerror="this.style.opacity=0.22">'+
       '<button class="spk" onclick="event.stopPropagation();speak(\''+it.hz.replace(/'/g,'')+'\',this)"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button>'+
-      '<div class="sr-cap"><div class="sr-hz">'+it.hz+'</div><div class="sr-py">'+it.py+'</div><div class="sr-en">'+it.en+'</div></div>'+
+      '<div class="sr-cap"><div class="sr-hz">'+it.hz+'</div><div class="sr-py">'+toneColorPy(it.py)+'</div><div class="sr-en">'+it.en+'</div></div>'+
       '</div>';
   }).join('');
 }
-function openRead(i){ var it = READ_ITEMS[i]; if(it) speak(it.hz); }
+/* v0.14.6 B 分级阅读升级：reader 弹层（点词查义 / 拼音显隐 / 跟读评分 / 卡拉OK 高亮） */
+var readerIdx = -1, readerFollowIdx = 0, readerFollowTimer = null, readerRec = null;
+function openReader(i){
+  var it = READ_ITEMS[i]; if(!it) return;
+  readerIdx = i;
+  var im = document.getElementById('reader-img'); if(im) im.src = it.img || '';
+  var words = it.words || [];
+  var box = document.getElementById('reader-words');
+  if(words.length){
+    box.innerHTML = words.map(function(w, k){
+      return '<div class="rword" id="rw-'+k+'" onclick="event.stopPropagation();toggleRPop('+k+')">'+
+        '<div class="rhz">'+w.hz+'</div>'+
+        '<div class="rpy">'+toneColorPy(w.py)+'</div>'+
+        '<div class="rpop"><b>'+toneColorPy(w.py)+'</b> · '+esc(w.en||'')+'</div>'+
+      '</div>';
+    }).join('');
+  } else {
+    box.innerHTML = '<div class="rword" style="cursor:default"><div class="rhz">'+it.hz+'</div><div class="rpy">'+toneColorPy(it.py)+'</div></div>';
+  }
+  var sc = document.getElementById('reader-score'); sc.style.display='block'; sc.innerHTML='';
+  document.getElementById('reader').classList.add('on');
+}
+function closeReader(){ var r=document.getElementById('reader'); if(r) r.classList.remove('on'); clearRHighlight(); }
+function toggleRPop(k){
+  var el = document.getElementById('rw-'+k); if(!el) return;
+  document.querySelectorAll('.rword.pop').forEach(function(n){ if(n!==el) n.classList.remove('pop'); });
+  el.classList.toggle('pop');
+}
+function toggleReaderPy(){
+  var box = document.getElementById('reader-words'); if(!box) return;
+  box.querySelectorAll('.rword').forEach(function(n){ n.classList.toggle('py-hide'); });
+}
+function readerHear(){ var it = READ_ITEMS[readerIdx]; if(it) speak(it.hz); }
+function clearRCur(){ document.querySelectorAll('.rword.cur').forEach(function(n){ n.classList.remove('cur'); }); }
+function highlightRWord(k){ clearRCur(); var el=document.getElementById('rw-'+k); if(el) el.classList.add('cur'); }
+function clearRHighlight(){ clearRCur(); if(readerFollowTimer){ clearInterval(readerFollowTimer); readerFollowTimer=null; } }
+/* 卡拉OK：播放整句 + 按词高亮（近似节奏，~650ms/词）。音频失败不影响高亮计时。 */
+function readerFollow(){
+  var it = READ_ITEMS[readerIdx]; if(!it) return;
+  var words = it.words || [];
+  speak(it.hz);
+  clearRHighlight();
+  if(!words.length) return;
+  readerFollowIdx = 0; highlightRWord(0);
+  var step = 650;
+  readerFollowTimer = setInterval(function(){
+    readerFollowIdx++;
+    if(readerFollowIdx >= words.length){ clearRHighlight(); return; }
+    highlightRWord(readerFollowIdx);
+  }, step);
+}
+/* 跟读评分：录音 → ASR → /api/score → 复用 renderScore（含 A 的声调标注） */
+function readerScore(){
+  var i = readerIdx; if(i<0) return;
+  var it = READ_ITEMS[i];
+  var btn = document.getElementById('reader-rec-btn'), box = document.getElementById('reader-score');
+  if(!btn || !box) return;
+  if(btn.classList.contains('listening')){ if(readerRec && readerRec.state!=='inactive') readerRec.stop(); return; }
+  if(readerRec && readerRec.state!=='inactive'){ readerRec.stop(); }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
+    box.style.display='block'; box.innerHTML='<div class="score-err">Recording is not supported in this browser. Use Chrome or Edge.</div>'; return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var chunks=[]; var rec=new MediaRecorder(stream); readerRec=rec;
+    rec.ondataavailable=function(e){ if(e.data&&e.data.size) chunks.push(e.data); };
+    rec.onstop=async function(){
+      btn.classList.remove('listening'); btn.textContent='🎤 Read & score';
+      stream.getTracks().forEach(function(t){ try{t.stop();}catch(e){} });
+      box.style.display='block'; box.innerHTML='<div class="score-load">Scoring…</div>';
+      if(!chunks.length){ box.innerHTML='<div class="score-err">No sound captured. Try again.</div>'; return; }
+      try{
+        var wav = await blobToWav(new Blob(chunks));
+        var res = await asrText(wav, it.hz);
+        if(!res || !res.ok || !res.text){ box.innerHTML='<div class="score-err">'+esc((res&&res.err)||'could not hear that')+'</div>'; return; }
+        var r = await fetch(API_BASE+'api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target:it.hz,user:res.text})});
+        var d = await r.json().catch(function(){return{};});
+        if(d.error){ box.innerHTML='<div class="score-err">'+esc(d.error)+'</div>'; return; }
+        box.innerHTML = renderScore(d);
+      }catch(e){ box.innerHTML='<div class="score-err">'+esc(e&&e.message||'error')+'</div>'; }
+    };
+    rec.onerror=function(){ btn.classList.remove('listening'); btn.textContent='🎤 Read & score'; box.style.display='block'; box.innerHTML='<div class="score-err">Recording error. Try again.</div>'; };
+    rec.start();
+    btn.classList.add('listening'); btn.textContent='⏹ Stop';
+    box.style.display='block'; box.innerHTML='<div class="score-load">Listening… tap stop when you finish.</div>';
+  }).catch(function(e){
+    var ua=navigator.userAgent||'', isWeChat=/MicroMessenger/i.test(ua), isIOS=/iPhone|iPad|iPod/i.test(ua);
+    var steps = isWeChat?'Tap ··· → Open in Browser, then allow the microphone.' : isIOS?'Settings → Safari → Microphone → Allow':'Tap the 🔒 lock → Site settings → Microphone → Allow, then reload.';
+    box.style.display='block'; box.innerHTML='<div class="score-err">🎤 Microphone blocked.<div class="mic-help">'+steps+'</div></div>';
+  });
+}
 
 var SCENES = [
 
@@ -2758,6 +2931,8 @@ var REGIONS = [
 function isCity(sc){ return sc.day1 === false; }
 function cityList(){ return SCENES.filter(isCity); }
 function cityDoneN(sc){ return (S.phrases[sc.id]||[]).length; }
+/* v0.14.6 F：已点亮（全部句子说过）的城市数 —— 徽章绑定「场景通关」 */
+function litCount(){ return cityList().filter(function(sc){ return cityDoneN(sc) >= sc.phrases.length; }).length; }
 function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function cityEn(sc){ return String(sc.title||'').split(' \u00b7 ')[0]; }
 /* v0.3.45 图片管线：图配在「句子」上，不是当 banner。
@@ -2778,6 +2953,23 @@ function cityThumbHtml(sc){
   return '<span class="ci cthumb"><img src="assets/cities/thumb_' + sc.id +
     '.webp" alt="" loading="lazy" onerror="var p=this.parentNode;p.className=\'ci\';p.innerHTML=\'' +
     sc.icon + '\'"></span>';
+}
+/* v0.14.6 E：进度环 SVG（地标点亮进度）。r=15.5 → 周长 97.39；dashoffset 越小越满 */
+function progRingSvg(pct, cls){
+  cls = cls || 'mpring';
+  var C = 97.39, p = Math.max(0, Math.min(1, pct||0));
+  var off = (C * (1 - p)).toFixed(1);
+  return '<svg class="'+cls+'" viewBox="0 0 36 36" aria-hidden="true">'+
+    '<circle class="'+cls+'-bg" cx="18" cy="18" r="15.5"></circle>'+
+    '<circle class="'+cls+'-fg" cx="18" cy="18" r="15.5" stroke-dasharray="'+C+'" stroke-dashoffset="'+off+'"></circle>'+
+    '</svg>';
+}
+/* v0.14.6 E：地标缩略图（图标兜底，图缺失自动隐藏不留空） */
+function mapThumbHtml(sc){
+  var ic = '<span class="mthumb">'+sc.icon+'</span>';
+  if(!CITY_IMG_ON) return ic;
+  return '<span class="mthumb"><img src="assets/cities/thumb_'+sc.id+
+    '.webp" alt="" loading="lazy" onerror="this.style.display=\'none\'">'+sc.icon+'</span>';
 }
 
 /* v0.3.70 情景图 + 徽章 + Banner 接入（豆包 A1/A13/A14 素材） */
@@ -2801,6 +2993,10 @@ function badgeGalleryHtml(){
     { id:'tone-master', t:'Tone master',       on: (S.tone && S.tone.total >= 20 && S.tone.right / S.tone.total >= 0.9) },
     { id:'graduate',    t:'Graduate · Day 30', on: isDayDone(30) },
     { id:'centurion',   t:'100-day streak',    on: (S.streak || 0) >= 100 },
+    /* v0.14.6 F：徽章绑定「场景通关」——城市=地标，点亮即解锁，而非纯装饰 */
+    { id:'first_city',  t:'First landmark', on: litCount() >= 1 },
+    { id:'explorer',    t:'5 landmarks',   on: litCount() >= 5 },
+    { id:'map_master',  t:'All landmarks', on: litCount() >= cityList().length && cityList().length > 0 },
     /* v0.14.4：服务端解锁的高级勋章（本地无对应判定，依赖 badgeSync 点亮） */
     { id:'reversal-king', t:'Reversal king',   on: false },
     { id:'real-world',    t:'In the wild',     on: false },
@@ -2820,30 +3016,33 @@ function bannerHtml(){
 }
 
 function cityRowHtml(sc, from){
-  var d = cityDoneN(sc), tot = sc.phrases.length, fin = d >= tot;
+  var d = cityDoneN(sc), tot = sc.phrases.length, fin = d >= tot, pct = tot ? d/tot : 0;
   return '<button class="cityrow'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\',undefined,\''+from+'\')">'+
     cityThumbHtml(sc)+'<span class="cm">'+
     '<span class="cn">'+escHtml(cityEn(sc))+' \u00b7 '+escHtml(sc.city)+'</span>'+
     '<span class="cz">'+escHtml(sc.desc||'')+'</span></span>'+
-    '<span class="cd">'+(fin?'\u2713':d+'/'+tot)+'</span></button>';
+    '<span class="cd">'+progRingSvg(pct,'rowring')+'<span class="cd-n">'+(fin?'\u2713':d+'/'+tot)+'</span></span></button>';
 }
+/* v0.14.6 E：地图式通关 —— 城市=地标，done=点亮（teal 辉光+✓），进度环随说出句数填充 */
 function cityBlockHtml(){
   var all = cityList();
   if(!all.length) return '';
   var hot = all.filter(function(sc){ return sc.hot; });
   if(!hot.length) hot = all.slice(0,6);
-  var h = '<div class="card"><div class="top"><h2>\ud83d\udccd City phrases</h2>'+
-    '<span class="badge">'+all.length+' CITIES</span></div>'+
-    '<p class="desc">A few lines for the places people actually go \u2014 order, ask, get around.</p>'+
-    '<div class="citygrid">';
+  var litN = all.reduce(function(a,sc){ return a + (cityDoneN(sc) >= sc.phrases.length ? 1 : 0); }, 0);
+  var h = '<div class="card"><div class="top"><h2>\ud83d\udccd City map</h2>'+
+    '<span class="badge">'+litN+'/'+all.length+' LIT</span></div>'+
+    '<p class="desc">Each city is a landmark. Say every line to light it up \u2014 light the whole map.</p>'+
+    '<div class="mapgrid">';
   hot.forEach(function(sc){
-    var fin = cityDoneN(sc) >= sc.phrases.length;
-    h += '<button class="citychip'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\')">'+
-      cityThumbHtml(sc)+
-      '<span class="cn">'+escHtml(cityEn(sc))+'</span>'+
-      '<span class="cz">'+escHtml(sc.city)+'</span></button>';
+    var d = cityDoneN(sc), tot = sc.phrases.length, fin = d >= tot, pct = tot ? d/tot : 0;
+    h += '<button class="mapnode'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\')">'+
+      '<span class="micon">'+mapThumbHtml(sc)+progRingSvg(pct)+
+        (fin?'<span class="mcheck">\u2713</span>':'')+'</span>'+
+      '<span class="mname">'+escHtml(cityEn(sc))+'</span>'+
+      '<span class="mcity">'+escHtml(sc.city)+'</span></button>';
   });
-  h += '</div><button class="btn ghost" onclick="go(\'cities\')">See all '+all.length+' cities \u2192</button></div>';
+  h += '</div><button class="btn ghost" onclick="go(\'cities\')">Open the map \u2192</button></div>';
   return h;
 }
 function renderCities(){
@@ -3296,8 +3495,13 @@ function revQueue(){
       if(!st.due || st.due <= todayStr) out.push({ scene:sc, idx:idx, p:p, st:st, mode:revModeOf({day:sc.day}) });
     });
   });
-  /* 稳定排序：到期越久越靠前（同键恒定顺序，避免每次刷新乱跳） */
-  out.sort(function(a,b){ return (a.st.due||'').localeCompare(b.st.due||'') || (a.scene.id+a.idx).localeCompare(b.scene.id+b.idx); });
+  /* 稳定排序：错误加权优先置顶 → 其次到期越久越靠前（同键恒定顺序，避免每次刷新乱跳） */
+  out.sort(function(a,b){
+    var ea = ((S.rev||{})[revKey(a.scene, a.idx)]||{}).e||0;
+    var eb = ((S.rev||{})[revKey(b.scene, b.idx)]||{}).e||0;
+    if(ea!==eb) return eb-ea;                         /* 错误多 → 优先置顶召回 */
+    return (a.st.due||'').localeCompare(b.st.due||'') || (a.scene.id+a.idx).localeCompare(b.scene.id+b.idx);
+  });
   return out;
 }
 function revSchedule(k, passed, score){
@@ -3314,6 +3518,33 @@ function revSchedule(k, passed, score){
   var d = new Date(Date.now() + st.iv * 86400000);
   st.due = d.toISOString().slice(0,10);
   st.last = score;
+  saveState();
+}
+/* v0.14.6 C SRS 错误驱动复习：把实时评分（A 声调纠音闭环的输出）喂进 S.rev 调度。
+   低分 → 错误加权(e+1) + 降桶(reps=0,iv=1) + 立即到期(优先置顶召回)；高分 → 升桶。 */
+var lastReviewScore = null;
+function shiftDate(s, delta){
+  var p = (s||today()).split('-');
+  var t = new Date(+p[0], +p[1]-1, +p[2]);
+  t.setDate(t.getDate() + delta);
+  var z = function(n){ return (n<10?'0':'')+n; };
+  return t.getFullYear()+'-'+z(t.getMonth()+1)+'-'+z(t.getDate());
+}
+function rvMarkError(key){
+  var st = revState(key);
+  st.e = (st.e||0) + 1;
+  st.reps = 0; st.iv = 1;            /* 说错降桶：次日重来 */
+  st.due = shiftDate(today(), 0);    /* 加权提前：立即到期 → 队列置顶 */
+  st.last = 0;
+  saveState();
+}
+function rvMarkGood(key){
+  var st = revState(key);
+  if(st.last == null) return;        /* 无历史（本就没到期）不强行升桶 */
+  st.reps = Math.min(st.reps + 1, REV_IV.length - 1);
+  st.iv = REV_IV[st.reps];
+  st.due = shiftDate(today(), st.iv);
+  st.last = 100;
   saveState();
 }
 function revMark(k, passed, score){ revSchedule(k, passed, score); renderReview(); }
@@ -4037,6 +4268,9 @@ async function nonoGrade(wav){
   S.nono.n++; S.nono.sum += acc; S.nono.best = Math.max(S.nono.best||0, acc);
   S.nono.last = { key:line.key, score:acc, at:new Date().toISOString().slice(0,10) };
   syll.forEach(function(x){ if(!(x.score>=0.99)){ S.nono.weak[line.key] = (S.nono.weak[line.key]||0)+1; } });
+  /* v0.14.6 C：实时评分驱动 S.rev 调度（错误加权+降桶 / 说对升桶） */
+  lastReviewScore = acc;
+  if(acc != null){ if(acc < 70) rvMarkError(line.key); else rvMarkGood(line.key); }
   if(typeof saveState === 'function') saveState();
 
   /* 诺诺风格点评 */
@@ -4060,9 +4294,12 @@ async function nonoGrade(wav){
       bar('Accuracy', acc) + bar('Complete', comp) + bar('Fluency', flu) +
     '</div>'+
     (syll.length ? '<div class="np-syl">'+ syll.map(function(x){
-        return '<span class="'+((x.score>=0.99)?'ok':'bad')+'">'+ (x.target||'') +'</span>'; }).join('') +'</div>' : '')+
+        var tb = (x.toneOk===false);
+        return '<span class="'+((x.score>=0.99)?'ok':'bad')+'">'+ (x.target||'') +(tb?'<i class="tone-err">应为'+toneLabel(x.tExp)+'</i>':'') +'</span>'; }).join('') +'</div>' : '')+
     (fixes.length ? '<div class="np-fix">'+ fixes.slice(0,4).map(function(f){
-        return '<b>'+(f.target||'')+'</b> → you said <b>'+(f.user||'?')+'</b> · '+((f.errs||[]).join(' · ')||'try again');
+        var ms = (f.errs||[]).join(' · ')||'try again';
+        if(f.toneOk===false) ms += ' · tone should be '+toneLabelEn(f.tExp)+' ('+toneLabel(f.tExp)+')';
+        return '<b>'+(f.target||'')+'</b> → you said <b>'+(f.user||'?')+'</b> · '+ms;
       }).join('<br>') +'</div>' : '')+
     weakNote +
     '<div class="np-fix" style="margin-top:8px">'+comment+(verdict?' <span style="color:var(--sub)">('+verdict+')</span>':'')+'</div>'+
@@ -4359,6 +4596,29 @@ function splitSyllables(hz, py){
   for(var i=0;i<zs.length;i++) out.push({ zi: zs.charAt(i), py: ps[i] });
   return out;
 }
+/* [吸收D] 声调色彩：拼音按声调上色。纯展示增强，不改发音/数据。
+   toneOfSyl 扫描音节内带调号元音→映射 1-4 声；无调号=轻声(0)。 */
+var TONE_DIAC = {
+  'ā':1,'ē':1,'ī':1,'ō':1,'ū':1,'ǖ':1,'ê':1,
+  'á':2,'é':2,'í':2,'ó':2,'ú':2,'ǘ':2,'ń':2,'ḿ':2,
+  'ǎ':3,'ě':3,'ǐ':3,'ǒ':3,'ǔ':3,'ǚ':3,'ň':3,
+  'à':4,'è':4,'ì':4,'ò':4,'ù':4,'ǜ':4,'ǹ':4,
+  'm̄':0,'ṅ':0
+};
+function toneOfSyl(s){
+  for(var i=0;i<s.length;i++){
+    var c = s.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(TONE_DIAC, c)) return TONE_DIAC[c];
+  }
+  return 0; /* 轻声 / 无标调 */
+}
+function toneColorPy(py){
+  if(!py) return '';
+  return String(py).split(/(\s+)/).map(function(tok){
+    if(!tok || /^\s+$/.test(tok)) return tok;
+    return '<span class="py-t' + toneOfSyl(tok) + '">' + tok + '</span>';
+  }).join('');
+}
 function sylHtml(pya, hz, py){
   /* 首选 pya：构建期 gen-pinyin.js 用 pinyin-pro 生成的逐字表（"字:拼音|字:拼音"），
      覆盖率 108/111。py 是词级连写（Xièxie / Xǐshǒujiān），按空格拆对不上汉字数，
@@ -4381,7 +4641,7 @@ function sylHtml(pya, hz, py){
   items.forEach(function(x){
     h += '<button class="syl" onclick="event.stopPropagation();speak(\'' + x.zi.replace(/'/g,'') +
          '\',this)" title="Hear just this one sound">' +
-         '<span class="syl-py">' + x.py + '</span><span class="syl-zi">' + x.zi + '</span></button>';
+         '<span class="syl-py">' + toneColorPy(x.py) + '</span><span class="syl-zi">' + x.zi + '</span></button>';
   });
   return h + '</div>';
 }
@@ -4398,7 +4658,7 @@ function renderSceneList(){
           + '<button class="spk" onclick="speak(\''+p.hear.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>'
         : '<div class="p-en">'+p.en+'</div>')+
       '<div class="p-zh'+(isDone?'':' hidden')+'" onclick="toggleZh('+i+')" id="zh-'+i+'" title="Tap to reveal / cover">'+
-      '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+p.py+'</div>'+sylHtml(p.pya, p.hz, p.py)+'</div>'+
+      '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+toneColorPy(p.py)+'</div>'+sylHtml(p.pya, p.hz, p.py)+'</div>'+
       '<div class="p-hint">'+(isDone?'✓ said out loud':(p.hear?'他们说了「'+p.hear.hz+'」 — 你答：'+p.en+'（答完看 ✓）':'Tap to reveal · <b>🐢 Slow</b> if too fast · cover &amp; say it 3×'))+'</div></div>'+
       '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>'+
       '<div class="p-actions">'+
@@ -4454,7 +4714,7 @@ function realHtml(i, p){
     return '<div class="real-item" onclick="speak(\'' + (r.tts||r.hz).replace(/'/g,'') + '\',this)">' +
       '<div class="real-main">' +
         '<span class="real-hz">' + r.hz + '</span>' +
-        '<span class="real-py">' + r.py + '</span>' +
+        '<span class="real-py">' + toneColorPy(r.py) + '</span>' +
         '<span class="real-style s-' + r.style + '">' + r.style + '</span>' +
       '</div>' +
       '<div class="real-note">' + r.note + '</div>' +
@@ -4689,6 +4949,12 @@ async function sendScore(p, transcript, i){
     console.log('[SCORE] body', JSON.stringify(data).slice(0, 300));
     if(data.error){ box.innerHTML='<div class="score-err">'+esc(data.error)+'</div>'; return; }
     box.innerHTML = renderScore(data);
+    /* v0.14.6 C：实时评分驱动 S.rev 调度（错误加权+降桶 / 说对升桶） */
+    lastReviewScore = data.overall;
+    if(data.overall != null){
+      var _k = revKey(curScene, i);
+      if(data.overall < 70) rvMarkError(_k); else rvMarkGood(_k);
+    }
     var badge = document.querySelector('#v-scene .badge.teal');
     if(badge) badge.textContent = T('SCORED · {s}').replace('{s}',data.overall);
     var ns = document.querySelector('#v-scene .noscore');
@@ -4705,14 +4971,16 @@ function renderScore(d){
   var fixes = [];
   (d.perSyll||[]).forEach(function(s){
     var ok = s.score>=0.99;
-    h += '<span class="ss '+(ok?'ok':'bad')+'">'+esc(s.target)+'</span>';
-    if(!ok) fixes.push({ t:s.target, u:s.user, errs:(s.errs&&s.errs.length?s.errs:['miss']) });
+    var tb = (s.toneOk===false);
+    h += '<span class="ss '+(ok?'ok':'bad')+'">'+esc(s.target)+(tb?'<i class="tone-err">应为'+toneLabel(s.tExp)+'</i>':'')+'</span>';
+    if(!ok) fixes.push({ t:s.target, u:s.user, errs:(s.errs&&s.errs.length?s.errs:['miss']), tExp:s.tExp, tGot:s.tGot, toneOk:s.toneOk });
   });
   h += '</div>';
   if(fixes.length){
     h += '<div class="score-fix">';
     fixes.forEach(function(f){
       var msgs = f.errs.map(errHuman).join(' \u00b7 ');
+      if(f.toneOk===false) msgs += ' \u00b7 tone should be '+toneLabelEn(f.tExp)+' ('+toneLabel(f.tExp)+')';
       h += '<div><b>'+esc(f.t)+'</b> \u2192 you said <b>'+esc(f.u||'?')+'</b> \u00b7 '+esc(msgs)+'</div>';
     });
     h += '</div>';
@@ -4728,17 +4996,25 @@ function errHuman(e){
   if(e==='missing syllable') return 'this syllable was missing';
   return e;
 }
+/* v0.14.6 A 声调纠音闭环：调值数字 → 中西文标签（target 为不懂中文的外国学习者，双标） */
+function toneLabel(n){ return n===1?'一声':n===2?'二声':n===3?'三声':n===4?'四声':'轻声'; }
+function toneLabelEn(n){ return n===1?'1st':n===2?'2nd':n===3?'3rd':n===4?'4th':'neutral'; }
 function finishScene(){
   var d = today();
+  var grace = false;
   if(S.lastDone !== d){
-    var y = new Date(Date.now()-864e5).toISOString().slice(0,10);
-    S.streak = (S.lastDone === y) ? S.streak+1 : 1;
+    var y1 = shiftDate(d, -1), y2 = shiftDate(d, -2);  // yesterday / day before yesterday
+    grace = (S.lastDone === y2);                        // missed exactly 1 day → forgive (no penalty)
+    if(S.lastDone === y1) S.streak = S.streak + 1;      // consecutive day → +1
+    else if(!grace) S.streak = 1;                        // gap >=3 days or first time → reset
     S.lastDone = d;
   }
   if(S.days.indexOf(d)===-1){ S.days.push(d); }
   markDaysDone();          /* v0.3.47：记下本次完成的 Day（幂等，只记第一次） */
   saveState();
-  toast(T('🔥 {s}-day streak! Speak it out there.').replace('{s}',S.streak));
+  toast(grace
+    ? T('🔥 Streak kept at {s} days — no penalty for one missed day. Keep going!').replace('{s}', S.streak)
+    : T('🔥 {s}-day streak! Speak it out there.').replace('{s}', S.streak));
   renderHome(); go('home');
 }
 
