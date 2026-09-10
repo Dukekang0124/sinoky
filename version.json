@@ -1,5 +1,5 @@
 {
-  "version": "0.14.4",
+  "version": "0.14.5",
   "updated": "2026-09-10",
   "note": "v0.14.4：勋章/进度后端部署到 Pages Function（/api/badges、/api/users/*），App 勋章墙可同步服务端解锁；补齐缺失勋章图（survivor/tone-master/graduate/centurion/reversal-king/real-world/polyglot-path）；官网落地页 /landing 上线；修复 centurion/tone_master 的 badge id 映射。",
   "apk": {
@@ -10,6 +10,6 @@
     "size": 23839597
   },
   "noteEn": [
-    "v0.14.4: badge/progress backend deployed to Pages Function (/api/badges, /api/users/*); badge wall syncs server-side unlocks; added missing badge images (survivor/tone-master/graduate/centurion/reversal-king/real-world/polyglot-path); /landing page live; fixed centurion/tone_master badge id mapping."
+    "v0.14.5: release SOP first-use acceptance — version strings synced across index/sw/version.json/download; re-validated badge generator (gen_badges.py, idempotent) and Playwright smoke test (25/25); no functional change, in-package web identical to v0.14.4."
   ]
 }
