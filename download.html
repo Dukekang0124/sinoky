@@ -33,33 +33,143 @@
 <body>
 <div class="box">
   <div class="logo">Sinoky<span>.</span></div>
-  <div class="tag">Speak Chinese where it matters. Get the Android app for offline practice &amp; one-tap updates.</div>
+  <div class="tag" data-i18n="tag">Speak Chinese where it matters. Get the Android app for offline practice &amp; one-tap updates.</div>
 
-  <div class="wechat" id="wechatTip">
+  <div class="wechat" id="wechatTip" data-i18n="wechatTip">
     ⚠️ You are in an in-app browser (WeChat?). Tap ⋯ (top-right) → <b>Open in system browser</b>, then tap Download.
   </div>
 
   <div class="card">
     <div class="ver"><b id="v">Sinoky Android</b><small id="sz"></small></div>
-    <div class="note" id="note">Loading latest version…</div>
+    <div class="note" id="note" data-i18n="loading">Loading latest version…</div>
   </div>
 
-  <a class="dl" id="dl" href="#" download>⬇️ Download latest APK<small id="dlsz">tap to start download</small></a>
+  <a class="dl" id="dl" href="#" download><span data-i18n="dl">⬇️ Download latest APK</span><small id="dlsz" data-i18n="dlsz">tap to start download</small></a>
 
   <div class="card">
-    <b style="font-size:.9rem">Install in 3 steps</b>
+    <b style="font-size:.9rem" data-i18n="install">Install in 3 steps</b>
     <ol>
-      <li>Tap <b>Download</b> above and wait for the file.</li>
-      <li>Open the downloaded file. If asked, allow <b>Install unknown apps</b> for your browser.</li>
-      <li>Tap <b>Install</b>. Your learning data is kept.</li>
+      <li data-i18n="li1">Tap <b>Download</b> above and wait for the file.</li>
+      <li data-i18n="li2">Open the downloaded file. If asked, allow <b>Install unknown apps</b> for your browser.</li>
+      <li data-i18n="li3">Tap <b>Install</b>. Your learning data is kept.</li>
     </ol>
-    <div class="warn">After this one-time install, the app updates itself: new versions pop up automatically inside the app with a one-tap Download button.</div>
+    <div class="warn" data-i18n="warn">After this one-time install, the app updates itself: new versions pop up automatically inside the app with a one-tap Download button.</div>
   </div>
 
-  <div class="foot">© 2026 Sinoky · Your data stays on your device<br>Already installed? Open Sinoky → Me → Settings → Check update</div>
+  <div class="foot"><span data-i18n="foot1">© 2026 Sinoky · Your data stays on your device</span><br><span data-i18n="foot2">Already installed? Open Sinoky → Me → Settings → Check update</span></div>
 </div>
 <script>
+/* v0.14.2 六语内联：key = data-i18n，value 按 navigator.language 前缀选择（默认英文原文，零额外请求） */
+var DL_I18N = {
+  zh: {
+    title: "下载 Sinoky — 安卓版",
+    tag: "开口说真正用得上的中文。装上安卓版，离线练习，一键更新。",
+    wechatTip: "⚠️ 你正在微信等内置浏览器里。点右上角 ⋯ → 选「在浏览器打开」，再回来点下载。",
+    loading: "正在获取最新版本…",
+    dl: "⬇️ 下载最新 APK", dlsz: "点按开始下载",
+    install: "三步安装",
+    li1: "点上面的「下载」，等文件下完。",
+    li2: "打开下载的文件。如提示，请允许浏览器「安装未知应用」。",
+    li3: "点「安装」。你的学习数据会保留。",
+    warn: "这次装好之后，App 会自己更新：新版本会自动出现在应用内，点一下就能下载。",
+    foot1: "© 2026 Sinoky · 数据只存在你的设备上",
+    foot2: "已装过？打开 Sinoky → 我 → 设置 → 检查更新",
+    error: "版本信息加载失败——下载按钮仍指向最新构建。",
+    appname: "Sinoky 安卓版"
+  },
+  es: {
+    title: "Descargar Sinoky — App Android",
+    tag: "Habla chino cuando importa. Consigue la app Android para practicar sin conexión y actualizar con un toque.",
+    wechatTip: "⚠️ Estás en un navegador integrado (¿WeChat?). Toca ⋯ (arriba a la derecha) → <b>Abrir en el navegador del sistema</b> y vuelve a tocar Descargar.",
+    loading: "Cargando la última versión…",
+    dl: "⬇️ Descargar el último APK", dlsz: "toca para empezar la descarga",
+    install: "Instala en 3 pasos",
+    li1: "Toca <b>Descargar</b> arriba y espera el archivo.",
+    li2: "Abre el archivo descargado. Si te lo pide, permite <b>Instalar apps desconocidas</b> a tu navegador.",
+    li3: "Toca <b>Instalar</b>. Tu progreso se conserva.",
+    warn: "Tras esta instalación única, la app se actualiza sola: las versiones nuevas aparecen dentro de la app con un botón de descarga.",
+    foot1: "© 2026 Sinoky · Tus datos se quedan en tu dispositivo",
+    foot2: "¿Ya la tienes? Abre Sinoky → Yo → Ajustes → Comprobar actualización",
+    error: "No se pudo cargar la información de versión — el botón sigue apuntando a la última compilación.",
+    appname: "Sinoky Android"
+  },
+  ru: {
+    title: "Скачать Sinoky — приложение для Android",
+    tag: "Говорите по-китайски, когда это важно. Установите приложение Android: офлайн-практика и обновление в одно касание.",
+    wechatTip: "⚠️ Вы во встроенном браузере (WeChat?). Нажмите ⋯ (справа вверху) → <b>Открыть в системном браузере</b>, затем нажмите «Скачать».",
+    loading: "Загружаем последнюю версию…",
+    dl: "⬇️ Скачать последний APK", dlsz: "нажмите, чтобы начать загрузку",
+    install: "Установка в 3 шага",
+    li1: "Нажмите <b>Скачать</b> выше и дождитесь файла.",
+    li2: "Откройте скачанный файл. Если спросит — разрешите браузеру <b>устанавливать неизвестные приложения</b>.",
+    li3: "Нажмите <b>Установить</b>. Ваш прогресс сохранится.",
+    warn: "После этой разовой установки приложение обновляется само: новые версии появляются внутри с кнопкой скачивания.",
+    foot1: "© 2026 Sinoky · Данные остаются на вашем устройстве",
+    foot2: "Уже установлено? Откройте Sinoky → Я → Настройки → Проверить обновления",
+    error: "Не удалось загрузить данные о версии — кнопка всё равно ведёт на последнюю сборку.",
+    appname: "Sinoky Android"
+  },
+  vi: {
+    title: "Tải Sinoky — ứng dụng Android",
+    tag: "Nói tiếng Trung vào lúc quan trọng. Cài app Android để luyện offline và cập nhật một chạm.",
+    wechatTip: "⚠️ Bạn đang dùng trình duyệt nhúng (WeChat?). Chạm ⋯ (góc trên phải) → <b>Mở bằng trình duyệt hệ thống</b>, rồi chạm Tải xuống.",
+    loading: "Đang tải phiên bản mới nhất…",
+    dl: "⬇️ Tải APK mới nhất", dlsz: "chạm để bắt đầu tải",
+    install: "Cài đặt trong 3 bước",
+    li1: "Chạm <b>Tải xuống</b> ở trên và chờ file tải xong.",
+    li2: "Mở file vừa tải. Nếu được hỏi, cho phép trình duyệt <b>Cài đặt ứng dụng không xác định</b>.",
+    li3: "Chạm <b>Cài đặt</b>. Dữ liệu học của bạn được giữ nguyên.",
+    warn: "Sau lần cài một lần này, app tự cập nhật: phiên bản mới hiện ngay trong app với nút tải một chạm.",
+    foot1: "© 2026 Sinoky · Dữ liệu của bạn nằm trên thiết bị",
+    foot2: "Đã cài rồi? Mở Sinoky → Tôi → Cài đặt → Kiểm tra cập nhật",
+    error: "Không tải được thông tin phiên bản — nút tải vẫn trỏ tới bản mới nhất.",
+    appname: "Sinoky Android"
+  },
+  id: {
+    title: "Unduh Sinoky — Aplikasi Android",
+    tag: "Bicara Mandarin di momen yang penting. Pasang aplikasi Android untuk latihan offline dan pembaruan sekali ketuk.",
+    wechatTip: "⚠️ Kamu sedang di browser dalam aplikasi (WeChat?). Ketuk ⋯ (kanan atas) → <b>Buka di browser sistem</b>, lalu ketuk Unduh.",
+    loading: "Memuat versi terbaru…",
+    dl: "⬇️ Unduh APK terbaru", dlsz: "ketuk untuk mulai mengunduh",
+    install: "Pasang dalam 3 langkah",
+    li1: "Ketuk <b>Unduh</b> di atas dan tunggu filenya selesai.",
+    li2: "Buka file yang diunduh. Jika diminta, izinkan browser <b>memasang aplikasi tidak dikenal</b>.",
+    li3: "Ketuk <b>Pasang</b>. Data belajarmu tetap aman.",
+    warn: "Setelah sekali ini, aplikasi memperbarui dirinya sendiri: versi baru muncul otomatis di dalam app dengan tombol unduh sekali ketuk.",
+    foot1: "© 2026 Sinoky · Datamu tetap di perangkatmu",
+    foot2: "Sudah terpasang? Buka Sinoky → Saya → Pengaturan → Periksa pembaruan",
+    error: "Gagal memuat info versi — tombol unduh tetap mengarah ke build terbaru.",
+    appname: "Sinoky Android"
+  },
+  th: {
+    title: "ดาวน์โหลด Sinoky — แอป Android",
+    tag: "พูดจีนในโอกาสที่สำคัญ ติดตั้งแอป Android เพื่อฝึกแบบออฟไลน์และอัปเดตแตะเดียว",
+    wechatTip: "⚠️ คุณกำลังใช้เบราว์เซอร์ในแอป (WeChat?) แตะ ⋯ (มุมขวาบน) → <b>เปิดในเบราว์เซอร์ของระบบ</b> แล้วกลับมาแตะดาวน์โหลด",
+    loading: "กำลังโหลดเวอร์ชันล่าสุด…",
+    dl: "⬇️ ดาวน์โหลด APK ล่าสุด", dlsz: "แตะเพื่อเริ่มดาวน์โหลด",
+    install: "ติดตั้งใน 3 ขั้นตอน",
+    li1: "แตะ <b>ดาวน์โหลด</b>ด้านบนแล้วรอไฟล์",
+    li2: "เปิดไฟล์ที่ดาวน์โหลด ถ้ามีข้อความถาม ให้อนุญาตเบราว์เซอร์ <b>ติดตั้งแอปที่ไม่รู้จัก</b>",
+    li3: "แตะ <b>ติดตั้ง</b> ข้อมูลการเรียนของคุณจะอยู่ครบ",
+    warn: "หลังติดตั้งครั้งนี้ แอปจะอัปเดตเอง: เวอร์ชันใหม่จะเด้งขึ้นในแอปพร้อมปุ่มดาวน์โหลดแตะเดียว",
+    foot1: "© 2026 Sinoky · ข้อมูลของคุณอยู่บนเครื่องคุณเท่านั้น",
+    foot2: "ติดตั้งไปแล้ว? เปิด Sinoky → ฉัน → ตั้งค่า → ตรวจสอบการอัปเดต",
+    error: "โหลดข้อมูลเวอร์ชันไม่สำเร็จ — ปุ่มดาวน์โหลดยังชี้ไปที่บิลด์ล่าสุด",
+    appname: "Sinoky Android"
+  }
+};
 (function(){
+  var nl = (navigator.language || 'en');
+  var lang = 'en';
+  ['zh','es','ru','vi','id','th'].forEach(function(l){ if (!lang || nl.indexOf(l) === 0) { if (nl.indexOf(l) === 0) lang = l; } });
+  var dict = DL_I18N[lang];
+  if (dict) {
+    document.title = dict.title;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if (dict[k]) el.innerHTML = dict[k];
+    });
+  }
   var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
   var isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
   if (isWeChat || (isMobile && /MiuiBrowser|HeyTapBrowser|VivoBrowser|HuaweiBrowser/i.test(navigator.userAgent))) {
@@ -71,7 +181,7 @@
     .then(function(j){
       var a = j.apk || {};
       var ver = a.version || j.version || '';
-      document.getElementById('v').textContent = 'Sinoky Android v' + ver;
+      document.getElementById('v').textContent = (dict && dict.appname ? dict.appname : 'Sinoky Android') + ' v' + ver;
       if (a.size) {
         document.getElementById('sz').textContent = fmt(a.size);
         document.getElementById('dlsz').textContent = 'APK · ' + fmt(a.size);
@@ -81,8 +191,8 @@
       if (note) document.getElementById('note').textContent = note;
     })
     .catch(function(){
-      document.getElementById('note').textContent = 'Could not load version info — the Download button still points to the latest build.';
-      document.getElementById('dl').href = 'https://sinoky.pages.dev/apk/Sinoky-v0.13.1-release.apk';
+      document.getElementById('note').textContent = dict ? dict.error : 'Could not load version info — the Download button still points to the latest build.';
+      document.getElementById('dl').href = 'https://sinoky.pages.dev/apk/Sinoky-v0.14.1-release.apk';
     });
 })();
 </script>

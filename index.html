@@ -493,6 +493,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .setrow:last-of-type{border-bottom:none}
       .setctl{display:flex;gap:8px;align-items:center}
       .setctl .btn.on, .btn.ghost.on{border-color:var(--red);color:var(--red)}
+    /* v0.14.2 语言下拉 */
+    .lang-opt:hover,.lang-opt:focus-visible{background:rgba(230,57,70,.08);outline:none;}
+    .lang-opt[aria-selected="true"]{background:rgba(230,57,70,.06);}
       .seg{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:10px 0}
       .seg button{flex:1;background:none;border:none;border-radius:9px;padding:8px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit}
       .seg button.on{background:rgba(230,57,70,.12);color:var(--red)}
@@ -1049,7 +1052,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.1';
+var APP_VERSION = '0.14.2';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3374,7 +3377,11 @@ function applyI18n(root){
     var nodes = [];
     while (w.nextNode()) nodes.push(w.currentNode);
     nodes.forEach(function(n){
-      var s = (n.nodeValue || '').trim();
+      /* v0.14.2：跳过 data-noi18n 子树（语言选择器本地名等，防误翻/误还原） */
+      var pe = n.parentElement;
+      if (pe && pe.closest && pe.closest('[data-noi18n]')) return;
+      /* v0.14.2：空白归一匹配 —— 节点内部含换行/多空格也能命中字典（旧实现只 trim，含 \r\n 的节点永远翻不上） */
+      var s = (n.nodeValue || '').replace(/\s+/g, ' ').trim();
       if (!s) return;
       if (Object.prototype.hasOwnProperty.call(pack, s) && pack[s] !== s) { n.nodeValue = pack[s]; return; }
       /* 当前文本是上一种语言的译文 → 先还原原文，再套新语言（支持 zh↔es↔en 任意切换） */
@@ -3385,11 +3392,16 @@ function applyI18n(root){
     });
     _lastAppliedLang = l;
     root.querySelectorAll('[placeholder],[aria-label]').forEach(function(el){
+      if (el.closest && el.closest('[data-noi18n]')) return;
       ['placeholder', 'aria-label'].forEach(function(at){
         var v = el.getAttribute(at);
-        if (v && Object.prototype.hasOwnProperty.call(pack, v)) el.setAttribute(at, pack[v]);
+        if (!v) return;
+        var nv = v.replace(/\s+/g, ' ').trim();   /* v0.14.2：属性值同样归一匹配 */
+        if (Object.prototype.hasOwnProperty.call(pack, nv)) el.setAttribute(at, pack[nv]);
       });
     });
+    /* v0.14.2：<title> 在 head 内 TreeWalker 够不着 —— 每次应用翻译时同步 */
+    document.title = 'Sinoky \u2014 ' + T('Speak Chinese where it matters');
   } catch (e) {}
 }
 var _i18nTimer = null, _i18nObs = null;
@@ -3410,44 +3422,100 @@ function setLang(l){
 }
 function applyLang(){ applyI18n(document.body); }  /* 兼容旧调用点 */
 function renderLangList(){
+  /* v0.14.2：平铺 → 自定义下拉面板。唯一数据源 LANGS：新增语言只改数据，面板自动渲染+滚动 */
   var box = document.getElementById('lang-list');
   if (!box) return;
+  box.style.position = 'relative';
   var cur = curLang();
+  var trig = document.createElement('button');
+  trig.id = 'lang-trig';
+  trig.type = 'button';
+  trig.className = 'btn ghost';
+  trig.setAttribute('data-noi18n', '');
+  trig.setAttribute('aria-haspopup', 'listbox');
+  trig.setAttribute('aria-expanded', 'false');
+  trig.style.cssText = 'display:inline-flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;min-width:160px;';
+  trig.innerHTML = '<span style="display:inline-flex;align-items:center;gap:7px;">\ud83c\udf10 <b>' + (LANGS[cur] || 'English') + '</b></span>'
+    + '<span aria-hidden="true" style="font-size:.7rem;opacity:.7;">\u25be</span>';
+  var panel = document.createElement('div');
+  panel.id = 'lang-panel';
+  panel.setAttribute('data-noi18n', '');
+  panel.setAttribute('role', 'listbox');
+  panel.setAttribute('aria-label', 'Interface language');
+  panel.style.cssText = 'display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:80;background:var(--card,#fff);border:1px solid var(--border,#e6e6e6);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.18);max-height:42vh;overflow-y:auto;min-width:230px;padding:6px;-webkit-overflow-scrolling:touch;';
+  function buildPanel(){
+    panel.innerHTML = '';
+    var c = curLang();
+    Object.keys(LANGS).forEach(function(l){
+      var it = document.createElement('button');
+      it.type = 'button';
+      it.className = 'lang-opt';
+      it.setAttribute('role', 'option');
+      it.setAttribute('data-noi18n', '');
+      it.setAttribute('aria-selected', l === c ? 'true' : 'false');
+      it.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:11px 12px;border:none;background:transparent;border-radius:9px;font-size:.95rem;cursor:pointer;text-align:left;color:inherit;font-family:inherit;';
+      it.innerHTML = '<span>' + LANGS[l] + '</span>' + (l === c ? '<span style="color:var(--accent,#e63946);font-weight:800;">\u2713</span>' : '');
+      it.onclick = function(){ closeLangPanel(); setLang(l); };
+      panel.appendChild(it);
+    });
+  }
+  function closeLangPanel(){
+    panel.style.display = 'none';
+    trig.setAttribute('aria-expanded', 'false');
+  }
+  trig.onclick = function(e){
+    e.stopPropagation();
+    var willOpen = (panel.style.display === 'none');
+    if (willOpen) buildPanel();
+    panel.style.display = willOpen ? 'block' : 'none';
+    trig.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  };
+  panel.addEventListener('click', function(e){ e.stopPropagation(); });
+  if (!window._langDocBound) {
+    window._langDocBound = true;
+    document.addEventListener('click', function(ev){
+      var b = document.getElementById('lang-trig');
+      var p = document.getElementById('lang-panel');
+      if (b && p && !b.contains(ev.target) && !p.contains(ev.target)) { p.style.display = 'none'; b.setAttribute('aria-expanded', 'false'); }
+    });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape') {
+        var p = document.getElementById('lang-panel');
+        var b = document.getElementById('lang-trig');
+        if (p) { p.style.display = 'none'; }
+        if (b) { b.setAttribute('aria-expanded', 'false'); }
+      }
+    });
+  }
   box.innerHTML = '';
-  Object.keys(LANGS).forEach(function(l){
-    var b = document.createElement('button');
-    b.className = 'btn ghost' + (l === cur ? ' on' : '');
-    b.style.cssText = 'padding:8px 14px;';
-    b.textContent = LANGS[l];
-    b.onclick = function(){ setLang(l); };
-    box.appendChild(b);
-  });
+  box.appendChild(trig);
+  box.appendChild(panel);
 }
 /* ===== end i18n ===== */
 async function checkUpdate(){
   var hint=$('set-updhint'); var btn=$('set-apkupdate');
   if(!hint) return;
   try{
-    hint.textContent='Checking…';
+    hint.textContent=T('Checking…');
     if(btn) btn.style.display='none';
     var r=await fetch((API_BASE||'')+'version.json?t='+Date.now()); var jd=await r.json();
     var latest=jd.version||APP_VERSION;
     var apk=null;
     try{ apk=await checkApkUpdate(); }catch(e){}
     if(apk){
-      hint.textContent='New app version v'+(apk.version||apk.versionCode)+' available — download & install.';
+      hint.textContent=T('New app version v{v} available — download & install.').replace('{v}',(apk.version||apk.versionCode));
       if(btn){ btn.style.display='inline-block'; btn.onclick=function(){ startApkUpdate(apk); }; }
-      toast('⬆️ New app v'+(apk.version||apk.versionCode)+' — tap Download to update');
+      toast(T('⬆️ New app v{v} — tap Download to update').replace('{v}',(apk.version||apk.versionCode)));
     } else if(latest!==APP_VERSION){
-      hint.textContent='New version available: v'+latest+' — reload the page to update.';
-      toast('New web version v'+latest+' — reload the page to update');
+      hint.textContent=T('New version available: v{v} — reload the page to update.').replace('{v}',latest);
+      toast(T('New web version v{v} — reload the page to update').replace('{v}',latest));
     } else {
-      hint.textContent='Up to date (v'+APP_VERSION+')';
-      toast('✅ You are up to date (v'+APP_VERSION+')');
+      hint.textContent=T('Up to date (v{v})').replace('{v}',APP_VERSION);
+      toast(T('✅ You are up to date (v{v})').replace('{v}',APP_VERSION));
     }
   }catch(e){
-    hint.textContent='Could not check for updates (offline?). Current: v'+APP_VERSION;
-    toast('⚠️ Update check failed — check your connection');
+    hint.textContent=T('Could not check for updates (offline?). Current: v{v}').replace('{v}',APP_VERSION);
+    toast(T('⚠️ Update check failed — check your connection'));
   }
 }
 
@@ -3810,7 +3878,7 @@ function nonoState(st){
               speaking:['like','Nono is speaking…'], cheer:['cheer','Nono is happy!'], sorry:['sorry','Nono is helping…'] };
   var m = map[st];
   if(m){ pose.src = 'assets/mascot/' + m[0] + '.webp'; pose.classList.add('st-' + st);
-         if(stEl){ stEl.style.display='block'; stEl.innerHTML='<div class="np-state">'+m[1]+'</div>'; } }
+         if(stEl){ stEl.style.display='block'; stEl.innerHTML='<div class="np-state">'+T(m[1])+'</div>'; } }
   else { pose.src = 'assets/mascot/like.webp'; if(stEl) stEl.style.display='none'; }
 }
 
@@ -4008,7 +4076,7 @@ function nonoPracticeLine(sceneId, idx){
   var panel = document.getElementById('nono-panel');
   if(panel) panel.style.display = 'block';
   var msg = document.getElementById('nono-msg');
-  if(msg) msg.innerHTML = 'Let us say this one together. <b>跟我读</b>';
+  if(msg) msg.innerHTML = T('Let us say this one together.') + ' <b>跟我读</b>';
   nonoStartPracticeWith(line);
   nonoState('idle');
 }
@@ -4018,7 +4086,7 @@ function nonoPracticeDialog(id, idx){
   var l = d.lines[idx];
   NONO.closed = false;
   var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
-  var msg = document.getElementById('nono-msg'); if(msg) msg.innerHTML = 'Let us say this one together. <b>跟我读</b>';
+  var msg = document.getElementById('nono-msg'); if(msg) msg.innerHTML = T('Let us say this one together.') + ' <b>跟我读</b>';
   nonoStartPracticeWith({ hz: l.hz, py: l.py||'', en: l.en||'', key: 'dialog#'+id+'#'+idx, scene: 'dialog' });
   nonoState('idle');
 }
@@ -4055,8 +4123,8 @@ function nonoDailyLine(){
   var line = (typeof NONO.pickLine === 'function') ? NONO.pickLine() : null;
   if (!line) return;
   try { localStorage.setItem('sinoky_nono_daily', JSON.stringify({ day: today, key: line.key })); } catch(e){}
-  nonoShow('Your line for today: <b>' + line.hz + '</b><br><span style="color:var(--sub)">' + (line.py||'') + '</span><br>' + (line.en||'') +
-    '<br><span style="color:var(--sub)">Say it out loud once, then go about your day.</span>',
+  nonoShow(T('Your line for today: <b>{hz}</b>').replace('{hz}', line.hz) + '<br><span style="color:var(--sub)">' + (line.py||'') + '</span><br>' + (line.en||'') +
+    '<br><span style="color:var(--sub)">' + T('Say it out loud once, then go about your day.') + '</span>',
     { pose:'like', priority:'result', actions:[
       { t:'Hear Nono', fn:'nonoPracticeKey(\'' + line.key + '\')'},
       { t:'Later', fn:'nonoMin()', ghost:true }
@@ -4072,7 +4140,7 @@ function nonoPracticeKey(key){
   NONO.closed = false;
   var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
   var msg = document.getElementById('nono-msg');
-  if(msg) msg.innerHTML = 'Let us say this one together. <b>跟我读</b>';
+  if(msg) msg.innerHTML = T('Let us say this one together.') + ' <b>跟我读</b>';
   nonoStartPracticeWith({ hz: ph.hz, py: ph.py||'', en: ph.en||'', key: key, scene: parts[0] });
   nonoState('idle');
 }
@@ -4088,7 +4156,7 @@ function nonoWatchBadges(){
     try { localStorage.setItem('sinoky_badges_on', JSON.stringify(on)); } catch(e){}
     if (fresh.length && !NONO.closed){
       var names = fresh.join(', ');
-      nonoShow('New badge unlocked: <b>' + names + '</b> 🏅 — that is real progress. <b>你做到了！</b>',
+      nonoShow(T('New badge unlocked: <b>{n}</b> 🏅 — that is real progress.').replace('{n}', names) + ' <b>你做到了！</b>',
         { pose:'cheer', priority:'result', actions:[{ t:'See badges', fn:"go('prog')" }, { t:'Thanks', fn:'nonoMin()', ghost:true }] });
     }
   }catch(e){}
@@ -4105,7 +4173,7 @@ function nonoGraduation(){
     try { flag = !!JSON.parse(localStorage.getItem('sinoky_graduated') || 'false'); } catch(e){}
     if (flag) return;
     try { localStorage.setItem('sinoky_graduated', 'true'); } catch(e){}
-    nonoShow('You finished all ' + DAYS.length + ' days. 🎓 You can now answer people, not just memorise words. <b>毕业了！</b>',
+    nonoShow(T('You finished all {n} days. 🎓 You can now answer people, not just memorise words.').replace('{n}', DAYS.length) + ' <b>毕业了！</b>',
       { pose:'cheer', priority:'result', actions:[{ t:'Keep practising', fn:"go('review')" }, { t:'OK', fn:'nonoMin()', ghost:true }] });
   }catch(e){}
 }
@@ -4279,7 +4347,7 @@ function renderSceneList(){
       '<div class="p-hint">'+(isDone?'✓ said out loud':(p.hear?'他们说了「'+p.hear.hz+'」 — 你答：'+p.en+'（答完看 ✓）':'Tap to reveal · <b>🐢 Slow</b> if too fast · cover &amp; say it 3×'))+'</div></div>'+
       '<button class="spk" onclick="speak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>'+
       '<div class="p-actions">'+
-      '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="Next tap: '+SPEEDS[0].tip+'">'+SPEEDS[0].label+'</button>'+
+      '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="'+T('Next tap: ')+T(SPEEDS[0].tip)+'">'+SPEEDS[0].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
          '<button class="btn ghost" style="flex:0 0 auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+curScene.id+'\','+i+')">🐼</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
@@ -4316,7 +4384,7 @@ function speedSpeak(text, btn){
   if(btn){
     btn.setAttribute('data-sp', String(next));
     btn.textContent = SPEEDS[next].label;
-    btn.title = 'Next tap: ' + SPEEDS[next].tip;
+    btn.title = T('Next tap: ') + T(SPEEDS[next].tip);
   }
   if(rateTimer) clearTimeout(rateTimer);
   rateTimer = setTimeout(function(){ ttsRate = 1; rateTimer = null; }, 4000);

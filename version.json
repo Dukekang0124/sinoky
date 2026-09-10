@@ -1,7 +1,7 @@
 {
-  "version": "0.14.1",
+  "version": "0.14.2",
   "updated": "2026-09-10",
-  "note": "v0.14.1：界面语言扩展至 7 门——新增俄语、越南语、印尼语、泰语（核心界面，beta），切换即生效并自动跟随系统语言。",
+  "note": "v0.14.2：i18n 大修——修复换行节点漏翻机制、更新提示等 6 处拼接文案可翻译；语言选择改为下拉面板（新增语言不再拉长列表）；下载页支持 6 语。",
   "apk": {
     "versionCode": 1401,
     "version": "0.14.1",
@@ -10,6 +10,6 @@
     "size": 23522899
   },
   "noteEn": [
-    "v0.14.1: Interface languages expanded to 7 — added Russian, Vietnamese, Indonesian and Thai (core UI, beta). Switching takes effect instantly and follows your system language."
+    "v0.14.2: i18n overhaul — fixed whitespace-node matching, 6 concatenated strings now translatable; language picker redesigned as a dropdown (ready for more languages); download page now speaks 6 languages."
   ]
 }
