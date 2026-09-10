@@ -420,19 +420,22 @@ async function chatGLM(userText, hist, env) {
     }
   } catch (e) { glmErr = 'glm-exc:' + String((e && e.message) || e); }
 
-  // L2：Workers AI Qwen2.5-7B（env.AI 绑定，零密钥）——兼容多种返回结构
+  // L2：Workers AI（env.AI 绑定，零密钥）——按可用性依次尝试多个模型，兼容多种返回结构
   let aiErr = '';
-  try {
-    const r = await env.AI.run('@cf/qwen/qwen2.5-7b-instruct', { messages: messages, max_tokens: 200 });
-    const t = (
-      (r && r.response) ||
-      (r && r.result && r.result.response) ||
-      (r && r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) ||
-      (r && r.text) || ''
-    ).trim();
-    if (t) return { text: t, model: 'workers-ai', degraded: false };
-    aiErr = 'ai-empty:' + JSON.stringify(r).slice(0, 120);
-  } catch (e) { aiErr = 'ai-exc:' + String((e && e.message) || e); }
+  const AI_MODELS = ['@cf/qwen/qwen2.5-7b-instruct', '@cf/qwen/qwen1.5-7b-chat', '@cf/meta/llama-3-8b-instruct', '@cf/mistral/mistral-7b-instruct-v0.2'];
+  for (const m of AI_MODELS) {
+    try {
+      const r = await env.AI.run(m, { messages: messages, max_tokens: 200 });
+      const t = (
+        (r && r.response) ||
+        (r && r.result && r.result.response) ||
+        (r && r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) ||
+        (r && r.text) || ''
+      ).trim();
+      if (t) return { text: t, model: 'workers-ai:' + m, degraded: false };
+      aiErr = 'ai-empty@' + m + ':' + JSON.stringify(r).slice(0, 100);
+    } catch (e) { aiErr = 'ai-exc@' + m + ':' + String((e && e.message) || e); }
+  }
 
   // L3：两层都挂 → 温柔降级 + 记录原因（看板 model 字段可观测）
   console.log('[CHAT] degraded -> glm:' + glmErr + ' | ai:' + aiErr);
