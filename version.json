@@ -6,8 +6,8 @@
     "versionCode": 1406,
     "version": "0.14.6",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.6-release.apk",
-    "md5": "8bdc8a15308afb43387a382921f91d71",
-    "size": 23839597
+    "md5": "5982afc6652aa7fb087e62491859f12e",
+    "size": 23881111
   },
   "noteEn": [
     "v0.14.6: competitor absorption — (A) syllable-level tone feedback marks which char's tone was off with expected tone label; (B) graded reader with tap-to-define words, pinyin toggle, karaoke follow-along scoring; (C) error-driven SRS review pulls low-score lines forward and promotes correct ones; (E) city map progress (landmark = scene, lit when done, progress ring); (F) forgiving streak (1 missed day freezes, no reset) plus scene-completion badges (first_city / explorer / map_master)."
