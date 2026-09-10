@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sinoky — Stop memorizing. Start speaking Chinese.</title>
+<meta name="description" content="Speak Chinese where it matters. 30 days of real-life lines — ordering food, taking taxis, small talk at work. Pinyin first, tones by ear, no textbooks.">
+<meta name="theme-color" content="#0d0f12">
+<style>
+:root{
+  --bg:#0d0f12; --card:#14171c; --card2:#191d23; --line:#242a32;
+  --tx:#e8eaed; --sub:#9aa3ad; --red:#e63946; --red-dim:rgba(230,57,70,.14);
+  --teal:#7fb3b0; --ok:#0a8f6e;
+  --r:14px; --maxw:1080px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+a{color:inherit; text-decoration:none}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px}
+h1,h2,h3{margin:0; line-height:1.22; letter-spacing:-.02em}
+p{margin:0}
+.red{color:var(--red)}
+
+/* ---------- nav ---------- */
+.nav{position:sticky; top:0; z-index:20; background:rgba(13,15,18,.86); backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex; align-items:center; justify-content:space-between; height:60px}
+.logo{display:flex; align-items:center; gap:9px; font-weight:800; letter-spacing:-.03em; font-size:17px}
+.logo .dot{width:9px;height:9px;border-radius:50%;background:var(--red)}
+.nav nav{display:flex; gap:24px; font-size:14.5px; color:var(--sub)}
+.nav nav a:hover{color:var(--tx)}
+@media(max-width:760px){.nav nav{display:none}}
+
+/* ---------- hero ---------- */
+.hero{padding:76px 0 30px; text-align:center}
+.eyebrow{display:inline-block; font-size:12.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--red); background:var(--red-dim); padding:6px 13px; border-radius:99px; margin-bottom:22px}
+h1{font-size:clamp(34px,6vw,62px); font-weight:800}
+h1 .strike{position:relative; color:var(--sub)}
+h1 .strike::after{content:""; position:absolute; left:0; right:0; top:52%; height:3px; background:var(--red); border-radius:2px; transform:rotate(-1.2deg)}
+.sub{margin:20px auto 0; max-width:600px; font-size:clamp(16px,2.1vw,19px); color:var(--sub)}
+.cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:32px}
+.btn{display:inline-flex; align-items:center; gap:8px; padding:14px 24px; border-radius:var(--r);
+  font-weight:700; font-size:15.5px; border:1px solid transparent; cursor:pointer; transition:transform .16s, box-shadow .16s, background .16s}
+.btn:hover{transform:translateY(-2px)}
+.btn-p{background:var(--red); color:#fff; box-shadow:0 8px 26px rgba(230,57,70,.3)}
+.btn-g{background:transparent; color:var(--tx); border-color:var(--line)}
+.btn-g:hover{border-color:var(--sub)}
+.trust{margin-top:24px; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; color:var(--sub); font-size:13.5px}
+.avatars{display:flex}
+.avatars i{width:29px;height:29px;border-radius:50%;border:2px solid var(--bg);margin-left:-9px;display:grid;place-items:center;
+  font-style:normal;font-size:12px;font-weight:700;color:#0d0f12}
+.avatars i:first-child{margin-left:0}
+.stars{color:#f5b544; letter-spacing:1px}
+
+/* ---------- phone mock ---------- */
+.phone-stage{display:flex; justify-content:center; margin-top:52px}
+.phone{width:300px; border-radius:38px; background:linear-gradient(180deg,#22262e,#15181d);
+  padding:11px; box-shadow:0 34px 80px rgba(0,0,0,.6), 0 0 0 1px var(--line) inset}
+.screen{background:#0b0d10; border-radius:29px; padding:16px 14px; text-align:left}
+.s-head{display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:var(--sub); margin-bottom:14px}
+.s-head b{color:var(--tx); font-size:13px}
+.bub{max-width:88%; border-radius:14px; padding:10px 12px; margin-bottom:10px; font-size:13.5px}
+.bub .py{font-size:15px; font-weight:600; letter-spacing:.01em; margin-bottom:3px}
+.bub .hz{font-size:12.5px; color:var(--sub)}
+.bub.them{background:var(--card2); border-bottom-left-radius:4px}
+.bub.you{background:var(--red-dim); margin-left:auto; border-bottom-right-radius:4px; position:relative}
+.bub.you .py{color:#ffd9dd}
+.bub .tag{display:inline-block; margin-top:6px; font-size:10.5px; font-weight:800; letter-spacing:.06em; color:var(--ok)}
+.s-bar{margin-top:16px; background:var(--card2); border-radius:99px; padding:8px 12px; display:flex; align-items:center; gap:9px; font-size:12px; color:var(--sub)}
+.s-bar .grow{flex:1; height:5px; background:#242a32; border-radius:99px; overflow:hidden}
+.s-bar .grow i{display:block; height:100%; width:64%; background:var(--red); border-radius:99px}
+
+/* ---------- sections ---------- */
+section{padding:82px 0}
+.sec-h{text-align:center; margin-bottom:44px}
+.sec-h h2{font-size:clamp(25px,3.6vw,36px); font-weight:800}
+.sec-h p{margin-top:13px; color:var(--sub); font-size:16px; max-width:560px; margin-left:auto; margin-right:auto}
+
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+@media(max-width:860px){.grid3{grid-template-columns:1fr}}
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:26px}
+.card .ico{width:42px; height:42px; border-radius:11px; display:grid; place-items:center; font-size:21px; background:var(--red-dim); margin-bottom:16px}
+.card h3{font-size:18.5px; font-weight:750}
+.card p{margin-top:9px; color:var(--sub); font-size:14.8px}
+.card .cn{margin-top:12px; font-size:13.5px; color:#c8d0d8; border-left:2px solid var(--red); padding-left:10px}
+
+/* steps */
+.steps{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; counter-reset:s}
+@media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.steps{grid-template-columns:1fr}}
+.step{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:22px; position:relative}
+.step::before{counter-increment:s; content:counter(s); position:absolute; top:16px; right:18px;
+  font-size:26px; font-weight:800; color:#262c34}
+.step h3{font-size:16.5px; margin-top:6px}
+.step p{margin-top:8px; color:var(--sub); font-size:14px}
+
+/* journey */
+.journey{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+@media(max-width:860px){.journey{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.journey{grid-template-columns:1fr}}
+.ph{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:20px; border-top:3px solid var(--red)}
+.ph:nth-child(2){border-top-color:#e2725b}
+.ph:nth-child(3){border-top-color:var(--teal)}
+.ph:nth-child(4){border-top-color:#8b8ff0}
+.ph .wk{font-size:11.5px; font-weight:800; letter-spacing:.08em; color:var(--sub); text-transform:uppercase}
+.ph h3{margin-top:7px; font-size:17.5px}
+.ph p{margin-top:8px; color:var(--sub); font-size:14px}
+.ph ul{margin:12px 0 0; padding-left:17px; color:#c8d0d8; font-size:13.5px}
+.rev{margin-top:20px; text-align:center; color:var(--sub); font-size:14px;
+  background:var(--card); border:1px dashed var(--line); border-radius:var(--r); padding:16px}
+
+/* final */
+.final{text-align:center; padding:86px 0}
+.final h2{font-size:clamp(26px,4vw,40px); font-weight:800}
+.final p{margin-top:14px; color:var(--sub)}
+
+footer{border-top:1px solid var(--line); padding:30px 0; color:var(--sub); font-size:13.5px}
+footer .wrap{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center}
+footer a:hover{color:var(--tx)}
+
+/* fade-in */
+.fade{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease}
+.fade.in{opacity:1; transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .fade{opacity:1; transform:none; transition:none}
+  .btn:hover{transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top"><span class="dot"></span>Sinoky</a>
+    <nav>
+      <a href="#why">Why it works</a>
+      <a href="#how">How it works</a>
+      <a href="#journey">30-day path</a>
+      <a href="#start">Get the app</a>
+    </nav>
+    <a class="btn btn-p" href="#start" style="padding:9px 16px; font-size:14px">Start free</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">For people who actually need to speak</span>
+      <h1><span class="strike">Stop memorizing.</span><br>Start <span class="red">speaking.</span></h1>
+      <p class="sub">
+        You don't need more vocabulary lists. You need the 30 lines that get you fed, home, and through Monday small talk —
+        said out loud, with your voice, until your mouth knows them.
+      </p>
+
+      <div class="cta">
+        <a class="btn btn-p" href="#start">Start free — no account</a>
+        <a class="btn btn-g" href="#journey">See the 30-day path</a>
+      </div>
+
+      <div class="trust">
+        <span class="avatars"><i style="background:#e63946">A</i><i style="background:#7fb3b0">M</i><i style="background:#f5b544">J</i><i style="background:#8b8ff0">L</i></span>
+        <span class="stars">★★★★★</span>
+        <span>"I ordered dinner in Mandarin on day 3. Badly. But I did it." — beta tester, Berlin</span>
+      </div>
+
+      <!-- 手机拟真：拼音优先 + THEM→YOU -->
+      <div class="phone-stage">
+        <div class="phone">
+          <div class="screen">
+            <div class="s-head"><b>🍜 Ordering food</b><span>Day 4 · 1/8</span></div>
+
+            <div class="bub them">
+              <div class="py">nǐ hǎo, xiǎng chī shén me?</div>
+              <div class="hz">你好，想吃什么？</div>
+            </div>
+
+            <div class="bub you">
+              <div class="py">wǒ yào yí fèn jī ròu fàn</div>
+              <div class="hz">我要一份鸡肉饭</div>
+              <span class="tag">✓ 92 · TONES CLEAR</span>
+            </div>
+
+            <div class="bub them">
+              <div class="py">hǎo de, shāo děng yí xià</div>
+              <div class="hz">好的，稍等一下</div>
+            </div>
+
+            <div class="s-bar">
+              <span>🔥 4</span>
+              <span class="grow"><i></i></span>
+              <span>Day 4/30</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2>Built for the moment you open your mouth</h2>
+        <p>Three things we obsess over — and three things textbooks never give you.</p>
+      </div>
+
+      <div class="grid3">
+        <div class="card fade">
+          <div class="ico">💬</div>
+          <h3>Answer, don't recite</h3>
+          <p>Every line starts as a question someone really asks you. You answer it — out loud — not read it off a page.</p>
+          <p class="cn">不是背课文：先有人问你，你再开口答。</p>
+        </div>
+        <div class="card fade">
+          <div class="ico">📍</div>
+          <h3>Learn where it matters</h3>
+          <p>Scenes are the places you'll actually be: a noodle shop, a taxi, a first-day office hello. No "the cat is on the table."</p>
+          <p class="cn">学你真会用上的场景：面馆、出租车、第一天见同事。</p>
+        </div>
+        <div class="card fade">
+          <div class="ico">🎧</div>
+          <h3>Master tones by ear</h3>
+          <p>Tone Gym trains the hard part first: hearing 妈 / 麻 / 马 / 骂 apart, then saying them until they land.</p>
+          <p class="cn">声调先练耳朵：听得出，才说得出。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2>Four steps. About five minutes a day.</h2>
+        <p>No accounts to set up, no streaks to feel guilty about. Just the line you'll need next.</p>
+      </div>
+      <div class="steps">
+        <div class="step fade"><span class="ico">1️⃣</span><h3>Pick a scene</h3><p>Choose where you'll be — food, transport, work, travel.</p></div>
+        <div class="step fade"><span class="ico">2️⃣</span><h3>Hear it real</h3><p>Native audio at real speed, plus slow mode when you need it.</p></div>
+        <div class="step fade"><span class="ico">3️⃣</span><h3>Say it out loud</h3><p>Record yourself; get a score on pronunciation and tones. No judgement.</p></div>
+        <div class="step fade"><span class="ico">4️⃣</span><h3>Use it for real</h3><p>Take it outside. Log the win. The line moves to review before you forget it.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNEY -->
+  <section id="journey">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2>Your 30-day path</h2>
+        <p>Four phases, 19 learning days, and 11 review days that come back right before you'd forget.</p>
+      </div>
+      <div class="journey">
+        <div class="ph fade">
+          <div class="wk">Phase 1 · Days 1–6</div>
+          <h3>Survive</h3>
+          <p>The absolute basics that unlock everything else.</p>
+          <ul><li>Hello, thanks, sorry</li><li>Numbers &amp; prices</li><li>"I don't understand"</li></ul>
+        </div>
+        <div class="ph fade">
+          <div class="wk">Phase 2 · Days 7–12</div>
+          <h3>Eat &amp; move</h3>
+          <p>Food, taxis, directions — the daily transactions.</p>
+          <ul><li>Ordering &amp; paying</li><li>Getting somewhere</li><li>Asking "how much?"</li></ul>
+        </div>
+        <div class="ph fade">
+          <div class="wk">Phase 3 · Days 13–19</div>
+          <h3>Work &amp; people</h3>
+          <p>Small talk that makes you a colleague, not a stranger.</p>
+          <ul><li>Introducing yourself</li><li>Monday small talk</li><li>Polite refusals</li></ul>
+        </div>
+        <div class="ph fade">
+          <div class="wk">Phase 4 · Days 20–30</div>
+          <h3>Go further</h3>
+          <p>Longer exchanges, real conversations, your own sentences.</p>
+          <ul><li>Back-and-forth</li><li>Fixing misunderstandings</li><li>Sounding like you</li></ul>
+        </div>
+      </div>
+      <div class="rev fade">
+        🔁 <b>11 review days</b> are spaced in automatically — spaced repetition without you managing a thing.
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final" id="start">
+    <div class="wrap fade">
+      <h2>Your first line is five minutes away.</h2>
+      <p>Free in the browser, no sign-up. Android app if you want it in your pocket.</p>
+      <div class="cta" style="margin-top:26px">
+        <a class="btn btn-p" href="https://sinoky.pages.dev/" target="_blank" rel="noopener">Open Sinoky — it's free</a>
+        <a class="btn btn-g" href="https://sinoky.pages.dev/download" target="_blank" rel="noopener">Get the Android app</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Sinoky · Speak Chinese where it matters</span>
+    <span>
+      <a href="#why">Why</a> · <a href="#how">How</a> ·
+      <a href="#journey">Path</a> ·
+      <a href="https://sinoky.pages.dev/privacy.html" target="_blank" rel="noopener">Privacy</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+/* 滚动淡入；尊重 prefers-reduced-motion（CSS 已兜底，这里再关掉 JS 侧） */
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els = document.querySelectorAll('.fade');
+  if (reduce || !('IntersectionObserver' in window)) {
+    els.forEach(function (e) { e.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  els.forEach(function (e) { io.observe(e); });
+})();
+</script>
+</body>
+</html>

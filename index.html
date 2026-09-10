@@ -1052,7 +1052,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.3';
+var APP_VERSION = '0.14.4';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2340,6 +2340,11 @@ function markDaysDone(){
     if(S.dayDone[n] !== undefined) continue; /* 已记录（含 '' 历史未知）永不覆盖 */
     if(isDayDone(n)) S.dayDone[n] = d;
   }
+  /* v0.14.4：把「今天新完成」的天报给后端（静默，失败不影响本地） */
+  try{
+    for(var k=1;k<=DAYS.length;k++){ if(S.dayDone[k] === d) badgeReport('day_complete', { day: k }); }
+    if(Object.keys(S.dayDone||{}).length) badgeReport('checkin', {});
+  }catch(e){}
 }
 /* '2026-08-30' -> '8/30'；''（历史未知）返回空串，UI 不显示假日期 */
 function dayDoneLabel(n){
@@ -2718,6 +2723,7 @@ function go(v){
     S.feat = S.feat || {}; S.feat[v] = (S.feat[v]||0)+1; saveStateLocal();   /* v0.3.40：埋点计数只写本地，随真实进度或会话结束 flush 上云（recordStat 是 max 幂等，批量上报不丢数据） */
   }
   if(v==='prog'){ renderProgress(); var pb=$('prog-badges'); if(pb && typeof badgeGalleryHtml==='function') pb.innerHTML = badgeGalleryHtml();
+    try{ badgeSync(); }catch(e){} /* v0.14.4：拉服务端勋章（失败静默降级到本地） */
     var pw=$('prog-weak'); if(pw && typeof weakLinesHtml==='function') pw.innerHTML = weakLinesHtml();
     try{ nonoWatchBadges(); }catch(e){} }
   if(v==='scenes-read'){ renderScenesRead(); }
@@ -2794,10 +2800,18 @@ function badgeGalleryHtml(){
     { id:'survivor',    t:'Survivor · Day 6',  on: isDayDone(6) },
     { id:'tone-master', t:'Tone master',       on: (S.tone && S.tone.total >= 20 && S.tone.right / S.tone.total >= 0.9) },
     { id:'graduate',    t:'Graduate · Day 30', on: isDayDone(30) },
-    { id:'centurion',   t:'100-day streak',    on: (S.streak || 0) >= 100 }
+    { id:'centurion',   t:'100-day streak',    on: (S.streak || 0) >= 100 },
+    /* v0.14.4：服务端解锁的高级勋章（本地无对应判定，依赖 badgeSync 点亮） */
+    { id:'reversal-king', t:'Reversal king',   on: false },
+    { id:'real-world',    t:'In the wild',     on: false },
+    { id:'polyglot-path', t:'All paths',       on: false }
   ];
+  /* v0.14.4：并上服务端已解锁（badgeSync 写入），本地没算出来也算数 */
+  var _on = {};
+  try{ _on = JSON.parse(localStorage.getItem('sinoky_badges_on') || '{}') || {}; }catch(e){}
+  defs.forEach(function(d){ if(_on[d.id]) d.on = true; });
   var cards = defs.map(function(d){
-    return '<div class="badge-cell'+(d.on?' on':'')+'" data-badge="'+d.id+'"><img src="assets/badges/'+d.id+'_256.webp" alt="'+d.t+'" loading="lazy" onerror="this.parentNode.style.visibility=\'hidden\'"><span>'+d.t+'</span></div>';
+    return '<div class="badge-cell'+(d.on?' on':'')+'" data-badge="'+d.id+'"><img src="assets/badges/'+d.id+'_256.webp" alt="'+d.t+'" loading="lazy" onerror="this.style.display=\'none\'"><span>'+d.t+'</span></div>';
   }).join('');
   return '<div class="card badge-card"><div class="top"><h2>🏅 Your badges</h2><span class="badge">collect them all</span></div><div class="badge-row">'+cards+'</div></div>';
 }
@@ -3820,6 +3834,45 @@ function nonoContextGreet(manual) {
   }
 }
 
+/* ---- v0.14.4 后端激励（可选增强）：后端不可用时一律静默降级，绝不影响开口 ----
+   同源部署时 BADGE_API 为空串 → 直接打 /api/*（未接后端时返回 404，自动降级到本地）。
+   本地开发：把 BADGE_API 指到 sinoky_backend（默认 http://127.0.0.1:8787）。 */
+var BADGE_API = (location.protocol === 'http:' || location.hostname === 'localhost') ? 'http://127.0.0.1:8787' : '';
+/* 后端勋章 id -> 前端勋章 id（前端沿用早期命名与图片资源，避免改图） */
+var BADGE_ID_MAP = {
+  first_word:'first-speak', three_peat:'streak3', week_warrior:'streak7',
+  centurion:'centurion', tone_master:'tone-master', survivor:'survivor', graduate:'graduate',
+  reversal_king:'reversal-king', real_world:'real-world', polyglot_path:'polyglot-path'
+};
+/* 上报事件：fire-and-forget，失败静默（后端挂了也要能继续练） */
+function badgeReport(type, payload){
+  try{
+    if(!UID) return;
+    var body = JSON.stringify(Object.assign({ type: type }, payload || {}));
+    var p = fetch((BADGE_API||'') + '/api/users/' + encodeURIComponent(UID) + '/events', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: body, keepalive:true
+    });
+    if(p && p.then) p.then(function(){}, function(){});
+  }catch(e){}
+}
+/* 拉取服务端已解锁勋章，合并进本地（并集），再刷新勋章墙 */
+function badgeSync(){
+  try{
+    if(!UID) return;
+    var p = fetch((BADGE_API||'') + '/api/users/' + encodeURIComponent(UID) + '/badges', { cache:'no-store' });
+    if(!p || !p.then) return;
+    p.then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+      if(!j || !j.badges || !j.badges.length) return;
+      var on = {};
+      try{ on = JSON.parse(localStorage.getItem('sinoky_badges_on') || '{}') || {}; }catch(e){}
+      j.badges.forEach(function(b){ on[BADGE_ID_MAP[b.id] || b.id] = true; });
+      try{ localStorage.setItem('sinoky_badges_on', JSON.stringify(on)); }catch(e){}
+      var pb = document.getElementById('prog-badges');
+      if(pb && typeof badgeGalleryHtml === 'function') pb.innerHTML = badgeGalleryHtml();
+    }).then(function(){}, function(){});
+  }catch(e){}
+}
+
 /* ---- 包装监听（不改原函数体）：评分完成 / 失败 → 鼓励或安慰 ---- */
 (function () {
   if (typeof window.renderScore !== 'function') return;
@@ -3830,6 +3883,8 @@ function nonoContextGreet(manual) {
       var sc = (d && (d.overall != null ? d.overall : d.score)) || 0;
       if (sc >= 70) nonoShow("Nice! <b>很好</b> — that sounded natural.", { pose: 'cheer', id: 'cheer' + sc, once: false });
       else if (sc > 0) nonoShow("Close! Try slower — <b>慢慢来，再说一次。</b>", { pose: 'sorry', id: 'low' + sc, once: false });
+      /* v0.14.4：开口一次即上报（激励后端，静默） */
+      try{ badgeReport('complete_line', { score: sc }); }catch(e){}
     } catch (e) {}
     return out;
   };

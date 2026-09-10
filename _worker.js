@@ -26,6 +26,7 @@ async function ensurePinyin() {
    大脑：pinyin-pro 把两端汉字转拼音串 → 解析声母/韵母/调 → 加权比对。
    关键：比的是"拼音符号串"，只用 pinyin-pro 一次（汉字→拼音数组），
    绝不再把拼音当汉字二次转写。 */
+import { handleBadgeApi } from './badge-backend.mjs';
 const W = { initial: 0.2, final: 0.3, tone: 0.5 };
 
 // 拼音符号 → 数字调值（à→4 等；无声调符号→0 轻声）
@@ -371,6 +372,10 @@ export default {
     // v0.3.23 安全加固：所有 /api/* 写/计费端点先过 guard（Origin + 速率限制）
     const blocked = await guardApi(req, url, json, env);
     if (blocked) return blocked;
+
+    // v0.14.4：勋章/进度后端（同源 /api/badges /api/users/*）
+    const badgeRes = await handleBadgeApi(req, url, env, json);
+    if (badgeRes) return badgeRes;
 
     /* /api/tts：中文语音合成，服务端多源串行兜底。
        为什么必须服务端多源：
