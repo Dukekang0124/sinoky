@@ -6,8 +6,8 @@
     "versionCode": 1400,
     "version": "0.14.0",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.0-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "2fe51977fe69b8ba467587895215391b",
+    "size": 23510319
   },
   "noteEn": [
     "v0.14.0: The app now speaks your language — full Chinese and core Spanish (beta) interface translations. First launch auto-detects your system language; switch anytime in Settings. All menus, dialogs, download progress and messages are localized, and new screens follow your language automatically. Also today: fixed the in-app update failure (native toast crash) and added the auto update dialog."
