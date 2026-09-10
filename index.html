@@ -1052,7 +1052,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.2';
+var APP_VERSION = '0.14.3';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3313,7 +3313,7 @@ function renderReview(){
     var k = revKey(it.scene, it.idx), mode = it.mode;
     var label = mode === 'speed_run' ? '\u{26A1} Speed run · 80%' : (mode === 'role_reversal' ? '\u{1F504} Role reversal · 70%' : '\u{1F500} Random recall · 60%');
     h += '<div class="rv-item">'+
-      '<div class="rv-meta">'+label+' · next in '+(it.st.iv||1)+'d</div>'+
+      '<div class="rv-meta">'+label+T(' · next in {n}d').replace('{n}',(it.st.iv||1))+'</div>'+
       '<button class="rv-line" onclick="openScene(\''+it.scene.id+'\','+it.idx+')">'+
         '<span class="rv-en">'+esc(it.p.en)+'</span>'+
         '<span class="rv-hz">'+esc(it.p.hz)+'</span></button>'+
@@ -3391,9 +3391,9 @@ function applyI18n(root){
       }
     });
     _lastAppliedLang = l;
-    root.querySelectorAll('[placeholder],[aria-label]').forEach(function(el){
+    root.querySelectorAll('[placeholder],[aria-label],[title]').forEach(function(el){
       if (el.closest && el.closest('[data-noi18n]')) return;
-      ['placeholder', 'aria-label'].forEach(function(at){
+      ['placeholder', 'aria-label', 'title'].forEach(function(at){
         var v = el.getAttribute(at);
         if (!v) return;
         var nv = v.replace(/\s+/g, ' ').trim();   /* v0.14.2：属性值同样归一匹配 */
@@ -3584,7 +3584,7 @@ function showApkUpdateBar(apk){
   if(st.apkDismissed === apk.versionCode) return;
   var bar = document.getElementById('updatebar');
   if(!bar) return;
-  bar.innerHTML = 'New app v'+(apk.version||apk.versionCode)+' — tap to update';
+  bar.innerHTML = T('New app v{v} — tap to update').replace('{v}',(apk.version||apk.versionCode));
   var x = document.createElement('span');
   x.textContent = '×';
   x.setAttribute('style','position:absolute;top:0;right:0;line-height:1;padding:10px 14px;cursor:pointer;font-size:1.1rem;');
@@ -3596,7 +3596,7 @@ function showApkUpdateBar(apk){
   bar.appendChild(x);
   bar.style.display = 'block';
   bar.onclick = function(){ startApkUpdate(apk); };
-  toast('⬆️ New app v'+(apk.version||apk.versionCode)+' available — tap the banner to update');
+  toast(T('⬆️ New app v{v} available — tap the banner to update').replace('{v}',(apk.version||apk.versionCode)));
 }
 /* v0.12.0：更新进度浮层——百分比进度条 + 弱网停滞琥珀提示 + 取消/重试。
    老插件（无进度事件）自动退化：无事件时 watchdog 不启用，resolve 即完成。 */
@@ -3688,7 +3688,7 @@ async function startApkUpdate(apk){
         txt.textContent = T('Update cancelled');
         txt.style.color = '';
       } else {
-        txt.textContent = '⚠️ Update failed: ' + m.slice(0, 120);
+        txt.textContent = T('⚠️ Update failed: ') + m.slice(0, 120);
         txt.style.color = '';
         retryBtn.style.display = '';
         cancelBtn.style.display = 'none';
@@ -4100,9 +4100,9 @@ function nonoToneTip(ok, picked, correct, hz){
   if(NONO.closed) return;
   var tip = TONE_TIP[correct] || '';
   var msg = ok
-    ? ('You heard that right — tone ' + correct + '. <b>听得很准！</b> ' + tip)
-    : ('You picked tone ' + picked + ', but it was tone ' + correct + '. ' + tip);
-  var acts = [{ t: 'Hear tone ' + correct, fn: 'nonoHearTone(' + correct + ')' }];
+    ? (T('You heard that right — tone {n}. ').replace('{n}',correct) + '<b>听得很准！</b> ' + tip)
+    : (T('You picked tone {p}, but it was tone {c}. ').replace('{p}',picked).replace('{c}',correct) + tip);
+  var acts = [{ t: T('Hear tone {n}').replace('{n}',correct), fn: 'nonoHearTone(' + correct + ')' }];
   if(!ok) acts.push({ t: 'OK', fn: 'nonoMin()', ghost: true });
   nonoShow(msg, { pose: ok ? 'cheer' : 'sorry', actions: acts, priority: 'result' });
 }
@@ -4230,9 +4230,9 @@ function renderHome(){
   var lastDone = 0, lastDate = '';
   for (var dn = 1; dn <= DAYS.length; dn++) { var dv = (S.dayDone||{})[dn]; if (dv) { lastDone = dn; lastDate = dayDoneLabel(dn); } }
   d1 += '</div><div class="day1-cta" style="display:'+(cdAll?'block':'none')+'">'+
-    (cd>=DAYS.length ? '🎉 All '+DAYS.length+' days done — you can survive in China.' : '🎉 Day '+cd+' complete! Day '+(cd+1)+' unlocks next time you open Sinoky.')+
-    '</div><div class="day-prog">'+doneDays+' / '+DAYS.length+' days finished</div>'+
-    (lastDate ? '<div class="day-finish-date" style="margin-top:6px;font-size:12.5px;font-weight:600;color:#0a8f6e">✅ Day '+lastDone+' finished on '+lastDate+'</div>' : '')+
+    (cd>=DAYS.length ? T('🎉 All {n} days done — you can survive in China.').replace('{n}',DAYS.length) : T('🎉 Day {a} complete! Day {b} unlocks next time you open Sinoky.').replace('{a}',cd).replace('{b}',(cd+1)))+
+    '</div><div class="day-prog">'+T('{a} / {n} days finished').replace('{a}',doneDays).replace('{n}',DAYS.length)+'</div>'+
+    (lastDate ? '<div class="day-finish-date" style="margin-top:6px;font-size:12.5px;font-weight:600;color:#0a8f6e">'+T('✅ Day {d} finished on {date}').replace('{d}',lastDone).replace('{date}',lastDate)+'</div>' : '')+
     '<button class="daylink" onclick="go(\'days\')">See all '+DAYS.length+' days →</button></div>';
 
   /* v0.5.1：场景默认只展开 4 张，其余折叠（能力完整保留，一键展开） */
@@ -4248,7 +4248,7 @@ function renderHome(){
       '</div><p class="desc">'+sc.desc+'</p>'+
       '<div class="pbar"><i style="width:'+pct+'%"></i></div>'+
       '<button class="btn '+(pct===100?'ghost':'primary')+'" onclick="openScene(\''+sc.id+'\')">'+
-      (pct===100?'Practice again':'Start · '+doneN+'/'+sc.phrases.length)+'</button></div>';
+      (pct===100?T('Practice again'):T('Start · {a}/{n}').replace('{a}',doneN).replace('{n}',sc.phrases.length))+'</button></div>';
     if(scN < 4){ html += card; } else { moreHtml += card; }
     scN++;
   });
@@ -4406,7 +4406,7 @@ function realHtml(i, p){
     '</div>';
   }).join('');
   return '<div class="p-real">' +
-    '<button class="real-toggle" onclick="toggleReal(' + i + ')">💬 Real speech · ' + p.real.length + ' ways</button>' +
+    '<button class="real-toggle" onclick="toggleReal(' + i + ')">'+T('💬 Real speech · {n} ways').replace('{n}',p.real.length)+'</button>' +
     '<div class="real-list" id="real-' + i + '" style="display:none">' + items + '</div>' +
   '</div>';
 }
@@ -4575,8 +4575,8 @@ async function scorePhrase(i){
     console.log('[REC] MediaRecorder error', e && e.error && e.error.message);
     btn.classList.remove('listening'); btn.textContent='🎤 Score';
     box.style.display='block';
-    box.innerHTML='<div class="score-err">Recording error: ' +
-      ((e && e.error && e.error.name) || 'unknown') + '. Try again in a different browser.</div>';
+    box.innerHTML='<div class="score-err">'+T('Recording error: {n}. Try again in a different browser.').replace('{n}',
+      ((e && e.error && e.error.name) || 'unknown'))+'</div>';
   };
   rec.onstop = async function(){
     if(scRec === rec){ scRec = null; scRecIdx = -1; }
@@ -4604,7 +4604,7 @@ async function scorePhrase(i){
       /* 透出真实原因，避免再让用户看到没信息量的「Did not catch that」 */
       var reason = (result && result.err) || 'whisper returned no text';
       console.log('[REC] ASR failed:', reason);
-      box.innerHTML='<div class="score-err">Did not catch that. (' + reason + ')<br><small>Tap Score and hold the phone closer to your mouth, then tap Stop when you finish.</small></div>';
+      box.innerHTML='<div class="score-err">'+T('Did not catch that. ({r})').replace('{r}',reason)+'<br><small>'+T('Tap Score and hold the phone closer to your mouth, then tap Stop when you finish.')+'</small></div>';
       return;
     }
     await sendScore(p, result.text, i);
@@ -4616,7 +4616,7 @@ async function scorePhrase(i){
   try{ rec.start(); }
   catch(e){
     btn.classList.remove('listening'); btn.textContent='🎤 Score';
-    box.innerHTML='<div class="score-err">Could not start recording: '+e.message+'</div>';
+    box.innerHTML='<div class="score-err">'+T('Could not start recording: ')+e.message+'</div>';
   }
 }
 async function sendScore(p, transcript, i){
@@ -4635,12 +4635,12 @@ async function sendScore(p, transcript, i){
     if(data.error){ box.innerHTML='<div class="score-err">'+esc(data.error)+'</div>'; return; }
     box.innerHTML = renderScore(data);
     var badge = document.querySelector('#v-scene .badge.teal');
-    if(badge) badge.textContent = 'SCORED · '+data.overall;
+    if(badge) badge.textContent = T('SCORED · {s}').replace('{s}',data.overall);
     var ns = document.querySelector('#v-scene .noscore');
     if(ns) ns.style.display='none';
   }catch(err){
     console.log('[SCORE] error', err.message);
-    box.innerHTML='<div class="score-err">Scoring failed — '+humanizeApiErr(err, 0)+'<br><small>Tap Score and hold the phone closer to your mouth, then tap Stop when you finish.</small></div>';
+    box.innerHTML='<div class="score-err">'+T('Scoring failed — ')+humanizeApiErr(err, 0)+'<br><small>'+T('Tap Score and hold the phone closer to your mouth, then tap Stop when you finish.')+'</small></div>';
   }
 }
 function renderScore(d){
@@ -4683,7 +4683,7 @@ function finishScene(){
   if(S.days.indexOf(d)===-1){ S.days.push(d); }
   markDaysDone();          /* v0.3.47：记下本次完成的 Day（幂等，只记第一次） */
   saveState();
-  toast('🔥 '+S.streak+'-day streak! Speak it out there.');
+  toast(T('🔥 {s}-day streak! Speak it out there.').replace('{s}',S.streak));
   renderHome(); go('home');
 }
 
@@ -4812,13 +4812,13 @@ function renderProgress(){
     var dd = new Date(Date.now()-i*864e5);
     var hit = S.days.indexOf(d)>-1;
     var dn = []; for(var q=1;q<=DAYS.length;q++){ if((S.dayDone||{})[q]===d) dn.push(q); }
-    var tip = hit ? (dn.length ? d+' \u00b7 Day '+dn.join(', ')+' done' : d+' \u00b7 practiced') : d;
+    var tip = hit ? (dn.length ? T('{d} · Day {n} done').replace('{d}',d).replace('{n}',dn.join(', ')) : T('{d} · practiced').replace('{d}',d)) : d;
     html += '<div class="day'+(hit?' hit':'')+'" title="'+tip+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</div>';
   }
   $('cal').innerHTML = html;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
-  $('prog-detail').textContent = 'Streak: '+S.streak+' day(s) · Phrases said aloud: '+said+
-    ' · Tone Gym: '+S.tone.right+'/'+S.tone.total+' correct · Device ID: '+UID.slice(0,8)+'…';
+  $('prog-detail').textContent = T('Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}').replace('{a}',S.streak).replace('{b}',said)
+    .replace('{c}',S.tone.right).replace('{d}',S.tone.total).replace('{e}',UID.slice(0,8)+'…');
 }
 
 /* ---------- flashcards (v0.2.0): HSK1 deck, zero runtime deps ----------
@@ -4846,13 +4846,13 @@ function loadCards(){
 function renderCard(){
   if(!CARDS.length) return;
   var c = CARDS[fcIdx];
-  $('fc-prog').textContent = 'Card ' + (fcIdx + 1) + ' / ' + CARDS.length;
-  $('fc-saved').textContent = '★ ' + NW.length + ' saved';
+  $('fc-prog').textContent = T('Card {i} / {n}').replace('{i}',(fcIdx + 1)).replace('{n}',CARDS.length);
+  $('fc-saved').textContent = T('★ {n} saved').replace('{n}',NW.length);
   var starred = NW.indexOf(c.hanzi) > -1;
   $('fc-wrap').innerHTML =
     '<div class="fc-hz">' + esc(c.hanzi) + '</div>' +
     '<div class="fc-py' + (fcRevealed ? '' : ' hidden') + '">' + esc(c.pinyin) + '</div>' +
-    '<div class="fc-meta">' + esc(c.pos||'') + (c.bushou ? ' · radical ' + esc(c.bushou) : '') + ' · tone ' + esc(c.tone) + '</div>' +
+    '<div class="fc-meta">' + esc(c.pos||'') + (c.bushou ? T(' · radical ') + esc(c.bushou) : '') + T(' · tone ') + esc(c.tone) + '</div>' +
     '<div class="fc-back' + (fcRevealed ? ' on' : '') + '">' +
       '<div class="fc-mean">' + esc(c.meaning) + '</div>' +
       (c.words && c.words.length ? '<div class="fc-row"><b>Appears in:</b> ' + esc(c.words.join(' · ')) + '</div>' : '') +
@@ -5002,7 +5002,7 @@ function loadSentences(){
 function renderSentStats(){
   if(!SENT_STATS.attempts){ $('sent-stats').textContent = 'Pick a mode and complete a prompt to start tracking.'; return; }
   var pct = Math.round(100 * SENT_STATS.passes / SENT_STATS.attempts);
-  $('sent-stats').textContent = 'Attempts: ' + SENT_STATS.attempts + ' · Passed: ' + SENT_STATS.passes + ' · Accuracy: ' + pct + '%';
+  $('sent-stats').textContent = T('Attempts: {a} · Passed: {p} · Accuracy: {pc}%').replace('{a}',SENT_STATS.attempts).replace('{p}',SENT_STATS.passes).replace('{pc}',pct);
 }
 function sentMode(m){
   SENT_MODE = m; SENT_IDX = 0;
@@ -5092,15 +5092,15 @@ function sentCheck(){
     var ratio = total ? hits / total : 0;
     passed = ratio >= 0.8;
     var missing = (t.keywords || []).filter(function(k){ return user.indexOf(k) < 0; });
-    msg = passed ? ('Great! You used ' + hits + '/' + total + ' keywords.')
-                  : ('Missing keywords: ' + missing.join(' · '));
+    msg = passed ? (T('Great! You used {h}/{t} keywords.').replace('{h}',hits).replace('{t}',total))
+                  : (T('Missing keywords: ') + missing.join(' · '));
   } else if(SENT_MODE === 'keywords'){
     var must = t.mustInclude || [];
     var ok = must.every(function(k){ return user.indexOf(k) >= 0; });
     passed = ok;
     var missing = must.filter(function(k){ return user.indexOf(k) < 0; });
     msg = passed ? 'Great! All required words are present.'
-                  : ('Missing required words: ' + missing.join(' · '));
+                  : (T('Missing required words: ') + missing.join(' · '));
   }
   var box = $('sent-result');
   box.style.display = 'block';
@@ -5124,7 +5124,7 @@ function sentPick(i, btn){
   var box = $('sent-result');
   box.style.display = 'block';
   box.className = 'sent-result ' + (correct ? 'ok' : 'bad');
-  box.innerHTML = (correct ? '✅ ' : '❌ ') + esc('Full: ' + t.full) + '<div class="sent-en">' + esc(t.en) + '</div>';
+  box.innerHTML = (correct ? '✅ ' : '❌ ') + esc(T('Full: ') + t.full) + '<div class="sent-en">' + esc(t.en) + '</div>';
   recordSent(correct);
 }
 function sentWord(btn){
@@ -5137,7 +5137,7 @@ function sentReveal(){
   if(!SENT_TEMPLATES) return;
   var list = SENT_TEMPLATES[SENT_MODE];
   var t = list[SENT_IDX];
-  if(SENT_MODE === 'connectors'){ toast('Answer: ' + t.answer); return; }
+  if(SENT_MODE === 'connectors'){ toast(T('Answer: ') + t.answer); return; }
   var box = $('sent-result');
   box.style.display = 'block';
   box.className = 'sent-result bad';
@@ -5188,7 +5188,7 @@ function rdRead(){
     rdBusy = false;
     var items;
     try { items = mod.segment(txt); }
-    catch(e){ hint.textContent = 'Segmentation failed: ' + e.message; return; }
+    catch(e){ hint.textContent = T('Segmentation failed: ') + e.message; return; }
     var html = '';
     items.forEach(function(seg, i){
       var w = seg.origin || '';
@@ -5203,7 +5203,7 @@ function rdRead(){
     box.innerHTML = html;
     box.style.display = 'block';
     box.classList.toggle('nopy', !rdShowPy);
-    hint.textContent = items.length + ' segments. Tap any Chinese word for details.';
+    hint.textContent = T('{n} segments. Tap any Chinese word for details.').replace('{n}',items.length);
     window.__rdItems = items;
     }).catch(function(e){
     rdBusy = false;
@@ -5328,9 +5328,9 @@ function sendFB(btn){
         $('fb-text').value = '';
         closeFB();
         toast('Thanks! We read every message 🙏');
-      } else { toast('Send failed — ' + humanizeApiErr(null, 0) + (j && j.error ? '（' + j.error + '）' : '')); }
+      } else { toast(T('Send failed — ') + humanizeApiErr(null, 0) + (j && j.error ? '（' + j.error + '）' : '')); }
     })
-    .catch(function(e){ toast('Send failed — ' + humanizeApiErr(e, e && e.__status)); })
+    .catch(function(e){ toast(T('Send failed — ') + humanizeApiErr(e, e && e.__status)); })
     .then(function(){ if(btn){ btn.disabled = false; btn.textContent = 'Send feedback'; } });
 }
 /* 反馈按钮可拖拽（v0.3.10 → v0.3.11 重写点击判定）
@@ -5472,7 +5472,7 @@ document.querySelectorAll('#fb-cats .fb-cat').forEach(function(el){
 function openShare(){
   var said = 0; for(var k in (S.phrases||{})) said += (S.phrases[k]||[]).length;
   var st = $('share-stats');
-  if(st) st.innerHTML = '🔥 ' + (S.streak||0) + ' day streak · 🗣️ ' + said + ' phrases said';
+  if(st) st.innerHTML = T('🔥 {a} day streak · 🗣️ {b} phrases said').replace('{a}',(S.streak||0)).replace('{b}',said);
   var m = $('share-mask'), p = $('share-panel');
   if(m) m.style.display='block'; if(p) p.style.display='block';
 }
@@ -5578,7 +5578,7 @@ fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.js
     if(stw.webDismissed === j.version) return;
     var bar = $('updatebar');
     if(bar){
-      bar.innerHTML = 'New version ' + j.version + ' — tap to refresh';
+      bar.innerHTML = T('New version {v} — tap to refresh').replace('{v}',j.version);
       var xw = document.createElement('span');
       xw.textContent = '×';
       xw.setAttribute('style','position:absolute;top:0;right:0;line-height:1;padding:10px 14px;cursor:pointer;font-size:1.1rem;');

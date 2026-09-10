@@ -2,6 +2,7 @@ node_modules/
 .wrangler/
 .DS_Store
 *.log
+_audit_i18n.txt
 .dev.vars
 .env
 

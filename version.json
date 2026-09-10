@@ -1,15 +1,15 @@
 {
-  "version": "0.14.2",
+  "version": "0.14.3",
   "updated": "2026-09-10",
-  "note": "v0.14.2：i18n 大修——修复换行节点漏翻机制、更新提示等 6 处拼接文案可翻译；语言选择改为下拉面板（新增语言不再拉长列表）；下载页支持 6 语。",
+  "note": "v0.14.3：i18n 补齐第二批——录音/评分、进度统计、字卡、声调、造句、词典、反馈等 69 条动态文案可翻译（六语）；占位符模板化 38 处拼接句；属性翻译扩展支持 title；下载页兜底链接随版本同步。",
   "apk": {
-    "versionCode": 1402,
-    "version": "0.14.2",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.2-release.apk",
-    "md5": "4cd0bbbab64f37a839d49139b3330be4",
-    "size": 23543379
+    "versionCode": 1403,
+    "version": "0.14.3",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.3-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.14.2: i18n overhaul — fixed whitespace-node matching, 6 concatenated strings now translatable; language picker redesigned as a dropdown (ready for more languages); download page now speaks 6 languages."
+    "v0.14.3: i18n round two — 69 more dynamic strings (recording, scoring, progress, cards, tones, sentence builder, dictionary, feedback) now translatable in 6 languages; 38 concatenated strings converted to placeholder templates; title attributes are now translated too; download page fallback link follows the release version."
   ]
 }
