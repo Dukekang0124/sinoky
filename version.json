@@ -6,8 +6,8 @@
     "versionCode": 1408,
     "version": "0.14.8",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.8-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "2d8ced5103dd9e1460b1f3e6353e54b7",
+    "size": 23885207
   },
   "noteEn": [
     "v0.14.8: Nono chat box fully redesigned — 'Bamboo & Lattice' Chinese visual theme (ink-teal base, cinnabar/celadon bubbles, gold lattice texture). Chat panel no longer fills the screen (independent scrolling with height cap); hold-to-speak pulses red while recording; messages auto-scroll; fixed an issue where voice messages in chat could not be sent."
