@@ -398,6 +398,9 @@ async function chatGLM(userText, hist, env) {
     if (h && h.t) messages.push({ role: h.r === 'assistant' ? 'assistant' : 'user', content: h.t });
   });
   messages.push({ role: 'user', content: userText });
+
+  // L1：GLM-4-Flash（智谱，环境变量 GLM_KEY）
+  let glmErr = '';
   try {
     const r = await fetch(GLM_CHAT_URL, {
       method: 'POST',
@@ -411,14 +414,29 @@ async function chatGLM(userText, hist, env) {
       const d = await r.json().catch(function () { return null; });
       const t = (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content || '').trim();
       if (t) return { text: t, model: 'glm-4-flash', degraded: false };
+      glmErr = 'glm-empty-body';
+    } else {
+      glmErr = 'glm-http' + r.status;
     }
-  } catch (e) { /* GLM 失败 → 试 Workers AI */ }
+  } catch (e) { glmErr = 'glm-exc:' + String((e && e.message) || e); }
+
+  // L2：Workers AI Qwen2.5-7B（env.AI 绑定，零密钥）——兼容多种返回结构
+  let aiErr = '';
   try {
     const r = await env.AI.run('@cf/qwen/qwen2.5-7b-instruct', { messages: messages, max_tokens: 200 });
-    const t = (r && (r.response || r.text || '') || '').trim();
+    const t = (
+      (r && r.response) ||
+      (r && r.result && r.result.response) ||
+      (r && r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) ||
+      (r && r.text) || ''
+    ).trim();
     if (t) return { text: t, model: 'workers-ai', degraded: false };
-  } catch (e) { /* Workers AI 失败 → 降级文案 */ }
-  return { text: '诺诺有点累了，待会再聊 😴', model: 'degraded', degraded: true };
+    aiErr = 'ai-empty:' + JSON.stringify(r).slice(0, 120);
+  } catch (e) { aiErr = 'ai-exc:' + String((e && e.message) || e); }
+
+  // L3：两层都挂 → 温柔降级 + 记录原因（看板 model 字段可观测）
+  console.log('[CHAT] degraded -> glm:' + glmErr + ' | ai:' + aiErr);
+  return { text: '诺诺有点累了，待会再聊 😴', model: 'degraded:' + glmErr + '|' + aiErr, degraded: true };
 }
 
 // 聊天埋点（寄生写入 KV FEEDBACK，key 前缀 chat: 已被 feedback 读端点跳过，不污染看板）
