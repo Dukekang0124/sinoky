@@ -6,8 +6,8 @@
     "versionCode": 1407,
     "version": "0.14.7",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.7-release.apk",
-    "md5": "00000000000000000000000000000000",
-    "size": 0
+    "md5": "777fb315c365306a4eccc15186c4e0d9",
+    "size": 23885207
   },
   "noteEn": [
     "v0.14.7: Nono free chat — tap Nono and choose '💬 Chat' to talk freely in Chinese. GLM-4-Flash primary (best Chinese, fastest first token) with Workers AI Qwen fallback; conversation state stays on-device and resumes across sessions; voice-first (hold to speak) with text-input accessibility fallback; two-model degradation plus a gentle message that never blocks practice."
