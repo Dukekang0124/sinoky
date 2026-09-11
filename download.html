@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Download Sinoky — Android App</title>
+<title>下载 Sinoky — Android / iOS</title>
 <style>
   :root{ --bg:#0d0d10; --card:#17171c; --text:#f2f2f2; --sec:#9a9aa3; --accent:#e63946; --border:#2a2a31; }
   *{ box-sizing:border-box; margin:0; padding:0; }
   body{ background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
         min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px 16px calc(24px + env(safe-area-inset-bottom)); }
-  .box{ max-width:420px; width:100%; }
+  .box{ max-width:440px; width:100%; }
   .logo{ font-size:2rem; font-weight:800; letter-spacing:.5px; }
   .logo span{ color:var(--accent); }
   .tag{ color:var(--sec); font-size:.9rem; margin:6px 0 22px; line-height:1.5; }
@@ -17,185 +17,116 @@
   .ver{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
   .ver b{ font-size:1.15rem; }
   .ver small{ color:var(--sec); }
-  .note{ color:var(--sec); font-size:.82rem; line-height:1.55; margin-top:8px; max-height:150px; overflow-y:auto; }
+  .note{ color:var(--sec); font-size:.82rem; line-height:1.55; margin-top:8px; }
   .dl{ display:block; text-align:center; background:var(--accent); color:#fff; text-decoration:none; font-weight:700;
-       font-size:1.05rem; padding:16px; border-radius:12px; margin:4px 0 18px; }
+       font-size:1.05rem; padding:16px; border-radius:12px; margin:4px 0 14px; }
   .dl:active{ filter:brightness(.9); }
   .dl small{ display:block; font-weight:400; font-size:.75rem; opacity:.85; margin-top:2px; }
-  ol{ margin:10px 0 0 18px; color:var(--sec); font-size:.85rem; line-height:1.8; }
+  .steps{ margin:10px 0 0; padding-left:18px; color:var(--sec); font-size:.85rem; line-height:1.85; }
+  .steps b{ color:var(--text); }
   .warn{ background:rgba(230,57,70,.1); border:1px solid rgba(230,57,70,.35); color:#ffb3b9; border-radius:10px;
-         padding:10px 12px; font-size:.8rem; line-height:1.5; margin-top:12px; }
-  .foot{ color:var(--sec); font-size:.72rem; text-align:center; margin-top:18px; line-height:1.6; }
+         padding:10px 12px; font-size:.8rem; line-height:1.6; margin-top:12px; }
   .wechat{ display:none; background:rgba(217,136,0,.12); border:1px solid rgba(217,136,0,.4); color:#f0c060;
-           border-radius:10px; padding:10px 12px; font-size:.8rem; line-height:1.5; margin-bottom:16px; }
+           border-radius:10px; padding:10px 12px; font-size:.82rem; line-height:1.6; margin-bottom:16px; }
+  .desktop-url{ display:flex; gap:8px; margin-top:10px; }
+  .desktop-url input{ flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:#0d0d10; color:#fff; font-size:.85rem; }
+  .desktop-url button{ padding:0 14px; border:none; border-radius:10px; background:var(--accent); color:#fff; font-weight:700; }
+  .foot{ color:var(--sec); font-size:.72rem; text-align:center; margin-top:18px; line-height:1.6; }
+  .pill{ display:inline-block; font-size:.7rem; padding:2px 8px; border-radius:999px; background:rgba(127,127,127,.18); color:var(--sec); margin-bottom:8px; }
 </style>
 </head>
 <body>
 <div class="box">
   <div class="logo">Sinoky<span>.</span></div>
-  <div class="tag" data-i18n="tag">Speak Chinese where it matters. Get the Android app for offline practice &amp; one-tap updates.</div>
+  <div class="tag" id="tag">开口说真正用得上的中文。选你的设备安装方式。</div>
 
-  <div class="wechat" id="wechatTip" data-i18n="wechatTip">
-    ⚠️ You are in an in-app browser (WeChat?). Tap ⋯ (top-right) → <b>Open in system browser</b>, then tap Download.
+  <div class="wechat" id="wechatTip">
+    ⚠️ 你正在微信 / QQ 等内置浏览器里。点右上角 ⋯ → <b>在浏览器中打开</b>，再继续下面的步骤。
   </div>
 
-  <div class="card">
-    <div class="ver"><b id="v">Sinoky Android</b><small id="sz"></small></div>
-    <div class="note" id="note" data-i18n="loading">Loading latest version…</div>
+  <div class="card" id="mainCard">
+    <div class="ver"><b id="v">Sinoky</b><small id="sz"></small></div>
+    <div class="note" id="note">正在获取最新版本…</div>
   </div>
 
-  <a class="dl" id="dl" href="#" download><span data-i18n="dl">⬇️ Download latest APK</span><small id="dlsz" data-i18n="dlsz">tap to start download</small></a>
-
-  <div class="card">
-    <b style="font-size:.9rem" data-i18n="install">Install in 3 steps</b>
-    <ol>
-      <li data-i18n="li1">Tap <b>Download</b> above and wait for the file.</li>
-      <li data-i18n="li2">Open the downloaded file. If asked, allow <b>Install unknown apps</b> for your browser.</li>
-      <li data-i18n="li3">Tap <b>Install</b>. Your learning data is kept.</li>
-    </ol>
-    <div class="warn" data-i18n="warn">After this one-time install, the app updates itself: new versions pop up automatically inside the app with a one-tap Download button.</div>
-  </div>
-
-  <div class="foot"><span data-i18n="foot1">© 2026 Sinoky · Your data stays on your device</span><br><span data-i18n="foot2">Already installed? Open Sinoky → Me → Settings → Check update</span></div>
+  <div class="foot">© 2026 Sinoky · 数据只存在你的设备上</div>
 </div>
 <script>
-/* v0.14.2 六语内联：key = data-i18n，value 按 navigator.language 前缀选择（默认英文原文，零额外请求） */
-var DL_I18N = {
-  zh: {
-    title: "下载 Sinoky — 安卓版",
-    tag: "开口说真正用得上的中文。装上安卓版，离线练习，一键更新。",
-    wechatTip: "⚠️ 你正在微信等内置浏览器里。点右上角 ⋯ → 选「在浏览器打开」，再回来点下载。",
-    loading: "正在获取最新版本…",
-    dl: "⬇️ 下载最新 APK", dlsz: "点按开始下载",
-    install: "三步安装",
-    li1: "点上面的「下载」，等文件下完。",
-    li2: "打开下载的文件。如提示，请允许浏览器「安装未知应用」。",
-    li3: "点「安装」。你的学习数据会保留。",
-    warn: "这次装好之后，App 会自己更新：新版本会自动出现在应用内，点一下就能下载。",
-    foot1: "© 2026 Sinoky · 数据只存在你的设备上",
-    foot2: "已装过？打开 Sinoky → 我 → 设置 → 检查更新",
-    error: "版本信息加载失败——下载按钮仍指向最新构建。",
-    appname: "Sinoky 安卓版"
-  },
-  es: {
-    title: "Descargar Sinoky — App Android",
-    tag: "Habla chino cuando importa. Consigue la app Android para practicar sin conexión y actualizar con un toque.",
-    wechatTip: "⚠️ Estás en un navegador integrado (¿WeChat?). Toca ⋯ (arriba a la derecha) → <b>Abrir en el navegador del sistema</b> y vuelve a tocar Descargar.",
-    loading: "Cargando la última versión…",
-    dl: "⬇️ Descargar el último APK", dlsz: "toca para empezar la descarga",
-    install: "Instala en 3 pasos",
-    li1: "Toca <b>Descargar</b> arriba y espera el archivo.",
-    li2: "Abre el archivo descargado. Si te lo pide, permite <b>Instalar apps desconocidas</b> a tu navegador.",
-    li3: "Toca <b>Instalar</b>. Tu progreso se conserva.",
-    warn: "Tras esta instalación única, la app se actualiza sola: las versiones nuevas aparecen dentro de la app con un botón de descarga.",
-    foot1: "© 2026 Sinoky · Tus datos se quedan en tu dispositivo",
-    foot2: "¿Ya la tienes? Abre Sinoky → Yo → Ajustes → Comprobar actualización",
-    error: "No se pudo cargar la información de versión — el botón sigue apuntando a la última compilación.",
-    appname: "Sinoky Android"
-  },
-  ru: {
-    title: "Скачать Sinoky — приложение для Android",
-    tag: "Говорите по-китайски, когда это важно. Установите приложение Android: офлайн-практика и обновление в одно касание.",
-    wechatTip: "⚠️ Вы во встроенном браузере (WeChat?). Нажмите ⋯ (справа вверху) → <b>Открыть в системном браузере</b>, затем нажмите «Скачать».",
-    loading: "Загружаем последнюю версию…",
-    dl: "⬇️ Скачать последний APK", dlsz: "нажмите, чтобы начать загрузку",
-    install: "Установка в 3 шага",
-    li1: "Нажмите <b>Скачать</b> выше и дождитесь файла.",
-    li2: "Откройте скачанный файл. Если спросит — разрешите браузеру <b>устанавливать неизвестные приложения</b>.",
-    li3: "Нажмите <b>Установить</b>. Ваш прогресс сохранится.",
-    warn: "После этой разовой установки приложение обновляется само: новые версии появляются внутри с кнопкой скачивания.",
-    foot1: "© 2026 Sinoky · Данные остаются на вашем устройстве",
-    foot2: "Уже установлено? Откройте Sinoky → Я → Настройки → Проверить обновления",
-    error: "Не удалось загрузить данные о версии — кнопка всё равно ведёт на последнюю сборку.",
-    appname: "Sinoky Android"
-  },
-  vi: {
-    title: "Tải Sinoky — ứng dụng Android",
-    tag: "Nói tiếng Trung vào lúc quan trọng. Cài app Android để luyện offline và cập nhật một chạm.",
-    wechatTip: "⚠️ Bạn đang dùng trình duyệt nhúng (WeChat?). Chạm ⋯ (góc trên phải) → <b>Mở bằng trình duyệt hệ thống</b>, rồi chạm Tải xuống.",
-    loading: "Đang tải phiên bản mới nhất…",
-    dl: "⬇️ Tải APK mới nhất", dlsz: "chạm để bắt đầu tải",
-    install: "Cài đặt trong 3 bước",
-    li1: "Chạm <b>Tải xuống</b> ở trên và chờ file tải xong.",
-    li2: "Mở file vừa tải. Nếu được hỏi, cho phép trình duyệt <b>Cài đặt ứng dụng không xác định</b>.",
-    li3: "Chạm <b>Cài đặt</b>. Dữ liệu học của bạn được giữ nguyên.",
-    warn: "Sau lần cài một lần này, app tự cập nhật: phiên bản mới hiện ngay trong app với nút tải một chạm.",
-    foot1: "© 2026 Sinoky · Dữ liệu của bạn nằm trên thiết bị",
-    foot2: "Đã cài rồi? Mở Sinoky → Tôi → Cài đặt → Kiểm tra cập nhật",
-    error: "Không tải được thông tin phiên bản — nút tải vẫn trỏ tới bản mới nhất.",
-    appname: "Sinoky Android"
-  },
-  id: {
-    title: "Unduh Sinoky — Aplikasi Android",
-    tag: "Bicara Mandarin di momen yang penting. Pasang aplikasi Android untuk latihan offline dan pembaruan sekali ketuk.",
-    wechatTip: "⚠️ Kamu sedang di browser dalam aplikasi (WeChat?). Ketuk ⋯ (kanan atas) → <b>Buka di browser sistem</b>, lalu ketuk Unduh.",
-    loading: "Memuat versi terbaru…",
-    dl: "⬇️ Unduh APK terbaru", dlsz: "ketuk untuk mulai mengunduh",
-    install: "Pasang dalam 3 langkah",
-    li1: "Ketuk <b>Unduh</b> di atas dan tunggu filenya selesai.",
-    li2: "Buka file yang diunduh. Jika diminta, izinkan browser <b>memasang aplikasi tidak dikenal</b>.",
-    li3: "Ketuk <b>Pasang</b>. Data belajarmu tetap aman.",
-    warn: "Setelah sekali ini, aplikasi memperbarui dirinya sendiri: versi baru muncul otomatis di dalam app dengan tombol unduh sekali ketuk.",
-    foot1: "© 2026 Sinoky · Datamu tetap di perangkatmu",
-    foot2: "Sudah terpasang? Buka Sinoky → Saya → Pengaturan → Periksa pembaruan",
-    error: "Gagal memuat info versi — tombol unduh tetap mengarah ke build terbaru.",
-    appname: "Sinoky Android"
-  },
-  th: {
-    title: "ดาวน์โหลด Sinoky — แอป Android",
-    tag: "พูดจีนในโอกาสที่สำคัญ ติดตั้งแอป Android เพื่อฝึกแบบออฟไลน์และอัปเดตแตะเดียว",
-    wechatTip: "⚠️ คุณกำลังใช้เบราว์เซอร์ในแอป (WeChat?) แตะ ⋯ (มุมขวาบน) → <b>เปิดในเบราว์เซอร์ของระบบ</b> แล้วกลับมาแตะดาวน์โหลด",
-    loading: "กำลังโหลดเวอร์ชันล่าสุด…",
-    dl: "⬇️ ดาวน์โหลด APK ล่าสุด", dlsz: "แตะเพื่อเริ่มดาวน์โหลด",
-    install: "ติดตั้งใน 3 ขั้นตอน",
-    li1: "แตะ <b>ดาวน์โหลด</b>ด้านบนแล้วรอไฟล์",
-    li2: "เปิดไฟล์ที่ดาวน์โหลด ถ้ามีข้อความถาม ให้อนุญาตเบราว์เซอร์ <b>ติดตั้งแอปที่ไม่รู้จัก</b>",
-    li3: "แตะ <b>ติดตั้ง</b> ข้อมูลการเรียนของคุณจะอยู่ครบ",
-    warn: "หลังติดตั้งครั้งนี้ แอปจะอัปเดตเอง: เวอร์ชันใหม่จะเด้งขึ้นในแอปพร้อมปุ่มดาวน์โหลดแตะเดียว",
-    foot1: "© 2026 Sinoky · ข้อมูลของคุณอยู่บนเครื่องคุณเท่านั้น",
-    foot2: "ติดตั้งไปแล้ว? เปิด Sinoky → ฉัน → ตั้งค่า → ตรวจสอบการอัปเดต",
-    error: "โหลดข้อมูลเวอร์ชันไม่สำเร็จ — ปุ่มดาวน์โหลดยังชี้ไปที่บิลด์ล่าสุด",
-    appname: "Sinoky Android"
+/* v0.21.0 download 四段链路：微信/QQ / Android / iOS(PWA) / 桌面 分流 */
+function T2(zh, en){ return (navigator.language||'en').toLowerCase().indexOf('zh')===0 ? zh : en; }
+var UA = navigator.userAgent || '';
+var isWeChat = /MicroMessenger/i.test(UA);
+var isQQ = /QQ\//i.test(UA);
+var isInApp = isWeChat || isQQ || /MiuiBrowser|HeyTapBrowser|VivoBrowser|HuaweiBrowser|Weibo/i.test(UA);
+var isIOS = /iPhone|iPad|iPod/i.test(UA);
+var isAndroid = /Android/i.test(UA);
+var isMobile = isIOS || isAndroid || /Mobile/i.test(UA);
+
+if(isInApp) document.getElementById('wechatTip').style.display = 'block';
+
+fetch('version.json?t=' + Date.now(), { cache:'no-store' })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    var a = j.apk || {};
+    var ver = a.version || j.version || '';
+    var url = a.url || 'https://sinoky.pages.dev/apk/Sinoky-v0.18.0-release.apk';
+    var size = a.size || 0;
+    document.getElementById('v').textContent = 'Sinoky v' + ver;
+    if(size) document.getElementById('sz').textContent = (size>=1048576 ? (size/1048576).toFixed(1)+' MB' : Math.round(size/1024)+' KB');
+    renderPath(url, ver, size, a.note || j.note || '');
+  })
+  .catch(function(){
+    renderPath('https://sinoky.pages.dev/apk/Sinoky-v0.18.0-release.apk', '', 0, '');
+    document.getElementById('note').textContent = '版本信息加载失败，下载按钮仍指向最新构建。';
+  });
+
+function fmtUrl(u){ return u; }
+function renderPath(url, ver, size, note){
+  var card = document.getElementById('mainCard');
+  var noteHtml = note ? '<div class="note">'+esc(note)+'</div>' : '';
+
+  if(isIOS){
+    card.innerHTML =
+      '<span class="pill">iPhone / iPad</span>'+
+      '<div class="note">'+T2('iPhone 装不了 APK，但可以用 Safari 把 Sinoky 存成「主屏幕 App」，体验和安装版几乎一样（离线可用、一键打开）。',
+                                'iPhone can’t install APK, but you can add Sinoky to your Home Screen from Safari — works offline, opens in one tap.')+'</div>'+
+      '<div class="steps">'+
+      '<li>'+T2('用 <b>Safari</b> 打开本页面（不要用微信/QQ 内置浏览器）','Open this page in <b>Safari</b> (not WeChat/QQ)')+'</li>'+
+      '<li>'+T2('点底部工具栏的「分享」图标（方框+箭头）','Tap the <b>Share</b> icon at the bottom (square with arrow)')+'</li>'+
+      '<li>'+T2('下滑找到并点「<b>添加到主屏幕</b>」','Scroll down and tap <b>Add to Home Screen</b>')+'</li>'+
+      '<li>'+T2('点「添加」，Sinoky 就出现在本机了','Tap <b>Add</b> — Sinoky is now on your Home Screen')+'</li>'+
+      '</div>'+
+      noteHtml;
+    return;
   }
-};
-(function(){
-  var nl = (navigator.language || 'en');
-  var lang = 'en';
-  ['zh','es','ru','vi','id','th'].forEach(function(l){ if (!lang || nl.indexOf(l) === 0) { if (nl.indexOf(l) === 0) lang = l; } });
-  var dict = DL_I18N[lang];
-  if (dict) {
-    document.title = dict.title;
-    document.querySelectorAll('[data-i18n]').forEach(function(el){
-      var k = el.getAttribute('data-i18n');
-      if (dict[k]) el.innerHTML = dict[k];
-    });
+
+  if(!isMobile){
+    /* 桌面：给出可复制链接，手机扫码/输入打开 */
+    var here = location.origin + location.pathname;
+    card.innerHTML =
+      '<span class="pill">桌面浏览器</span>'+
+      '<div class="note">'+T2('在手机浏览器打开下面的链接即可安装 / 添加到主屏幕：','Open the link below on your phone’s browser to install / add to Home Screen:')+'</div>'+
+      '<div class="desktop-url"><input id="du" readonly value="'+esc(here)+'"><button onclick="copyLink()">复制</button></div>'+
+      '<div class="note" style="margin-top:10px">'+T2('或手机扫码：用微信「扫一扫」/ 相机扫这个页面地址也行。','Or scan: use WeChat “Scan” / camera on this page URL.')+'</div>'+
+      noteHtml;
+    return;
   }
-  var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-  var isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-  if (isWeChat || (isMobile && /MiuiBrowser|HeyTapBrowser|VivoBrowser|HuaweiBrowser/i.test(navigator.userAgent))) {
-    document.getElementById('wechatTip').style.display = 'block';
-  }
-  function fmt(b){ return b >= 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB'; }
-  fetch('version.json?t=' + Date.now(), { cache:'no-store' })
-    .then(function(r){ return r.json(); })
-    .then(function(j){
-      var a = j.apk || {};
-      var ver = a.version || j.version || '';
-      document.getElementById('v').textContent = (dict && dict.appname ? dict.appname : 'Sinoky Android') + ' v' + ver;
-      if (a.size) {
-        document.getElementById('sz').textContent = fmt(a.size);
-        document.getElementById('dlsz').textContent = 'APK · ' + fmt(a.size);
-      }
-      if (a.url) document.getElementById('dl').href = a.url;
-      var note = a.note || j.note || '';
-      if (note) document.getElementById('note').textContent = note;
-    })
-    .catch(function(){
-      document.getElementById('note').textContent = dict ? dict.error : 'Could not load version info — the Download button still points to the latest build.';
-      // 兜底：version.json 拉不到时指向最新版 APK（发版须随 apk/ 目录同步更新此处——v0.14.3 起纳入发版清单）
-      document.getElementById('dl').href = 'https://sinoky.pages.dev/apk/Sinoky-v0.18.0-release.apk';
-    });
-})();
+
+  /* Android / 其它移动端：APK 直链 + 安装授权图文 */
+  var szTxt = size ? (size>=1048576 ? (size/1048576).toFixed(1)+' MB' : Math.round(size/1024)+' KB') : '';
+  card.innerHTML =
+    '<a class="dl" id="dl" href="'+esc(url)+'" download><span>⬇️ '+T2('下载最新 APK','Download latest APK')+'</span><small>'+(szTxt?('APK · '+szTxt):T2('点按开始下载','tap to start'))+'</small></a>'+
+    '<div class="steps">'+
+    '<li>'+T2('点上面的「下载」，等文件下完','Tap <b>Download</b> above and wait for the file')+'</li>'+
+    '<li>'+T2('打开下载的文件。若提示「禁止安装未知应用」→ 点「设置」→ 开启「允许来自此来源」→ 返回','Open the file. If asked to allow <b>unknown apps</b>, tap <b>Settings</b> → enable the toggle → go back')+'</li>'+
+    '<li>'+T2('点「安装」，你的学习数据会保留','Tap <b>Install</b> — your learning data is kept')+'</li>'+
+    '</div>'+
+    '<div class="warn">'+T2('若浏览器下到 0 字节 / 打不开：请换 Chrome，或把链接复制到 Chrome 打开（部分国产浏览器对 APK 直链支持不好）。','If the download is 0 bytes / won’t open: use Chrome, or paste the link into Chrome (some built-in browsers mishandle APK links).')+'</div>'+
+    noteHtml;
+}
+function copyLink(){ var i=document.getElementById('du'); if(i){ i.select(); try{ document.execCommand('copy'); }catch(e){} navigator.clipboard && navigator.clipboard.writeText(i.value).catch(function(){}); toast('链接已复制'); } }
+function toast(m){ var t=document.createElement('div'); t.textContent=m; t.style.cssText='position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#000;color:#fff;padding:8px 14px;border-radius:10px;font-size:.82rem;z-index:9999'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 1600); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
 </html>

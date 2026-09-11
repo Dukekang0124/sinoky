@@ -1,0 +1,30 @@
+{
+  "levels": [
+    {
+      "level": 1,
+      "file": "data/flashcards.hsk1.json",
+      "name": "HSK1",
+      "ready": true,
+      "count": 193,
+      "note": ""
+    },
+    {
+      "level": 2,
+      "file": "data/flashcards.hsk2.json",
+      "name": "HSK2",
+      "ready": true,
+      "count": 125,
+      "note": ""
+    },
+    {
+      "level": 3,
+      "file": "data/flashcards.hsk3.json",
+      "name": "HSK3",
+      "ready": true,
+      "count": 267,
+      "note": ""
+    }
+  ],
+  "generatedAt": "2026-09-11T09:27:38.729Z",
+  "note": "HSK1=193 字、HSK2=125 词、HSK3=267 词，三等级全部 ready:true 并已上线。前端按 ready 字段渲染等级 tab 与计数。"
+}

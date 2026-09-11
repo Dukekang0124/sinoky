@@ -175,7 +175,7 @@ nav button.on{color:var(--red)}
 /* v0.14.6 A 声调纠音闭环：红色音节上标「应为 X 声」（覆盖 .ss.bad 的删除线，避免标注被划掉） */
 .tone-err{display:block;font-style:normal;font-size:10px;line-height:1.2;color:var(--red);text-decoration:none;margin-top:2px}
 /* ---------- flashcards (v0.2.0) ---------- */
-.fc-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 10px}
+.fc-nav{display:flex;flex-direction:column;gap:6px;margin:14px 0 10px}
 .fc-prog{font-size:12px;color:var(--sub)}
 .fc-wrap{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 16px 18px;text-align:center}
 .fc-hz{font-size:78px;font-weight:800;line-height:1.1;letter-spacing:2px}
@@ -194,6 +194,15 @@ nav button.on{color:var(--red)}
 .fc-actions{display:flex;gap:8px;margin-top:14px}
 .fc-actions .btn{margin-top:0;padding:11px;font-size:13px;border-radius:11px}
 .fc-empty{color:var(--sub);font-size:12.5px;text-align:center;padding:18px;line-height:1.6}
+.fc-levels{display:flex;gap:8px;flex-wrap:wrap}
+.fc-level-btn{flex:1;min-width:84px;padding:9px 8px;border:1px solid var(--line);background:var(--card);border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text);transition:.15s;font-family:inherit}
+.fc-level-btn b{font-size:14px;font-weight:700}
+.fc-level-btn.on{border-color:var(--red);background:rgba(230,57,70,.10);box-shadow:0 0 0 1px var(--red) inset}
+.fc-level-count{font-size:11px;color:var(--sub);background:var(--bg);border-radius:10px;padding:1px 8px}
+.fc-level-pending{font-size:11px;color:#b8860b;background:#fff7e6;border-radius:10px;padding:1px 8px}
+.fc-pending-zh{display:block;margin-top:6px;color:var(--text)}
+.fc-pending-note{display:block;margin-top:4px;color:var(--sub);font-size:11px}
+.fc-nav-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .nw-item{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:8px}
 .nw-item .hz{font-size:20px;font-weight:700;flex-shrink:0}
 .nw-item .mn{font-size:12px;color:var(--sub);flex:1;line-height:1.4}
@@ -913,7 +922,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div class="card"><div class="top"><h2>🎯 Practice</h2><span class="badge">pick a skill</span></div>
       <p class="desc">Train one skill at a time. Everything you say is scored.</p>
       <div class="hub-grid">
-        <button class="hub" onclick="go('cards')"><img class="ic-img" src="assets/icons/cards.svg" alt=""><b>Character cards</b><i>HSK1 deck, tap to hear</i></button>
+        <button class="hub" onclick="go('cards')"><img class="ic-img" src="assets/icons/cards.svg" alt=""><b>Character cards</b><i>HSK1–HSK3 decks · tap to hear</i></button>
         <button class="hub" onclick="go('reading')"><img class="ic-img" src="assets/icons/read.svg" alt=""><b>Read &amp; lookup</b><i>Paste text, get pinyin</i></button>
         <button class="hub" onclick="go('sentences')"><img class="ic-img" src="assets/icons/sentences.svg" alt=""><b>Sentences</b><i>Saved lines for review</i></button>
         <button class="hub" onclick="startTone()"><img class="ic-img" src="assets/icons/tones.svg" alt=""><b>Tone training</b><i>See your tone curve</i></button>
@@ -1043,10 +1052,13 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- CARDS -->
   <section id="v-cards" class="views">
     <div class="fc-nav">
-      <span class="fc-prog" id="fc-prog">Loading…</span>
-      <span class="fc-prog" id="fc-saved">★ 0 saved</span>
+      <div class="fc-levels" id="fc-levels"></div>
+      <div class="fc-nav-row">
+        <span class="fc-prog" id="fc-prog">Loading…</span>
+        <span class="fc-prog" id="fc-saved">★ 0 saved</span>
+      </div>
     </div>
-    <div class="fc-wrap" id="fc-wrap"><div class="fc-empty"><img class="empty-ill" src="assets/empty/network.webp" alt="" onerror="this.remove()">Loading the HSK1 deck…</div></div>
+    <div class="fc-wrap" id="fc-wrap"><div class="fc-empty"><img class="empty-ill" src="assets/empty/network.webp" alt="" onerror="this.remove()">Loading the HSK decks…</div></div>
     <div class="card" style="margin-top:14px">
       <div class="top"><h2>Saved words</h2><span class="badge teal" id="nw-count">0</span></div>
       <p class="desc">Characters you starred for later review. Tap the speaker to hear one again.</p>
@@ -1167,7 +1179,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.18.0';
+var APP_VERSION = '0.21.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -4085,7 +4097,7 @@ function nonoContextGreet(manual) {
     return;
   }
   if (v === 'cards') {
-    nonoShow("This is your HSK1 deck — tap a character to hear it, then say it back. <b>听一听，说一说。</b>",
+    nonoShow("This is your HSK deck — pick a level, tap a character to hear it, then say it back. <b>听一听，说一说。</b>",
       { pose: 'think', id: 'c_cards', once: true });
     return;
   }
@@ -4368,6 +4380,7 @@ function nonoChatTextToggle(){
 async function nonoChatSendText(){
   var i = document.getElementById('nono-input'); if(!i) return;
   var txt = (i.value||'').trim(); if(!txt) return;
+  if(window.SK && SK.quotaBlocked('chat')){ SK.showLimitWall('chat'); return; }
   i.value = '';
   await nonoChatReply(txt);
 }
@@ -4402,6 +4415,7 @@ function nonoChatScrollToBottom(){
 }
 async function nonoChatSend(wav){
   nonoState('thinking');
+  if(window.SK && SK.quotaBlocked('chat')){ SK.showLimitWall('chat'); return; }
   var a = await asrText(wav, '');
   if(!a.ok){
     nonoState('sorry');
@@ -4427,6 +4441,7 @@ async function nonoChatReply(userText){
     S.nonoChat = S.nonoChat || [];
     S.nonoChat.push({ r:'user', t: userText });
     S.nonoChat.push({ r:'assistant', t: reply });
+    if(window.SK) SK.quotaInc('chat');
     if(S.nonoChat.length > 40) S.nonoChat = S.nonoChat.slice(-40);
     /* 诺诺场景钩子：累计聊满 5 轮 -> 「会聊天了」彩蛋（仅一次） */
     try{
@@ -5074,6 +5089,7 @@ async function scorePhrase(i){
   var p = curScene.phrases[i];
   var btn = $('sc-btn-'+i), box = $('score-'+i);
   if(!btn || !box) return;
+  if(window.SK && SK.quotaBlocked('sentence')){ SK.showLimitWall('sentence'); return; }
   /* 正在录音 → 停止并把音频送去识别 */
   if(btn.classList.contains('listening')){
     stopRecording();
@@ -5183,6 +5199,7 @@ async function sendScore(p, transcript, i){
     console.log('[SCORE] body', JSON.stringify(data).slice(0, 300));
     if(data.error){ box.innerHTML='<div class="score-err">'+esc(data.error)+'</div>'; return; }
     box.innerHTML = renderScore(data);
+    if(window.SK){ SK.quotaInc('score'); box.insertAdjacentHTML('beforeend', '<div style="margin-top:10px">'+SK.quotaBadge('score')+'</div>'); SK.maybeExtendSentence(p); }
     /* v0.14.6 C：实时评分驱动 S.rev 调度（错误加权+降桶 / 说对升桶） */
     lastReviewScore = data.overall;
     if(data.overall != null){
@@ -5353,8 +5370,10 @@ function toneNewQuiz(){
 function answerTone(n){
   /* quiz 模式判分：只高亮正确答案(.right)，绝不双高亮（修复"选一个亮两个"误读） */
   if(toneLocked || !toneQ) return;
+  if(window.SK && SK.quotaBlocked('tone')){ SK.showLimitWall('tone'); return; }
   toneLocked = true;
   S.tone.total++;
+  if(window.SK) SK.quotaInc('tone');
   var ok = n === toneQ.t;
   if(ok){ S.tone.right++; }
   saveState();
@@ -5386,27 +5405,95 @@ function renderProgress(){
     .replace('{c}',S.tone.right).replace('{d}',S.tone.total).replace('{e}',UID.slice(0,8)+'…');
 }
 
-/* ---------- flashcards (v0.2.0): HSK1 deck, zero runtime deps ----------
+/* ---------- flashcards (v0.2.0+): HSK decks, zero runtime deps ----------
    拼音由构建期工具生成并随数据下发，前端不做分词 —— 守住「前端零依赖」红线。
-   数据离线可用：sw.js 预缓存 data/flashcards.hsk1.json。 */
-var CARDS = [], fcIdx = 0, fcRevealed = false, NW = [];
+   数据离线可用：sw.js 预缓存 data/flashcards.hsk{1,2,3}.json；等级由 data/flashcards-levels.json 驱动。 */
+var CARDS = [], fcIdx = 0, fcRevealed = false, NW = [], FC_LEVEL = 1, FC_LEVELS = [];
 try { NW = JSON.parse(localStorage.getItem('sinoky_newwords')) || []; } catch(e){ NW = []; }
 function saveNW(){ lsSet('sinoky_newwords', JSON.stringify(NW)); }
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function loadCards(){
-  fetch('data/flashcards.hsk1.json')
+/* v0.20.0 HSK 分级：等级由 data/flashcards-levels.json 驱动；HSK1/HSK2/HSK3 均已上线（ready:true，counts 193/125/267）。
+   进度按等级分别存于 S.cards[level].idx；legacy 平铺 {idx} 自动迁移到 {1:{idx}}。 */
+function fallbackLevels(){
+  return [
+    { level:1, file:'data/flashcards.hsk1.json', name:'HSK1', ready:true, count:193 },
+    { level:2, file:'data/flashcards.hsk2.json', name:'HSK2', ready:true, count:125 },
+    { level:3, file:'data/flashcards.hsk3.json', name:'HSK3', ready:true, count:267 },
+  ];
+}
+function initLevels(){
+  fetch('data/flashcards-levels.json')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      FC_LEVELS = (j.levels && j.levels.length) ? j.levels : fallbackLevels();
+      renderLevelTabs();
+      var def = 1;
+      for (var i=0;i<FC_LEVELS.length;i++){ if(FC_LEVELS[i].ready){ def = FC_LEVELS[i].level; break; } }
+      selectLevel(def);
+    })
+    .catch(function(){ FC_LEVELS = fallbackLevels(); renderLevelTabs(); selectLevel(1); });
+}
+function renderLevelTabs(){
+  var box = $('fc-levels'); if(!box) return;
+  box.innerHTML = '';
+  FC_LEVELS.forEach(function(L){
+    var b = document.createElement('button');
+    b.className = 'fc-level-btn' + (L.level === FC_LEVEL ? ' on' : '');
+    b.setAttribute('data-level', L.level);
+    b.onclick = function(){ selectLevel(L.level); };
+    b.innerHTML = '<b>' + L.name + '</b>' + (L.ready
+      ? '<span class="fc-level-count">' + (L.count || 0) + '</span>'
+      : '<span class="fc-level-pending">待补充</span>');
+    box.appendChild(b);
+  });
+}
+function selectLevel(level){
+  FC_LEVEL = level;
+  var btns = document.querySelectorAll('#fc-levels .fc-level-btn');
+  for (var i=0;i<btns.length;i++){ btns[i].classList.toggle('on', parseInt(btns[i].getAttribute('data-level'),10) === level); }
+  loadCards(level);
+}
+function fcState(level){
+  S.cards = S.cards || {};
+  if (S.cards.idx !== undefined && !S.cards[level] && Object.keys(S.cards).length <= 1){
+    var legacy = S.cards.idx; S.cards = {}; S.cards['1'] = { idx: legacy || 0 };
+  }
+  if (typeof S.cards[level] !== 'object' || S.cards[level] === null) S.cards[level] = { idx: 0 };
+  return S.cards[level];
+}
+function loadCards(level){
+  level = level || FC_LEVEL;
+  FC_LEVEL = level;
+  var meta = null;
+  for (var i=0;i<FC_LEVELS.length;i++){ if(FC_LEVELS[i].level === level){ meta = FC_LEVELS[i]; break; } }
+  fetch('data/flashcards.hsk' + level + '.json')
     .then(function(r){ return r.json(); })
     .then(function(j){
       CARDS = (j.cards || []).slice().sort(function(a,b){ return (a.freq||999) - (b.freq||999); });
-      var saved = (S.cards && typeof S.cards.idx === 'number') ? S.cards.idx : 0;
-      fcIdx = Math.max(0, Math.min(saved, CARDS.length - 1));
+      if (meta) meta.count = CARDS.length;
+      var st = fcState(level);
+      fcIdx = Math.max(0, Math.min(st.idx || 0, CARDS.length - 1));
+      if (!CARDS.length){ showLevelPending(level); return; }
       renderCard(); renderNW();
     })
     .catch(function(){
       $('fc-prog').textContent = '';
       $('fc-wrap').innerHTML = '<div class="fc-empty"><img class="empty-ill" src="assets/empty/network.webp" alt="" onerror="this.remove()">Could not load the card deck.<br>Reconnect and reopen the app to try again.</div>';
     });
+}
+function showLevelPending(level){
+  var note = '';
+  for (var i=0;i<FC_LEVELS.length;i++){ if(FC_LEVELS[i].level === level){ note = FC_LEVELS[i].note || ''; break; } }
+  $('fc-prog').textContent = 'HSK' + level + ' · 待补充';
+  $('fc-wrap').innerHTML =
+    '<div class="fc-empty">' +
+    '<img class="empty-ill" src="assets/empty/network.webp" alt="" onerror="this.remove()">' +
+    'HSK' + level + ' deck is coming soon.' +
+    '<br><span class="fc-pending-zh">我们正在根据教材策展 HSK' + level + ' 字卡，敬请期待。</span>' +
+    (note ? '<br><small class="fc-pending-note">' + esc(note) + '</small>' : '') +
+    '</div>';
+  renderNW();
 }
 function renderCard(){
   if(!CARDS.length) return;
@@ -5436,7 +5523,7 @@ function renderCard(){
       '<button class="btn ghost" onclick="fcMove(1)">Next →</button>' +
     '</div>' +
     '<div class="fc-strokes" id="fc-strokes"></div>';
-  S.cards = S.cards || {}; S.cards.idx = fcIdx; saveStateLocal();   /* v0.3.40 写入节流：卡片游标是纯 UI 位置、零学习价值，绝不触发云端同步。此前每翻一张卡都写一次 KV（40/min），是打爆 1000/天配额的真凶——带上它脏检查恒成立、防抖形同虚设 */
+  var fcSt = fcState(FC_LEVEL); fcSt.idx = fcIdx; saveStateLocal();   /* v0.3.40 写入节流：卡片游标是纯 UI 位置、零学习价值，绝不触发云端同步。此前每翻一张卡都写一次 KV（40/min），是打爆 1000/天配额的真凶——带上它脏检查恒成立、防抖形同虚设。v0.19.0：进度按等级分别存 S.cards[level].idx */
 }
 function fcToggle(){ fcRevealed = !fcRevealed; renderCard(); }
 function fcMove(d){
@@ -5796,9 +5883,9 @@ function rdTap(i){
           (card.tone ? ' · tone ' + esc(card.tone) : '') + '</div>' +
         (card.sentence ? '<div class="rd-pop-meta">e.g. ' + esc(card.sentence.zh) + ' — ' + esc(card.sentence.en) + '</div>' : '')
       /* v0.3.35 M9：CARDS 为空时的真实原因是"字卡库没加载"（多为离线首访），
-         旧文案一律说"不在 HSK1 库里"，把加载失败伪装成内容缺失。 */
+         旧文案一律说"不在 HSK1 库里"，把加载失败伪装成内容缺失。 v0.19.0 改为"不在 HSK 字卡库里"以适配多等级。 */
       : '<div class="rd-pop-meta">' + (CARDS.length
-          ? 'Not in the HSK1 deck yet — pinyin only.'
+          ? 'Not in an HSK deck yet — pinyin only.'
           : 'Character deck not loaded (offline?) — pinyin only.') + '</div>') +
     '<div class="rd-pop-actions">' +
       '<button class="btn ghost" onclick="speak(\'' + esc(w) + '\',this)">🔊 Play</button>' +
@@ -6170,7 +6257,9 @@ ensureI18nObserver();
 setTimeout(function(){ var s=document.getElementById('splash'); if(s){ s.classList.add('hide'); setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 520); } }, 420);
 /* v0.3.35 S3：存储被禁用时明确告诉用户"进度不会被保存"，而不是让他以为保存了 */
 if(!LS_OK) setTimeout(function(){ toast('Storage is blocked — progress will not be saved'); }, 1200);
-loadCards();
+/* v0.19.0 HSK 分级：启动入口改为 initLevels()——拉取等级清单、渲染等级 tab、选中首个 ready 等级（默认 HSK1），
+   内部调用 selectLevel→loadCards 加载对应字卡。直接 loadCards() 不会渲染 tab 且 FC_LEVELS 为空。 */
+initLevels();
 loadSentences();
 
 
@@ -7127,6 +7216,204 @@ SHARE.playDeepLink = function(){
       };
     }
   }catch(e){}
+})();
+</script>
+<!-- ============ v0.21.0 限额 / 解锁码 / 接一句（append-only：不改动上方任何逻辑） ============ -->
+<style>
+.qt-chip{ display:inline-block; font-size:.72rem; color:var(--text-sec,#888); background:rgba(127,127,127,.12);
+  border:1px solid rgba(127,127,127,.2); border-radius:999px; padding:2px 10px; margin:4px 0; }
+.qt-chip.warn{ color:#ffb3b9; border-color:rgba(230,57,70,.4); background:rgba(230,57,70,.1); }
+.qt-chip.unl{ color:#9be29b; border-color:rgba(46,160,67,.4); background:rgba(46,160,67,.12); }
+.qt-chip b{ color:inherit; }
+#quotaCard .qrow{ display:flex; justify-content:space-between; font-size:.82rem; padding:4px 0; border-bottom:1px dashed rgba(127,127,127,.18); }
+#quotaCard .qrow:last-child{ border-bottom:none; }
+.ovl{ position:fixed; inset:0; background:rgba(0,0,0,.62); display:flex; align-items:center; justify-content:center;
+  padding:20px; z-index:9000; }
+.ovl .panel{ background:var(--card,#17171c); border:1px solid var(--border,#2a2a31); border-radius:18px; padding:22px; max-width:380px; width:100%; }
+.ovl h3{ margin:0 0 6px; font-size:1.15rem; }
+.ovl p{ color:var(--text-sec,#9a9aa3); font-size:.9rem; line-height:1.6; margin:0 0 14px; }
+.ovl .two{ display:flex; gap:10px; margin-top:6px; }
+.ovl .two .btn{ flex:1; }
+.wc-steps{ background:rgba(217,136,0,.1); border:1px solid rgba(217,136,0,.35); border-radius:10px; padding:10px 12px;
+  font-size:.82rem; line-height:1.7; margin:10px 0; color:#f0c060; }
+.codeinput{ width:100%; padding:10px; border-radius:10px; border:1px solid var(--border,#2a2a31); background:#0d0d10; color:#fff; font-size:1rem; margin:8px 0; }
+.unl-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
+.extend-prompt{ background:rgba(230,57,70,.08); border:1px solid rgba(230,57,70,.3); border-radius:12px; padding:12px 14px; margin:10px 0; line-height:1.6; }
+.extend-prompt b{ color:#fff; }
+.rec-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; background:#e63946; margin-right:6px; vertical-align:middle; animation:pulse 1s infinite; }
+@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+<script>
+(function(){
+  'use strict';
+  var WECHAT_ID = 'Skkhaha456';
+  var UNLOCK_CODE = 'sinuoqi66';
+  var UNLOCK_KEY = 'sinoky_unlocked';
+  var QUOTA_KEY = 'sinoky_quota';
+  // 限额表：web 数值；app 为该值的倍率（mult:0 = 不限）
+  var QCFG = { sentence:{web:5,mult:3}, score:{web:10,mult:3}, chat:{web:5,mult:3}, tone:{web:10,mult:0} };
+  var QLABEL = { sentence:'新句开口', score:'跟读打分', chat:'诺诺聊天', tone:'声调训练' };
+
+  function isApp(){ try { return (typeof Capacitor!=='undefined') && Capacitor.isNativePlatform && Capacitor.isNativePlatform(); } catch(e){ return false; } }
+  function isUnlocked(){ try { return localStorage.getItem(UNLOCK_KEY)==='1'; } catch(e){ return false; } }
+  function loadQuota(){
+    var d; try { d = JSON.parse(localStorage.getItem(QUOTA_KEY)||'{}'); } catch(e){ d={}; }
+    if(!d.day || d.day !== today()){ d = { day: today(), used:{} }; }
+    d.used = d.used || {};
+    ['sentence','score','chat','tone'].forEach(function(k){ if(typeof d.used[k]!=='number') d.used[k]=0; });
+    return d;
+  }
+  function saveQuota(d){ try { localStorage.setItem(QUOTA_KEY, JSON.stringify(d)); } catch(e){} }
+  function quotaLimit(feat){
+    var c = QCFG[feat]; if(!c) return 0;
+    if(isUnlocked()) return 0;
+    if(isApp()) return c.mult>0 ? c.web*c.mult : 0;
+    return c.web;
+  }
+  function quotaLeft(feat){
+    var lim = quotaLimit(feat);
+    if(lim===0) return Infinity;
+    var d = loadQuota(); return Math.max(0, lim - (d.used[feat]||0));
+  }
+  function quotaBlocked(feat){ return quotaLeft(feat) <= 0; }
+  function quotaInc(feat){
+    if(isUnlocked()) return;
+    var lim = quotaLimit(feat);
+    if(lim===0) return;
+    var d = loadQuota(); d.used[feat]=(d.used[feat]||0)+1; saveQuota(d);
+  }
+  function quotaBadge(feat){
+    if(isUnlocked()) return '<span class="qt-chip unl">✅ 已解锁 · 不限次数</span>';
+    var lim = quotaLimit(feat);
+    if(lim===0) return '<span class="qt-chip unl">📱 App · 不限次数</span>';
+    var left = quotaLeft(feat);
+    return '<span class="qt-chip '+(left<=0?'warn':'')+'">今天还剩 <b>'+left+'</b> 次'+QLABEL[feat]+'</span>';
+  }
+
+  function closeOvl(id){ var el=document.getElementById(id); if(el) el.remove(); }
+  window.closeOvl = closeOvl;
+  function buildOvl(id){ closeOvl(id); var o=document.createElement('div'); o.className='ovl'; o.id=id; return o; }
+
+  function showLimitWall(feat){
+    if(isUnlocked()) return;
+    var o = buildOvl('limitWall');
+    var p = document.createElement('div'); p.className='panel';
+    if(isApp()){
+      p.innerHTML = '<h3>今天的额度用完了</h3>'+
+        '<p>装到手机已经很给力了，但免费额度每天有限。加我微信 <b>'+WECHAT_ID+'</b> 解锁全部功能（永久）。</p>'+
+        '<div class="wc-steps">① 点「复制微信号」<br>② 打开微信 → 右上角 ＋ → 添加朋友<br>③ 粘贴 '+WECHAT_ID+' → 发「解锁码」</div>'+
+        '<button class="btn primary" style="width:100%" onclick="SK.copyWechat()">📋 复制微信号</button>'+
+        '<button class="btn" style="width:100%;margin-top:8px" onclick="SK.doUnlock()">✅ 我已添加微信，解锁全部功能</button>'+
+        '<div style="margin-top:10px"><input class="codeinput" id="ucode" placeholder="或输入解锁码" />'+
+        '<button class="btn ghost" style="width:100%" onclick="SK.tryUnlockCode(document.getElementById(\'ucode\').value)">解锁</button></div>'+
+        '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="closeOvl(\'limitWall\')">关闭</button>';
+    } else {
+      var sub = '免费版每天有限额，装 App 后不限次数 —— 你的学习数据会全部保留。';
+      if(feat==='chat') sub='诺诺聊天每天免费 '+QCFG.chat.web+' 轮。装 App 后不限次数。';
+      else if(feat==='tone') sub='声调训练每天免费 '+QCFG.tone.web+' 题。装 App 后不限次数。';
+      else if(feat==='sentence') sub='每天免费练 '+QCFG.sentence.web+' 句新内容。装 App 后不限次数。';
+      p.innerHTML = '<h3>今天的免费次数用完了</h3>'+
+        '<p>'+sub+'</p>'+
+        '<div class="two">'+
+        '<button class="btn primary" onclick="location.href=\'download.html\'">📱 装 App · 不限次数</button>'+
+        '<button class="btn" onclick="go(\'review\')">🔁 今天先练复习</button>'+
+        '</div>'+
+        '<button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeOvl(\'limitWall\')">稍后再说</button>';
+    }
+    o.appendChild(p); document.body.appendChild(o);
+    o.addEventListener('click', function(e){ if(e.target===o) closeOvl('limitWall'); });
+  }
+  function copyWechat(){ copyText(WECHAT_ID, '微信号已复制：'+WECHAT_ID+'，去微信加我解锁'); }
+  function doUnlock(){
+    try { localStorage.setItem(UNLOCK_KEY,'1'); } catch(e){}
+    closeOvl('limitWall');
+    toast('✅ 已解锁全部功能 · 感谢支持！');
+    renderQuotaUI();
+  }
+  function tryUnlockCode(code){
+    if((code||'').trim() === UNLOCK_CODE){ doUnlock(); }
+    else { toast('解锁码不对，加微信 '+WECHAT_ID+' 领取'); }
+  }
+
+  // E2「我」页额度卡 + 解锁状态行
+  function renderQuotaUI(){
+    var me = document.getElementById('v-me'); if(!me) return;
+    var old = document.getElementById('quotaCard'); if(old) old.remove();
+    var card = document.createElement('div'); card.className='card'; card.id='quotaCard';
+    var rows = '';
+    ['sentence','score','chat','tone'].forEach(function(k){
+      var left = quotaLeft(k); var lim = quotaLimit(k);
+      var txt = (left===Infinity) ? '不限' : (isUnlocked() ? '不限（已解锁）' : left+' / '+lim);
+      rows += '<div class="qrow"><span>'+QLABEL[k]+'</span><span>'+txt+'</span></div>';
+    });
+    var unlockRow;
+    if(isUnlocked()){
+      unlockRow = '<div class="unl-row"><span>✅ 已解锁 · 感谢支持</span><button class="btn ghost" onclick="SK.resetUnlock()">撤销</button></div>';
+    } else {
+      var appNote = isApp() ? '（App 已享 3 倍额度）' : '';
+      unlockRow = '<div class="unl-row"><span>🔓 功能解锁'+appNote+'</span><button class="btn ghost" onclick="SK.showLimitWall(\'chat\')">解锁</button></div>';
+    }
+    card.innerHTML = '<div class="top"><h2>📊 今日额度</h2>'+(isUnlocked()?'<span class="badge teal">UNLOCKED</span>':'<span class="badge">免费版</span>')+'</div>'+
+      '<p class="desc">复习 / 字卡 / 徽章 / 进度永不限制 —— 只限制「生产」类功能。</p>'+ rows + unlockRow;
+    var first = me.querySelector('.card');
+    if(first && first.parentNode===me) me.insertBefore(card, first.nextSibling);
+  }
+  window.SK = {
+    isApp:isApp, isUnlocked:isUnlocked, quotaLeft:quotaLeft, quotaBlocked:quotaBlocked,
+    quotaInc:quotaInc, quotaBadge:quotaBadge, showLimitWall:showLimitWall,
+    copyWechat:copyWechat, doUnlock:doUnlock, tryUnlockCode:tryUnlockCode, renderQuotaUI:renderQuotaUI,
+    maybeExtendSentence:maybeExtendSentence
+  };
+  window.SK.resetUnlock = function(){ try{ localStorage.removeItem(UNLOCK_KEY); }catch(e){} renderQuotaUI(); toast('已撤销解锁'); };
+
+  // ===== 接一句 P0（零 LLM 成本、不判分、只记录开口）=====
+  function maybeExtendSentence(p){
+    if(!p || !p.hz) return;
+    var o = buildOvl('extendModal');
+    var panel = document.createElement('div'); panel.className='panel';
+    panel.innerHTML = '<h3>接一句 💬</h3>'+
+      '<div class="extend-prompt">你刚说了：<b>'+esc(p.hz)+'</b><br>换一个词，说一句你自己的 → 说 3 秒就行（不判分，只记录你开口了）。</div>'+
+      '<button class="btn primary" id="extRec" style="width:100%"><span class="rec-dot"></span>🎤 我来改一句</button>'+
+      '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="closeOvl(\'extendModal\')">跳过</button>';
+    o.appendChild(panel); document.body.appendChild(o);
+    var btn = panel.querySelector('#extRec');
+    btn.addEventListener('click', function(){ startExtend(btn, panel); });
+  }
+  var extRec=null, extStart=0;
+  function startExtend(btn, panel){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
+      panel.innerHTML='<h3>接一句 💬</h3><p>这个浏览器不支持录音。你已经在练了，跳过也行 👍</p><button class="btn" style="width:100%" onclick="closeOvl(\'extendModal\')">关闭</button>'; return;
+    }
+    if(extRec && extRec.state!=='inactive'){ try{extRec.stop();}catch(e){} return; }
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      var chunks=[]; var rec=new MediaRecorder(stream);
+      extRec=rec; extStart=Date.now();
+      rec.ondataavailable=function(e){ if(e.data&&e.data.size) chunks.push(e.data); };
+      rec.onstop=function(){
+        stream.getTracks().forEach(function(t){try{t.stop();}catch(e){}});
+        var dur=(Date.now()-extStart)/1000;
+        btn.textContent='🎤 我来改一句';
+        if(dur<1){ var pr=panel.querySelector('.extend-prompt'); if(pr) pr.insertAdjacentHTML('beforeend','<div style="color:#ffb3b9;margin-top:6px">没听到声音，再试一次 ✦</div>'); return; }
+        try{ S.extend=S.extend||{n:0}; S.extend.n++; saveState(); }catch(e){}
+        panel.innerHTML='<h3>接一句 💬</h3><div class="extend-prompt">✅ 你说了一句自己的中文！（累计扩展句：'+(S.extend?S.extend.n:1)+'）</div><button class="btn" style="width:100%" onclick="closeOvl(\'extendModal\')">完成</button>';
+      };
+      rec.onerror=function(){ btn.textContent='🎤 我来改一句'; var pr=panel.querySelector('.extend-prompt'); if(pr) pr.insertAdjacentHTML('beforeend','<div style="color:#ffb3b9;margin-top:6px">录音出错，跳过也行 ✦</div>'); };
+      btn.textContent='⏹ 说完了点这里';
+      var pr=panel.querySelector('.extend-prompt'); if(pr) pr.insertAdjacentHTML('beforeend','<div style="margin-top:6px;color:#9be29b">● 录音中…说完点「说完了」</div>');
+      rec.start();
+    }).catch(function(){
+      panel.innerHTML='<h3>接一句 💬</h3><p>麦克风打不开，跳过也行 👍</p><button class="btn" style="width:100%" onclick="closeOvl(\'extendModal\')">关闭</button>';
+    });
+  }
+
+  // 包裹 renderMe，使其渲染后注入额度卡
+  function hookRenderMe(){
+    var orig = window.renderMe;
+    window.renderMe = function(){ if(orig) orig.apply(null, arguments); renderQuotaUI(); };
+  }
+  if(typeof window.renderMe==='function'){ hookRenderMe(); }
+  else { document.addEventListener('DOMContentLoaded', function(){ renderQuotaUI(); }); }
+  try { if(document.readyState!=='loading') renderQuotaUI(); } catch(e){}
 })();
 </script>
 </body>

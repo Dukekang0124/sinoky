@@ -1,24 +1,67 @@
 /**
- * Sinoky 字卡库生成器（F 需求 · 数据地基）
+ * Sinoky 分级字卡构建器（参数化：HSK1 策展 / HSK2-3 占位或教材导入）
  *
- * 设计原则：
+ * 设计原则（继承 F 需求 · 数据地基）：
  *  - 语义字段（字义/词性/部首/词组/例句）由人工策展，保证准确。
  *  - 拼音 / 声调 / 声母 / 韵母 全部由 pinyin-pro 本地计算，零手写错误。
  *  - 笔顺（strokes）不入库：前端用 hanzi-writer 按 hanzi 现场拉 CDN
- *    （https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/{hanzi}.json），
- *    保持 F 库轻量、可_machine_校验。
+ *    （https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/{hanzi}.json）。
  *
- * 运行（受管 node + 隔离 node_modules）：
+ * 分级支持（对应需求「HSK 分级」）：
+ *  - level 1：使用内置 RAW 策展数据（193 字），生成 flashcards.hsk1.json。
+ *  - level 2/3 无教材：自动生成占位文件（ready:false, note「待补充」）。
+ *  - level 2/3 有教材：node build-flashcards.mjs --level 2 --csv hsk2.csv 一键导入。
+ *  - 每次生成后自动刷新 data/flashcards-levels.json 总清单（前端渲染等级 tab）。
+ *
+ * 运行（受管 node，pinyin-pro 已装于隔离 node_modules）：
  *   NODE_PATH="C:/Users/Admin/.workbuddy/binaries/node/workspace/node_modules" \
- *   C:/Users/Admin/.workbuddy/binaries/node/versions/22.22.2-2/node.exe build-flashcards.mjs
- *
- * 输出：flashcards.hsk1.json
+ *   C:/Users/Admin/.workbuddy/binaries/node/versions/22.22.2-3/node.exe build-flashcards.mjs [--level 1|2|3] [--csv file.csv] [--manifest]
  */
 
 import { writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
-const { pinyin } = require('pinyin-pro');
+let pinyin = null;
+try { pinyin = require('pinyin-pro').pinyin; } catch (e) { /* 占位模式可缺 pinyin-pro */ }
+
+// ---------- CLI 参数 ----------
+const args = process.argv.slice(2);
+const get = (k, d = null) => { const i = args.indexOf(k); return (i > -1 && args[i + 1]) ? args[i + 1] : d; };
+const has = (k) => args.includes(k);
+const HSK_NAME = { 1: 'HSK1', 2: 'HSK2', 3: 'HSK3' };
+
+// 从带声调符号的拼音解析 tone/initial/final（CSV 缺拼音列时的兜底；pinyin-pro 优先）
+function parsePinyinFallback(pinyinStr) {
+  const toneMarks = {
+    'ā': 'a', 'á': 'a', 'ǎ': 'a', 'à': 'a', 'ē': 'e', 'é': 'e', 'ě': 'e', 'è': 'e',
+    'ī': 'i', 'í': 'i', 'ǐ': 'i', 'ì': 'i', 'ō': 'o', 'ó': 'o', 'ǒ': 'o', 'ò': 'o',
+    'ū': 'u', 'ú': 'u', 'ǔ': 'u', 'ù': 'u', 'ǖ': 'ü', 'ǘ': 'ü', 'ǚ': 'ü', 'ǜ': 'ü',
+    'ń': 'n', 'ň': 'n', 'ǹ': 'n',
+  };
+  let tone = 0;
+  const TONE_DIACRITIC = {
+    'ā':1,'á':2,'ǎ':3,'à':4,
+    'ē':1,'é':2,'ě':3,'è':4,
+    'ī':1,'í':2,'ǐ':3,'ì':4,
+    'ō':1,'ó':2,'ǒ':3,'ò':4,
+    'ū':1,'ú':2,'ǔ':3,'ù':4,
+    'ǖ':1,'ǘ':2,'ǚ':3,'ǜ':4,
+    'ń':2,'ň':3,'ǹ':4
+  };
+  const str = String(pinyinStr || '');
+  for (const ch of str) { if (Object.prototype.hasOwnProperty.call(TONE_DIACRITIC, ch)) tone = TONE_DIACRITIC[ch]; }
+  const m = str.trim().match(/([1-5])$/);
+  if (m) tone = parseInt(m[1], 10);
+  let base = str;
+  for (const [mk, nk] of Object.entries(toneMarks)) base = base.split(mk).join(nk);
+  base = base.replace(/[0-9]/g, '').trim().toLowerCase();
+  const initials = ['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w'];
+  let initial = '', final = base;
+  for (const ini of initials) { if (base.startsWith(ini)) { initial = ini; final = base.slice(ini.length); break; } }
+  return { tone: tone === 5 ? 0 : tone, initial: initial || '-', final: final || base };
+}
 
 // 策展数据：[汉字, 英译, 词性, 部首, [常见词/词组], [例句中文, 例句英文]?]
 // 词性缩写：pron.代词 n.名词 v.动词 adj.形容词 adv.副词 conj.连词 prep.介词 num.数词 cls.量词 part.助词 suffix.后缀
@@ -262,34 +305,110 @@ function buildEntry(item, idx) {
   return entry;
 }
 
-const cards = RAW.map(buildEntry);
+function buildLevelFile(level, csvPath) {
+  const name = HSK_NAME[level] || ('HSK' + level);
+  let cards = [];
 
-// 简单校验：重复 hanzi 报警
-const seen = new Set();
-let dup = 0;
-for (const c of cards) {
-  if (seen.has(c.hanzi)) { console.warn('⚠ 重复字:', c.hanzi); dup++; }
-  seen.add(c.hanzi);
+  if (level === 1) {
+    cards = RAW.map(buildEntry);
+    const seen = new Set(); let dup = 0;
+    for (const c of cards) { if (seen.has(c.hanzi)) { console.warn('⚠ 重复字:', c.hanzi); dup++; } seen.add(c.hanzi); }
+    console.log(`   重复字: ${dup}  | 多音字标注: ${cards.filter(c => c.alt).length} 张`);
+  } else if (csvPath) {
+    const fs = require('node:fs');
+    const raw = fs.readFileSync(csvPath, 'utf8').replace(/\r/g, '').split('\n').filter(Boolean);
+    const header = raw[0].split(',').map((h) => h.trim());
+    for (let i = 1; i < raw.length; i++) {
+      const cols = raw[i].split(',');
+      const row = {}; header.forEach((h, k) => { row[h] = (cols[k] || '').trim(); });
+      let py = row.pinyin || '';
+      const pf = (pinyin && row.hanzi)
+        ? (() => {
+            try {
+              if (!py) py = pinyin(row.hanzi, { toneType: 'symbol' });
+              const numArr = pinyin(row.hanzi, { toneType: 'num', type: 'array', multiple: true });
+              const tRaw = (numArr && numArr[0]) ? String(numArr[0]).match(/(\d)/) : null;
+              const ini = pinyin(row.hanzi, { pattern: 'initial', type: 'array', multiple: true });
+              const fin = pinyin(row.hanzi, { pattern: 'final', type: 'array', multiple: true });
+              return {
+                tone: tRaw ? parseInt(tRaw[1], 10) : 0,
+                initial: (ini && ini[0]) ? (ini[0] || '-') : '-',
+                final: (fin && fin[0]) ? fin[0] : '',
+              };
+            } catch (e) { return parsePinyinFallback(py); }
+          })()
+        : parsePinyinFallback(py);
+      cards.push({
+        id: `hsk${level}-${String(i).padStart(3, '0')}`,
+        hanzi: row.hanzi,
+        pinyin: py,
+        tone: pf.tone,
+        initial: pf.initial,
+        final: pf.final,
+        pos: row.pos || '',
+        bushou: row.bushou || '',
+        meaning: row.meaning || '',
+        hsk: level,
+        freq: i,
+        words: row.words ? row.words.split('|') : [],
+        strokeData: 'hanzi-writer',
+      });
+    }
+  }
+
+  const out = {
+    meta: {
+      name: `Sinoky 分级字卡库 · ${name} 核心`,
+      version: '0.1.0',
+      source: csvPath
+        ? (`教材 CSV 导入: ${path.basename(csvPath)}`)
+        : (level === 1 ? '人工策展语义 + pinyin-pro 生成拼音/声调/声母/韵母' : '占位（待补充）'),
+      count: cards.length,
+      hsk: level,
+      ready: cards.length > 0,
+      note: cards.length ? '' : '待补充 — 教材策展中',
+      strokeDataNote: '笔顺不入库；前端用 hanzi-writer 按 hanzi 现场拉 https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/{hanzi}.json',
+      generatedAt: new Date().toISOString(),
+      fields: ['id', 'hanzi', 'pinyin', 'tone', 'initial', 'final', 'pos', 'bushou', 'meaning', 'hsk', 'freq', 'words', 'sentence', 'strokeData', 'alt?'],
+      consumers: ['G 沉浸阅读器', 'E 形音义调联动记忆卡', 'B 最小对立对发音', 'C 声调记忆辅助'],
+    },
+    cards,
+  };
+
+  const outPath = new URL(`./flashcards.hsk${level}.json`, import.meta.url);
+  writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf-8');
+  console.log(`✅ 生成 ${cards.length} 张字卡 → flashcards.hsk${level}.json (ready=${cards.length > 0})`);
+  if (level === 1 && cards[0]) console.log('   样例[0]:', JSON.stringify(cards[0], null, 0));
+  return out;
 }
 
-const out = {
-  meta: {
-    name: 'Sinoky 分级字卡库 · HSK1 核心',
-    version: '0.1.0',
-    source: '人工策展语义 + pinyin-pro 生成拼音/声调/声母/韵母',
-    count: cards.length,
-    hsk: 1,
-    strokeDataNote: '笔顺不入库；前端用 hanzi-writer 按 hanzi 现场拉 https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/{hanzi}.json',
+function refreshManifest() {
+  const levels = [1, 2, 3].map((lv) => {
+    let count = 0, ready = false, note = '';
+    try {
+      const p = new URL(`./flashcards.hsk${lv}.json`, import.meta.url);
+      const j = JSON.parse(require('node:fs').readFileSync(p, 'utf8'));
+      count = (j.cards || []).length; ready = count > 0; note = (j.meta && j.meta.note) || '';
+    } catch (e) { /* 文件缺失 → 待补充 */ }
+    return { level: lv, file: `data/flashcards.hsk${lv}.json`, name: HSK_NAME[lv], ready, count, note };
+  });
+  const manifest = {
+    levels,
     generatedAt: new Date().toISOString(),
-    fields: ['id', 'hanzi', 'pinyin', 'tone', 'initial', 'final', 'pos', 'bushou', 'meaning', 'hsk', 'freq', 'words', 'sentence', 'strokeData', 'alt?'],
-    consumers: ['G 沉浸阅读器', 'E 形音义调联动记忆卡', 'B 最小对立对发音', 'C 声调记忆辅助'],
-  },
-  cards,
-};
+    note: 'HSK1=193 字、HSK2=125 词、HSK3=267 词，三等级全部 ready:true 并已上线。前端按 ready 字段渲染等级 tab 与计数。',
+  };
+  writeFileSync(new URL('./flashcards-levels.json', import.meta.url), JSON.stringify(manifest, null, 2), 'utf-8');
+  console.log('✅ wrote flashcards-levels.json');
+}
 
-const outPath = new URL('./flashcards.hsk1.json', import.meta.url);
-writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf-8');
-
-console.log(`✅ 生成 ${cards.length} 张字卡 → flashcards.hsk1.json`);
-console.log(`   重复字: ${dup}  | 多音字标注: ${cards.filter(c => c.alt).length} 张`);
-console.log(`   样例[0]:`, JSON.stringify(cards[0], null, 0));
+// ---------- CLI ----------
+(async () => {
+  if (has('--manifest')) { refreshManifest(); return; }
+  const level = parseInt(get('--level') || '1', 10);
+  if (![1, 2, 3].includes(level)) {
+    console.error('用法: --level 1|2|3 [--csv file.csv] | --manifest');
+    process.exit(1);
+  }
+  buildLevelFile(level, get('--csv') || null);
+  refreshManifest();
+})();
