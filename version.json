@@ -6,8 +6,8 @@
     "versionCode": 1700,
     "version": "0.17.0",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.17.0-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "a97cf3f63e757469d56104f2a497b1b8",
+    "size": 23914397
   },
   "noteEn": [
     "v0.17.0 Share cards (P1): portrait cards, a progress report card, save to gallery, and arriving on the exact line a friend shared. (1) 1080x1920 portrait (Story/TikTok) with an in-sheet 1:1 / 9:16 switch — the portrait layout redistributes whitespace rather than stretching, with meander bands top and bottom, content centred and the footer anchored to the bottom edge. (2) New progress report card: a 2x2 grid (days in a row / phrases said / landmarks lit / badges) plus a last-14-days heat strip, all from real state; it only enters the theme pool once there is something to report (8+ phrases said or 3+ days practised). (3) In the Android app the save action now writes to the system gallery via MediaStore on Android 10+, which needs no storage permission at all; older versions fall back to long-press save rather than asking for a permission the app does not need. (4) Share links now carry which line it was: opening one lands on that exact sentence with it highlighted, plus an explanatory note; if onboarding is not finished yet the jump is queued until it is. Cards remain dependency-free, add no network requests, and still carry no device ID or recording."
