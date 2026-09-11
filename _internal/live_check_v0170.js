@@ -47,10 +47,19 @@ const md5 = b => crypto.createHash('md5').update(b).digest('hex');
   ok('APK 是合法 zip', apkBuf.slice(0, 2).toString() === 'PK', apkBuf.slice(0, 2).toString());
 
   // ---------- B. 安全收口（真实状态码，禁跟随跳转）----------
-  for (const p of ['/_internal/wait_apk.py', '/_internal/v0170_report_square.png', '/badge-backend.mjs', '/package.json', '/www/index.html']) {
-    const r = await fetch(BASE + p, { redirect: 'manual' });
-    ok('内部路径已拦 ' + p, [301, 302, 308].includes(r.status), `${r.status} -> ${r.headers.get('location') || '-'}`);
+  // 内部路径拦截：_redirects 随部署生效，边缘传播有窗口期 → 重试直到全部 302
+  const INTERNAL = ['/_internal/wait_apk.py', '/_internal/v0170_report_square.png', '/badge-backend.mjs', '/package.json', '/www/index.html'];
+  let states = {};
+  for (let i = 0; i < 10; i++) {
+    states = {};
+    for (const p of INTERNAL) {
+      const r = await fetch(BASE + p, { redirect: 'manual' });
+      states[p] = r.status;
+    }
+    if (INTERNAL.every(p => [301, 302, 308].includes(states[p]))) break;
+    await new Promise(r => setTimeout(r, 8000));
   }
+  for (const p of INTERNAL) ok('内部路径已拦 ' + p, [301, 302, 308].includes(states[p]), String(states[p]));
   ok('不存在路径仍 200 SPA 回退', (await fetch(BASE + '/nope-v0170', { redirect: 'manual' })).status === 200);
 
   // ---------- C. 接口回归 ----------
