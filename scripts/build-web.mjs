@@ -13,7 +13,8 @@ const out = path.join(src, 'www');
 const DIRS = ['assets', 'audio', 'data', 'icons', 'vendor', 'langs'];
 const FILES = [
   'index.html', 'sw.js', 'version.json', 'manifest.webmanifest',
-  'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'robots.txt', 'sitemap.xml', '_headers'
+  'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'robots.txt', 'sitemap.xml', '_headers',
+  '_worker.js' // ⚠️ 必须进包：Pages Functions(TTS/ASR/chat/score/feedback) 靠它。漏掉会导致 CI 末段 `wrangler pages deploy www` 把函数全覆盖掉（v0.21.0 踩过）
 ];
 
 await rm(out, { recursive: true, force: true });
