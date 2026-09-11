@@ -1,0 +1,72 @@
+[
+ {
+  "n": "生产页 APP_VERSION = 0.18.0",
+  "pass": true,
+  "info": "0.18.0"
+ },
+ {
+  "n": "语言包已加载(zh)",
+  "pass": true,
+  "info": "zh"
+ },
+ {
+  "n": "生产全站零横向溢出",
+  "pass": true,
+  "info": "(none)"
+ },
+ {
+  "n": "生产全站零转义泄漏",
+  "pass": true,
+  "info": "(none)"
+ },
+ {
+  "n": "天数计数器已中文化",
+  "pass": true,
+  "info": "第 1 天 / 共 30 天"
+ },
+ {
+  "n": "天数标题已中文化",
+  "pass": true,
+  "info": "📅 30 天计划 第 1 天 / 共 30 天 每天五分钟。走完它，你在中国"
+ },
+ {
+  "n": "城市计数已中文化",
+  "pass": true,
+  "info": "19 个城市"
+ },
+ {
+  "n": "中国香港标注在位",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "n": "复习页标题无转义",
+  "pass": true,
+  "info": "🔁 Smart review"
+ },
+ {
+  "n": "复习计数已中文化",
+  "pass": true,
+  "info": "6 条待复习"
+ },
+ {
+  "n": "复习页无横向溢出",
+  "pass": true,
+  "info": "390/390"
+ },
+ {
+  "n": "生产环境诺诺气泡不串页",
+  "pass": true,
+  "info": "visible=false"
+ },
+ {
+  "n": "零运行时 JS 错误",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "n": "无异常失败请求（排除本地化端点）",
+  "pass": true,
+  "info": "(none)"
+ }
+]
