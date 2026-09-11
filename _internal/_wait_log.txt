@@ -1,0 +1,6 @@
+strict-wait for 0.14.11
+[1] live_ver=0.14.11 ver_ok=True md5='' size=0 apk_bytes=467982
+[2] live_ver=0.14.11 ver_ok=True md5='' size=0 apk_bytes=467982
+[3] live_ver=0.14.11 ver_ok=True md5='' size=0 apk_bytes=467982
+[4] live_ver=0.14.11 ver_ok=True md5='ecb83f0910a2' size=23893487 apk_bytes=23893487
+READY

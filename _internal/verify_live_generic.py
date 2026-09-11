@@ -36,9 +36,9 @@ checks.append(("1 version.json", step("version.json", lambda: (
                    f"v={json.loads(b)['version']} code={json.loads(b)['apk']['versionCode']} md5={json.loads(b)['apk']['md5'][:12]!r}"))(*get(f"/version.json?cb={time.time()}"))
 ))))
 
-checks.append(("2 启动屏已回滚(无 dragon-nono)", step("index splash", lambda: (
-    (lambda s, b: ("a8_9x16.webp" in b and "dragon-nono" not in b and "sp-brand" not in b and f"APP_VERSION = '{VER}'" in b,
-                   f"status={s} a8图={'a8_9x16.webp' in b} 主视觉残留={'dragon-nono' in b}"))(*get(f"/?cb={time.time()}"))
+checks.append(("2 启动屏=主视觉(含 brand 字标)", step("index splash", lambda: (
+    (lambda s, b: ("dragon-nono.svg" in b and "sp-brand" in b and f"APP_VERSION = '{VER}'" in b,
+                   f"status={s} 主视觉={'dragon-nono.svg' in b} 字标={'sp-brand' in b}"))(*get(f"/?cb={time.time()}"))
 ))))
 
 checks.append(("3 sw 缓存", step("sw.js", lambda: (
