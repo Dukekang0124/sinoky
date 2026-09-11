@@ -6,8 +6,8 @@
     "versionCode": 1411,
     "version": "0.14.11",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.11-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "ecb83f0910a222d1762df7783ac69287",
+    "size": 23893487
   },
   "noteEn": [
     "v0.14.11: Theme cleanup — every leftover pre-theme color value is now mapped to the theme variables: 46 occurrences of the old magenta (including 26 translucent red tints) across the first-run onboarding, the 'hear this line' card, the dialog view and the day list now use the cinnabar red; the browser theme-color is updated to the new ink base; the Nono panel background is aligned to the theme; and the onboarding CTA is now a capsule. The Chinese-style theme now covers the whole app with no gaps."
