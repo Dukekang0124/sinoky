@@ -65,6 +65,13 @@ jobs:
 
           import android.content.Context;
           import android.content.Intent;
+          import android.content.ContentResolver;
+          import android.content.ContentValues;
+          import android.graphics.Bitmap;
+          import android.graphics.BitmapFactory;
+          import android.provider.MediaStore;
+          import android.util.Base64;
+          import java.io.OutputStream;
           import android.content.pm.PackageInfo;
           import android.net.Uri;
           import android.os.Build;
@@ -278,7 +285,58 @@ jobs:
                 }
               }).start();
             }
+          }          /* v0.17.0 分享卡片存相册。
+             Android 10+（API 29）起，往 MediaStore 写本 App 生成的图片不需要任何存储权限；
+             API < 29 需要 WRITE_EXTERNAL_STORAGE，本项目未申请该权限 → 明确返回 saved:false，
+             由前端回退到长按保存 —— 宁可不做，也不弹一个莫名其妙的授权给用户。 */
+          @PluginMethod
+          public void saveImageToGallery(final PluginCall call) {
+            final String dataUrl = call.getString("dataUrl");
+            final String filename = call.getString("filename");
+            if (dataUrl == null || dataUrl.length() == 0) { call.reject("dataUrl required"); return; }
+            final JSObject fail = new JSObject();
+            fail.put("saved", false);
+            if (Build.VERSION.SDK_INT < 29) { call.resolve(fail); return; }
+            new Thread(new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  String b64 = dataUrl;
+                  int comma = b64.indexOf(',');
+                  if (comma >= 0) { b64 = b64.substring(comma + 1); }
+                  byte[] raw = Base64.decode(b64, Base64.DEFAULT);
+                  Bitmap bmp = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+                  if (bmp == null) { call.resolve(fail); return; }
+                  ContentValues cv = new ContentValues();
+                  String name = (filename == null || filename.length() == 0) ? "sinoky-share.png" : filename;
+                  cv.put(MediaStore.Images.Media.DISPLAY_NAME, name);
+                  cv.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+                  cv.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Sinoky");
+                  cv.put(MediaStore.Images.Media.IS_PENDING, 1);
+                  ContentResolver cr = getContext().getContentResolver();
+                  Uri uri = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv);
+                  if (uri == null) { call.resolve(fail); return; }
+                  OutputStream os = cr.openOutputStream(uri);
+                  boolean ok = false;
+                  if (os != null) {
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, os);
+                    os.flush();
+                    os.close();
+                    ok = true;
+                  }
+                  cv.clear();
+                  cv.put(MediaStore.Images.Media.IS_PENDING, 0);
+                  cr.update(uri, cv, null, null);
+                  JSObject ret = new JSObject();
+                  ret.put("saved", ok);
+                  call.resolve(ret);
+                } catch (Exception e) {
+                  call.resolve(fail);
+                }
+              }
+            }).start();
           }
+
           EOF
           if [ -f "$PKGDIR/MainActivity.kt" ]; then
             MA="$PKGDIR/MainActivity.kt"

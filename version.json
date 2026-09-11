@@ -1,15 +1,15 @@
 {
-  "version": "0.16.0",
+  "version": "0.17.0",
   "updated": "2026-09-11",
-  "note": "v0.16.0：分享功能 P0 上线——把「你说出口的那句中文」做成可分享的卡片。Canvas 原生合成 1080×1080 中式卡片（回纹带 + 如意云头角花 + 朱砂印，零第三方依赖），五个主题：句子卡 / 连续卡 / 城市卡 / 徽章卡 / 起点卡；主题从「当前可渲染」的池里加权随机（纯随机会给新用户发出空卡），弹层内可「换一个」手动切换。分享弹层重做为「所见即所分享」：卡片预览 + 分享到…/保存图片/复制文案+链接三个动作，按环境自动取舍（微信内只留长按保存）。新增可选昵称（只存本地、绝不上云）、随机归因码（与设备 UID 无关联）。入口前置三处：场景全说完的祝贺气泡 / 徽章解锁气泡 / 「我」页常驻。全程零新增网络请求，合成失败自动降级到已有静态分享图。",
+  "note": "v0.17.0：分享功能 P1 —— 竖版卡片、进度报告卡、存进相册、朋友点开就是那一句。① 竖版 1080×1920（Story/抖音）；弹层内可切换 1:1 / 9:16，竖版不是拉伸而是重新分配留白（上下各一条回纹带，内容居中，页脚锚底）。② 新增「进度报告卡」：2×2 数据格（连续天数/已开口句数/点亮地标/徽章）+ 最近 14 天热力，全部取自真实状态；有积累（开口 ≥8 句或练过 ≥3 天）才会出现在主题池里。③ APK 原生壳「保存图片」改走系统相册：Android 10+ 经 MediaStore 写入 Pictures/Sinoky，不需要任何存储权限；低版本明确回退到长按保存（不申请多余权限）。④ 分享链接带上「是哪一句」：朋友点开直接落到同一句并高亮（复用场景入口自带的定位），同时给出说明提示；未完成引导页时会排队到引导结束后再打开。分享卡片依旧零第三方依赖、零新增请求，卡片上仍不含设备号/录音等任何个人信息。",
   "apk": {
-    "versionCode": 1600,
-    "version": "0.16.0",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.16.0-release.apk",
-    "md5": "8ba549c1040479e8715caa02e9f468b3",
-    "size": 23910301
+    "versionCode": 1700,
+    "version": "0.17.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.17.0-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.16.0 Share cards (P0): the Chinese sentence you actually said, turned into a shareable card. 1080x1080 cards composed with native Canvas only (meander band, ruyi corner ornaments, cinnabar seal; zero third-party dependencies). Five themes: the line you said / day streak / city unlocked / badge / just started. The theme is picked from the currently renderable pool with weighting (a pure random pick would hand a blank card to a brand-new user) and can be shuffled by hand. The share sheet is now what-you-see-is-what-you-share: card preview plus Share / Save image / Copy text + link, chosen per environment (inside WeChat only long-press-save applies). Adds an optional local-only nickname and a random attribution code with no link to the device UID. Three entry points: scene-complete congrats, badge unlock, and a permanent one on the Me page. No new network requests, and the card falls back to the existing static share image if composition fails."
+    "v0.17.0 Share cards (P1): portrait cards, a progress report card, save to gallery, and arriving on the exact line a friend shared. (1) 1080x1920 portrait (Story/TikTok) with an in-sheet 1:1 / 9:16 switch — the portrait layout redistributes whitespace rather than stretching, with meander bands top and bottom, content centred and the footer anchored to the bottom edge. (2) New progress report card: a 2x2 grid (days in a row / phrases said / landmarks lit / badges) plus a last-14-days heat strip, all from real state; it only enters the theme pool once there is something to report (8+ phrases said or 3+ days practised). (3) In the Android app the save action now writes to the system gallery via MediaStore on Android 10+, which needs no storage permission at all; older versions fall back to long-press save rather than asking for a permission the app does not need. (4) Share links now carry which line it was: opening one lands on that exact sentence with it highlighted, plus an explanatory note; if onboarding is not finished yet the jump is queued until it is. Cards remain dependency-free, add no network requests, and still carry no device ID or recording."
   ]
 }

@@ -394,5 +394,15 @@
  "City unlocked": "解锁了一座城",
  "New badge": "新徽章",
  "Exactly what your friends will see.": "朋友收到看到的就是这个。",
- "Close": "关闭"
+ "Close": "关闭",
+ "Size": "尺寸",
+ "Saved to your gallery": "已保存到相册",
+ "Could not save — try Share instead": "保存失败——可以改用分享",
+ "Your friend sent you this line — say it out loud": "朋友把这句话发给了你——大声说出来",
+ "My progress": "我的进度",
+ "days in a row": "天连续",
+ "phrases said": "已开口句数",
+ "landmarks": "点亮地标",
+ "badges": "徽章数",
+ "last 14 days": "最近 14 天"
 }
