@@ -1,15 +1,15 @@
 {
-  "version": "0.14.8",
-  "updated": "2026-09-10",
-  "note": "v0.14.8：诺诺聊天框全新升级——「竹影窗棂」中式视觉（黛青底/朱砂/水青气泡/金色窗格纹），聊天面板不再撑满屏幕（独立滚动+高度上限），按住说话录音中红脉动，消息自动滚底；修复聊天语音无法发送的问题。",
+  "version": "0.14.9",
+  "updated": "2026-09-11",
+  "note": "v0.14.9：中国风视觉全面落地——启动屏换「金龙盘诺诺」主视觉（鎏金中国龙盘绕怀抱青竹的诺诺，鹿角/鬃毛/龙须/鳞节，红连帽卫衣熊猫形象与 App 原型完全一致），全应用墨韵朱砂主题（朱砂/鎏金/竹青三彩、窗格纹底、宋体标题）、按钮全面胶囊化、卡片雕花角、导航图标统一为中式线稿、诺诺 AI 场景鼓励钩子。",
   "apk": {
-    "versionCode": 1408,
-    "version": "0.14.8",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.8-release.apk",
-    "md5": "2d8ced5103dd9e1460b1f3e6353e54b7",
-    "size": 23885207
+    "versionCode": 1409,
+    "version": "0.14.9",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.9-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.14.8: Nono chat box fully redesigned — 'Bamboo & Lattice' Chinese visual theme (ink-teal base, cinnabar/celadon bubbles, gold lattice texture). Chat panel no longer fills the screen (independent scrolling with height cap); hold-to-speak pulses red while recording; messages auto-scroll; fixed an issue where voice messages in chat could not be sent."
+    "v0.14.9: Full Chinese-style visual rollout — new 'Golden Dragon & Nono' splash screen (a gilded Chinese dragon coiling around Nono the panda in a red hoodie, with antlers, mane, whiskers and scales), the Ink & Cinnabar theme app-wide (cinnabar/gold/celadon palette, lattice texture, serif headings), fully capsule-shaped buttons, carved corner ornaments on cards, unified Chinese line-art nav icons, and Nono AI encouragement hooks."
   ]
 }
