@@ -6,8 +6,8 @@
     "versionCode": 1500,
     "version": "0.15.0",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.15.0-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "eaaf4f4c7ef9684fc4c66169543d1663",
+    "size": 23898013
   },
   "noteEn": [
     "v0.15.0: Chinese modular design system rollout — ruyi corner ornaments and meander bands on cards, inset gold rings on buttons, five Chinese line-art nav icons (gate/panda-bamboo-slip/compass/scale-steps/seal) that follow the selected state, gold hairline and cloud topper on the tab bar, capsule inputs with inset gold rules, seal-style badges, a gilded scale progress bar, and meander page-header rules. New theme variables --gold-dim and --paper. The 'Golden Dragon & Nono' splash is now live."
