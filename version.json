@@ -6,8 +6,8 @@
     "versionCode": 1600,
     "version": "0.16.0",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.16.0-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "8ba549c1040479e8715caa02e9f468b3",
+    "size": 23910301
   },
   "noteEn": [
     "v0.16.0 Share cards (P0): the Chinese sentence you actually said, turned into a shareable card. 1080x1080 cards composed with native Canvas only (meander band, ruyi corner ornaments, cinnabar seal; zero third-party dependencies). Five themes: the line you said / day streak / city unlocked / badge / just started. The theme is picked from the currently renderable pool with weighting (a pure random pick would hand a blank card to a brand-new user) and can be shuffled by hand. The share sheet is now what-you-see-is-what-you-share: card preview plus Share / Save image / Copy text + link, chosen per environment (inside WeChat only long-press-save applies). Adds an optional local-only nickname and a random attribution code with no link to the device UID. Three entry points: scene-complete congrats, badge unlock, and a permanent one on the Me page. No new network requests, and the card falls back to the existing static share image if composition fails."
