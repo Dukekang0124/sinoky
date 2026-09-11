@@ -6380,7 +6380,8 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
 #share-panel .sp-swap{ font-size:12px; padding:6px 15px; border-radius:99px; cursor:pointer;
   background:transparent; color:var(--txt); border:1px solid rgba(201,168,108,.45); }
 #share-panel .sp-nick{ display:block; margin:0 0 12px; }
-#share-panel .sp-nick input{ width:100%; box-sizing:border-box; font-size:13px; }
+#share-panel .sp-nick input{ width:100%; box-sizing:border-box; font-size:13px;
+  background:rgba(255,255,255,.06); color:var(--txt); }   /* 不显式给底色会回落成浏览器默认白底，暗色应用里很突兀 */
 #share-panel .btn{ width:100%; margin-top:8px; }
 #share-panel .sp-wx{ font-size:11px; color:var(--sub); line-height:1.55; margin-top:11px; }
 #share-panel .sp-priv{ font-size:10.5px; color:var(--sub); opacity:.72; line-height:1.5; margin-top:8px; }
