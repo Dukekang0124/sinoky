@@ -288,53 +288,71 @@ jobs:
           /* v0.17.0 分享卡片存相册。
              Android 10+（API 29）起，往 MediaStore 写本 App 生成的图片不需要任何存储权限；
              API < 29 需要 WRITE_EXTERNAL_STORAGE，本项目未申请该权限 → 明确返回 saved:false，
-             由前端回退到长按保存 —— 宁可不做，也不弹一个莫名其妙的授权给用户。 */
+             由前端回退到长按保存 —— 宁可不做，也不弹一个莫名其妙的授权给用户。
+
+             ⚠️ 结构铁律（踩坑记录）：用到 API 29 常量的代码**必须集中在单个 @TargetApi(29) 方法内**。
+             若写在线程的匿名内部类里，lint 的 NewApi 检查跨不过匿名类边界（匿名类里看不到外层
+             方法的 SDK_INT 早退守卫）→ assembleRelease 会跑 lintVitalRelease 而失败，
+             表现为 CI「Build APK」exit 1，且注解里只有一句 exit code 1，极难定位。 */
           @PluginMethod
           public void saveImageToGallery(final PluginCall call) {
             final String dataUrl = call.getString("dataUrl");
             final String filename = call.getString("filename");
             if (dataUrl == null || dataUrl.length() == 0) { call.reject("dataUrl required"); return; }
-            final JSObject fail = new JSObject();
-            fail.put("saved", false);
-            if (Build.VERSION.SDK_INT < 29) { call.resolve(fail); return; }
+            final JSObject out = new JSObject();
+            out.put("saved", false);
+            if (Build.VERSION.SDK_INT < 29) { call.resolve(out); return; }
+            final String name = (filename == null || filename.length() == 0) ? "sinoky-share.png" : filename;
+            final byte[] raw = decodeDataUrl(dataUrl);
+            if (raw == null) { call.resolve(out); return; }
             new Thread(new Runnable() {
               @Override
               public void run() {
-                try {
-                  String b64 = dataUrl;
-                  int comma = b64.indexOf(',');
-                  if (comma >= 0) { b64 = b64.substring(comma + 1); }
-                  byte[] raw = Base64.decode(b64, Base64.DEFAULT);
-                  Bitmap bmp = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-                  if (bmp == null) { call.resolve(fail); return; }
-                  ContentValues cv = new ContentValues();
-                  String name = (filename == null || filename.length() == 0) ? "sinoky-share.png" : filename;
-                  cv.put(MediaStore.Images.Media.DISPLAY_NAME, name);
-                  cv.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
-                  cv.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Sinoky");
-                  cv.put(MediaStore.Images.Media.IS_PENDING, 1);
-                  ContentResolver cr = getContext().getContentResolver();
-                  Uri uri = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv);
-                  if (uri == null) { call.resolve(fail); return; }
-                  OutputStream os = cr.openOutputStream(uri);
-                  boolean ok = false;
-                  if (os != null) {
-                    bmp.compress(Bitmap.CompressFormat.PNG, 100, os);
-                    os.flush();
-                    os.close();
-                    ok = true;
-                  }
-                  cv.clear();
-                  cv.put(MediaStore.Images.Media.IS_PENDING, 0);
-                  cr.update(uri, cv, null, null);
-                  JSObject ret = new JSObject();
-                  ret.put("saved", ok);
-                  call.resolve(ret);
-                } catch (Exception e) {
-                  call.resolve(fail);
-                }
+                boolean ok = false;
+                try { ok = writeToGallery(raw, name); } catch (Exception e) { ok = false; }
+                JSObject ret = new JSObject();
+                ret.put("saved", ok);
+                call.resolve(ret);
               }
             }).start();
+          }
+
+          /* data:image/png;base64,xxxx → 原始字节。只用 android.util.Base64（API 8），不涉及新 API。 */
+          private byte[] decodeDataUrl(String dataUrl) {
+            try {
+              String b64 = dataUrl;
+              int comma = b64.indexOf(',');
+              if (comma >= 0) { b64 = b64.substring(comma + 1); }
+              return Base64.decode(b64, Base64.DEFAULT);
+            } catch (Exception e) {
+              return null;
+            }
+          }
+
+          /* 写进系统相册：MediaStore + RELATIVE_PATH（API 29+）→ 零存储权限。
+             @TargetApi(29) 是对 lint 的显式声明：调用方已做 SDK_INT 早退，但 lint 跨不过
+             匿名内部类边界，所以这里必须显式标注，否则 release 构建的 lintVital 会失败。 */
+          @android.annotation.TargetApi(29)
+          private boolean writeToGallery(byte[] raw, String name) throws Exception {
+            Bitmap bmp = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+            if (bmp == null) { return false; }
+            ContentValues cv = new ContentValues();
+            cv.put(MediaStore.Images.Media.DISPLAY_NAME, name);
+            cv.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+            cv.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Sinoky");
+            cv.put(MediaStore.Images.Media.IS_PENDING, 1);
+            ContentResolver cr = getContext().getContentResolver();
+            Uri uri = cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv);
+            if (uri == null) { return false; }
+            OutputStream os = cr.openOutputStream(uri);
+            if (os == null) { return false; }
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, os);
+            os.flush();
+            os.close();
+            cv.clear();
+            cv.put(MediaStore.Images.Media.IS_PENDING, 0);
+            cr.update(uri, cv, null, null);
+            return true;
           }
 
           }
@@ -403,7 +421,18 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build APK
-        run: cd android && ./gradlew assemble${{ env.BUILD_TYPE == 'debug' && 'Debug' || 'Release' }} --no-daemon
+        run: |
+          cd android
+          set +e
+          ./gradlew assemble${{ env.BUILD_TYPE == 'debug' && 'Debug' || 'Release' }} --no-daemon 2>&1 | tee /tmp/gradle.log
+          RC=${PIPESTATUS[0]}
+          if [ "$RC" -ne 0 ]; then
+            ERR=$(grep -nE "error:|错误:|cannot find symbol|Execution failed|What went wrong|> Task .*FAILED|Unresolved reference|lint found|NewApi|requires API level|is not abstract|incompatible" /tmp/gradle.log | head -25 | tr '\n' '~')
+            echo "::error title=gradle-build-failed::${ERR}"
+            TAIL=$(tail -45 /tmp/gradle.log | tr '\n' '~')
+            echo "::error title=gradle-tail::${TAIL}"
+          fi
+          exit "$RC"
 
       - name: Sign release with fixed keystore (in-app update requires same signature forever)
         if: env.BUILD_TYPE == 'release'
