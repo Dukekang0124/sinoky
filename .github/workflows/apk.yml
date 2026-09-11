@@ -285,7 +285,7 @@ jobs:
                 }
               }).start();
             }
-          }          /* v0.17.0 分享卡片存相册。
+          /* v0.17.0 分享卡片存相册。
              Android 10+（API 29）起，往 MediaStore 写本 App 生成的图片不需要任何存储权限；
              API < 29 需要 WRITE_EXTERNAL_STORAGE，本项目未申请该权限 → 明确返回 saved:false，
              由前端回退到长按保存 —— 宁可不做，也不弹一个莫名其妙的授权给用户。 */
@@ -337,6 +337,7 @@ jobs:
             }).start();
           }
 
+          }
           EOF
           if [ -f "$PKGDIR/MainActivity.kt" ]; then
             MA="$PKGDIR/MainActivity.kt"
