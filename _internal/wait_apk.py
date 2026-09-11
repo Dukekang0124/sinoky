@@ -1,34 +1,44 @@
 # -*- coding: utf-8 -*-
-"""通用轮询：等 CI 出包（dist 分支）+ main 回写 md5/size + 线上 APK 可下载"""
+"""通用轮询：等 CI 出包。
+判据必须同时满足（v0.14.11 踩坑后加严）：
+  ① 线上 version.json 的 version == 本地目标版本（否则会读到上一版的 md5 而误判）
+  ② md5 非空、size > 1MB
+  ③ APK 实际下载字节数 == size
+    —— 不能用 HTTP 200 判断存在性：CF Pages 的 SPA 回退对不存在的 .apk 也返回 200
+       （实测返回 ~467KB 的 index.html）
+"""
 import json, ssl, subprocess, time, urllib.request
 
 APP = r"D:\写作工具\知识管理\01-Projects-项目\求职与作品集\03-作品集\Sinoky\sinoky-app"
 ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
 VER = json.load(open(APP + r"\version.json", encoding="utf-8"))["apk"]["version"]
 APK = f"https://sinoky.pages.dev/apk/Sinoky-v{VER}-release.apk"
-print("waiting for", VER, flush=True)
+print("strict-wait for", VER, flush=True)
 
 
-def get(url, t=45):
-    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}),
-                                  timeout=t, context=ctx).read()
+def get(u, t=90):
+    return urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}),
+                                  timeout=t, context=ctx)
 
 
 ok = False
 for i in range(1, 41):
+    try:
+        m = json.loads(get(f"https://sinoky.pages.dev/version.json?cb={time.time()}").read().decode())
+    except Exception as e:
+        print(f"[{i}] version.json 读取失败 {str(e)[:40]}", flush=True); time.sleep(30); continue
+    ver_ok = m["version"] == VER
+    md5, size = m["apk"]["md5"], m["apk"]["size"]
+    try:
+        with get(APK) as r:
+            n = len(r.read())
+    except Exception as e:
+        n = f"ERR {str(e)[:30]}"
     dist = subprocess.run(["git", "-C", APP, "ls-remote", "origin", "dist"],
                           capture_output=True, text=True).stdout.strip()
-    meta = json.loads(get(f"https://sinoky.pages.dev/version.json?cb={time.time()}").decode())
-    code, size = None, None
-    try:
-        req = urllib.request.Request(APK, headers={"User-Agent": "Mozilla/5.0", "Range": "bytes=0-1023"})
-        with urllib.request.urlopen(req, timeout=60, context=ctx) as r:
-            code = r.status
-            size = r.headers.get("Content-Range") or r.headers.get("Content-Length")
-    except Exception as e:
-        code, size = None, str(e)[:40]
-    print(f"[{i}] dist={'YES' if dist else 'no'} | md5={meta['apk']['md5'][:12]!r} size={meta['apk']['size']} | apk={code} {size}", flush=True)
-    if code == 200 and meta["apk"]["md5"] and meta["apk"]["size"] > 1_000_000:
+    print(f"[{i}] dist={'Y' if dist else 'n'} live_ver={m['version']} ver_ok={ver_ok} "
+          f"md5={md5[:12]!r} size={size} apk_bytes={n}", flush=True)
+    if ver_ok and md5 and size > 1_000_000 and n == size:
         ok = True; break
     time.sleep(30)
 print("READY" if ok else "TIMEOUT")
