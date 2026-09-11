@@ -1,15 +1,15 @@
 {
-  "version": "0.17.0",
+  "version": "0.18.0",
   "updated": "2026-09-11",
-  "note": "v0.17.0：分享功能 P1 —— 竖版卡片、进度报告卡、存进相册、朋友点开就是那一句。① 竖版 1080×1920（Story/抖音）；弹层内可切换 1:1 / 9:16，竖版不是拉伸而是重新分配留白（上下各一条回纹带，内容居中，页脚锚底）。② 新增「进度报告卡」：2×2 数据格（连续天数/已开口句数/点亮地标/徽章）+ 最近 14 天热力，全部取自真实状态；有积累（开口 ≥8 句或练过 ≥3 天）才会出现在主题池里。③ APK 原生壳「保存图片」改走系统相册：Android 10+ 经 MediaStore 写入 Pictures/Sinoky，不需要任何存储权限；低版本明确回退到长按保存（不申请多余权限）。④ 分享链接带上「是哪一句」：朋友点开直接落到同一句并高亮（复用场景入口自带的定位），同时给出说明提示；未完成引导页时会排队到引导结束后再打开。分享卡片依旧零第三方依赖、零新增请求，卡片上仍不含设备号/录音等任何个人信息。",
+  "note": "v0.18.0：全面体检修复 —— 界面乱码、复习页横向滚动、诺诺气泡串页、徽章名露出内部编号。① 复习页标题此前显示成 \"\\u{1F501} Smart review\"（转义没被解码）：已修，现在正常显示图标；顺带全站扫了一遍，确认再无同类「原始转义漏到界面」的情况。② 复习页卡片可被左右拖动（超出屏幕 115px）：熊猫练句按钮被拉伸到 298px 撑破容器，已修；现在全站零横向溢出。③ 切换页面时诺诺的气泡不再赖着不走 —— 之前会出现「在看 30 天计划，气泡却在讲字卡」的串页现象。④ 徽章解锁提示此前显示内部编号（streak3, first_city）：现在显示徽章名。⑤ 中文界面补译 149 条（30 天计划标题与说明、18 个城市简介、徽章名、复习动作、对话分类、声调名等）；保留英文的只剩「中文句子的英文释义」与第三方署名，属应当。⑥ 主操作按钮触控高度统一到 44px（场景页打分/更慢、天数切换、查看全部、导出导入）；30 天计划的说明从单行截断改为两行；引导页标题不再断在半字。⑦ 合规修正：香港城市卡标注为「中国香港」。",
   "apk": {
-    "versionCode": 1700,
-    "version": "0.17.0",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.17.0-release.apk",
-    "md5": "f706f6caa3d944037930d0326c20b9ba",
-    "size": 23914397
+    "versionCode": 1800,
+    "version": "0.18.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.18.0-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.17.0 Share cards (P1): portrait cards, a progress report card, save to gallery, and arriving on the exact line a friend shared. (1) 1080x1920 portrait (Story/TikTok) with an in-sheet 1:1 / 9:16 switch — the portrait layout redistributes whitespace rather than stretching, with meander bands top and bottom, content centred and the footer anchored to the bottom edge. (2) New progress report card: a 2x2 grid (days in a row / phrases said / landmarks lit / badges) plus a last-14-days heat strip, all from real state; it only enters the theme pool once there is something to report (8+ phrases said or 3+ days practised). (3) In the Android app the save action now writes to the system gallery via MediaStore on Android 10+, which needs no storage permission at all; older versions fall back to long-press save rather than asking for a permission the app does not need. (4) Share links now carry which line it was: opening one lands on that exact sentence with it highlighted, plus an explanatory note; if onboarding is not finished yet the jump is queued until it is. Cards remain dependency-free, add no network requests, and still carry no device ID or recording."
+    "v0.18.0 Audit sweep: raw escape text on screen, horizontal scrolling on Review, Nono bubbles lingering across pages, and internal badge IDs leaking. (1) The Review heading used to render as literal \"\\u{1F501} Smart review\" because the escape was written in static HTML and never decoded. (2) Review cards could be dragged sideways - a 298px-wide stretched button blew past the viewport by 115px; the whole app now has zero horizontal overflow. (3) Nono no longer keeps a previous page's bubble on screen (you could be reading the 30-day plan while the bubble talked about flashcards). (4) Badge unlocks used to show internal IDs such as streak3 / first_city; they now show badge names. (5) 149 Chinese-UI strings added - no more English fallback in the 30-day titles and notes, the 18 city blurbs, badge names, review actions, dialogue categories and tone names. (6) Primary tap targets raised to 44px and the 30-day notes go to two lines instead of truncating mid-sentence. (7) Compliance: the Hong Kong city card is now labelled Hong Kong, China."
   ]
 }

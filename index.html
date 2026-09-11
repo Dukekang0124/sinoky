@@ -901,7 +901,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- PROGRESS -->
   <section id="v-review" class="views">
     <div class="card">
-      <div class="top"><h2>\u{1F501} Smart review</h2><span class="badge" id="rv-count">0</span></div>
+      <div class="top"><h2>🔁 Smart review</h2><span class="badge" id="rv-count">0</span></div>
       <p class="desc">Spaced repetition (1→3→7→15→30 days). Say the line in the scene, then mark it — that decides when you see it again.</p>
       <div id="rv-modes"></div>
       <div id="rv-queue"></div>
@@ -1167,7 +1167,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.17.0';
+var APP_VERSION = '0.18.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2225,8 +2225,8 @@ var SCENES = [
           { hz:'白族三道茶。', py:'Báizú sāndào chá.', note:'Bai three-course tea', style:'casual' }
         ]}
     ]},
-  { id:'hongkong', icon:'🌆', title:'Hong Kong · Victoria Harbour', day1:false, region:'south', hot:true, city:'香港', pic:['landmark','food'],
-    desc:'Victoria Harbour and milk tea in Hong Kong. Tap, listen, then say it 3 times.',
+  { id:'hongkong', icon:'🌆', title:'Hong Kong, China · Victoria Harbour', day1:false, region:'south', hot:true, city:'中国香港', pic:['landmark','food'],
+    desc:'Victoria Harbour and milk tea in Hong Kong, China. Tap, listen, then say it 3 times.',
     phrases:[
       { en:'Victoria Harbour is beautiful.',  py:'Wéiduōlìyà gǎng hěn piàoliang.', hz:'维多利亚港很漂亮。', pya:'维:wéi|多:duō|利:lì|亚:yà|港:gǎng|很:hěn|漂:piào|亮:liang',
         real:[
@@ -3068,7 +3068,7 @@ function cityBlockHtml(){
   if(!hot.length) hot = all.slice(0,6);
   var litN = all.reduce(function(a,sc){ return a + (cityDoneN(sc) >= sc.phrases.length ? 1 : 0); }, 0);
   var h = '<div class="card"><div class="top"><h2>\ud83d\udccd City map</h2>'+
-    '<span class="badge">'+litN+'/'+all.length+' LIT</span></div>'+
+    '<span class="badge">'+T('{a}/{b} LIT').replace('{a}',litN).replace('{b}',all.length)+'</span></div>'+
     '<p class="desc">Each city is a landmark. Say every line to light it up \u2014 light the whole map.</p>'+
     '<div class="mapgrid">';
   hot.forEach(function(sc){
@@ -3092,7 +3092,7 @@ function renderCities(){
       return hay.indexOf(q) >= 0;
     });
   }
-  $('city-count').textContent = cityList().length + ' CITIES';
+  $('city-count').textContent = T('{n} CITIES').replace('{n}', cityList().length);
   if(!list.length){
     h = '<div class="cityempty"><img class="empty-ill" src="assets/empty/general.webp" alt="" onerror="this.remove()">No city matches \u201c'+escHtml(q)+'\u201d.<br>Try Beijing, \u6210\u90fd or chengdu.</div>';
   } else if(q){
@@ -3173,7 +3173,7 @@ function dayRowHtml(n){
 }
 function renderDays(){
   var h = '', cd = currentDay();
-  $('days-count').textContent = cd > DAYS.length ? 'ALL DONE' : 'DAY '+cd+' / '+DAYS.length;
+  $('days-count').textContent = cd > DAYS.length ? T('ALL DONE') : T('DAY {d} / {n}').replace('{d}',cd).replace('{n}',DAYS.length);
   $('dtab-time').className = 'daytab'+(dayMode==='timeline'?' on':'');
   $('dtab-topic').className = 'daytab'+(dayMode==='topic'?' on':'');
   if(dayMode === 'timeline'){
@@ -3294,12 +3294,12 @@ function reviewCardHtml(){
   var byMode = {random_recall:0, role_reversal:0, speed_run:0};
   q.forEach(function(it){ byMode[revModeOf(it)] = (byMode[revModeOf(it)]||0)+1; });
   return '<div class="card review"><div class="top"><h2>\u{1F501} Smart review</h2>'+
-    '<span class="badge teal">'+q.length+' due</span></div>'+
+    '<span class="badge teal">'+T('{n} due').replace('{n}',q.length)+'</span></div>'+
     '<p class="desc">Spaced repetition picks what you are about to forget. Three modes, three bars.</p>'+
     '<div class="rv-modes">'+
-    '<div class="rv-mode"><span class="rv-ic">\u{1F500}</span><b>Random recall</b><i>'+(byMode.random_recall||0)+' due · 60%</i></div>'+
-    '<div class="rv-mode"><span class="rv-ic">\u{1F504}</span><b>Role reversal</b><i>'+(byMode.role_reversal||0)+' due · 70%</i></div>'+
-    '<div class="rv-mode"><span class="rv-ic">\u{26A1}</span><b>Speed run</b><i>'+(byMode.speed_run||0)+' due · 80%</i></div>'+
+    '<div class="rv-mode"><span class="rv-ic">\u{1F500}</span><b>Random recall</b><i>'+T('{n} due · {p}%').replace('{n}',(byMode.random_recall||0)).replace('{p}',60)+'</i></div>'+
+    '<div class="rv-mode"><span class="rv-ic">\u{1F504}</span><b>Role reversal</b><i>'+T('{n} due · {p}%').replace('{n}',(byMode.role_reversal||0)).replace('{p}',70)+'</i></div>'+
+    '<div class="rv-mode"><span class="rv-ic">\u{26A1}</span><b>Speed run</b><i>'+T('{n} due · {p}%').replace('{n}',(byMode.speed_run||0)).replace('{p}',80)+'</i></div>'+
     '</div>'+
     '<button class="btn primary" onclick="go(\'review\')">Start review →</button></div>';
 }
@@ -3382,7 +3382,7 @@ function listenCardHtml(){
   var revealed = listenAns >= 0;
   var ok = revealed && listenAns === it.q.t;
   var html = '<div class="card earcheck"><div class="top"><h2>👂 Ear check · today</h2>'+
-    '<span class="badge'+(st.n>0?' teal':'')+'">'+(st.n>0 ? st.r+'/'+st.n+' right' : '1 sound')+'</span></div>'+
+    '<span class="badge'+(st.n>0?' teal':'')+'">'+(st.n>0 ? T('{r}/{n} right').replace('{r}',st.r).replace('{n}',st.n) : T('1 sound'))+'</span></div>'+
     '<p class="desc">Listen to the sound. Which tone do you hear?</p>'+
     '<button class="ear-play" id="ear-play" onclick="listenPlay()">' + PLAY_ICON + ' Play the sound</button>'+
     '<div class="earbtns" id="ear-btns">';
@@ -3594,7 +3594,7 @@ function rvMarkGood(key){
 function revMark(k, passed, score){ revSchedule(k, passed, score); renderReview(); }
 function renderReview(){
   var q = revQueue(), box = $('rv-queue'), cnt = $('rv-count');
-  if(cnt) cnt.textContent = q.length + ' due';
+  if(cnt) cnt.textContent = T('{n} due').replace('{n}', q.length);
   if(!box) return;
   if(!q.length){ box.innerHTML = '<div class="dayempty"><img class="empty-ill" src="assets/empty/study.webp" alt="" onerror="this.remove()">Nothing due today — go learn a new line.</div>'; return; }
   var h = '';
@@ -3609,7 +3609,7 @@ function renderReview(){
       '<div class="rv-acts">'+
         '<button class="btn primary" onclick="revMark(\''+k+'\',true,'+REV_PASS[mode]+')">Got it</button>'+
         '<button class="btn ghost" onclick="revMark(\''+k+'\',false,40)">Missed it</button>'+
-        '<button class="btn ghost" style="flex:0 0 auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+it.scene.id+'\','+it.idx+')">🐼</button>'+
+        '<button class="btn ghost" style="flex:0 0 auto;width:auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+it.scene.id+'\','+it.idx+')">🐼</button>'+
       '</div></div>';
   });
   box.innerHTML = h;
@@ -4672,7 +4672,7 @@ function nonoWatchBadges(){
     var fresh = Object.keys(on).filter(function(k){ return !prev[k]; });
     try { localStorage.setItem('sinoky_badges_on', JSON.stringify(on)); } catch(e){}
     if (fresh.length && !NONO.closed){
-      var names = fresh.join(', ');
+      var names = fresh.map(function(id){ var sp = document.querySelector('#prog-badges .badge-cell[data-badge="'+id+'"] span'); var nm = sp && sp.textContent ? sp.textContent.replace(/\s+/g,' ').trim() : ''; return nm || id; }).join(', ');
       nonoShow(T('New badge unlocked: <b>{n}</b> 🏅 — that is real progress.').replace('{n}', names) + ' <b>你做到了！</b>',
         { pose:'cheer', priority:'result', actions:[{ t:'See badges', fn:"go('prog')" }, { t:'Thanks', fn:'nonoMin()', ghost:true }] });
     }
@@ -4750,7 +4750,7 @@ function renderHome(){
     (cd>=DAYS.length ? T('🎉 All {n} days done — you can survive in China.').replace('{n}',DAYS.length) : T('🎉 Day {a} complete! Day {b} unlocks next time you open Sinoky.').replace('{a}',cd).replace('{b}',(cd+1)))+
     '</div><div class="day-prog">'+T('{a} / {n} days finished').replace('{a}',doneDays).replace('{n}',DAYS.length)+'</div>'+
     (lastDate ? '<div class="day-finish-date" style="margin-top:6px;font-size:12.5px;font-weight:600;color:#0a8f6e">'+T('✅ Day {d} finished on {date}').replace('{d}',lastDone).replace('{date}',lastDate)+'</div>' : '')+
-    '<button class="daylink" onclick="go(\'days\')">See all '+DAYS.length+' days →</button></div>';
+    '<button class="daylink" onclick="go(\'days\')">'+T('See all {n} days →').replace('{n}',DAYS.length)+'</button></div>';
 
   /* v0.5.1：场景默认只展开 4 张，其余折叠（能力完整保留，一键展开） */
   var html = '', moreHtml = '', scN = 0;
@@ -4889,7 +4889,7 @@ function renderSceneList(){
       '<div class="p-actions">'+
       '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="'+T('Next tap: ')+T(SPEEDS[0].tip)+'">'+SPEEDS[0].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
-         '<button class="btn ghost" style="flex:0 0 auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+curScene.id+'\','+i+')">🐼</button>'+
+         '<button class="btn ghost" style="flex:0 0 auto;width:auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+curScene.id+'\','+i+')">🐼</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
       '</div>' + realHtml(i, p) + '<div class="score-result" id="score-'+i+'"></div></div>';
   });
@@ -5731,7 +5731,7 @@ function rdLoadPY(){
 function rdSample(){ $('rd-input').value = RD_SAMPLE; toast('Sample loaded — tap Read'); }
 function rdTogglePy(){
   rdShowPy = !rdShowPy;
-  $('rd-py-btn').textContent = 'Pinyin: ' + (rdShowPy ? 'on' : 'off');
+  $('rd-py-btn').textContent = T(rdShowPy ? 'Pinyin: on' : 'Pinyin: off');
   var t = $('rd-text');
   if(t) t.classList.toggle('nopy', !rdShowPy);
 }
@@ -6223,7 +6223,7 @@ function renderDialogList(){
     var done = S.dialogs && S.dialogs[id];
     h += '<button class="cityrow'+(done?' done':'')+'" onclick="openDialog(\''+id+'\')">'+
       '<span class="ci">'+d.icon+'</span><span class="cm"><span class="cn">'+d.title+'</span>'+
-      '<span class="cz">Day '+d.day+' · '+(done?'✓ done':'tap to practice')+'</span></span></button>';
+      '<span class="cz">'+T('Day {d} · {s}').replace('{d}',d.day).replace('{s}', done?T('✓ done'):T('tap to practice'))+'</span></span></button>';
   });
   h += '</div></div>';
   var dl=document.getElementById('dialog-list'); if(dl){ dl.innerHTML=h; dl.style.display='block'; }
@@ -7083,6 +7083,49 @@ SHARE.playDeepLink = function(){
     if (base.charAt(base.length-1) !== '/') base += '/';
     fetch(base + 'api/share', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ c:c, t:t }) })
       .catch(function(){});
+  }catch(e){}
+})();
+</script>
+<style id="cn-audit-fix">
+/* v0.18.0 审计修复（纯追加，不改旧规则） */
+.rv-acts .btn{width:auto}                        /* P0-2 兜底：flex:0 0 auto 时不再拿 100% 当基准 */
+.btn.ghost.speed,.btn.record{min-height:44px}    /* P1-6 场景页主操作钮 36→44 */
+.daytab{min-height:44px}                         /* P1-6 时间线/主题切换 37→44 */
+.daylink{min-height:44px;display:flex;align-items:center}
+#v-prog .btn{min-height:44px}                    /* P1-6 导出/导入 41→44 */
+.day1-step .panda-practice{width:34px;height:34px}   /* P1-6 熊猫练句钮 28→34 */
+#v-days .dz{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;line-height:1.4;max-height:2.8em}   /* P1-8 单行截断→两行 */
+#v-onboard h1 .hl{white-space:nowrap}            /* P1-8 引导页高亮短语不再断在半字 */
+</style>
+<script id="cn-audit-js">
+/* 语言包是异步 fetch 的；在它到位之前渲染的「模板串」会把英文焊进 DOM（applyI18n 只认整串，改不回来）。
+   这里在语言包就绪后把当前视图重渲染一次 —— 与 App 自身的 loadLangPack 回调同源。 */
+(function(){
+  var tries = 0;
+  var t = setInterval(function(){
+    tries++;
+    var l = 'en'; try{ l = curLang(); }catch(e){}
+    var ready = (l === 'en') || (window.LANG_PACK && LANG_PACK[l]);
+    if (!ready && tries <= 50) return;
+    clearInterval(t);
+    if (!ready || l === 'en') return;
+    try{
+      var on = document.querySelector('.views.on');
+      if (on && typeof go === 'function') go(on.id.replace('v-',''));
+    }catch(e){}
+  }, 120);
+})();
+/* v0.18.0：切换视图时收起诺诺气泡 —— 修「上一页的提示一直挂在新页面上」 */
+(function(){
+  try{
+    var _cnGo = window.go;
+    if (typeof _cnGo === "function"){
+      window.go = function(v){
+        try{ if (typeof nonoMin === "function") nonoMin(); }catch(e){}
+        return _cnGo.apply(this, arguments);
+      };
+    }
   }catch(e){}
 })();
 </script>

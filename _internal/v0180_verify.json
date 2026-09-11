@@ -1,0 +1,67 @@
+[
+ {
+  "n": "P0-1 review 标题不再是转义字面量",
+  "pass": true,
+  "info": "{\"t\":\"🔁 Smart review\",\"html\":\"🔁 Smart review\"}"
+ },
+ {
+  "n": "P0-2 review 无横向溢出",
+  "pass": true,
+  "info": "scrollWidth=390 vw=390"
+ },
+ {
+  "n": "P0-2 🐼 按钮不再撑破",
+  "pass": true,
+  "info": "[]"
+ },
+ {
+  "n": "P0-2 🐼 按钮尺寸合理",
+  "pass": true,
+  "info": "{\"w\":47,\"h\":48}"
+ },
+ {
+  "n": "P0-3 切视图后诺诺气泡已收起",
+  "pass": true,
+  "info": "visible=false"
+ },
+ {
+  "n": "P0-4 徽章气泡不含内部 ID",
+  "pass": true,
+  "info": "解锁新徽章：First speak, 3-day streak, 7-day streak, Tone master, First landmark 🏅——这是实实在在的进步。 你做到了！"
+ },
+ {
+  "n": "全站零 \\u{...} 字面量泄漏",
+  "pass": true,
+  "info": "(none)"
+ },
+ {
+  "n": "全站零横向溢出",
+  "pass": true,
+  "info": "(none)"
+ },
+ {
+  "n": "触控：天数切换 ≥44",
+  "pass": true,
+  "info": "44px"
+ },
+ {
+  "n": "i18n：未译条数 ≤ 30（原 137）",
+  "pass": true,
+  "info": "剩余 15 条: Hello! (greeting anyone) | Thank you! | My name is (your name). | Nice to meet you. | Hong Kong, China | Sinoky v | Hanzi Writer | Make Me a Hanzi | pinyin-pro | vConsole | How much is it? | I want to go here. (show address)"
+ },
+ {
+  "n": "i18n：无「有译文未应用」",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "n": "合规：城市标签为中国香港",
+  "pass": true,
+  "info": "zh 出现 5 次"
+ },
+ {
+  "n": "零 JS 运行时错误",
+  "pass": true,
+  "info": ""
+ }
+]

@@ -1,0 +1,502 @@
+{
+ "views": {
+  "home": {
+   "id": "v-home",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "panda-practice",
+     "w": 28,
+     "h": 28,
+     "t": "🐼"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "panda-practice",
+     "w": 28,
+     "h": 28,
+     "t": "🐼"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "panda-practice",
+     "w": 28,
+     "h": 28,
+     "t": "🐼"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "panda-practice",
+     "w": 28,
+     "h": 28,
+     "t": "🐼"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "daylink",
+     "w": 324,
+     "h": 24,
+     "t": "See all 30 days →"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "on",
+     "w": 67,
+     "h": 19,
+     "t": "Sentences"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "",
+     "w": 48,
+     "h": 19,
+     "t": "Scenes"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "more-scenes-btn",
+     "cls": "daylink",
+     "w": 358,
+     "h": 25,
+     "t": "Show 31 more scenes ▾"
+    },
+    {
+     "tag": "A",
+     "id": "",
+     "cls": "",
+     "w": 21,
+     "h": 14,
+     "t": "隐私"
+    },
+    {
+     "tag": "A",
+     "id": "",
+     "cls": "",
+     "w": 21,
+     "h": 14,
+     "t": "分享"
+    }
+   ],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "Hello! (greeting anyone)",
+    "Thank you!",
+    "My name is (your name).",
+    "Start",
+    "Nice to meet you.",
+    "Spaced repetition picks what you are about to forget. Three modes, three bars.",
+    "Random recall",
+    "Role reversal",
+    "Speed run",
+    "Sentences",
+    "Scenes",
+    "Listen to the sound. Which tone do you hear?",
+    "Play the sound",
+    "DAILY",
+    "Your first few survival lines: greeting, price, destination, restroom, thanks. T",
+    "Introduce yourself the Chinese way: your name, where you are from, what you do, ",
+    "Xi'an",
+    "Hong Kong",
+    "Sinoky v"
+   ],
+   "overlap": []
+  },
+  "practice": {
+   "id": "v-practice",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [],
+   "overlap": []
+  },
+  "explore": {
+   "id": "v-explore",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [],
+   "overlap": []
+  },
+  "prog": {
+   "id": "v-prog",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [
+    {
+     "tag": "A",
+     "id": "",
+     "cls": "",
+     "w": 63,
+     "h": 14,
+     "t": "文鼎公版授权"
+    }
+   ],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "collect them all",
+    "First speak",
+    "Perfect tone",
+    "Tone master",
+    "First landmark",
+    "All landmarks",
+    "Reversal king",
+    "In the wild",
+    "All paths",
+    "Sinoky v",
+    "Hanzi Writer",
+    "Make Me a Hanzi",
+    "pinyin-pro",
+    "vConsole"
+   ],
+   "overlap": []
+  },
+  "me": {
+   "id": "v-me",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [],
+   "overlap": []
+  },
+  "settings": {
+   "id": "v-settings",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [],
+   "overlap": []
+  },
+  "cards": {
+   "id": "v-cards",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "Reveal",
+    "No saved characters yet."
+   ],
+   "overlap": []
+  },
+  "sentences": {
+   "id": "v-sentences",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "Check",
+    "Show answer",
+    "I got up late, so I was late."
+   ],
+   "overlap": []
+  },
+  "reading": {
+   "id": "v-reading",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [],
+   "overlap": []
+  },
+  "days": {
+   "id": "v-days",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [
+    {
+     "cls": "dz",
+     "t": "Your first four lines. Say them out loud",
+     "sw": 328,
+     "cw": 266
+    },
+    {
+     "cls": "dz",
+     "t": "Someone speaks too fast? These three lin",
+     "sw": 336,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Prices, directions, and the most importa",
+     "sw": 412,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "The lines that matter when something goe",
+     "sw": 407,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "110 police · 119 fire · 120 ambulance — ",
+     "sw": 413,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Markets and malls: ask the price, try it",
+     "sw": 285,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Hear a price, say a number. This day sav",
+     "sw": 296,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Get in, say where, get out — and find yo",
+     "sw": 318,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Check in, get the Wi-Fi, fix the AC. A r",
+     "sw": 285,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Weather, food, weekend plans — the glue ",
+     "sw": 327,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Replies that keep a conversation alive: ",
+     "sw": 312,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Dinners, drinks, invitations — the fun p",
+     "sw": 330,
+     "cw": 241
+    },
+    {
+     "cls": "dz",
+     "t": "Describe what hurts, understand the pres",
+     "sw": 250,
+     "cw": 241
+    }
+   ],
+   "eng": [
+    "Someone speaks too fast? These three lines save the conversation.",
+    "LOCKED",
+    "Prices, directions, and the most important question of all: where is the bathroo",
+    "DONE",
+    "Pay the bill, ask for water, and keep it going.",
+    "Markets and malls: ask the price, try it on, pay by phone.",
+    "Hear a price, say a number. This day saves you real money.",
+    "Check in, get the Wi-Fi, fix the AC. A roof with no drama.",
+    "Replies that keep a conversation alive: really? me too, no way!",
+    "Describe what hurts, understand the prescription.",
+    "Order a drink, make small talk, learn to say no.",
+    "Describe what you need, ask about rent.",
+    "Communicate how you want your hair cut.",
+    "Handle formal procedures with confidence.",
+    "Describe the problem, understand the timeline.",
+    "Receive wishes and express warm replies.",
+    "Buy tickets and handle travel changes.",
+    "Talk about your child with the teacher.",
+    "Talk about fitness and find a buddy.",
+    "Share opinions and understand metaphors.",
+    "Complain and negotiate a resolution.",
+    "Ask questions and join the discussion.",
+    "Persuade, compromise, and close the deal.",
+    "Express feelings and handle close moments."
+   ],
+   "overlap": []
+  },
+  "cities": {
+   "id": "v-cities",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "Famous sights and local food in Beijing. Tap a card, hear it, then say it 3 time",
+    "Sea bridges and fresh beer in Qingdao. Tap, listen, then say it 3 times.",
+    "The Terracotta Army and roujiamo in Xi'an. Tap, listen, then say it 3 times.",
+    "Iconic waterfront and soup dumplings in Shanghai. Tap, listen, then say it 3 tim",
+    "West Lake views and vinegar fish in Hangzhou. Tap, listen, then say it 3 times.",
+    "A famous pavilion and jar soup in Nanchang. Tap, listen, then say it 3 times.",
+    "River isle and stinky tofu in Changsha. Tap, listen, then say it 3 times.",
+    "Misty quartz peaks and a local stew in Zhangjiajie. Tap, listen, then say it 3 t",
+    "A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.",
+    "The slender tower and dim sum in Guangzhou. Tap, listen, then say it 3 times.",
+    "A car-free island and shacha noodles in Xiamen. Tap, listen, then say it 3 times",
+    "Slow island life and chicken rice in Haikou. Tap, listen, then say it 3 times.",
+    "Victoria Harbour and milk tea in Hong Kong. Tap, listen, then say it 3 times.",
+    "Cliff-side night views and fiery hotpot in Chongqing. Tap, listen, then say it 3",
+    "Giant pandas and numbing hotpot in Chengdu. Tap, listen, then say it 3 times.",
+    "Vast landscapes and lamb skewers in Xinjiang. Tap, listen, then say it 3 times.",
+    "Karst peaks and rice noodles in Guilin. Tap, listen, then say it 3 times.",
+    "Erhai Lake and roasted rushan in Dali. Tap, listen, then say it 3 times."
+   ],
+   "overlap": []
+  },
+  "tone": {
+   "id": "v-tone",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [],
+   "overlap": []
+  },
+  "dialog": {
+   "id": "v-dialog",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "Convenience Store",
+    "Ordering Food",
+    "Taking a Taxi",
+    "First Meeting"
+   ],
+   "overlap": []
+  },
+  "review": {
+   "id": "v-review",
+   "overflowX": 115,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "Hello! (greeting anyone)",
+    "Got it",
+    "Missed it",
+    "How much is it?",
+    "I want to go here. (show address)",
+    "Thank you!",
+    "I want to see giant pandas.",
+    "Chengdu hotpot is delicious.",
+    "I want this one. (pointing)",
+    "Not spicy, please.",
+    "Delicious!"
+   ],
+   "overlap": []
+  },
+  "scene": {
+   "id": "v-scene",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "real-toggle",
+     "w": 117,
+     "h": 29,
+     "t": "💬 真实说法 · 2 种"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "real-toggle",
+     "w": 117,
+     "h": 29,
+     "t": "💬 真实说法 · 2 种"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "real-toggle",
+     "w": 117,
+     "h": 29,
+     "t": "💬 真实说法 · 2 种"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "real-toggle",
+     "w": 117,
+     "h": 29,
+     "t": "💬 真实说法 · 2 种"
+    },
+    {
+     "tag": "BUTTON",
+     "id": "",
+     "cls": "real-toggle",
+     "w": 117,
+     "h": 29,
+     "t": "💬 真实说法 · 2 种"
+    }
+   ],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [
+    "Your first few survival lines: greeting, price, destination, restroom, thanks. T",
+    "your recording is used only to score that line. It is never saved, never shared,",
+    "Hello! (greeting anyone)",
+    "How much is it?",
+    "I want to go here. (show address)",
+    "Thank you!",
+    "Where is the restroom?"
+   ],
+   "overlap": []
+  },
+  "onboard": {
+   "id": "v-onboard",
+   "overflowX": 0,
+   "noName": [],
+   "smallTap": [],
+   "brokenImg": [],
+   "clipped": [],
+   "eng": [],
+   "overlap": []
+  }
+ },
+ "global": {
+  "errors": [
+   "console: Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+   "console: Failed to load resource: the server responded with a status of 404 (File not found)",
+   "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+   "console: Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))"
+  ],
+  "requestFailed": [
+   "http://127.0.0.1:8787/api/users/c85166cb-8a35-421f-a0e1-e63205bccaaa/badges :: net::ERR_CONNECTION_REFUSED"
+  ],
+  "badResponses": [
+   "501 http://127.0.0.1:8899/api/register",
+   "404 http://127.0.0.1:8899/api/profile?uid=c85166cb-8a35-421f-a0e1-e63205bccaaa",
+   "501 http://127.0.0.1:8899/api/profile"
+  ],
+  "onboardErrors": []
+ }
+}
