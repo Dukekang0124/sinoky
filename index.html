@@ -478,11 +478,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .dayempty{font-size:12px;color:var(--sub);padding:6px 2px}
 .daylink{margin-top:9px;width:100%;background:none;border:none;color:var(--teal);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
 /* v0.10.0：A8 开屏 splash —— 首屏品牌图，app 初始化后淡出 */
-#splash{position:fixed;inset:0;z-index:9999;background:#17423D;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6vh;transition:opacity .45s ease}
+#splash{position:fixed;inset:0;z-index:9999;background:#141a24;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease}
 #splash.hide{opacity:0;pointer-events:none}
-#splash img{width:100%;max-width:430px;height:auto;max-height:70vh;object-fit:contain}
-#splash .sp-brand{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
-#splash .sp-brand b{color:#D8402F;font-weight:800}
+#splash img{width:auto;height:78vh;max-width:92vw;object-fit:contain;border-radius:18px}
 </style>
 </head>
 <body>
@@ -1118,7 +1116,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <button id="nav-me" onclick="go('me')"><span class="ic">👤</span>Me</button>
 </nav>
 <div class="toast" id="toast"></div>
-<div id="splash"><div class="sp-brand">Sino<b>k</b>y</div><img src="assets/brand/dragon-nono.svg" alt="Sinoky" onerror="this.parentNode.remove()"></div>
+<div id="splash"><img src="assets/splash/a8_9x16.webp" alt="Sinoky" onerror="this.parentNode.remove()"></div>
 <div id="updatebar"></div>
 <div class="rd-pop" id="rd-pop" role="dialog" aria-label="Word details"></div>
 <div id="rd-mask"></div>
@@ -1175,7 +1173,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.9';
+var APP_VERSION = '0.14.10';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。

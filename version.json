@@ -1,15 +1,15 @@
 {
-  "version": "0.14.9",
+  "version": "0.14.10",
   "updated": "2026-09-11",
-  "note": "v0.14.9：中国风视觉全面落地——启动屏换「金龙盘诺诺」主视觉（鎏金中国龙盘绕怀抱青竹的诺诺，鹿角/鬃毛/龙须/鳞节，红连帽卫衣熊猫形象与 App 原型完全一致），全应用墨韵朱砂主题（朱砂/鎏金/竹青三彩、窗格纹底、宋体标题）、按钮全面胶囊化、卡片雕花角、导航图标统一为中式线稿、诺诺 AI 场景鼓励钩子。",
+  "note": "v0.14.10：中国风视觉全面落地——全应用「墨韵·朱砂」主题（朱砂/鎏金/竹青三彩、墨底窗格纹、宋体标题）、全部按钮胶囊化、勋章印章化、诺诺聊天框「竹影窗棂」重制（面板限高+独立滚动、按住说话、消息自动滚底，并修复聊天内语音发不出去的问题）、诺诺 AI 鼓励钩子（场景句卡全清 / 复习连对 / 复习清空 / 聊天 5 轮彩蛋）。本版不含新启动屏主视觉。",
   "apk": {
-    "versionCode": 1409,
-    "version": "0.14.9",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.9-release.apk",
-    "md5": "1bbfc34822bbe91d43c6620a86b90d35",
-    "size": 23893487
+    "versionCode": 1410,
+    "version": "0.14.10",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.10-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.14.9: Full Chinese-style visual rollout — new 'Golden Dragon & Nono' splash screen (a gilded Chinese dragon coiling around Nono the panda in a red hoodie, with antlers, mane, whiskers and scales), the Ink & Cinnabar theme app-wide (cinnabar/gold/celadon palette, lattice texture, serif headings), fully capsule-shaped buttons, carved corner ornaments on cards, unified Chinese line-art nav icons, and Nono AI encouragement hooks."
+    "v0.14.10: Full Chinese-style visual rollout — the 'Ink & Cinnabar' theme app-wide (cinnabar/gold/celadon palette, ink-black base with lattice texture, serif headings), all buttons reshaped to capsules, seal-style badges, the redesigned 'Bamboo Lattice' Nono chat panel (height-capped with its own scrolling, hold-to-speak, auto-scroll, and a fix for voice messages that could not be sent in chat), and Nono's AI encouragement hooks. This build does not include the new splash main visual."
   ]
 }
