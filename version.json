@@ -6,8 +6,8 @@
     "versionCode": 1410,
     "version": "0.14.10",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.10-release.apk",
-    "md5": "",
-    "size": 0
+    "md5": "391f224398d1fe89f87f5a327962fcd1",
+    "size": 23893487
   },
   "noteEn": [
     "v0.14.10: Full Chinese-style visual rollout — the 'Ink & Cinnabar' theme app-wide (cinnabar/gold/celadon palette, ink-black base with lattice texture, serif headings), all buttons reshaped to capsules, seal-style badges, the redesigned 'Bamboo Lattice' Nono chat panel (height-capped with its own scrolling, hold-to-speak, auto-scroll, and a fix for voice messages that could not be sent in chat), and Nono's AI encouragement hooks. This build does not include the new splash main visual."
