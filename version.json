@@ -1,15 +1,15 @@
 {
-  "version": "0.15.0",
+  "version": "0.16.0",
   "updated": "2026-09-11",
-  "note": "v0.15.0：中式模块化设计落地——按《中式模块化设计规范 v1》实施：卡片四角如意云头 + 底边回纹带、按钮内嵌金环、底部导航统一为五枚中式线稿图标（回纹门楼/竹简与笔/祥云罗盘/龙鳞阶/朱砂印，随选中态变色）+ 顶部金线与祥云托底、输入框胶囊化 + 内嵌金线、勋章印章化（圆形金环）、进度条改鎏金龙鳞（进度即奖励）、页头回纹收边；新增 --gold-dim / --paper 变量；启动屏上线「金龙盘诺诺」主视觉（鎏金中国龙盘绕怀抱青竹的诺诺）。",
+  "note": "v0.16.0：分享功能 P0 上线——把「你说出口的那句中文」做成可分享的卡片。Canvas 原生合成 1080×1080 中式卡片（回纹带 + 如意云头角花 + 朱砂印，零第三方依赖），五个主题：句子卡 / 连续卡 / 城市卡 / 徽章卡 / 起点卡；主题从「当前可渲染」的池里加权随机（纯随机会给新用户发出空卡），弹层内可「换一个」手动切换。分享弹层重做为「所见即所分享」：卡片预览 + 分享到…/保存图片/复制文案+链接三个动作，按环境自动取舍（微信内只留长按保存）。新增可选昵称（只存本地、绝不上云）、随机归因码（与设备 UID 无关联）。入口前置三处：场景全说完的祝贺气泡 / 徽章解锁气泡 / 「我」页常驻。全程零新增网络请求，合成失败自动降级到已有静态分享图。",
   "apk": {
-    "versionCode": 1500,
-    "version": "0.15.0",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.15.0-release.apk",
-    "md5": "eaaf4f4c7ef9684fc4c66169543d1663",
-    "size": 23898013
+    "versionCode": 1600,
+    "version": "0.16.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.16.0-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.15.0: Chinese modular design system rollout — ruyi corner ornaments and meander bands on cards, inset gold rings on buttons, five Chinese line-art nav icons (gate/panda-bamboo-slip/compass/scale-steps/seal) that follow the selected state, gold hairline and cloud topper on the tab bar, capsule inputs with inset gold rules, seal-style badges, a gilded scale progress bar, and meander page-header rules. New theme variables --gold-dim and --paper. The 'Golden Dragon & Nono' splash is now live."
+    "v0.16.0 Share cards (P0): the Chinese sentence you actually said, turned into a shareable card. 1080x1080 cards composed with native Canvas only (meander band, ruyi corner ornaments, cinnabar seal; zero third-party dependencies). Five themes: the line you said / day streak / city unlocked / badge / just started. The theme is picked from the currently renderable pool with weighting (a pure random pick would hand a blank card to a brand-new user) and can be shuffled by hand. The share sheet is now what-you-see-is-what-you-share: card preview plus Share / Save image / Copy text + link, chosen per environment (inside WeChat only long-press-save applies). Adds an optional local-only nickname and a random attribution code with no link to the device UID. Three entry points: scene-complete congrats, badge unlock, and a permanent one on the Me page. No new network requests, and the card falls back to the existing static share image if composition fails."
   ]
 }

@@ -1,2 +1,7 @@
 verify-cards.cjs
 verify-*.png
+# v0.16.0：内部工作区（补丁脚本/设计方案/验收截图/日志）绝不上线
+_internal/
+badge-backend.mjs
+package.json
+package-lock.json

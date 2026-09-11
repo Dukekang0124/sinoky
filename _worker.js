@@ -722,6 +722,74 @@ export default {
        /api/profile ：GET ?uid= 读云端进度；POST {uid,state} 写云端进度（KV binding=PROFILES）
        前端 saveState 异步推云端、启动拉云端合并（云端 _ts 新则覆盖），换机/清缓存可恢复，
        也为 L3 语伴互认铺路。两路由均走上方 guardApi（Origin + 每 IP 60s/40 次限流，防刷 KV）。 */
+    /* ===== v0.16.0 分享归因（P0）=====
+       目的：知道「分享带来了多少次打开」，用来判断分享功能到底有没有在拉新。
+       隐私设计（硬约束，与隐私政策 never saved / never shared 一致）：
+         - 分享码由前端随机生成 8 位，与设备 UID **无任何关联**，一次分享一个码；
+         - 服务端只存「码 → 打开次数 / 主题 / 首次日期」，不存 UID、不存 IP、
+           不存任何可回溯到个人的字段 → 即便 KV 泄露也反推不出是谁分享的。
+       存储：PROFILES KV 前缀 shr:（与进度 p: / 统计 s: / 勋章 b: 完全分开。
+             刻意用 shr: 而不是 sh:，避免与 summarizeStats 的 's:' 前缀发生任何歧义）
+       写入量：一条分享链接被打开一次，写一次；叠加 guardApi 限流，量级可忽略。 */
+    if (url.pathname === '/api/share' && req.method === 'POST') {
+      try {
+        const b = await req.json().catch(() => ({}));
+        const code = String((b && b.c) || '').trim().toLowerCase();
+        const theme = String((b && b.t) || '').trim().toLowerCase();
+        if (!/^[a-z0-9]{4,12}$/.test(code)) return json({ ok: false, error: 'bad code' }, 400);
+        if (theme && !/^[a-z]{1,12}$/.test(theme)) return json({ ok: false, error: 'bad theme' }, 400);
+        if (!env.PROFILES) return json({ ok: false, error: 'profiles KV not bound' }, 200);
+        const key = 'shr:' + code;
+        let rec = { t: theme, n: 0, f: new Date().toISOString().slice(0, 10) };
+        try {
+          const raw = await env.PROFILES.get(key);
+          if (raw) rec = Object.assign(rec, JSON.parse(raw));
+        } catch (e) { /* 读失败按新记录计，不阻塞 */ }
+        rec.n = Math.min(100000, (parseInt(rec.n, 10) || 0) + 1);
+        if (theme) rec.t = theme;
+        try {
+          await env.PROFILES.put(key, JSON.stringify(rec), { expirationTtl: 15552000 }); /* 180 天 */
+        } catch (e) {
+          /* 极少数运行时不接受 options → 退回不带 options 写一次 */
+          try { await env.PROFILES.put(key, JSON.stringify(rec)); } catch (e2) { /* 静默 */ }
+        }
+        return json({ ok: true });
+      } catch (e) {
+        return json({ ok: false, error: 'share failed' }, 200); /* 统计失败绝不影响用户 */
+      }
+    }
+
+    /* GET /api/share：给看板读。返回「分享带来的打开总数 / 独立分享码数 / 按主题分布」。
+       鉴权口径与 /api/stats 完全一致（STATS_TOKEN，未设置时保持开放）。 */
+    if (url.pathname === '/api/share' && req.method === 'GET') {
+      const wantTok = env.STATS_TOKEN || '';
+      if (wantTok) {
+        const gotTok = url.searchParams.get('token') || req.headers.get('x-stats-token') || '';
+        if (gotTok !== wantTok) return json({ ok: false, error: 'unauthorized' }, 401);
+      }
+      if (!env.PROFILES) return json({ ok: false, error: 'profiles KV not bound' }, 500);
+      try {
+        let cursor = undefined, opens = 0, codes = 0, byTheme = {}, page = 0;
+        do {
+          const r = await env.PROFILES.list({ prefix: 'shr:', cursor });
+          for (const k of r.keys) {
+            codes++;
+            try {
+              const v = JSON.parse((await env.PROFILES.get(k.name)) || '{}');
+              const n = parseInt(v.n, 10) || 0;
+              opens += n;
+              if (v.t) byTheme[v.t] = (byTheme[v.t] || 0) + n;
+            } catch (e) { /* 单条坏了不影响整体 */ }
+          }
+          cursor = r.list_complete ? null : r.cursor;
+          page++;
+        } while (cursor && page < 10);
+        return json({ ok: true, opens, codes, byTheme });
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) }, 500);
+      }
+    }
+
     if (url.pathname === '/api/register' && req.method === 'POST') {
       try {
         const b = await req.json().catch(() => ({}));

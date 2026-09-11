@@ -1167,7 +1167,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.15.0';
+var APP_VERSION = '0.16.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -6352,5 +6352,577 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
 #splash .sp-brand{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
 #splash .sp-brand b{color:var(--red);font-weight:800}
 </style>
+
+<style id="cn-share">
+/* v0.16.0 分享功能 P0 —— 中式分享卡片 + 弹层重做。
+   铁律：不新增设计语言。按钮全部复用 .btn/.btn.primary/.btn.ghost（v0.15.0 已加内嵌金环），
+   输入框复用全局 input 胶囊（99px + 内嵌金线），只补版式与卡片预览框。 */
+#share-panel{ width:min(92vw,406px); background:var(--card); color:var(--txt);
+  border-radius:18px; padding:18px 16px 16px; display:none; border:1px solid rgba(201,168,108,.34);
+  max-height:90vh; overflow:auto; }
+#share-panel .sp-head{ display:flex; align-items:center; justify-content:space-between; margin:0 0 4px; }
+#share-panel .sp-h{ font-family:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",serif;
+  font-size:17px; font-weight:600; margin:0; }
+#share-panel .sp-x{ background:transparent; border:1px solid transparent; color:var(--sub);
+  font-size:15px; line-height:1; padding:6px 10px; cursor:pointer; border-radius:99px; }
+#share-panel .sp-x:hover{ border-color:rgba(201,168,108,.4); }
+#share-panel .sp-sub{ font-size:12px; color:var(--sub); line-height:1.55; margin-bottom:12px; }
+#share-panel .sp-prev{ width:100%; border-radius:14px; overflow:hidden; background:#161a20;
+  border:1px solid rgba(201,168,108,.3); display:flex; justify-content:center; }
+#share-panel .sp-prev img{ width:100%; max-width:276px; display:block; }
+#share-panel .sp-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 12px; }
+#share-panel .sp-tname{ font-size:12px; color:var(--gold); letter-spacing:.3px; }
+#share-panel .sp-swap{ font-size:12px; padding:6px 15px; border-radius:99px; cursor:pointer;
+  background:transparent; color:var(--txt); border:1px solid rgba(201,168,108,.45); }
+#share-panel .sp-nick{ display:block; margin:0 0 12px; }
+#share-panel .sp-nick input{ width:100%; box-sizing:border-box; font-size:13px; }
+#share-panel .btn{ width:100%; margin-top:8px; }
+#share-panel .sp-wx{ font-size:11px; color:var(--sub); line-height:1.55; margin-top:11px; }
+#share-panel .sp-priv{ font-size:10.5px; color:var(--sub); opacity:.72; line-height:1.5; margin-top:8px; }
+</style>
+
+
+<script id="cn-share-mod">
+/* ============================================================
+   v0.16.0 分享功能 P0（九思）
+   纲领：分享的不是 App，是你说出的那句中文。
+   - 卡片主体 = 用户真实开口过的句子（S.phrases），品牌只做署名（<12% 面积）
+   - 五主题：start / line / streak / city / badge；从「当前可渲染」的池里加权随机，
+     并支持手动切换 —— 纯随机会给新用户发出空卡（未解锁徽章却抽到徽章卡）
+   - 零第三方依赖：Canvas 2D 原生合成。失败降级到已有 assets/share/*.webp，永不空手
+   - 隐私：卡片绝不含 UID / 录音 / 设备信息；昵称存独立 localStorage，不上云
+   - 归因：随机分享码（与 UID 无关联），一次分享一个码
+   ============================================================ */
+var SHARE = {
+  theme:'line', code:'', ctx:null, _mounted:false, _cv:null, _nickT:null,
+  KEY_NICK:'sinoky_share_nick'
+};
+
+/* ---------- 常量 ---------- */
+SHARE.SERIF = '"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","SimSun",serif';
+SHARE.SANS  = '-apple-system,"Segoe UI",Roboto,"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif';
+SHARE.C = { bg:'#161a20', red:'#c2362b', gold:'#c9a86c', goldDim:'#8a7448', paper:'#f5f1e8', teal:'#8ab8b2' };
+
+/* 徽章 id → 印章内单字 + 展示名（仅展示标签，判定条件仍复用 App 现有逻辑） */
+SHARE.BADGE = {
+  'first-speak':['开','First speak'], 'streak3':['连','3-day streak'], 'streak7':['连','7-day streak'],
+  'streak14':['连','14-day streak'], 'perfect':['准','Perfect tone'], 'survivor':['存','Survivor · Day 6'],
+  'tone-master':['调','Tone master'], 'graduate':['成','Graduate · Day 30'], 'centurion':['百','100-day streak'],
+  'first_city':['城','First landmark'], 'explorer':['游','5 landmarks'], 'map_master':['图','All landmarks'],
+  'reversal-king':['转','Reversal king'], 'real-world':['野','In the wild'], 'polyglot-path':['通','All paths']
+};
+SHARE.TNAME = { start:'Just started', line:'This line I said', streak:'My streak', city:'City unlocked', badge:'New badge' };
+
+/* ---------- 基础读取（全部只用真实数据，绝不编造） ---------- */
+SHARE.said = function(){
+  var n = 0; try{ Object.keys(S.phrases||{}).forEach(function(k){ n += (S.phrases[k]||[]).length; }); }catch(e){}
+  return n;
+};
+SHARE.badgeOn = function(){
+  try{ return Object.keys(JSON.parse(localStorage.getItem('sinoky_badges_on') || '{}')); }catch(e){ return []; }
+};
+SHARE.nick = function(){ try{ return localStorage.getItem(SHARE.KEY_NICK) || ''; }catch(e){ return ''; } };
+SHARE.setNick = function(v){
+  /* 只做长度与空白清理，不做激进过滤：昵称是用户自己的展示名，且绝不上云、绝不进链接 */
+  var s = String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').slice(0, 16);
+  try{ localStorage.setItem(SHARE.KEY_NICK, s); }catch(e){}
+  if (SHARE._nickT) clearTimeout(SHARE._nickT);
+  SHARE._nickT = setTimeout(function(){ SHARE.render(); }, 320);
+  return s;
+};
+
+/* 最近一次开口的那一句：优先用触发时带来的上下文，退化到「最后一个有记录的场景的末句」 */
+SHARE.lastLine = function(){
+  var c = SHARE.ctx;
+  if (c && c.sc && typeof c.i === 'number' && c.sc.phrases && c.sc.phrases[c.i]) return { sc:c.sc, i:c.i, p:c.sc.phrases[c.i] };
+  var found = null;
+  try{
+    for (var n=0; n<SCENES.length; n++){
+      var sc = SCENES[n], arr = (S.phrases||{})[sc.id];
+      if (arr && arr.length && sc.phrases && sc.phrases[arr[arr.length-1]]) found = { sc:sc, i:arr[arr.length-1], p:sc.phrases[arr[arr.length-1]] };
+    }
+  }catch(e){}
+  return found;
+};
+/* 最近通关的城市（该城全部句子都说过） */
+SHARE.litCity = function(){
+  try{
+    var cities = (typeof cityList === 'function') ? cityList() : [];
+    var lit = cities.filter(function(sc){ return (S.phrases[sc.id]||[]).length >= (sc.phrases||[]).length && (sc.phrases||[]).length > 0; });
+    if (!lit.length) return null;
+    var c = lit[lit.length-1], arr = S.phrases[c.id] || [], li = arr[arr.length-1], cp = (c.phrases||[])[li];
+    return { sc:c, cn:(c.city || String(c.title||'').split(' \u00b7 ')[0]), en:String(c.title||'').split(' \u00b7 ')[0], line: cp ? { hz:cp.hz, py:cp.py, en:cp.en } : null };
+  }catch(e){ return null; }
+};
+SHARE.topBadge = function(){
+  var on = SHARE.badgeOn();
+  if (!on.length) return null;
+  var id = on[on.length-1];                       /* 本地记录是追加写入，末尾即最近解锁 */
+  var m = SHARE.BADGE[id] || ['徽', id];
+  return { id:id, seal:m[0], name:m[1], total:on.length };
+};
+
+/* ---------- 主题池：可用性过滤 + 权重 ---------- */
+SHARE.pool = function(){
+  var pool = [];
+  var line = SHARE.lastLine();
+  if (line && line.p && line.p.hz) pool.push({ id:'line', w:5 });      /* 社交货币最强 → 权重最高 */
+  if ((S.streak||0) >= 2) pool.push({ id:'streak', w:2 });
+  if (SHARE.litCity()) pool.push({ id:'city', w:2 });
+  if (SHARE.topBadge()) pool.push({ id:'badge', w:1 });
+  if (!pool.length) pool.push({ id:'start', w:1 });                    /* 零数据用户 → 起点卡，绝不出空卡 */
+  return pool;
+};
+SHARE.pick = function(prefer){
+  var pool = SHARE.pool(), i;
+  if (prefer) for (i=0;i<pool.length;i++) if (pool[i].id===prefer){ SHARE.theme=prefer; return; }
+  var tot = 0; pool.forEach(function(p){ tot += p.w; });
+  var r = Math.random()*tot, acc = 0;
+  for (i=0;i<pool.length;i++){ acc += pool[i].w; if (r <= acc){ SHARE.theme = pool[i].id; return; } }
+  SHARE.theme = pool[0].id;
+};
+SHARE.swap = function(){
+  var pool = SHARE.pool(), ids = pool.map(function(p){ return p.id; });
+  var i = ids.indexOf(SHARE.theme);
+  SHARE.theme = ids[(i+1) % ids.length];
+  SHARE.render();
+};
+
+/* ---------- 归因码：随机，与 UID 无任何关联 ---------- */
+SHARE.newCode = function(){
+  var a = 'abcdefghijklmnopqrstuvwxyz0123456789', s = '';
+  try{
+    var buf = new Uint8Array(8);
+    (window.crypto || window.msCrypto).getRandomValues(buf);
+    for (var i=0;i<8;i++) s += a[buf[i] % a.length];
+  }catch(e){ for (var j=0;j<8;j++) s += a[Math.floor(Math.random()*a.length)]; }
+  return s;
+};
+SHARE.link = function(){ return 'https://sinoky.pages.dev/?s=' + SHARE.code + '&t=' + SHARE.theme; };
+SHARE.text = function(){
+  var line = SHARE.lastLine();
+  if (SHARE.theme === 'line' && line && line.p && line.p.hz){
+    return '"' + line.p.hz + '" (' + (line.p.py||'') + ')\n' +
+           'I said this in Chinese today. Learning to actually speak it with Sinoky (free) \u2192 ' + SHARE.link();
+  }
+  return 'I\u2019m learning to actually speak Chinese with Sinoky (free beta) \u2192 ' + SHARE.link();
+};
+
+/* ============================================================
+   Canvas 合成器（1080×1080）—— 零依赖
+   ============================================================ */
+function _hui(ctx, x, y, w, s, alpha){
+  /* 回纹 = 「回」字（外方 + 内方）二方连续。描边式，不填充 —— 纹样只做边饰，不压内容 */
+  ctx.save(); ctx.strokeStyle = 'rgba(201,168,108,' + alpha + ')'; ctx.lineWidth = 2;
+  var step = s + Math.round(s*0.42);
+  for (var px = x; px + s <= x + w; px += step){
+    ctx.strokeRect(px + 0.5, y + 0.5, s - 1, s - 1);
+    ctx.strokeRect(px + s*0.32, y + s*0.32, s*0.36, s*0.36);
+  }
+  ctx.restore();
+}
+function _corner(ctx, cx, cy, rot, alpha, R){
+  /* 如意云头角花：一段弧 + 两卷云。统一 R=56，让四角几何完全一致 */
+  R = R || 56;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+  ctx.strokeStyle = 'rgba(201,168,108,' + alpha + ')';
+  ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(0, R); ctx.bezierCurveTo(0, R*0.34, R*0.34, 0, R, 0); ctx.stroke();
+  ctx.beginPath(); ctx.arc(R*0.40, R*0.40, R*0.17, Math.PI, Math.PI*2.45); ctx.stroke();
+  ctx.beginPath(); ctx.arc(R*0.76, R*0.19, R*0.105, Math.PI, Math.PI*2.45); ctx.stroke();
+  ctx.restore();
+}
+function _brand(ctx, x, y, size){
+  /* Sino<k>y —— k 用朱砂，其余纸色 */
+  ctx.save();
+  ctx.font = '600 ' + size + 'px ' + SHARE.SERIF;
+  ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  var a = 'Sino', k = 'k', y2 = 'y';
+  var wa = ctx.measureText(a).width, wk = ctx.measureText(k).width;
+  ctx.fillStyle = SHARE.C.paper; ctx.fillText(a, x, y);
+  ctx.fillStyle = SHARE.C.red;   ctx.fillText(k, x + wa, y);
+  ctx.fillStyle = SHARE.C.paper; ctx.fillText(y2, x + wa + wk, y);
+  ctx.restore();
+}
+function _seal(ctx, x, y, s){
+  var r = Math.round(s * 0.2);
+  ctx.save();
+  ctx.fillStyle = SHARE.C.red;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, s, s, r); else ctx.rect(x, y, s, s);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(245,241,232,.5)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x + s*0.13, y + s*0.13, s*0.74, s*0.74, r*0.55); else ctx.rect(x + s*0.13, y + s*0.13, s*0.74, s*0.74);
+  ctx.stroke();
+  ctx.fillStyle = SHARE.C.paper; ctx.font = '600 ' + Math.round(s*0.5) + 'px ' + SHARE.SERIF;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('\u8bfa', x + s/2, y + s/2 + 1);
+  ctx.restore();
+}
+function _fit(ctx, txt, maxW, start, min, font, weight){
+  var s = start;
+  while (s > min){ ctx.font = (weight||'') + s + 'px ' + font; if (ctx.measureText(txt).width <= maxW) break; s -= 4; }
+  return s;
+}
+function _cjkLines(ctx, txt, maxW, font, weight){
+  /* 汉字折行：先试单行，超宽则在字数中点断成两行（中文可任意处断行） */
+  var t = String(txt || '');
+  ctx.font = (weight||'') + '100px ' + font;
+  var chars = t.split('');
+  var lo = 1, hi = chars.length, half = chars.length;
+  if (ctx.measureText(t).width / 100 * 100 <= maxW) return [t];   /* 单行走得下 */
+  /* 二分找最小行数：先按中点硬分两行 */
+  half = Math.ceil(chars.length / 2);
+  return [chars.slice(0, half).join(''), chars.slice(half).join('')];
+}
+
+/* 游标式纵向排版：元素自带真实留白 h，整块在 [top,bot] 区间内垂直居中。
+   取代原先各自写死的 y —— 那是留白不均与元素重叠的根源。 */
+function _stack(ctx, cx, items, top, bot){
+  var total = 0;
+  items.forEach(function(it){
+    if (it.hook){ it.h = it.h || 120; total += it.h; return; }   /* 槽位：纹样/图形也占真实的 h */
+    var lines = it.lines || [it.t];
+    it._lh = Math.round(it.size * 1.24);
+    it._blk = it._lh * lines.length;
+    it.h = it.h || (it._blk + (it.gap || 0));
+    total += it.h;
+  });
+  var y = top + Math.max(0, (bot - top - total) / 2);
+  items.forEach(function(it){
+    if (it.hook){ it.hook(ctx, cx, y, it.h); y += it.h; return; }
+    var lines = it.lines || [it.t];
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = (it.weight || '400') + ' ' + it.size + 'px ' + it.font;
+    ctx.fillStyle = it.color;
+    var y0 = y + Math.max(0, (it.h - it._blk)/2) + it._lh/2;
+    for (var k = 0; k < lines.length; k++) ctx.fillText(lines[k], cx, y0 + k*it._lh);
+    y += it.h;
+  });
+  return y;
+}
+/* 龙鳞：尖顶叠瓦（不是圆角矩形 —— 那读不出「鳞」） */
+function _scales(ctx, cx, baseY, on, alphaOn){
+  var n = 5, sw = 62, gap = 8, hh = 36;
+  var total = n*sw + (n-1)*gap, sx = cx - total/2;
+  for (var i = 0; i < n; i++){
+    var x0 = sx + i*(sw + gap);
+    ctx.beginPath();
+    ctx.moveTo(x0, baseY);
+    ctx.quadraticCurveTo(x0 + sw/2, baseY - hh*1.75, x0 + sw, baseY);
+    ctx.closePath();
+    var lit = i < on;
+    ctx.fillStyle = 'rgba(201,168,108,' + (lit ? (0.34 + i*0.16).toFixed(2) : '0.15') + ')';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(201,168,108,' + (lit ? 0.75 : 0.22) + ')';
+    ctx.lineWidth = 2; ctx.stroke();
+  }
+}
+
+SHARE.draw = function(){
+  var S_ = SHARE.C, W = 1080, PAD = 84;
+  var cv = document.createElement('canvas'); cv.width = W; cv.height = W;
+  var ctx = cv.getContext('2d');
+  if (!ctx) return null;
+  var cx = W/2;
+
+  /* ---- 背景与边饰（四角统一 inset 34 / R 56；页脚整体让出角花区间）---- */
+  ctx.fillStyle = S_.bg; ctx.fillRect(0, 0, W, W);
+  _corner(ctx, 34, 34, 0, .45);
+  _corner(ctx, W-34, 34, Math.PI/2, .45);
+  _corner(ctx, W-34, W-34, Math.PI, .45);
+  _corner(ctx, 34, W-34, -Math.PI/2, .45);
+  _hui(ctx, 150, 58, W-300, 22, .45);
+
+  var d = {
+    said:SHARE.said(), streak:(S.streak||0), nick:SHARE.nick(),
+    line:SHARE.lastLine(), city:SHARE.litCity(), badge:SHARE.topBadge()
+  };
+  var maxW = W - PAD*2 - 40;
+  var items = [];
+  var push = function(o){ items.push(o); };
+
+  /* ---- 内容：每主题三行齐备（汉字 / 拼音 / 英文），A 圈也读得懂 ---- */
+  if (SHARE.theme === 'line' && d.line){
+    push({ t:'I SAID THIS OUT LOUD', size:26, font:SHARE.SANS, color:S_.goldDim, gap:26 });
+    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:22 });
+    var hz = d.line.p.hz || '';
+    var fs = _fit(ctx, hz, maxW, (hz.length<=3?196:hz.length<=5?168:hz.length<=8?136:112), 68, SHARE.SERIF);
+    ctx.font = fs + 'px ' + SHARE.SERIF;
+    var lines = (ctx.measureText(hz).width > maxW) ? _cjkLines(ctx, hz, maxW, SHARE.SERIF) : [hz];
+    push({ lines:lines, size:fs, font:SHARE.SERIF, color:S_.paper, gap:34 });
+    if (d.line.p.py) push({ t:d.line.p.py, size:_fit(ctx, d.line.p.py, maxW, 46, 26, SHARE.SANS), font:SHARE.SANS, color:S_.gold, gap:22 });
+    if (d.line.p.en) push({ t:d.line.p.en, size:_fit(ctx, d.line.p.en, maxW, 38, 24, SHARE.SANS), font:SHARE.SANS, color:'rgba(245,241,232,.62)', gap:56 });
+    if (d.said > 0) push({ t:'Phrases said: ' + d.said, size:28, font:SHARE.SANS, color:'rgba(245,241,232,.46)', gap:0 });
+    _stack(ctx, cx, items, 176, 806);
+
+  } else if (SHARE.theme === 'streak'){
+    var n = d.streak;
+    push({ t:'DAY STREAK', size:26, font:SHARE.SANS, color:S_.goldDim, gap:30 });
+    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:22 });
+    push({ t:String(n), size:200, font:SHARE.SERIF, weight:'600', color:S_.gold, gap:34 });
+    var on = Math.max(1, Math.min(5, Math.round((n/7)*5) || 1));
+    push({ h:126, hook:function(c, cc, y, hh){ _scales(c, cc, y + hh - 8, on); } });
+    push({ t:'DAYS IN A ROW', size:34, font:SHARE.SANS, weight:'600', color:'rgba(245,241,232,.62)', gap:16 });
+    var yEnd = _stack(ctx, cx, items, 176, 592);
+    _stack(ctx, cx, [{ t:'Phrases said: ' + d.said + (d.badge ? ('   \u00b7   Badges: ' + d.badge.total) : ''),
+                       size:28, font:SHARE.SANS, color:'rgba(245,241,232,.46)', gap:0 }], yEnd + 52, yEnd + 160);
+
+  } else if (SHARE.theme === 'city' && d.city){
+    push({ t:'CITY UNLOCKED \u00b7 ' + String(d.city.en || '').toUpperCase(), size:26, font:SHARE.SANS, color:S_.goldDim, gap:28 });
+    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:22 });
+    var cn = d.city.cn || '';
+    var cfs = _fit(ctx, cn, maxW, (cn.length<=2?186:cn.length<=3?156:126), 78, SHARE.SERIF);
+    push({ t:cn, size:cfs, font:SHARE.SERIF, weight:'600', color:S_.teal, gap:44 });
+    if (d.city.line && d.city.line.hz){
+      var lh2 = _fit(ctx, d.city.line.hz, maxW, 52, 32, SHARE.SERIF);
+      push({ t:d.city.line.hz, size:lh2, font:SHARE.SERIF, color:S_.paper, gap:22 });
+      if (d.city.line.py) push({ t:d.city.line.py, size:_fit(ctx, d.city.line.py, maxW, 34, 22, SHARE.SANS), font:SHARE.SANS, color:S_.gold, gap:18 });
+      if (d.city.line.en) push({ t:d.city.line.en, size:_fit(ctx, d.city.line.en, maxW, 32, 22, SHARE.SANS), font:SHARE.SANS, color:'rgba(245,241,232,.62)', gap:54 });
+    }
+    push({ t:'Landmarks lit: ' + (function(){ try{ return litCount(); }catch(e){ return 0; } })(),
+           size:28, font:SHARE.SANS, color:'rgba(245,241,232,.46)', gap:0 });
+    _stack(ctx, cx, items, 176, 806);
+
+  } else if (SHARE.theme === 'badge' && d.badge){
+    push({ t:'BADGE UNLOCKED', size:26, font:SHARE.SANS, color:S_.goldDim, gap:30 });
+    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:20 });
+    push({ h:244, hook:function(c, cc, y, hh){
+      var cy = y + hh/2;
+      c.save();
+      c.strokeStyle = 'rgba(201,168,108,.34)'; c.lineWidth = 2;
+      c.beginPath(); c.arc(cc, cy, 112, 0, Math.PI*2); c.stroke();
+      c.strokeStyle = SHARE.C.gold; c.lineWidth = 5;
+      c.beginPath(); c.arc(cc, cy, 88, 0, Math.PI*2); c.stroke();
+      c.restore();
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillStyle = SHARE.C.gold; c.font = '600 88px ' + SHARE.SERIF;
+      c.fillText(d.badge.seal, cc, cy + 2);
+    } });
+    push({ t:d.badge.name, size:_fit(ctx, d.badge.name, maxW, 52, 30, SHARE.SERIF), font:SHARE.SERIF, weight:'600', color:S_.paper, gap:36 });
+    push({ t:'Badges: ' + d.badge.total, size:28, font:SHARE.SANS, color:'rgba(245,241,232,.46)', gap:0 });
+    _stack(ctx, cx, items, 176, 806);
+
+  } else {
+    push({ t:'JUST STARTED', size:26, font:SHARE.SANS, color:S_.goldDim, gap:28 });
+    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:22 });
+    push({ t:'\u4f60\u597d\uff01', size:196, font:SHARE.SERIF, color:S_.paper, gap:34 });
+    push({ t:'N\u01d0 h\u01ceo!', size:46, font:SHARE.SANS, color:S_.gold, gap:22 });
+    push({ t:'Hello \u2014 I\u2019m starting to learn Chinese.', size:36, font:SHARE.SANS, color:'rgba(245,241,232,.62)', gap:30 });
+    push({ t:'Free during beta', size:28, font:SHARE.SANS, color:'rgba(245,241,232,.46)', gap:0 });
+    _stack(ctx, cx, items, 176, 806);
+  }
+
+  /* ---- L1 品牌层：署名，不是主体（金线 852 / 字标 916 / URL 954 / 印 872，全在角花之上）---- */
+  ctx.save(); ctx.strokeStyle = 'rgba(201,168,108,.3)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(PAD, 852); ctx.lineTo(W-PAD, 852); ctx.stroke(); ctx.restore();
+  _brand(ctx, PAD, 916, 46);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = 'rgba(245,241,232,.42)'; ctx.font = '400 27px ' + SHARE.SANS;
+  ctx.fillText('sinoky.pages.dev', PAD, 954);
+  _seal(ctx, W - PAD - 92, 872, 92);
+  return cv;
+};
+
+/* ============================================================
+   弹层（JS 构建，避免脆弱的 markup 文本匹配）
+   ============================================================ */
+SHARE.PANEL = ''
+ + '<div class="sp-head"><div class="sp-h">Share this card</div>'
+ + '<button class="sp-x" onclick="closeShare()" aria-label="Close">&#10005;</button></div>'
+ + '<div class="sp-sub">Exactly what your friends will see.</div>'
+ + '<div class="sp-prev"><img id="sp-img" alt="Share card preview"></div>'
+ + '<div class="sp-row"><span class="sp-tname" id="sp-tname"></span>'
+ + '<button class="sp-swap" onclick="SHARE.swap()">Shuffle</button></div>'
+ + '<label class="sp-nick"><input id="sp-nick" maxlength="16" placeholder="Your name (optional)" oninput="SHARE.setNick(this.value)"></label>'
+ + '<button class="btn primary" id="sp-share" onclick="SHARE.doShare()">Share\u2026</button>'
+ + '<button class="btn ghost" id="sp-save" onclick="SHARE.doSave()">Save image</button>'
+ + '<button class="btn ghost" id="sp-copy" onclick="copyShare()">Copy text + link</button>'
+ + '<div class="sp-wx" id="sp-wx"></div>'
+ + '<div class="sp-priv">No account, no recording, no device ID on this card \u2014 '
+ + 'just the Chinese you actually said.</div>';
+
+SHARE.mount = function(){
+  if (SHARE._mounted) return;
+  var p = $('share-panel'); if (!p) return;
+  p.innerHTML = SHARE.PANEL;
+  var ni = $('sp-nick'); if (ni) ni.value = SHARE.nick();
+  SHARE._mounted = true;
+  try{ if (typeof applyI18n === 'function') applyI18n(p); }catch(e){}
+};
+
+SHARE.render = function(){
+  SHARE.mount();
+  var cv = SHARE.draw(); if (!cv) return;
+  SHARE._cv = cv;
+  var img = $('sp-img');
+  try{ if (img) img.src = cv.toDataURL('image/png'); }catch(e){}
+  var tn = $('sp-tname');
+  if (tn){ tn.textContent = SHARE.TNAME[SHARE.theme] || ''; try{ if (typeof applyI18n === 'function') applyI18n(tn); }catch(e){} }
+  /* 环境适配：三个动作按能力取舍 */
+  var ua = navigator.userAgent || '';
+  var wx = /micromessenger|qq\//i.test(ua);
+  var canShare = !!navigator.share;
+  var sb = $('sp-share'), sv = $('sp-save'), wt = $('sp-wx'), cp = $('sp-copy');
+  if (sb) sb.style.display = (canShare && !wx) ? '' : 'none';
+  if (sv) sv.style.display = wx ? 'none' : '';
+  if (cp) cp.style.display = '';
+  if (wt) wt.textContent = wx
+    ? 'Opened inside WeChat \u2014 press and hold the card above to save it, or use \u201cCopy text + link\u201d.'
+    : (canShare ? '' : 'Your browser can\u2019t open the system share sheet \u2014 save the image instead.');
+};
+
+SHARE.open = function(theme){
+  SHARE.mount();
+  SHARE.code = SHARE.newCode();
+  SHARE.pick(theme);
+  SHARE.render();
+  var m = $('share-mask'), p = $('share-panel');
+  if (m) m.style.display = 'block';
+  if (p) p.style.display = 'block';
+};
+
+SHARE.blob = function(){
+  var cv = SHARE._cv || SHARE.draw();
+  SHARE._cv = cv;
+  if (!cv) return Promise.reject(new Error('no canvas'));
+  return new Promise(function(res){
+    if (cv.toBlob) cv.toBlob(function(bl){ res(bl); }, 'image/png');
+    else {
+      try{
+        var d = cv.toDataURL('image/png').split(',')[1], bin = atob(d), arr = new Uint8Array(bin.length);
+        for (var i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+        res(new Blob([arr], { type:'image/png' }));
+      }catch(e){ res(null); }
+    }
+  });
+};
+
+SHARE.doShare = function(){
+  var txt = SHARE.text(), url = SHARE.link();
+  if (!navigator.share){ copyShare(); return; }
+  SHARE.blob().then(function(bl){
+    if (bl){
+      var f = new File([bl], 'sinoky-' + SHARE.theme + '.png', { type:'image/png' });
+      if (navigator.canShare && navigator.canShare({ files:[f] })){
+        return navigator.share({ files:[f], title:'Sinoky', text:txt });
+      }
+    }
+    return navigator.share({ title:'Sinoky', text:txt, url:url });
+  }).catch(function(){
+    /* 用户取消 share 也会 reject —— 不再二次弹出，静默即可 */
+  });
+};
+
+SHARE.doSave = function(){
+  SHARE.blob().then(function(bl){
+    if (!bl){ toast('Could not build the image \u2014 try Share or Copy instead'); return; }
+    try{
+      var u = URL.createObjectURL(bl);
+      var a = document.createElement('a');
+      a.href = u; a.download = 'sinoky-' + SHARE.theme + '.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+      toast('Image saved');
+    }catch(e){
+      toast('Long-press the card above to save it');
+    }
+  });
+};
+
+/* ============================================================
+   函数覆盖：后声明的 function 覆盖先前声明（全局绑定）
+   ============================================================ */
+function openShare(theme){ SHARE.open(theme); }
+function closeShare(){
+  var m = $('share-mask'), p = $('share-panel');
+  if (m) m.style.display = 'none';
+  if (p) p.style.display = 'none';
+}
+function shareSinoky(){ SHARE.open(); }          /* 旧入口一律升级到新弹层 */
+function copyShare(){
+  var t = SHARE.text();
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast('Copied \u2014 paste it anywhere'); })
+      .catch(function(){ fallbackCopy(t); });
+  } else { fallbackCopy(t); }
+}
+
+/* ============================================================
+   入口前置三处（全部用包装，不改旧代码）
+   ============================================================ */
+/* 通用：把分享按钮追加到诺诺气泡的动作行 */
+SHARE.nonoOffer = function(theme){
+  setTimeout(function(){
+    try{
+      var acts = document.getElementById('nono-acts'), panel = document.getElementById('nono-panel');
+      if (!acts || !panel || panel.style.display === 'none') return;
+      if (acts.querySelector('[data-share]')) return;
+      acts.insertAdjacentHTML('beforeend',
+        '<button data-share onclick="SHARE.open(\'' + theme + '\')">Share this card</button>');
+      try{ if (typeof applyI18n === 'function') applyI18n(acts); }catch(e){}
+    }catch(e){}
+  }, 140);
+};
+
+/* E1 + 上下文记录：包装 markDone。场景刚被说全 → 祝贺气泡里加分享按钮 */
+(function(){
+  if (typeof window.markDone !== 'function') return;
+  var _md = window.markDone;
+  window.markDone = function(i){
+    var sc = (typeof curScene !== 'undefined' && curScene) ? curScene : null;
+    var cid = sc ? sc.id : null;
+    var pre = true;
+    try{ pre = !!(cid && window.NONO && NONO.sceneCheer && NONO.sceneCheer[cid]); }catch(e){}
+    var r = _md.apply(this, arguments);
+    try{
+      if (sc) SHARE.ctx = { sc: sc, i: i };                       /* 记住刚处理的那句，供分享取用 */
+      if (cid && !pre && window.NONO && NONO.sceneCheer && NONO.sceneCheer[cid]) SHARE.nonoOffer('line');
+    }catch(e){}
+    return r;
+  };
+})();
+
+/* E2：包装 nonoWatchBadges。有徽章新解锁 → 气泡里加分享按钮 */
+(function(){
+  if (typeof window.nonoWatchBadges !== 'function') return;
+  var _wb = window.nonoWatchBadges;
+  window.nonoWatchBadges = function(){
+    var before = '';
+    try{ before = localStorage.getItem('sinoky_badges_on') || ''; }catch(e){}
+    var r = _wb.apply(this, arguments);
+    var after = '';
+    try{ after = localStorage.getItem('sinoky_badges_on') || ''; }catch(e){}
+    try{ if (after && after !== before) SHARE.nonoOffer('badge'); }catch(e){}
+    return r;
+  };
+})();
+
+/* E3：把「我」页的旧分享按钮接到新弹层（JS 改属性，不做文本匹配） */
+(function(){
+  try{
+    var btn = document.querySelector('#v-me button[onclick="shareSinoky()"]');
+    if (btn){ btn.setAttribute('onclick', 'SHARE.open()'); btn.textContent = 'Share my progress'; }
+  }catch(e){}
+})();
+
+/* ============================================================
+   归因：落地页读 ?s= 上报一次（sessionStorage 防重复），只计数，不识别个人
+   ============================================================ */
+(function(){
+  try{
+    var q = new URLSearchParams(location.search || '');
+    var c = (q.get('s') || '').toLowerCase();
+    if (!/^[a-z0-9]{4,12}$/.test(c)) return;
+    var t = (q.get('t') || '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 12);
+    try{ if (sessionStorage.getItem('sinoky_sh_seen') === c) return; sessionStorage.setItem('sinoky_sh_seen', c); }catch(e){}
+    var base = (typeof API_BASE === 'string' && API_BASE) ? API_BASE : '/';
+    if (base.charAt(base.length-1) !== '/') base += '/';
+    fetch(base + 'api/share', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ c:c, t:t }) })
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
