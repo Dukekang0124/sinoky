@@ -1,15 +1,15 @@
 {
-  "version": "0.14.10",
+  "version": "0.14.11",
   "updated": "2026-09-11",
-  "note": "v0.14.10：中国风视觉全面落地——全应用「墨韵·朱砂」主题（朱砂/鎏金/竹青三彩、墨底窗格纹、宋体标题）、全部按钮胶囊化、勋章印章化、诺诺聊天框「竹影窗棂」重制（面板限高+独立滚动、按住说话、消息自动滚底，并修复聊天内语音发不出去的问题）、诺诺 AI 鼓励钩子（场景句卡全清 / 复习连对 / 复习清空 / 聊天 5 轮彩蛋）。本版不含新启动屏主视觉。",
+  "note": "v0.14.11：换肤收尾——把上一版漏掉的「换肤前旧色值」全部清剿归位：首次引导页整屏、跟读页「听这一句」卡片、对话页、天数页等 46 处旧洋红（含 26 处半透明红 tint）统一改为主题变量朱砂红；顶部状态栏主题色改为新墨色；诺诺面板底色对齐主题；首次引导页主按钮胶囊化。中国风主题自此全应用无死角。",
   "apk": {
-    "versionCode": 1410,
-    "version": "0.14.10",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.10-release.apk",
-    "md5": "391f224398d1fe89f87f5a327962fcd1",
-    "size": 23893487
+    "versionCode": 1411,
+    "version": "0.14.11",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.11-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.14.10: Full Chinese-style visual rollout — the 'Ink & Cinnabar' theme app-wide (cinnabar/gold/celadon palette, ink-black base with lattice texture, serif headings), all buttons reshaped to capsules, seal-style badges, the redesigned 'Bamboo Lattice' Nono chat panel (height-capped with its own scrolling, hold-to-speak, auto-scroll, and a fix for voice messages that could not be sent in chat), and Nono's AI encouragement hooks. This build does not include the new splash main visual."
+    "v0.14.11: Theme cleanup — every leftover pre-theme color value is now mapped to the theme variables: 46 occurrences of the old magenta (including 26 translucent red tints) across the first-run onboarding, the 'hear this line' card, the dialog view and the day list now use the cinnabar red; the browser theme-color is updated to the new ink base; the Nono panel background is aligned to the theme; and the onboarding CTA is now a capsule. The Chinese-style theme now covers the whole app with no gaps."
   ]
 }
