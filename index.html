@@ -77,7 +77,7 @@ header img{width:34px;height:34px;border-radius:9px}
 .btn.ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
 .btn:active{transform:scale(.98)}
 .pbar{height:7px;background:var(--bg2);border-radius:99px;margin-top:12px;overflow:hidden}
-.pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),#ff6b6b);border-radius:99px;transition:width .3s}
+.pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--paper));border-radius:99px;transition:width .3s}
 .phrase{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
 .phrase.done{border-color:rgba(42,157,143,.5)}
 .p-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -497,7 +497,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- ONBOARDING · v0.3.62：6 步首次引导（品牌→goal→level→麦克风预告→voice→Day1预览） -->
   <section id="v-onboard" class="views">
     <style>
-      #v-onboard{background:#0d0f12;color:#f2f4f7;position:fixed;top:0;left:0;width:100%;height:100dvh;min-height:100dvh;z-index:100;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);font-family:-apple-system,"SF Pro","Helvetica Neue",Arial,sans-serif}
+      #v-onboard{background:var(--bg);color:#f2f4f7;position:fixed;top:0;left:0;width:100%;height:100dvh;min-height:100dvh;z-index:100;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);font-family:-apple-system,"SF Pro","Helvetica Neue",Arial,sans-serif}
       #v-onboard.views.on{display:flex;flex-direction:column}
       #v-onboard .ob-screen{display:none;flex:1;min-height:0;padding:30px 24px 140px;overflow:auto}
       #v-onboard .ob-screen.on{display:flex;flex-direction:column;min-height:0}
@@ -671,12 +671,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #v-onboard .ob-li:last-child{border:none}
       #v-onboard .ob-li .num{color:var(--red);font-weight:800;min-width:18px}
       #v-onboard .ob-li .py{color:var(--sub);font-size:13px}
-      #v-onboard .ob-bar{position:absolute;bottom:0;left:0;right:0;padding:16px 22px calc(20px + env(safe-area-inset-bottom));background:linear-gradient(0deg,#0d0f12 60%,transparent);display:flex;flex-direction:column;gap:12px}
+      #v-onboard .ob-bar{position:absolute;bottom:0;left:0;right:0;padding:16px 22px calc(20px + env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--bg) 60%,transparent);display:flex;flex-direction:column;gap:12px}
       #v-onboard .ob-pager{display:flex;gap:6px;justify-content:center}
       #v-onboard .ob-pager span{width:7px;height:7px;border-radius:50%;background:var(--card)}
       #v-onboard .ob-pager span.on{background:var(--red);width:22px;border-radius:5px}
       #v-onboard .ob-btn{width:100%;border:none;border-radius:99px;padding:16px;font-size:16px;font-weight:700;background:var(--red);color:#fff;cursor:pointer;transition:.2s}
-      #v-onboard .ob-btn:hover{background:#ff6b70}
+      #v-onboard .ob-btn:hover{background:#d94a3c}
       #v-onboard .ob-skip{text-align:center;font-size:13px;color:var(--sub);cursor:pointer}
       @media (max-height: 700px){
         #v-onboard .ob-screen{padding:20px 20px 120px}
@@ -828,7 +828,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- DIALOG CARDS · v0.3.62：P0 场景卡片（多轮对话 + Role reversal，拼音优先零汉字） -->
   <section id="v-dialog" class="views">
     <style>
-      #v-dialog{background:#0d0f12;color:#f2f4f7;padding:16px;overflow:auto;font-family:-apple-system,"SF Pro",Arial,sans-serif}
+      #v-dialog{background:var(--bg);color:#f2f4f7;padding:16px;overflow:auto;font-family:-apple-system,"SF Pro",Arial,sans-serif}
       #v-dialog .d-line{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
       #v-dialog .d-line .who{min-width:44px;font-size:11px;font-weight:700;padding-top:2px}
       #v-dialog .d-line .who.them{color:#4cc9f0}
@@ -837,7 +837,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #v-dialog .d-line .py{font-size:16px;font-weight:600;letter-spacing:.3px}
       #v-dialog .d-line .en{font-size:12px;color:var(--sub);margin-top:3px}
       #v-dialog .d-line.you{border:1px solid rgba(194,54,43,.3);border-radius:12px;padding:14px;background:rgba(194,54,43,.06)}
-      #v-dialog .d-line.you .py{color:#ff6b70}
+      #v-dialog .d-line.you .py{color:#d94a3c}
       #v-dialog .d-flip{margin-top:16px;background:rgba(76,201,240,.08);border:1px dashed rgba(76,201,240,.4);border-radius:14px;padding:16px;font-size:14px}
       #v-dialog .d-flip b{color:#4cc9f0}
       #v-dialog .d-flip .py{font-size:16px;font-weight:600;margin-top:8px}
@@ -1108,15 +1108,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   </button>
 </div>
 
-<nav>
-  <button id="nav-home" class="on" onclick="go('home')"><img class="ic-img" src="assets/icons/home.svg" alt="Home">Home</button>
-  <button id="nav-practice" onclick="go('practice')"><span class="ic">🎯</span>Practice</button>
-  <button id="nav-explore" onclick="go('explore')"><span class="ic">🧭</span>Explore</button>
-  <button id="nav-prog" onclick="go('prog')"><img class="ic-img" src="assets/icons/progress.svg" alt="Progress">Progress</button>
-  <button id="nav-me" onclick="go('me')"><span class="ic">👤</span>Me</button>
-</nav>
+<nav><button id="nav-home" class="on" onclick="go('home')"><span class="navico navico-home"></span>Home</button><button id="nav-practice" onclick="go('practice')"><span class="navico navico-practice"></span>Practice</button><button id="nav-explore" onclick="go('explore')"><span class="navico navico-explore"></span>Explore</button><button id="nav-prog" onclick="go('prog')"><span class="navico navico-prog"></span>Progress</button><button id="nav-me" onclick="go('me')"><span class="navico navico-me"></span>Me</button></nav>
 <div class="toast" id="toast"></div>
-<div id="splash"><img src="assets/splash/a8_9x16.webp" alt="Sinoky" onerror="this.parentNode.remove()"></div>
+<div id="splash"><div class="sp-brand">Sino<b>k</b></div><img src="assets/brand/dragon-nono.svg" alt="Sinoky" onerror="this.parentNode.remove()"></div>
 <div id="updatebar"></div>
 <div class="rd-pop" id="rd-pop" role="dialog" aria-label="Word details"></div>
 <div id="rd-mask"></div>
@@ -1173,7 +1167,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.14.11';
+var APP_VERSION = '0.15.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -6299,5 +6293,64 @@ function replayDialog(id){
 }
 
 </script>
+<style id="cn-modules">
+/* ===== 中式模块层 v1（M1-M10）· v0.15.0 ===== */
+:root{--gold-dim:#8a7448;--paper:#f5f1e8}
+
+/* M1 卡片：四角如意云头 + 底边回纹带（纹样只在边缘，中央留白） */
+.hub,.card{position:relative;background-color:var(--card);border-color:var(--line);
+  background-repeat:no-repeat;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M1,21 V13 C1,6 6,1 13,1 H21'/%3E%3Cpath d='M4,21 V15 C4,9 9,4 15,4 H21' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M21,21 V13 C21,6 16,1 9,1 H1'/%3E%3Cpath d='M18,21 V15 C18,9 13,4 7,4 H1' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M1,1 V9 C1,16 6,21 13,21 H21'/%3E%3Cpath d='M4,1 V7 C4,13 9,18 15,18 H21' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M21,1 V9 C21,16 16,21 9,21 H1'/%3E%3Cpath d='M18,1 V7 C18,13 13,18 7,18 H1' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E");
+  background-position:7px 7px,calc(100% - 7px) 7px,7px calc(100% - 7px),calc(100% - 7px) calc(100% - 7px);
+  background-size:20px 20px}
+.hub::after,.card::after{content:"";position:absolute;left:14px;right:14px;bottom:7px;height:7px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.3;pointer-events:none}
+
+/* M3 按钮：内嵌金环（雕刻感来自双层线，不加纹理） */
+.btn{box-shadow:inset 0 0 0 1px rgba(201,168,108,.42)}
+.btn.ghost{background:none;box-shadow:inset 0 0 0 1px var(--gold-dim)}
+.record{box-shadow:inset 0 0 0 1px rgba(201,168,108,.34)}
+
+/* M10 表单与分段器 */
+input,textarea,.citysearch,.sent-input,.rd-input{border-radius:99px;box-shadow:inset 0 0 0 1px rgba(201,168,108,.24)}
+textarea,.rd-input{min-height:110px;border-radius:18px}
+.seg button{border-radius:99px}
+.seg button.on{box-shadow:inset 0 0 0 1px rgba(201,168,108,.5)}
+
+/* M4 底部导航：金线 + 回纹收尾 + 选中项祥云托底 + 图标随选中态变色 */
+body>nav{background:rgba(22,26,32,.94);border-top:1px solid rgba(201,168,108,.42)}
+body>nav::after{content:"";position:absolute;right:12px;top:6px;width:36px;height:7px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.32;pointer-events:none}
+body>nav button{position:relative}
+body>nav button.on::before{content:"";position:absolute;bottom:2px;left:50%;width:32px;height:10px;margin-left:-16px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 10'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4,8.5 C4,4.5 8,3.5 10.5,6 C11.5,2.5 16,2 18,5.5 C20.5,3 25,4.5 25,8.5'/%3E%3Cpath d='M3,8.6 H29'/%3E%3C/g%3E%3C/svg%3E");background-repeat:no-repeat;background-size:contain;opacity:.9;pointer-events:none}
+.navico{display:block;width:22px;height:22px;background-color:currentColor;margin-bottom:1px;
+  -webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain;
+  mask-position:center;mask-repeat:no-repeat;mask-size:contain}
+.navico-home{-webkit-mask-image:url(assets/icons/nav-home.svg);mask-image:url(assets/icons/nav-home.svg)}
+.navico-practice{-webkit-mask-image:url(assets/icons/nav-practice.svg);mask-image:url(assets/icons/nav-practice.svg)}
+.navico-explore{-webkit-mask-image:url(assets/icons/nav-explore.svg);mask-image:url(assets/icons/nav-explore.svg)}
+.navico-prog{-webkit-mask-image:url(assets/icons/nav-prog.svg);mask-image:url(assets/icons/nav-prog.svg)}
+.navico-me{-webkit-mask-image:url(assets/icons/nav-me.svg);mask-image:url(assets/icons/nav-me.svg)}
+
+/* M7 徽章印章化：圆形 + 金环 + 外圈淡金晕 */
+.badge-cell img{border-radius:50%;box-shadow:0 0 0 2px var(--gold),0 0 0 7px rgba(201,168,108,.1)}
+.badge-cell:not(.on) img{box-shadow:0 0 0 2px var(--gold-dim),0 0 0 7px rgba(138,116,72,.08)}
+
+/* M6 龙鳞进度（进度＝奖励＝鎏金，替换旧红渐变） */
+.pbar{height:9px;background-color:var(--bg2);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.1'%3E%3Cpath d='M0,7 A5.5,5.5 0 0 1 11,7'/%3E%3Cpath d='M-5.5,3 A5.5,5.5 0 0 1 5.5,3 M5.5,3 A5.5,5.5 0 0 1 16.5,3'/%3E%3C/g%3E%3C/svg%3E");background-repeat:repeat-x;background-size:11px 7px}
+.pbar i{background:linear-gradient(90deg,var(--gold),var(--paper))}
+
+/* M5 页头：回纹收边 */
+header{position:relative;padding-bottom:16px}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.28}
+
+/* 启动屏：主视觉接回（深青品牌底 + Sino<k>y 衬线字标） */
+#splash{background:#17423D;flex-direction:column;gap:1.6vh}
+#splash img{width:100%;max-width:430px;height:auto;max-height:70vh;border-radius:0}
+#splash .sp-brand{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
+#splash .sp-brand b{color:var(--red);font-weight:800}
+</style>
 </body>
 </html>

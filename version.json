@@ -1,15 +1,15 @@
 {
-  "version": "0.14.11",
+  "version": "0.15.0",
   "updated": "2026-09-11",
-  "note": "v0.14.11：换肤收尾——把上一版漏掉的「换肤前旧色值」全部清剿归位：首次引导页整屏、跟读页「听这一句」卡片、对话页、天数页等 46 处旧洋红（含 26 处半透明红 tint）统一改为主题变量朱砂红；顶部状态栏主题色改为新墨色；诺诺面板底色对齐主题；首次引导页主按钮胶囊化。中国风主题自此全应用无死角。",
+  "note": "v0.15.0：中式模块化设计落地——按《中式模块化设计规范 v1》实施：卡片四角如意云头 + 底边回纹带、按钮内嵌金环、底部导航统一为五枚中式线稿图标（回纹门楼/竹简与笔/祥云罗盘/龙鳞阶/朱砂印，随选中态变色）+ 顶部金线与祥云托底、输入框胶囊化 + 内嵌金线、勋章印章化（圆形金环）、进度条改鎏金龙鳞（进度即奖励）、页头回纹收边；新增 --gold-dim / --paper 变量；启动屏上线「金龙盘诺诺」主视觉（鎏金中国龙盘绕怀抱青竹的诺诺）。",
   "apk": {
-    "versionCode": 1411,
-    "version": "0.14.11",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.14.11-release.apk",
-    "md5": "ecb83f0910a222d1762df7783ac69287",
-    "size": 23893487
+    "versionCode": 1500,
+    "version": "0.15.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.15.0-release.apk",
+    "md5": "",
+    "size": 0
   },
   "noteEn": [
-    "v0.14.11: Theme cleanup — every leftover pre-theme color value is now mapped to the theme variables: 46 occurrences of the old magenta (including 26 translucent red tints) across the first-run onboarding, the 'hear this line' card, the dialog view and the day list now use the cinnabar red; the browser theme-color is updated to the new ink base; the Nono panel background is aligned to the theme; and the onboarding CTA is now a capsule. The Chinese-style theme now covers the whole app with no gaps."
+    "v0.15.0: Chinese modular design system rollout — ruyi corner ornaments and meander bands on cards, inset gold rings on buttons, five Chinese line-art nav icons (gate/panda-bamboo-slip/compass/scale-steps/seal) that follow the selected state, gold hairline and cloud topper on the tab bar, capsule inputs with inset gold rules, seal-style badges, a gilded scale progress bar, and meander page-header rules. New theme variables --gold-dim and --paper. The 'Golden Dragon & Nono' splash is now live."
   ]
 }

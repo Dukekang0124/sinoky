@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <!-- Sinoky 中式线稿导航图标 · 朱砂印 · 48网格 / 2.6px / 圆头圆角 / 单色（CSS mask 用） -->
+  <g fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.5,9.5 H38.5 V38.5 H9.5 Z"/>
+    <path d="M14,14 H34 V34 H14 Z"/>
+    <path d="M24,18.5 A3.6,3.6 0 1 1 23.9,18.5"/>
+    <path d="M17.5,31 C17.5,26.4 20.4,23.5 24,23.5 C27.6,23.5 30.5,26.4 30.5,31"/>
+  </g>
+</svg>
