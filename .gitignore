@@ -3,6 +3,7 @@ node_modules/
 .DS_Store
 *.log
 _audit_i18n.txt
+__pycache__/
 .dev.vars
 .env
 

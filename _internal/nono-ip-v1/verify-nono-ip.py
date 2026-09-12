@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""v0.22.0 诺诺 IP 接入 —— 独立验收（不依赖落地脚本的自我断言）
+"""诺诺 IP 接入（v0.22.0 起）—— 独立验收（不依赖落地脚本的自我断言）
+
+换版本号只需改顶部 EXPECT_VER 一处（NKEY 跟着 key 数走）。
 
 跑法：python verify-nono-ip.py
 """
@@ -13,6 +15,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.abspath(os.path.join(HERE, "..", ".."))
 NODE = r"C:\Users\Admin\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
+
+# 🔴 唯一版本真值：换版本号只改这一处（sw.js CACHE / version.json version / APP_VERSION 都对着它断言）。
+# 刻意不把版本号写死在断言里 —— v0.22.0 时硬编码 574 / 0.21.2 各误报过一轮。
+EXPECT_VER = "0.23.0"
 
 fails, warns, oks = [], [], []
 
@@ -74,7 +80,7 @@ if b"dragon-nono.svg" in b:
 # A5 APP_VERSION
 m = re.search(rb"var APP_VERSION = '([\d.]+)'", b)
 v = m.group(1).decode() if m else "?"
-(ok if v == "0.22.0" else bad)("APP_VERSION = %s" % v)
+(ok if v == EXPECT_VER else bad)("APP_VERSION = %s" % v)
 
 # A6 语法：抽出注入的 JS 块单独 node --check
 css_start = i_css - len(b"<style ")
@@ -149,7 +155,7 @@ if b"icon-512.png" not in sb:
 else:
     bad("sw.js 仍有 icon-512.png（addAll 会让 SW 装不上）")
 m = re.search(rb"var CACHE = '([^']+)'", sb)
-(ok if m and m.group(1).decode().endswith("0.22.0") else bad)("sw.js CACHE = %s" % (m.group(1).decode() if m else "?"))
+(ok if m and m.group(1).decode().endswith(EXPECT_VER) else bad)("sw.js CACHE = %s" % (m.group(1).decode() if m else "?"))
 paths = re.findall(rb"'\./([^']+)'", sb)
 swmiss = [p.decode() for p in paths if p.decode() not in ("",) and not os.path.isfile(os.path.join(APP, p.decode())) and p.decode() != ""]
 # 处理 './' 本身（站点根）与目录
@@ -165,7 +171,7 @@ else:
 
 vb = rd(os.path.join(APP, "version.json"))
 vj = json.loads(vb.decode("utf-8"))
-(ok if vj["version"] == "0.22.0" else bad)("version.json version = %s" % vj["version"])
+(ok if vj["version"] == EXPECT_VER else bad)("version.json version = %s" % vj["version"])
 # APK 版本段自洽性 —— 不写死具体版本号（编码阶段 APK 常落后于网页版；发版后两者应相等）。
 # 2026-09-12 修正：原先硬编码「预期 0.21.2」，APK 发版后必然误报。
 _av = vj["apk"]["version"]
@@ -181,7 +187,7 @@ if ("Sinoky-v%s-release.apk" % _av) in _au:
     ok("apk.url 与 apk.version 指向同一版本（%s）" % _av)
 else:
     bad("apk.url 与 apk.version 不一致：url=%s version=%s" % (_au, _av))
-if "0.22.0" in vj.get("note", ""):
+if EXPECT_VER in vj.get("note", ""):
     ok("version.json note 已更新")
 if vb.count(b"\n") - vb.count(b"\r\n") == 0:
     ok("version.json 行尾 CRLF")
@@ -190,16 +196,24 @@ else:
 
 # ============================================================== C. 语言包
 print("\n[C] 语言包")
-KEY = "No worries — try again"
+NKEY = 580          # v0.23.0：574（v0.22.0）+ 6（导览）
+KEYS = [
+    "No worries — try again",                                      # v0.22.0 state 文案
+    "Tour", "Show me around",                                      # v0.23.0 导览入口
+    "Not sure where to start? Let me show you around.",            # v0.23.0 浮动邀请
+    "You've seen the whole place.",                                # v0.23.0 收尾站
+    "Finish", "Take me there",                                     # v0.23.0 骨架按钮
+]
 for lg in ["zh", "es", "ru", "vi", "id", "th"]:
     p = os.path.join(APP, "langs", lg + ".json")
     d = json.loads(rd(p).decode("utf-8"))
-    if len(d) != 574:
-        bad("%s.json key 数 = %d（应 574）" % (lg, len(d)))
-    elif KEY not in d or not d[KEY]:
-        bad("%s.json 缺新 key %r" % (lg, KEY))
+    miss = [k for k in KEYS if k not in d or not d[k]]
+    if len(d) != NKEY:
+        bad("%s.json key 数 = %d（应 %d）" % (lg, len(d), NKEY))
+    elif miss:
+        bad("%s.json 缺 key %r" % (lg, miss))
     else:
-        print("  ✓ %s.json 574 key，新 key = %r" % (lg, d[KEY]))
+        print("  ✓ %s.json %d key，%d 个关键 key 齐" % (lg, len(d), len(KEYS)))
 
 # ============================================================ D. landing
 print("\n[D] landing")

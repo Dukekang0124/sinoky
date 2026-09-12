@@ -56,3 +56,59 @@
 
 /* ---- 浮标侧：录音中给浮标一圈朱砂微光（姿态图本身已在 index.html 里换） ---- */
 #nono-fab img.nono-fab-listening{box-shadow:0 0 0 3px rgba(194,54,43,.22)}
+
+/* ==========================================================================
+   v0.23.0 功能导览（纯追加）
+   —— 面板内的导览正文：复用 #nono-msg / #nono-acts 两个既有容器，
+      不新增面板结构，因此不改 index.html 的面板 HTML。
+   ========================================================================== */
+
+/* 站点标签（TOUR · 3/6） */
+#nono-panel .nt-top{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+/* 站点标题 */
+#nono-panel .nt-h{margin:0 0 7px;font-size:16px;line-height:1.25;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
+/* 功能说明（英文，与既有的教学提示文案同风格：硬编码不走 i18n） */
+#nono-panel .nt-b{margin:0 0 11px;font-size:12.5px;line-height:1.55;color:var(--sub)}
+#nono-panel .nt-b b{color:var(--gold)}
+/* 每站绑的那句中文 —— Edify Gate 的落点，视觉上给足权重 */
+#nono-panel .nt-cn{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:12px;
+  background:rgba(194,54,43,.10);border:1px solid rgba(194,54,43,.28)}
+#nono-panel .nt-cn b{font-size:19px;line-height:1.2;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;color:#f2f4f7}
+#nono-panel .nt-cn i{font-style:normal;font-size:12px;font-weight:700;color:var(--red);letter-spacing:.02em}
+#nono-panel .nt-cn span{font-size:12px;color:var(--sub)}
+/* 进度点 */
+#nono-panel .nt-prog{display:flex;gap:5px;margin-top:12px}
+#nono-panel .nt-prog i{flex:1;height:3px;border-radius:99px;background:var(--line)}
+#nono-panel .nt-prog i.on{background:var(--red)}
+
+/* ---- 浮动邀请（首次，只在 home，可点可关，只出一次）----
+   位置与 #nono-tip 相同 —— 出现前 JS 会先 nonoHintHide() 清掉胶囊，不会叠。 */
+#nono-invite{
+  position:fixed;right:74px;bottom:104px;z-index:59;
+  max-width:min(70vw,272px);padding:11px 26px 11px 13px;
+  border-radius:16px 16px 5px 16px;
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  border:1px solid rgba(194,54,43,.42);
+  color:var(--txt);font-size:12.5px;line-height:1.45;cursor:pointer;
+  box-shadow:0 10px 28px rgba(0,0,0,.58),0 0 0 1px rgba(201,168,108,.06);
+  opacity:0;transform:translateY(8px) scale(.97);
+  transition:opacity .3s ease,transform .3s ease;font-family:inherit;
+}
+#nono-invite.on{opacity:1;transform:translateY(0) scale(1)}
+#nono-invite b{display:block;color:var(--gold);font-size:13px;margin-bottom:3px}
+#nono-invite .ni-en{color:var(--sub);font-size:11.5px}
+#nono-invite .ni-x{position:absolute;top:4px;right:6px;font-size:11px;color:var(--sub);
+  padding:3px 5px;line-height:1;border-radius:6px}
+#nono-invite .ni-x:hover{color:var(--txt)}
+
+/* ---- 既有「首视图轻引导」卡（tourHtml）里的诺诺行 ----
+   只加这一段，卡片其余样式全部沿用既有的 .card / .tour-steps。 */
+#v-home .nt-nono{display:flex;align-items:center;gap:11px;padding:0 0 12px;margin-bottom:12px;
+  border-bottom:1px solid var(--line)}
+#v-home .nt-nono img{width:54px;height:54px;border-radius:50%;flex:0 0 auto;object-fit:cover;
+  background:rgba(194,54,43,.14);border:1px solid rgba(201,168,108,.28)}
+#v-home .nt-nono b{display:block;font-size:13.5px;color:var(--gold);margin-bottom:2px;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
+#v-home .nt-nono span{font-size:11.5px;color:var(--sub);line-height:1.45}

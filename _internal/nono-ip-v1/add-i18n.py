@@ -67,7 +67,10 @@ def main():
 
     print("  lang  状态      key数")
     for lg, st, n in report:
-        print("  %-5s %-9s %d %s" % (lg, st, n, "OK" if n == 574 else "!!"))
+        # 注：本脚本是 v0.22.0 那一次的一次性工具，当时目标 key 数是 574。
+        # v0.23.0 起为 580（导览 +6），此处的基准只用于判断"这次插入是否生效"，
+        # 故改为「≥ 574 即 OK」，避免历史脚本在后续版本误报 !!。
+        print("  %-5s %-9s %d %s" % (lg, st, n, "OK" if n >= 574 else "!!"))
 
 
 if __name__ == "__main__":

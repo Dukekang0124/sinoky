@@ -27,8 +27,8 @@ APP = os.path.abspath(os.path.join(HERE, "..", ".."))
 PATCH_CSS = os.path.join(HERE, "patch.css")
 PATCH_JS = os.path.join(HERE, "patch.js")
 
-NEW_VER = "0.22.0"
-OLD_VER = "0.21.2"
+NEW_VER = "0.23.0"
+OLD_VER = "0.22.0"
 
 log = []
 
@@ -270,7 +270,9 @@ def step_landing():
 
 
 # --------------------------------------------------------------- 5. version.json
-NOTE = (
+# 历史留档：v0.22.0 那一次发版的 version.json note 原文。
+# 现已改由发版 SOP 撰写（§1 四处同步），本脚本**不再写入 note**。
+NOTE_V0220_HISTORY = (
     "v0.22.0：诺诺 IP 产品内接入 —— 「墨韵·朱砂」米白真龙盘字卫衣定妆版上线（基准资产 "
     "nono-looklocked-D-quarter-1024x1024.png）。"
     "① 全站形象收口：启动屏 / 分享卡 / App 图标 / 三张空态 / 浮标 / 面板六处全部换成同一张 "
@@ -297,13 +299,16 @@ def step_version():
     path = os.path.join(APP, "version.json")
     b = rd(path)
     j = json.loads(b.decode("utf-8"))
-    if j.get("version") == NEW_VER:
-        p("  [5] version.json 已是 %s，跳过" % NEW_VER)
+    if j.get("version") != OLD_VER:
+        # 🔴 版本号与发布注记归发版 SOP（§1 四处同步）统一管理。
+        # 本脚本只在「确实是 OLD_VER → NEW_VER 那一次」才动 version.json，
+        # 其余一切情况跳过 —— 否则会把当前版本的发布注记覆盖成历史文案
+        # （原 NOTE 是 v0.22.0 文案，已改名 NOTE_V0220_HISTORY，不再写盘）。
+        p("  [5] version.json = %s（非 %s），跳过（版本号归发版 SOP 管）"
+          % (j.get("version"), OLD_VER))
         return
-    assert j["version"] == OLD_VER, "version.json 版本号意外：%s" % j["version"]
     j["version"] = NEW_VER
     j["updated"] = "2026-09-12"
-    j["note"] = NOTE
     out = json.dumps(j, ensure_ascii=False, indent=2)
     out = to_crlf(out.encode("utf-8"))
     assert_no_bare_lf(out, "version.json")
@@ -315,7 +320,7 @@ def step_version():
 
 
 def main():
-    p("=== v0.22.0 诺诺 IP 接入：落地 ===")
+    p("=== 诺诺 IP 接入：落地 / 重跑（幂等，v0.23.0）===")
     step_index()
     step_manifest()
     step_sw()

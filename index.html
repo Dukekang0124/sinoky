@@ -1179,7 +1179,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.22.0';
+var APP_VERSION = '0.23.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -7418,6 +7418,9 @@ SHARE.playDeepLink = function(){
 </script>
 
 
+
+
+
 <!-- ===== v0.22.0 Nono IP 接入层（纯追加） ===== -->
 <style id="nono-ip-v1-css">
 /* ==========================================================================
@@ -7478,6 +7481,62 @@ SHARE.playDeepLink = function(){
 
 /* ---- 浮标侧：录音中给浮标一圈朱砂微光（姿态图本身已在 index.html 里换） ---- */
 #nono-fab img.nono-fab-listening{box-shadow:0 0 0 3px rgba(194,54,43,.22)}
+
+/* ==========================================================================
+   v0.23.0 功能导览（纯追加）
+   —— 面板内的导览正文：复用 #nono-msg / #nono-acts 两个既有容器，
+      不新增面板结构，因此不改 index.html 的面板 HTML。
+   ========================================================================== */
+
+/* 站点标签（TOUR · 3/6） */
+#nono-panel .nt-top{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+/* 站点标题 */
+#nono-panel .nt-h{margin:0 0 7px;font-size:16px;line-height:1.25;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
+/* 功能说明（英文，与既有的教学提示文案同风格：硬编码不走 i18n） */
+#nono-panel .nt-b{margin:0 0 11px;font-size:12.5px;line-height:1.55;color:var(--sub)}
+#nono-panel .nt-b b{color:var(--gold)}
+/* 每站绑的那句中文 —— Edify Gate 的落点，视觉上给足权重 */
+#nono-panel .nt-cn{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:12px;
+  background:rgba(194,54,43,.10);border:1px solid rgba(194,54,43,.28)}
+#nono-panel .nt-cn b{font-size:19px;line-height:1.2;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;color:#f2f4f7}
+#nono-panel .nt-cn i{font-style:normal;font-size:12px;font-weight:700;color:var(--red);letter-spacing:.02em}
+#nono-panel .nt-cn span{font-size:12px;color:var(--sub)}
+/* 进度点 */
+#nono-panel .nt-prog{display:flex;gap:5px;margin-top:12px}
+#nono-panel .nt-prog i{flex:1;height:3px;border-radius:99px;background:var(--line)}
+#nono-panel .nt-prog i.on{background:var(--red)}
+
+/* ---- 浮动邀请（首次，只在 home，可点可关，只出一次）----
+   位置与 #nono-tip 相同 —— 出现前 JS 会先 nonoHintHide() 清掉胶囊，不会叠。 */
+#nono-invite{
+  position:fixed;right:74px;bottom:104px;z-index:59;
+  max-width:min(70vw,272px);padding:11px 26px 11px 13px;
+  border-radius:16px 16px 5px 16px;
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  border:1px solid rgba(194,54,43,.42);
+  color:var(--txt);font-size:12.5px;line-height:1.45;cursor:pointer;
+  box-shadow:0 10px 28px rgba(0,0,0,.58),0 0 0 1px rgba(201,168,108,.06);
+  opacity:0;transform:translateY(8px) scale(.97);
+  transition:opacity .3s ease,transform .3s ease;font-family:inherit;
+}
+#nono-invite.on{opacity:1;transform:translateY(0) scale(1)}
+#nono-invite b{display:block;color:var(--gold);font-size:13px;margin-bottom:3px}
+#nono-invite .ni-en{color:var(--sub);font-size:11.5px}
+#nono-invite .ni-x{position:absolute;top:4px;right:6px;font-size:11px;color:var(--sub);
+  padding:3px 5px;line-height:1;border-radius:6px}
+#nono-invite .ni-x:hover{color:var(--txt)}
+
+/* ---- 既有「首视图轻引导」卡（tourHtml）里的诺诺行 ----
+   只加这一段，卡片其余样式全部沿用既有的 .card / .tour-steps。 */
+#v-home .nt-nono{display:flex;align-items:center;gap:11px;padding:0 0 12px;margin-bottom:12px;
+  border-bottom:1px solid var(--line)}
+#v-home .nt-nono img{width:54px;height:54px;border-radius:50%;flex:0 0 auto;object-fit:cover;
+  background:rgba(194,54,43,.14);border:1px solid rgba(201,168,108,.28)}
+#v-home .nt-nono b{display:block;font-size:13.5px;color:var(--gold);margin-bottom:2px;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
+#v-home .nt-nono span{font-size:11.5px;color:var(--sub);line-height:1.45}
 
 </style>
 <script id="nono-ip-v1-js">
@@ -7586,20 +7645,26 @@ SHARE.playDeepLink = function(){
     };
   }
 
-  /* ---------- 3. 语境分支：补齐 6 个空缺视图（P0-2） ----------
-     原 nonoContextGreet 只覆盖 7/13 视图，缺的 6 个里 v-scene（主练习页）、
+  /* ---------- 3. 语境分支：补齐空缺视图（P0-2；v0.23.0 由 6 个扩到 9 个） ----------
+     原 nonoContextGreet 只覆盖 7/17 视图，缺的里 v-scene（主练习页）、
      v-scenes-read（阅读打分）恰好是最需要促开口的两个位。
-     这里只接管这 6 个视图并走边角提示（不展开面板、不吃每日 4 次配额）；
+     这里只接管这些视图并走边角提示（不展开面板、不吃每日 4 次配额）；
      其余视图原逻辑照跑。
-     文案全部改成「动作召唤型」——原实现多为「说明书型」，占掉配额却换不来开口。 */
-  var NEWVIEWS = { scene: 1, 'scenes-read': 1, practice: 1, explore: 1, days: 1, dialog: 1 };
+     文案全部改成「动作召唤型」——原实现多为「说明书型」，占掉配额却换不来开口。
+     v0.23.0 补 3 个：sentences（收藏句）/ reading（文本查词）/ prog（勋章进度）——
+     至此 16/17 视图有问候，只剩 v-onboard（首启全屏层，由 §8 导览承接，不需要气泡）。 */
+  var NEWVIEWS = { scene: 1, 'scenes-read': 1, practice: 1, explore: 1, days: 1, dialog: 1,
+                   sentences: 1, reading: 1, prog: 1 };
   var VIEW_HINT = {
     scene:          { pose: 'listen', html: '<b>先听，再跟我念 3 遍。</b><br>Tap the mic and say it out loud.' },
     'scenes-read':  { pose: 'listen', html: '<b>读一句，说一句。</b><br>Reading it is not the same as saying it.' },
     practice:       { pose: 'cheer',  html: '<b>选一句，说 3 遍。</b><br>Slow the first time, real the third.' },
     explore:        { pose: 'point',  html: '<b>挑一个你明天就会用到的场景。</b>' },
     days:           { pose: 'cheer',  html: '<b>今天这一步，只要一句。</b><br>说给我听。' },
-    dialog:         { pose: 'listen', html: '<b>一人一句 —— 你来演那个「你」。</b>' }
+    dialog:         { pose: 'listen', html: '<b>一人一句 —— 你来演那个「你」。</b>' },
+    sentences:      { pose: 'note',   html: '<b>挑一句，说给我听。</b><br>You saved these — now say them out loud.' },
+    reading:        { pose: 'listen', html: '<b>看懂了，也要说出来。</b><br>Understanding it is not the same as saying it.' },
+    prog:           { pose: 'cheer',  html: '<b>每一枚勋章，都是你开口换来的。</b><br>Say one more line — the next one is close.' }
   };
   if (typeof window.nonoContextGreet === 'function') {
     var _ncg = window.nonoContextGreet;
@@ -7747,6 +7812,225 @@ SHARE.playDeepLink = function(){
       } catch (e) {}
       return r;
     };
+  })();
+
+  /* ---------- 8. 功能导览：诺诺带你认识产品（v0.23.0） ----------
+     对应需求「引导用户了解并使用产品内的各项功能与学习内容」。
+     为什么必须新做：产品有 17 个视图 / 14 天路径 / HSK1–3 字卡 / 声调曲线 /
+     100 句生存中文，但首次进来的用户看不到全貌 —— 出场机制再完备，
+     用户不知道「去哪、用什么」也没用。
+
+     位阶（Edify Gate：不 edify 但必需的藏进二级位置，绝不占主路径）：
+       ① 入口放二级 —— 诺诺面板模式菜单第三项（随时可回访）＋ 一条浮动邀请
+          （只在 home 出现、可关闭、只出一次）；
+       ② 不消耗每日 4 次主动气泡配额（自己渲染面板，不走 nonoShow）；
+       ③ **每一站都绑一句中文** —— 功能说明与开口不分成两件事。
+
+     状态落盘：'sinoky_nono_tour'='done'（逛完）或 'sinoky_nono_invite'='off'
+       （关掉邀请）—— 任一成立即永久静音，不再打扰。 */
+  var TOUR_KEY = 'sinoky_nono_tour', INVITE_KEY = 'sinoky_nono_invite';
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  /* 6 站 = 6 个功能区。view 全部落在 go() 白名单内，点「带我去」即可直达。 */
+  var TOUR = [
+    { view: 'days', pose: 'cheer', hz: '今天只要一句', py: 'jīntiān zhǐyào yī jù',
+      en: 'One line a day', gloss: 'One line is enough today',
+      body: 'Your main path: 14 days, one survival line each. Finish them and you can answer people — not just recite words.' },
+    { view: 'practice', pose: 'listen', hz: '跟我念', py: 'gēn wǒ niàn',
+      en: 'Where you actually speak', gloss: 'Repeat after me',
+      body: 'Real situations — taxi, clinic, hotpot. Tap the mic, say the line out loud, and I score your tone.' },
+    { view: 'cards', pose: 'note', hz: '听一听，说一说', py: 'tīng yi tīng, shuō yi shuō',
+      en: 'HSK character cards', gloss: 'Listen, then say it',
+      body: 'HSK1 to HSK3 decks. Tap any character to hear it, then say it back — this builds the words behind the lines.' },
+    { view: 'tone', pose: 'think', hz: '慢慢来', py: 'màn màn lái',
+      en: 'Tone training', gloss: 'Take it slow',
+      body: 'Say a word and I draw your tone curve in real time. This is the one thing that makes you sound Chinese.' },
+    { view: 'cities', pose: 'point', hz: '你去哪儿？', py: 'nǐ qù nǎr?',
+      en: 'Cities & scenes', gloss: 'Where are you going?',
+      body: 'Pick a city you will actually visit, or read a short scene and look up any word. Learn the lines that come up there.' },
+    { view: 'prog', pose: 'cheer', hz: '你做到了', py: 'nǐ zuò dào le',
+      en: 'Badges & progress', gloss: 'You did it',
+      body: 'Every badge is a line you actually said out loud. Come back and see how far you have come.' }
+  ];
+  window.NONO_TOUR = TOUR;
+
+  function hideOtherAreas() {
+    ['nono-chat', 'nono-practice', 'nono-state'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+
+  /* 渲染第 i 站（i === TOUR.length 即收尾站） */
+  window.nonoTour = function (i) {
+    i = parseInt(i, 10) || 0;
+    if (i < 0) i = 0;
+    var N = window.NONO || {};
+    N.closed = false;                       /* 用户主动要导览 ⇒ 解除「今天不再打扰」 */
+    var panel = document.getElementById('nono-panel');
+    var msg = document.getElementById('nono-msg');
+    var acts = document.getElementById('nono-acts');
+    if (!panel || !msg) return;
+    hideOtherAreas();
+    if (typeof window.nonoHintHide === 'function') window.nonoHintHide();
+    var iv = document.getElementById('nono-invite');
+    if (iv) iv.classList.remove('on');
+    if (typeof window.nonoModeChips === 'function') window.nonoModeChips();
+    panel.style.display = 'block';
+    if (typeof window.nonoPanelFlex === 'function') window.nonoPanelFlex(false);
+    msg.style.display = 'block';
+    if (typeof window.nonoState === 'function') window.nonoState('idle');   /* 先清状态（会重置为 like） */
+
+    if (i >= TOUR.length) {                 /* ---- 收尾站 ---- */
+      lsSet(TOUR_KEY, 'done');
+      msg.innerHTML = '<div class="nt-top">' + T('Tour') + '</div>' +
+        '<h3 class="nt-h">' + T("You've seen the whole place.") + '</h3>' +
+        '<p class="nt-b">Pick any button below and go say one line. <b>说一句就行。</b></p>';
+      if (typeof window.nonoPose === 'function') window.nonoPose('wave');
+      if (acts) acts.innerHTML =
+        '<button onclick="nonoStartPractice()">🎙️ ' + T('Practise') + '</button>' +
+        '<button class="ghost" onclick="nonoStartChat()">💬 ' + T('Chat') + '</button>' +
+        '<button class="ghost" onclick="nonoMin()">' + T('Close') + '</button>';
+      return;
+    }
+
+    var t = TOUR[i];
+    var dots = '';
+    for (var k = 0; k < TOUR.length; k++) dots += '<i class="' + (k <= i ? 'on' : '') + '"></i>';
+    msg.innerHTML =
+      '<div class="nt-top">' + T('Tour') + ' · ' + (i + 1) + '/' + TOUR.length + '</div>' +
+      '<h3 class="nt-h">' + t.en + '</h3>' +
+      '<p class="nt-b">' + t.body + '</p>' +
+      '<div class="nt-cn"><b>' + t.hz + '</b><i>' + t.py + '</i><span>= ' + t.gloss + '</span></div>' +
+      '<div class="nt-prog">' + dots + '</div>';
+    if (typeof window.nonoPose === 'function') window.nonoPose(t.pose);
+    if (acts) acts.innerHTML =
+      '<button onclick="nonoTour(' + (i + 1) + ')">' +
+        (i + 1 < TOUR.length ? T('Next →') : T('Finish')) + '</button>' +
+      '<button class="ghost" onclick="nonoTourGo(\'' + t.view + '\')">' + T('Take me there') + '</button>' +
+      '<button class="ghost" onclick="nonoMin()">' + T('Skip for now') + '</button>';
+  };
+  /* 直达那一站对应的视图，并收起面板（视图本身就是最好的说明） */
+  window.nonoTourGo = function (v) {
+    try { if (typeof window.go === 'function') window.go(v); } catch (e) {}
+    if (typeof window.nonoMin === 'function') window.nonoMin();
+  };
+
+  /* 面板模式菜单挂第三项（覆盖原函数并保留原有两项的行为） */
+  (function () {
+    if (typeof window.nonoModeChips === 'function') {
+      var _chips = window.nonoModeChips;
+      window.nonoModeChips = function () {
+        var r = _chips.apply(this, arguments);
+        try {
+          var el = document.getElementById('nono-modes');
+          var w = el && el.querySelector('.nm-wrap');
+          if (w && !w.querySelector('.nm-tour')) {
+            var b = document.createElement('button');
+            b.className = 'nm-chip nm-tour' + ((window.NONO || {}).mode === 'tour' ? ' on' : '');
+            b.innerHTML = '🧭 ' + T('Tour');
+            b.onclick = function () { window.NONO.mode = 'tour'; window.nonoTour(0); };
+            w.appendChild(b);
+          }
+        } catch (e) {}
+        return r;
+      };
+    }
+  })();
+
+  /* 浮动邀请：只在 home（落地页）出现 —— 主路径给句子，绝不抢 */
+  var inviteEl = null, inviteTries = 0;
+  function inviteOk() {
+    if (lsGet(TOUR_KEY) === 'done' || lsGet(INVITE_KEY) === 'off') return false;
+    if ((window.NONO || {}).closed) return false;
+    var v = (typeof window.nonoView === 'function') ? window.nonoView() : 'home';
+    if (v !== 'home') return false;
+    var panel = document.getElementById('nono-panel');
+    if (panel && panel.style.display === 'block') return false;   /* 面板开着就不叠一层 */
+    return true;
+  }
+  function dismissInvite(remember) {
+    if (remember) lsSet(INVITE_KEY, 'off');
+    if (inviteEl) inviteEl.classList.remove('on');
+  }
+  function showInvite() {
+    if (typeof window.nonoHintHide === 'function') window.nonoHintHide();  /* 与 #nono-tip 同位，先清掉 */
+    if (!inviteEl || !inviteEl.parentNode) {
+      inviteEl = document.createElement('div');
+      inviteEl.id = 'nono-invite';
+      inviteEl.setAttribute('role', 'button');
+      inviteEl.innerHTML = '<span class="ni-x" aria-label="Dismiss">✕</span>' +
+        '<b>' + T('Show me around') + '</b>' +
+        '<span class="ni-en">' + T('Not sure where to start? Let me show you around.') + '</span>';
+      document.body.appendChild(inviteEl);
+    }
+    inviteEl.onclick = function (e) {
+      var tgt = e.target || {};
+      var isX = (tgt.className || '').indexOf('ni-x') >= 0;
+      dismissInvite(true);
+      if (!isX) window.nonoTour(0);
+    };
+    setTimeout(function () { if (inviteEl) inviteEl.classList.add('on'); }, 40);
+  }
+  function inviteTick() {
+    if (inviteOk()) { showInvite(); return; }
+    if (inviteTries++ < 24) setTimeout(inviteTick, 6000);   /* 约 2.5 分钟内持续等条件成立 */
+  }
+  setTimeout(inviteTick, 8000);
+
+  /* ---------- 9. 给既有「首视图轻引导」卡接上诺诺（v0.23.0） ----------
+     查后结论：项目**本来就有**「引导用户了解产品功能」的机制 ——
+       · tourHtml()（index.html L3214）：home 首视图一次性卡片，「👋 New here?
+         60 SECONDS」，讲三步 + 四条操作指引；
+       · tourNeeded()（L3208）控制只对零进度新用户出现；
+       · endTour()（L3213）点一次即写 sinoky_tour 永不再现（I-014 边界：一次性、
+         单卡片、不遮挡不弹窗）。
+     ⇒ 不重造。只把陪伴角色接上去：让「介绍产品」这件事由诺诺来说。
+     纯追加：包裹原函数，在卡片开头插一段诺诺行；原函数体、tourNeeded() /
+     endTour() / sinoky_tour 标记一律原样，行为不变。 */
+  (function () {
+    if (typeof window.tourHtml !== 'function') return;
+    var _th = window.tourHtml;
+    window.tourHtml = function () {
+      var h = _th.apply(this, arguments);
+      try {
+        var block = '<div class="nt-nono">' +
+          '<img src="' + P('point') + '" alt="Nono">' +
+          '<div><b>诺诺带你认识</b>' +
+          '<span>I\u2019m Nono \uD83D\uDC3C \u2014 here are the three things that matter. ' +
+          'Want the full map? Tap me any time.</span></div></div>';
+        var i = h.indexOf('<div class="tour-steps">');
+        if (i < 0) i = h.indexOf('<button');
+        if (i > 0) h = h.slice(0, i) + block + h.slice(i);
+      } catch (e) { /* 任何异常都退回原卡片，绝不弄坏既有引导 */ }
+      return h;
+    };
+  })();
+
+  /* ---------- 10. 修「陪伴入口被 Feedback 按钮压住」的既有布局缺陷 ----------
+     实测（Playwright 量矩形）：#nono-dock(right:12px;bottom:78px) 与
+     #fb-open(CSS right:12px;bottom:calc(72px+…)) 在**同一个右下角重叠**，
+     且 #fb-open 在 DOM 里靠后、同为 z-index:60 ⇒ 压在浮标之上，浮标下半部点不准。
+     根因不是本轮引入的：#nono-dock 是 v0.5.0 预留的位、#fb-open 是 v0.3.10
+     上移到「导航栏上方」的位，两者从那时起就撞在右下角。
+     #fb-open 自己的 JS 里 DEFAULT 写的是 left:12px（左下），注释也写
+     「左下导航栏上方」，但 applyDefault() 只在【长按 700ms 复位】时被调用 ——
+     首次访问（无 sinoky-fb-pos）时 CSS 的 right:12px 直接生效 ⇒ 从没落过左下。
+
+     本层只做一次性纠正：不动原代码，不动它的拖拽/长按复位逻辑。
+       有 sinoky-fb-pos（用户自己摆过位）⇒ 一律尊重，完全不干预；
+       没有 ⇒ 按它自己注释里的设计意图落到左下，把右下让给陪伴角色。 */
+  (function () {
+    var btn = document.getElementById('fb-open');
+    if (!btn) return;
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('sinoky-fb-pos') || 'null'); } catch (e) {}
+    if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') return;
+    btn.style.right = 'auto';
+    btn.style.left = '12px';
+    btn.style.top = 'auto';
+    btn.style.bottom = 'calc(72px + env(safe-area-inset-bottom))';
   })();
 })();
 
