@@ -1,0 +1,15 @@
+{
+  "version": "0.21.2",
+  "updated": "2026-09-11",
+  "note": "v0.21.2：修复 Strokes 笔顺功能——HSK1/2/3 均正常显示。根因① HanziWriter 不接受 CSS 变量 strokeColor: 'var(--red)'，改为 '#c2362b'；② HSK2/3 本地 data/strokes/ 缺 434 个字文件（仅 HSK1 193 个），从 hanzi-writer-data CDN 补齐 390 个，HSK1-3 全部 583 unique hanzi 全覆盖，离线可用。v0.21.1：7 语言字典补全——es/ru/vi/id/th 共补 290 个缺失 UI 串（71 个跨语言缺口 + 14 个诺诺聊天串 + 4 个语言切换器语言名 + 219 个原并集缺口），zh/en/es/ru/vi/id/th 现均 573 key 全覆盖、零英文 fallback。v0.21.0：网页版限额 + 解锁码 + 接一句 + /download 四段链路全部上线，APK 同步升到 v0.21.0（versionCode 2100）。① 限额只卡「生产」不卡「消费」：每日新句 5 / 跟读打分 10 / 诺诺聊天 5 / 声调 10（App 享 3 倍），复习·字卡·徽章·进度永不限；计数仅落本地、按自然日重置；额度用尽给两路（装 App · 不限次数 / 今天先练复习），不硬推下载。② 解锁码：限额墙上点「复制微信号」复制 Skkhaha456，在 App 内点「我已添加微信，解锁全部功能」即解锁（纯前端、无后端验证；输入 sinuoqi66 亦可）。③ 接一句 P0：跟读打分通过后弹出可替换槽位的扩展句，用户说自己的那句（不判分、零 LLM 成本）。④ /download 四段链路：微信/QQ 引导浏览器打开、Android 安装授权图文、iOS Safari 添加到主屏幕、桌面复制链接。⑤ HSK1/2/3 三等级持续在线（193/125/267）。R2 桶须经 Cloudflare 后台手动启用（API 无权开通），APK 暂仍走 Pages 分发。",
+  "apk": {
+    "versionCode": 2102,
+    "version": "0.21.2",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.21.2-release.apk",
+    "md5": "28b69d9bead63c1eb8f66956f826b450",
+    "size": 24557306
+  },
+  "noteEn": [
+    "v0.18.0 Audit sweep: raw escape text on screen, horizontal scrolling on Review, Nono bubbles lingering across pages, and internal badge IDs leaking. (1) The Review heading used to render as literal \"\\u{1F501} Smart review\" because the escape was written in static HTML and never decoded. (2) Review cards could be dragged sideways - a 298px-wide stretched button blew past the viewport by 115px; the whole app now has zero horizontal overflow. (3) Nono no longer keeps a previous page's bubble on screen (you could be reading the 30-day plan while the bubble talked about flashcards). (4) Badge unlocks used to show internal IDs such as streak3 / first_city; they now show badge names. (5) 149 Chinese-UI strings added - no more English fallback in the 30-day titles and notes, the 18 city blurbs, badge names, review actions, dialogue categories and tone names. (6) Primary tap targets raised to 44px and the 30-day notes go to two lines instead of truncating mid-sentence. (7) Compliance: the Hong Kong city card is now labelled Hong Kong, China."
+  ]
+}

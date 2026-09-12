@@ -1,5 +1,5 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.22.0';
+var CACHE = 'sinoky-v0.21.2';
 var ASSETS = [
   './',
   './index.html',
@@ -12,24 +12,8 @@ var ASSETS = [
   './data/connect-templates.json',
   './langs/zh.json', './langs/es.json', './langs/ru.json', './langs/vi.json', './langs/id.json', './langs/th.json',
   './icons/icon-192.png',
-  './icons/icon-512.webp',
+  './icons/icon-512.png',
   './icons/favicon-32.png',
-  /* v0.22.0 诺诺 IP：定妆图 + 8 姿态 + 3 空态。全部本地资源，接地即用。 */
-  ./icons/logo-header.png,
-  ./assets/brand/nono-splash.webp,
-  ./assets/brand/nono-hero.webp,
-  ./assets/brand/nono-share.webp,
-  ./assets/mascot/like.webp,
-  ./assets/mascot/cheer.webp,
-  ./assets/mascot/think.webp,
-  ./assets/mascot/listen.webp,
-  ./assets/mascot/sorry.webp,
-  ./assets/mascot/point.webp,
-  ./assets/mascot/wave.webp,
-  ./assets/mascot/note.webp,
-  ./assets/empty/general.webp,
-  ./assets/empty/network.webp,
-  ./assets/empty/study.webp,
 ];
 
 self.addEventListener('install', function (e) {
