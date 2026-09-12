@@ -233,8 +233,8 @@
         /* 角色底下的柔和朱砂光晕，避免直接压在深色底上显脏 */
         var g = ctx.createRadialGradient(x + w * 0.5, y + h * 0.55, h * 0.05,
                                          x + w * 0.5, y + h * 0.55, h * 0.72);
-        g.addColorStop(0, 'rgba(194,54,43,0.16)');
-        g.addColorStop(1, 'rgba(194,54,43,0)');
+        g.addColorStop(0, 'rgba(230,57,70,0.16)');
+        g.addColorStop(1, 'rgba(230,57,70,0)');
         ctx.save();
         ctx.fillStyle = g;
         ctx.beginPath();
