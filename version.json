@@ -3,11 +3,11 @@
   "updated": "2026-09-12",
   "note": "v0.22.0：诺诺 IP 产品内接入 —— 「墨韵·朱砂」米白真龙盘字卫衣定妆版上线（基准资产 nono-looklocked-D-quarter-1024x1024.png）。① 全站形象收口：启动屏 / 分享卡 / App 图标 / 三张空态 / 浮标 / 面板六处全部换成同一张 3D 定妆资产，消除「App 内手绘 2D 描边 + 品牌位 3D 软渲染」两套诺诺并存的分裂。② 姿态 4 张 → 8 张（like/cheer/think/sorry/listen/point/wave/note），每姿绑一句中文 —— Edify Gate：诺诺每多出现一次，就要多换来一句中文。③ 主练习页(v-scene) 与阅读打分(v-scenes-read) 首次有诺诺出场，走新增的「边角胶囊」通道：不展开 340px 面板、不消耗每日 4 次主动气泡配额，主视觉仍然让给句子（主路径诺诺只占边角）。④ 失败态语义修正：原 sorry 状态文案「Nono 在帮你…」与实际触发位（录音失败 / 麦克风被拦 / 打分 acc<70）不符，改为「No worries — try again」。⑤ 打分结果绑「Practice again」动作条，点一下回到同一句重录（原先只有气泡、没有下一步动作）。⑥ 分享卡补诺诺 —— 原先纯 Canvas 合成、零 IP，是唯一的社交传播出口。⑦ App 图标 151.5KB → 31.9KB：3D 柔和渐变下 PNG 量化压不到 60KB（64 色仍 69.6KB 且失真），改 WebP q88。⑧ 语言包 6 语言各 +1 key（'No worries — try again'），仍保持 574 key 全覆盖、零英文 fallback。⑨ sw.js 预缓存同步：原先引用的 icons/icon-512.png 已删，而 caches.addAll 是全有全无 —— 任一 404 会让 SW 整个装不上、整站离线能力失效；一并修掉并补入新素材。⑩ 落地页 hero 加诺诺 + 一句可跟读中文（你好 / nǐ hǎo）。⑪ 启动屏素材净化：旧抠图在脚后与两腿之间残留一整片影棚地面（浅色涂抹，实测 y≥760 区浅色像素 3921 个），改为「暗色掩膜（闭运算补足面镜面高光 + 膨胀留 1px 抗锯齿边）+ 暖色色差排除（两腿之间那条缝隙上半段是暗的、与腿同亮度带，唯一分得开的是 R−B 色差）+ 孤立碎块过滤」，y≥760 区浅色残留 3921→44（−99%）、暖色残留 1795→111（−94%）、封闭透明洞 0；静态 27 项 / 浏览器真跑 31 项 / 旧版对照 14 项 / 构建闸门全部通过，其余素材经 md5 校验字节未动。网页版 v0.22.0；APK 未重出，apk.version 仍为 v0.21.2。",
   "apk": {
-    "versionCode": 2102,
-    "version": "0.21.2",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.21.2-release.apk",
-    "md5": "28b69d9bead63c1eb8f66956f826b450",
-    "size": 24557306
+    "versionCode": 2200,
+    "version": "0.22.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.22.0-release.apk",
+    "md5": "ba2968cffc810ad4b1ff6841d89637c1",
+    "size": 24635730
   },
   "noteEn": [
     "v0.18.0 Audit sweep: raw escape text on screen, horizontal scrolling on Review, Nono bubbles lingering across pages, and internal badge IDs leaking. (1) The Review heading used to render as literal \"\\u{1F501} Smart review\" because the escape was written in static HTML and never decoded. (2) Review cards could be dragged sideways - a 298px-wide stretched button blew past the viewport by 115px; the whole app now has zero horizontal overflow. (3) Nono no longer keeps a previous page's bubble on screen (you could be reading the 30-day plan while the bubble talked about flashcards). (4) Badge unlocks used to show internal IDs such as streak3 / first_city; they now show badge names. (5) 149 Chinese-UI strings added - no more English fallback in the 30-day titles and notes, the 18 city blurbs, badge names, review actions, dialogue categories and tone names. (6) Primary tap targets raised to 44px and the 30-day notes go to two lines instead of truncating mid-sentence. (7) Compliance: the Hong Kong city card is now labelled Hong Kong, China."
