@@ -18,7 +18,7 @@ NODE = r"C:\Users\Admin\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
 
 # 🔴 唯一版本真值：换版本号只改这一处（sw.js CACHE / version.json version / APP_VERSION 都对着它断言）。
 # 刻意不把版本号写死在断言里 —— v0.22.0 时硬编码 574 / 0.21.2 各误报过一轮。
-EXPECT_VER = "0.23.1"
+EXPECT_VER = "0.23.2"
 
 fails, warns, oks = [], [], []
 

@@ -67,6 +67,25 @@ async function main() {
   const errors = [];
   page.on('pageerror', (e) => errors.push('' + e.message));
 
+  /* 启动屏 #splash 在 420ms 淡出、940ms 后被 remove（index.html L6257），而本脚本要在
+     reload 后等 1500ms 才动手 ⇒ 直接 querySelector 必然拿到 null。
+     用 addInitScript 在页面最早时机抓一次存到 window，彻底摆脱时序依赖（每次导航都会跑）。 */
+  await page.addInitScript(() => {
+    window.__spBrand = null;
+    const grab = () => {
+      const el = document.querySelector('#splash .sp-brand');
+      if (el && !window.__spBrand) {
+        const b = el.querySelector('b');
+        window.__spBrand = {
+          text: el.textContent.replace(/\s+/g, ''),
+          k: b ? b.textContent.trim() : null,
+        };
+      }
+    };
+    try { new MutationObserver(grab).observe(document.documentElement, { childList: true, subtree: true }); } catch (e) {}
+    const t = setInterval(() => { grab(); if (window.__spBrand) clearInterval(t); }, 20);
+  });
+
   await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
   /* 不能整个 localStorage.clear()：清掉 sinoky_state 会触发首启引导层
      （#v-onboard 全屏、z-index:100），把浮标整个挡住 —— 第一次跑就是这么失败的。
@@ -160,9 +179,13 @@ async function main() {
       });
       return Promise.all([statP, bytesP]).then(([st, by]) => { st.bytes = by; return st; });
     }
-    Promise.all([probe('icons/logo-header.png'), probe('icons/favicon-32.png')]).then(([a, b]) => {
+    Promise.all([probe('icons/logo-header.png'), probe('icons/favicon-32.png'),
+                 probe('icons/icon-192.png'), probe('icons/icon-512.webp')]).then(([a, b, c, d]) => {
       const link = document.querySelector('link[rel="icon"]');
-      res({ logo: a, fav: b, iconHref: link ? link.getAttribute('href') : null });
+      res({ logo: a, fav: b, desk: c, desk512: d,
+            iconHref: link ? link.getAttribute('href') : null,
+            spText: window.__spBrand ? window.__spBrand.text : null,
+            spK: window.__spBrand ? window.__spBrand.k : null });
     });
   }));
   const pct = (v) => ((v * 100 || 0).toFixed(1) + '%');
@@ -184,6 +207,26 @@ async function main() {
      若将来品牌设计换字标，这里要同步改。 */
   chk('header 品牌图标 = 4,989 B（与品牌设计源 sinoky-图标-192.png 逐字节一致）', iconStat.logo.bytes === 4989, `实测 ${iconStat.logo.bytes} B`);
   chk('favicon = 885 B（与品牌设计源 sinoky-图标-32.png 逐字节一致）', iconStat.fav.bytes === 885, `实测 ${iconStat.fav.bytes} B`);
+
+  /* ---- 桌面图标位：v0.23.2 起也换品牌红字标（康哥决策①；此前为诺诺熊猫）----
+     「品牌设计是红线，图标位不放吉祥物」⇒ 桌面图标必须与 header/favicon 同口径。 */
+  chk('桌面图标 icons/icon-192.png 可加载且 192×192',
+      !iconStat.desk.err && iconStat.desk.w === 192 && iconStat.desk.h === 192, JSON.stringify(iconStat.desk));
+  chk('桌面图标是红字标、不是熊猫（暗底 ≥ 60% 且米白 ≈ 0）',
+      !iconStat.desk.err && iconStat.desk.dark >= 0.60 && iconStat.desk.light <= 0.05,
+      `暗底 ${pct(iconStat.desk.dark)} / 米白 ${pct(iconStat.desk.light)}（熊猫会米白 >30%）`);
+  chk('桌面图标 = 4,989 B（与品牌设计源 sinoky-图标-192.png 逐字节一致）',
+      iconStat.desk.bytes === 4989, `实测 ${iconStat.desk.bytes} B`);
+  chk('桌面图标 icons/icon-512.webp 同为红字标（暗底 ≥ 60% 且米白 ≈ 0）',
+      !iconStat.desk512.err && iconStat.desk512.dark >= 0.60 && iconStat.desk512.light <= 0.05,
+      `暗底 ${pct(iconStat.desk512.dark)} / 米白 ${pct(iconStat.desk512.light)} / ${iconStat.desk512.w}×${iconStat.desk512.h}`);
+
+  /* ---- 启动屏品牌文字：v0.23.2 修的漏字 ----
+     原来标记是 `Sino<b>k</b>` ⇒ 只渲染成 "Sinok"，末尾 y 丢了（康哥发现）。 */
+  chk('启动屏品牌文字 = "Sinoky"（末尾 y 未被漏掉）',
+      iconStat.spText === 'Sinoky', `实测 ${JSON.stringify(iconStat.spText)}`);
+  chk('启动屏品牌文字高亮段 = "k"（钥匙 = key 的品牌语义，不可丢）',
+      iconStat.spK === 'k', `实测 ${JSON.stringify(iconStat.spK)}`);
 
   /* ==================== B. 导览入口 ==================== */
   await page.click('#nono-fab');

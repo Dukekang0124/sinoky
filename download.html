@@ -69,14 +69,14 @@ fetch('version.json?t=' + Date.now(), { cache:'no-store' })
   .then(function(j){
     var a = j.apk || {};
     var ver = a.version || j.version || '';
-    var url = a.url || 'https://sinoky.pages.dev/apk/Sinoky-v0.23.1-release.apk';
+    var url = a.url || 'https://sinoky.pages.dev/apk/Sinoky-v0.23.2-release.apk';
     var size = a.size || 0;
     document.getElementById('v').textContent = 'Sinoky v' + ver;
     if(size) document.getElementById('sz').textContent = (size>=1048576 ? (size/1048576).toFixed(1)+' MB' : Math.round(size/1024)+' KB');
     renderPath(url, ver, size, a.note || j.note || '');
   })
   .catch(function(){
-    renderPath('https://sinoky.pages.dev/apk/Sinoky-v0.23.1-release.apk', '', 0, '');
+    renderPath('https://sinoky.pages.dev/apk/Sinoky-v0.23.2-release.apk', '', 0, '');
     document.getElementById('note').textContent = '版本信息加载失败，下载按钮仍指向最新构建。';
   });
 
