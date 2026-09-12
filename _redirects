@@ -12,3 +12,9 @@
 /badge-backend.mjs    /  302
 /package.json         /  302
 /package-lock.json    /  302
+
+# v0.21.2：data/ 下的构建器与字段规范此前公网可直下（实测 200 +
+# application/javascript、text/markdown）。.assetsignore 已剔除出后续部署，
+# 此处再在边缘拒访一次，防旧部署残留。
+/data/build-flashcards.mjs   /  302
+/data/flashcards.schema.md   /  302

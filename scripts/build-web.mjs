@@ -10,14 +10,39 @@ const src = path.join(root, '..');           // sinoky-app/
 const out = path.join(src, 'www');
 
 // 需要进包的目录 / 文件（其余一律不带）
-const DIRS = ['assets', 'audio', 'data', 'icons', 'vendor', 'langs'];
+const DIRS = ['assets', 'audio', 'data', 'icons', 'vendor', 'langs', 'landing'];
 const FILES = [
   'index.html', 'sw.js', 'version.json', 'manifest.webmanifest',
-  'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'robots.txt', 'sitemap.xml', '_headers',
+  'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'robots.txt', 'sitemap.xml',
+  '_headers',
+  '_redirects',        // ⚠️ 部署配置：承载边缘 302 收口（/www/*、/_internal/*、/badge-backend.mjs…）。漏带 → tag CI 部署后收口规则整体失效
+  'download.html',     // ⚠️ 线上 /download 下载引导页。漏带 → tag CI 部署后下载页退化成 SPA 兜底
   '_worker.js',        // ⚠️ 必须进包：Pages Functions(TTS/ASR/chat/score/feedback) 靠它。漏掉会导致 CI 末段 `wrangler pages deploy www` 把函数全覆盖掉（v0.21.0 踩过）
   'badge-backend.mjs', // ⚠️ _worker.js:29 `import { handleBadgeApi } from './badge-backend.mjs'` 的依赖。漏掉 → wrangler 打包 worker 报 Could not resolve → APK 发布链整体失败（v0.21.2 踩过）
   '.assetsignore'      // ⚠️ 使 badge-backend.mjs 不作为静态资源上传（防公网直接下载），但保留在磁盘上供 worker bundler 解析 import
 ];
+
+// 明确不上线的根级条目
+const EXCLUDE = new Set([
+  '.git', '.github', '.gitignore', '.wrangler', '.dev.vars', '.env',
+  'node_modules', 'android', 'www', 'apk', 'apk-icons', 'scripts', 'voice', '_internal',
+  'package.json', 'package-lock.json', 'capacitor.config.json',
+  '_audit_i18n.txt',
+]);
+
+/* ── 归类断言（2026-09-12 新增）────────────────────────────────────
+   仓库根新加一个条目后若忘了归类，后果是静默的：该上线的没上线
+   （download.html / _redirects / landing 都曾长期漏在包外，只有 push main
+   的根目录部署才临时掩盖），或内部文件被上线。这里让构建阶段直接失败。 */
+const unclassified = (await readdir(src, { withFileTypes: true }))
+  .map((e) => e.name)
+  .filter((n) => !DIRS.includes(n) && !FILES.includes(n) && !EXCLUDE.has(n) && !/\.(log|jks)$/.test(n));
+if (unclassified.length) {
+  console.error('[build:web] ✗ 仓库根有未归类条目：');
+  unclassified.forEach((n) => console.error('   - ' + n));
+  console.error('   → 该上线：加进 DIRS / FILES；不该上线：加进 EXCLUDE');
+  throw new Error('unclassified root entries: ' + unclassified.join(', '));
+}
 
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
@@ -80,12 +105,28 @@ for (const f of jsFiles) {
   }
 }
 
-// index.html 里同级的本地 script src（漏列文件时页面静默挂掉，kaikou 项目踩过）
-const htmlOut = readFileSync(path.join(out, 'index.html'), 'utf8');
-for (const m of htmlOut.matchAll(/<script[^>]+src=["']([^"'#:?]+)["']/g)) {
-  const p = m[1];
-  if (/^(https?:|\/\/|data:)/.test(p)) continue;
-  if (!existsSync(path.join(out, p))) missing.push(`index.html → ${p}`);
+// 所有 HTML 的本地 script src / stylesheet href（漏列文件时页面静默挂掉，kaikou 项目踩过）
+const htmlFiles = [];
+const walkHtml = async (dir) => {
+  for (const e of await readdir(dir, { withFileTypes: true })) {
+    const fp = path.join(dir, e.name);
+    if (e.isDirectory()) await walkHtml(fp);
+    else if (/\.html?$/i.test(e.name)) htmlFiles.push(fp);
+  }
+};
+await walkHtml(out);
+for (const f of htmlFiles) {
+  const html = readFileSync(f, 'utf8');
+  const rel = path.relative(out, f).replace(/\\/g, '/');
+  const local = (u) => u && !/^(https?:|\/\/|data:|mailto:|#)/.test(u);
+  for (const m of html.matchAll(/<script[^>]+src=["']([^"'#:?]+)["']/g)) {
+    if (local(m[1]) && !existsSync(path.join(out, m[1]))) missing.push(`${rel} → ${m[1]}`);
+  }
+  for (const tag of html.match(/<link[^>]*>/g) || []) {
+    if (!/rel=["']stylesheet["']/i.test(tag)) continue;
+    const h = tag.match(/href=["']([^"'#:?]+)["']/);
+    if (h && local(h[1]) && !existsSync(path.join(out, h[1]))) missing.push(`${rel} → ${h[1]}`);
+  }
 }
 
 if (missing.length) {

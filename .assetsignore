@@ -5,3 +5,6 @@ _internal/
 badge-backend.mjs
 package.json
 package-lock.json
+# v0.21.2：data/ 下的构建器与字段规范属内部文档，此前公网可直下（实测 200 + application/javascript、text/markdown），不上线
+data/build-flashcards.mjs
+data/flashcards.schema.md
