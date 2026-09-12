@@ -166,10 +166,21 @@ else:
 vb = rd(os.path.join(APP, "version.json"))
 vj = json.loads(vb.decode("utf-8"))
 (ok if vj["version"] == "0.22.0" else bad)("version.json version = %s" % vj["version"])
-if vj["apk"]["version"] == "0.21.2":
-    ok("version.json apk.version = 0.21.2（APK 未重出，双版本号互不污染）")
+# APK 版本段自洽性 —— 不写死具体版本号（编码阶段 APK 常落后于网页版；发版后两者应相等）。
+# 2026-09-12 修正：原先硬编码「预期 0.21.2」，APK 发版后必然误报。
+_av = vj["apk"]["version"]
+_au = vj["apk"]["url"]
+if _av == vj["version"]:
+    ok("version.json apk.version = %s（与网页版一致，双版本号落差已收敛）" % _av)
+elif _av < vj["version"]:
+    warn("version.json apk.version = %s < 网页版 %s（APK 落后 → App 用户拿不到最新改动，需出包）"
+         % (_av, vj["version"]))
 else:
-    warn("version.json apk.version = %s（预期 0.21.2）" % vj["apk"]["version"])
+    bad("version.json apk.version = %s > 网页版 %s（APK 不应领先网页版）" % (_av, vj["version"]))
+if ("Sinoky-v%s-release.apk" % _av) in _au:
+    ok("apk.url 与 apk.version 指向同一版本（%s）" % _av)
+else:
+    bad("apk.url 与 apk.version 不一致：url=%s version=%s" % (_au, _av))
 if "0.22.0" in vj.get("note", ""):
     ok("version.json note 已更新")
 if vb.count(b"\n") - vb.count(b"\r\n") == 0:
