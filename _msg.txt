@@ -1,0 +1,8 @@
+v0.23.0 收尾：修 CI 元数据回写产 LF 的根因 + version.json 归一化 CRLF
+
+- .github/workflows/apk.yml 两处 node -e 的元数据回写用
+  JSON.stringify(j,null,2)+'\n'，天然产出 LF 行尾，与项目
+  「version.json 行尾 CRLF」约定冲突，也让静态验收出现 1 项失败。
+  改为 .replace(/\n/g,'\r\n')+'\r\n'，此后 CI 回写同样产 CRLF。
+- version.json 归一化到 CRLF（裸 LF 16 → 0）；apk 段保留
+  CI 回填的真实值（versionCode 2300 / size 24643922 / md5 e2c6d828…）。
