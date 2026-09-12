@@ -27,8 +27,8 @@ APP = os.path.abspath(os.path.join(HERE, "..", ".."))
 PATCH_CSS = os.path.join(HERE, "patch.css")
 PATCH_JS = os.path.join(HERE, "patch.js")
 
-NEW_VER = "0.23.0"
-OLD_VER = "0.22.0"
+NEW_VER = "0.23.1"
+OLD_VER = "0.23.0"
 
 log = []
 

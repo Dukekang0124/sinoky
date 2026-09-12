@@ -3,8 +3,8 @@
    ----------------------------------------------------------------------------
    为什么必须真跑（康哥铁律）：语法校验 / grep / diff 只证明「看起来对」。
    本脚本验证的是**行为**：
-     · header 品牌图标真的换成「朱砂红底 + 熊猫」且红色真的占了可辨识比例
-     · favicon 真的指向新图（浏览器标签上看到的才是用户看到的）
+     · header 品牌图标是品牌红字标（深青黑底 + 朱砂红钥匙几何标），**不是熊猫**
+     · favicon 真的指向该红字标（浏览器标签上看到的才是用户看到的）
      · 导览入口真的在面板里（第三个 chip）且真的能逐站推进
      · 每站真的绑了汉字 + 拼音 + 英文释义（Edify Gate 的落点）
      · 「带我去」真的切到对应视图并收起面板
@@ -81,13 +81,38 @@ async function main() {
   });
   await page.reload({ waitUntil: 'load' });
   await page.waitForTimeout(1500);          /* 过启动屏窗口（420ms hide / 520ms 移除） */
-  /* 双保险：即使 state 没生效，也把引导层摘掉并落到 home */
-  await page.evaluate(() => {
+  /* 摘掉首启引导层并落到 home。
+     ⚠️ 必须「摘 .on + 置 display:none」双管，且摘两次 —— 只用 classList 踩过偶发：
+     app 的异步初始化会把 .on 加回来，于是 #nono-fab 被 .ob-bar 挡住，
+     page.click 命中了但不触发 onclick，面板不开 → 后面 .nm-tour 取到 null 直接崩。
+     这个 flaky 出现过两次，别退回单保险。 */
+  const stripOnboard = () => page.evaluate(() => {
     const o = document.getElementById('v-onboard');
-    if (o) o.classList.remove('on');
+    if (o) { o.classList.remove('on'); o.style.display = 'none'; }
     if (typeof window.go === 'function') window.go('home');
+    return true;
   });
-  await page.waitForTimeout(400);
+  await stripOnboard();
+  await page.waitForTimeout(500);
+  await stripOnboard();                     /* 再摘一次：覆盖 app 迟到的初始化 */
+  /* 等浮标真的可点（命中测试通过）—— 把「点不到」变成明确断言，而不是 null 崩 */
+  await page.waitForFunction(() => {
+    const f = document.getElementById('nono-fab');
+    if (!f) return false;
+    const r = f.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return !!el && (el === f || f.contains(el));
+  }, null, { timeout: 8000 }).catch(() => {});
+  chk('首启引导层已摘除、浮标命中测试通过（不是被遮住点不到）',
+      await page.evaluate(() => {
+        const o = document.getElementById('v-onboard');
+        const f = document.getElementById('nono-fab');
+        if (!f) return false;
+        const r = f.getBoundingClientRect();
+        const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return !(o && o.classList.contains('on')) && !!el && (el === f || f.contains(el));
+      }), '');
 
   /* ==================== A0. 既有首视图轻引导卡接上诺诺 ==================== */
   const tourCard = await page.evaluate(() => {
@@ -106,7 +131,9 @@ async function main() {
   /* ==================== A. 品牌图标 ==================== */
   const iconStat = await page.evaluate(() => new Promise((res) => {
     function probe(src) {
-      return new Promise((r) => {
+      const bytesP = fetch(src + '?cb=' + Date.now())          /* 字节数：锚定品牌设计源 */
+        .then((r) => r.arrayBuffer()).then((b) => b.byteLength).catch(() => 0);
+      const statP = new Promise((r) => {
         const im = new Image();
         im.onload = () => {
           const c = document.createElement('canvas');
@@ -114,28 +141,49 @@ async function main() {
           const g = c.getContext('2d');
           g.drawImage(im, 0, 0);
           const d = g.getImageData(0, 0, c.width, c.height).data;
-          let red = 0, solid = 0;
+          let red = 0, solid = 0, dark = 0, light = 0;
           for (let i = 0; i < d.length; i += 4) {
             if (d[i + 3] <= 25) continue;
             solid++;
-            if (d[i] > 120 && d[i] - d[i + 1] > 45 && d[i] - d[i + 2] > 40) red++;
+            const R = d[i], G = d[i + 1], B = d[i + 2];
+            if (R > 120 && R - G > 45 && R - B > 40) red++;                 /* 朱砂红 #e63946 */
+            if (R < 70 && G < 75 && B < 90) dark++;                          /* 深青黑底 #141a24 */
+            if (R > 200 && G > 200 && B > 195) light++;                      /* 米白 —— 熊猫毛色 */
           }
-          r({ w: im.naturalWidth, h: im.naturalHeight, ratio: solid ? red / solid : 0 });
+          r({ w: im.naturalWidth, h: im.naturalHeight,
+              ratio: solid ? red / solid : 0,
+              dark: solid ? dark / solid : 0,
+              light: solid ? light / solid : 0 });
         };
         im.onerror = () => r({ err: 1 });
         im.src = src + '?cb=' + Date.now();
       });
+      return Promise.all([statP, bytesP]).then(([st, by]) => { st.bytes = by; return st; });
     }
     Promise.all([probe('icons/logo-header.png'), probe('icons/favicon-32.png')]).then(([a, b]) => {
       const link = document.querySelector('link[rel="icon"]');
       res({ logo: a, fav: b, iconHref: link ? link.getAttribute('href') : null });
     });
   }));
+  const pct = (v) => ((v * 100 || 0).toFixed(1) + '%');
   chk('header 品牌图标可加载且尺寸 192×192', !iconStat.logo.err && iconStat.logo.w === 192 && iconStat.logo.h === 192, JSON.stringify(iconStat.logo));
-  chk('header 品牌图标朱砂红占比 ≥ 30%（品牌色真的可见了）', !iconStat.logo.err && iconStat.logo.ratio >= 0.30, `实测 ${(iconStat.logo.ratio * 100 || 0).toFixed(1)}%（改前 2.05%）`);
+  /* 红字标 = 深青黑底(#141a24) + 朱砂红(#e63946)钥匙；熊猫 = 米白 + 黑 ⇒ 用「暗底高 + 米白≈0」把两者分开 */
+  chk('header 品牌图标是「深青黑底」字标、不是熊猫（暗底 ≥ 60%）',
+      !iconStat.logo.err && iconStat.logo.dark >= 0.60,
+      `暗底 ${pct(iconStat.logo.dark)} / 米白 ${pct(iconStat.logo.light)}（熊猫配色米白会 >30%）`);
+  chk('header 品牌图标朱砂红占比 12%~30%（红钥匙几何标）',
+      !iconStat.logo.err && iconStat.logo.ratio >= 0.12 && iconStat.logo.ratio <= 0.30,
+      `实测 ${pct(iconStat.logo.ratio)}`);
   chk('favicon 可加载且尺寸 32×32', !iconStat.fav.err && iconStat.fav.w === 32 && iconStat.fav.h === 32, JSON.stringify(iconStat.fav));
-  chk('favicon 朱砂红占比 ≥ 30%（浅色标签栏上不再隐形）', !iconStat.fav.err && iconStat.fav.ratio >= 0.30, `实测 ${(iconStat.fav.ratio * 100 || 0).toFixed(1)}%（改前 0.00%）`);
+  chk('favicon 同为红字标（暗底 ≥ 60% 且朱砂红 12%~30%）',
+      !iconStat.fav.err && iconStat.fav.dark >= 0.60 && iconStat.fav.ratio >= 0.12 && iconStat.fav.ratio <= 0.30,
+      `暗底 ${pct(iconStat.fav.dark)} / 朱砂红 ${pct(iconStat.fav.ratio)} / 米白 ${pct(iconStat.fav.light)}`);
   chk('<link rel="icon"> 指向 icons/favicon-32.png', /icons\/favicon-32\.png/.test(iconStat.iconHref || ''), iconStat.iconHref);
+  /* 逐字节锚定品牌设计源：logo-header.png = 4,989 B、favicon-32.png = 885 B
+     （源：04-品牌设计/assets/第二轮/sinoky-图标-192.png / -32.png，md5 ab9b1b66… / beb28dca…）
+     若将来品牌设计换字标，这里要同步改。 */
+  chk('header 品牌图标 = 4,989 B（与品牌设计源 sinoky-图标-192.png 逐字节一致）', iconStat.logo.bytes === 4989, `实测 ${iconStat.logo.bytes} B`);
+  chk('favicon = 885 B（与品牌设计源 sinoky-图标-32.png 逐字节一致）', iconStat.fav.bytes === 885, `实测 ${iconStat.fav.bytes} B`);
 
   /* ==================== B. 导览入口 ==================== */
   await page.click('#nono-fab');
@@ -150,7 +198,22 @@ async function main() {
   chk('第三个 chip 是导览入口', entry.n === 3 && /Tour/.test(entry.texts[2]), entry.texts[2]);
 
   /* ==================== C. 逐站推进 ==================== */
-  await page.evaluate(() => document.querySelector('#nono-modes .nm-chip.nm-tour').click());
+  console.log('[DEBUG] entry =', JSON.stringify(entry));
+  const tourClicked = await page.evaluate(() => {
+    const el = document.querySelector('#nono-modes .nm-chip.nm-tour');
+    if (!el) {
+      return {
+        ok: false,
+        html: (document.getElementById('nono-modes') || {}).innerHTML || '',
+        panel: (document.getElementById('nono-panel') || {}).style ? document.getElementById('nono-panel').style.display : 'NO-PANEL',
+        onboard: (document.getElementById('v-onboard') || {}).className || 'NO-ONBOARD',
+        mode: (window.NONO || {}).mode,
+      };
+    }
+    el.click();
+    return { ok: true };
+  });
+  chk('导览 chip 存在且可点', tourClicked.ok, JSON.stringify(tourClicked).slice(0, 240));
   await page.waitForTimeout(400);
   const s1 = await page.evaluate(() => {
     const m = document.getElementById('nono-msg');
@@ -225,16 +288,47 @@ async function main() {
 
   /* ==================== F. 浮动邀请（干净状态重载） ==================== */
   await page.evaluate(() => {
-    ['sinoky_nono_tour', 'sinoky_nono_invite'].forEach((k) => localStorage.removeItem(k));
+    ['sinoky_nono_tour', 'sinoky_nono_invite', 'sinoky_nono'].forEach((k) => localStorage.removeItem(k));
   });
   await page.reload({ waitUntil: 'load' });
   await page.waitForTimeout(1000);
   await page.evaluate(() => {
     const o = document.getElementById('v-onboard');
-    if (o) o.classList.remove('on');
+    if (o) { o.classList.remove('on'); o.style.display = 'none'; }
     if (typeof window.go === 'function') window.go('home');
   });
-  await page.waitForTimeout(9000);                 /* 邀请在页面加载后 8s 出现，这里补足余量 */
+  /* ⚠️ 守夜：两件事一起纠，缺一条邀请就不出现（DEBUG-F 实测过）——
+     ① 视图：app 的异步初始化会把视图恢复成 reload 前那个（上一段停在 prog）；
+     ② 面板：干净状态下诺诺的**主动气泡会把面板弹开**（这是产品正确行为，不是 bug），
+        而 inviteOk() 里有「面板开着就不叠一层」这条 ⇒ 面板一直开着时邀请永不出现（4 跑 3 挂，
+        失败样本 panel 全是 block、hasEl 全是 false）。
+     持续把「视图=home、面板=关」这两条前提纠住，inviteTick 的 6s 重试终会命中。别删这层。 */
+  await page.evaluate(() => {
+    window.__keepHome = setInterval(() => {
+      try {
+        if (typeof window.go === 'function' && typeof window.nonoView === 'function' && window.nonoView() !== 'home') window.go('home');
+        const p = document.getElementById('nono-panel');
+        if (p && p.style.display === 'block' && typeof window.nonoMin === 'function') window.nonoMin();
+      } catch (e) {}
+    }, 400);
+  });
+  /* 邀请在页面加载后 8s 起、每 6s 重试 ⇒ 必须等元素真的出现，不能固定 sleep。
+     踩过：固定 9s 时首跑恰好吃到第 1 次 tick（约 8.x s）通过，后两次要等第 2 次 tick 就崩。 */
+  await page.waitForFunction(() => {
+    const el = document.getElementById('nono-invite');
+    return !!(el && el.classList.contains('on'));
+  }, null, { timeout: 30000 }).catch(() => {});
+  await page.evaluate(() => { if (window.__keepHome) clearInterval(window.__keepHome); });
+  console.log('[DEBUG-F]', JSON.stringify(await page.evaluate(() => ({
+    tour: localStorage.getItem('sinoky_nono_tour'),
+    invKey: localStorage.getItem('sinoky_nono_invite'),
+    closed: (window.NONO || {}).closed,
+    nonoLS: localStorage.getItem('sinoky_nono'),
+    view: typeof window.nonoView === 'function' ? window.nonoView() : 'NO-FN',
+    panel: (document.getElementById('nono-panel') || {}).style ? document.getElementById('nono-panel').style.display : 'NO-PANEL',
+    hasEl: !!document.getElementById('nono-invite'),
+    onboardCls: (document.getElementById('v-onboard') || {}).className || 'NO-ONBOARD',
+  }))));
   const inv = await page.evaluate(() => {
     const el = document.getElementById('nono-invite');
     return { exists: !!el, on: !!(el && el.classList.contains('on')), txt: el ? el.textContent.trim() : '', pe: el ? getComputedStyle(el).pointerEvents : '' };
@@ -242,13 +336,20 @@ async function main() {
   chk('浮动邀请在 home 出现（8s 后）', inv.exists && inv.on, inv.txt.slice(0, 60));
   chk('邀请含可点文案', /Show me around/.test(inv.txt), inv.txt.replace(/\s+/g, ' ').slice(0, 70));
   chk('邀请可点击（pointer-events 非 none）', inv.pe !== 'none', inv.pe);
-  await page.evaluate(() => document.getElementById('nono-invite').click());
+  const invClicked = await page.evaluate(() => {
+    const el = document.getElementById('nono-invite');
+    if (!el) return false;
+    el.click();
+    return true;
+  });
+  chk('浮动邀请可点（元素真的存在）', invClicked, String(invClicked));
   await page.waitForTimeout(450);
   const invOpen = await page.evaluate(() => {
     const m = document.getElementById('nono-msg');
+    const iv = document.getElementById('nono-invite');
     return {
       top: m.querySelector('.nt-top') ? m.querySelector('.nt-top').textContent.trim() : '',
-      invOff: !document.getElementById('nono-invite').classList.contains('on'),
+      invOff: !(iv && iv.classList.contains('on')),
       flag: localStorage.getItem('sinoky_nono_invite'),
     };
   });
