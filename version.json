@@ -6,8 +6,8 @@
     "versionCode": 2312,
     "version": "0.23.12",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.12-release.apk",
-    "md5": "28756b75728c125ea20fc4c9171d1ccc",
-    "size": 24672666
+    "md5": "e14f92b7b8500b3ec559a19e9b830334",
+    "size": 24668570
   },
   "noteEn": [
     "v0.23.12: fixes a launch-screen glitch - on a cold start a second copy of the wordmark flashed over the full-bleed splash image. What users saw: the SinoKy wordmark appeared first, then the full-screen artwork arrived, but the wordmark did not go away - it stayed on top of the image. Because the artwork already contains the brand wordmark, this put two wordmarks on screen at once (the CSS one visible on the left). On a slow connection it was measured at 5.7 seconds visible, 4.9 of which had the image and the wordmark on screen together. The cause is a classic trap in single-file pages: the rule that hides the wordmark sat in a style block far down the file (past line 6500) while the splash element is at line 1138, so by the time the browser streamed to the element it had not yet read that rule and rendered the wordmark at its default value. The seven launch-screen rules are now merged from two places into one and moved up into the head style block, ahead of the element. The layout values are unchanged, so the settled screen looks exactly as before. This also removes a first-frame background colour jump and an outdated note in the source that said two rule sets had to be kept in sync. Web and APK ship together this round.",
