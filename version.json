@@ -6,8 +6,8 @@
     "versionCode": 2311,
     "version": "0.23.11",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.11-release.apk",
-    "md5": "b647897803600d4343ef48ae32748dca",
-    "size": 24668570
+    "md5": "28756b75728c125ea20fc4c9171d1ccc",
+    "size": 24672666
   },
   "noteEn": [
     "v0.23.11: the launch screen (splash) is now one complete full-bleed artwork. Previously it was assembled on the spot from a dark teal background, a SinoKy wordmark drawn with a font, and a transparent character cutout - and that cutout, a 560x820 asset with an alpha channel, was made for the tap-to-expand full-body view rather than for a splash. Its aspect ratio did not match, leaving blank bands, and it looked like an image pasted onto a colour block. The app now uses assets/splash/a8_9x16.webp: a finished 1080x1920 launch artwork that already contains the red brand wordmark, the cloud-and-mountain background and Nono, as a single full-screen image. Three things were tightened along the way. (1) The backing colour changed from #17423D to #0E3739, sampled from the artwork itself, so the letterboxed areas are seamless with the image edges - measured colour difference is at most 4. (2) The new image is twice the size of the old asset (101 KB versus 48 KB), and the old fixed 420 ms fade-out would have dismissed the splash just as the image arrived on a slow connection. It now waits for the image to be ready, with a hard 1600 ms ceiling so the first screen is never held up. (3) The splash image is pre-cached for offline use, and if it fails to load the app falls back to the brand wordmark instead of a blank screen. The APK native launch background is aligned to #0E3739 as well, removing the colour jump at startup. Web and APK ship together this round.",
