@@ -19,3 +19,6 @@ _internal/fix-2026-09-13/tmp/
 _internal/fix-2026-09-13/_old_index.html
 _internal/fix-2026-09-13/_worker_testable*.mjs
 _internal/fix-2026-09-13/checklist-report.md
+
+# v0.23.9 自检截图（可由 smoke-live-check.mjs 重建，不入库）
+_internal/fix-2026-09-13/shots/

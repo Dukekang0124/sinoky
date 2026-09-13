@@ -564,6 +564,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .hub b{font-size:14px}
       .hub i{font-style:normal;font-size:11.5px;color:var(--sub);line-height:1.35}
       .setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+/* v0.23.9：左侧标签不再被右侧长文本压缩。中文标签可在任意字间断行 ⇒ 曾被压成竖排
+   （「界面语言」50px/2 行 ·「关于」27px/2 行）；英文标签是不可断单词所以只在中文界面显形。 */
+.setrow>span:first-child{flex:0 0 auto;white-space:nowrap}
       .setrow:last-of-type{border-bottom:none}
       .setctl{display:flex;gap:8px;align-items:center}
       .setctl .btn.on, .btn.ghost.on{border-color:var(--red);color:var(--red)}
