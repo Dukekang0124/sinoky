@@ -3,11 +3,11 @@
   "updated": "2026-09-13",
   "note": "v0.23.9：修好「界面上的字看不清」这件事。① 有用户反馈复习卡片（Smart review）里的英文句子是黑的，压在深色底上几乎读不出来 —— 同一张卡的中文却是正常的浅色。查下来根因是样式表里写了一个**从未定义过**的颜色变量：整个文件里它被引用了 5 次、定义了 0 次，于是浏览器按「没设颜色」处理，最终继承到了系统按钮的默认黑色。这个写法语法完全合法、浏览器不会报错，所以一直没人发现。现已把这类引用全部收敛到既有颜色变量上。② 顺着同一个根因做了一次全量体检：把 17 个界面里 **924 处可见文字**的\"字色 vs 底色\"对比度全部算了一遍，又抓出两处同类问题 —— 页脚的 Privacy / Share 两个链接掉了浏览器的默认链接色（深蓝，在深色底上等于看不见）；已完成步骤的圆形序号是白字压亮青色块。都已修正。③ 新增第 4 道自动检查（颜色令牌），以后「引用不存在的颜色变量」「链接掉到浏览器默认色」这两类问题在提交阶段就会被拦下，不会等到用户截图才发现。④ 顺手修了一处只在中文界面才显形的排版：设置页的左侧标签（如「界面语言」「关于」）会被右侧长文本挤成竖排，已改为不被压缩。本版网页与 APK 同步发布，APK 从 v0.23.4 升到 v0.23.9。",
   "apk": {
-    "versionCode": 2304,
-    "version": "0.23.4",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.4-release.apk",
-    "md5": "1b0a2c9312e12099452e3d6a4d1706bb",
-    "size": 24631634
+    "versionCode": 2309,
+    "version": "0.23.9",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.9-release.apk",
+    "md5": "062d6577aea56979d77d3b382f5c6a77",
+    "size": 24668570
   },
   "noteEn": [
     "v0.23.9: fixes unreadable text in the interface. (1) A user reported that the English sentence in the Smart review card was black and almost impossible to read against the dark background, while the Chinese line on the same card looked correct. The cause was a colour variable that is referenced five times but was never defined anywhere - so the browser treated it as \"no colour set\" and the text inherited the operating system's default black for buttons. The syntax was completely valid and the browser reported no error, which is why it went unnoticed. All such references now use existing colour tokens. (2) Following the same root cause, every visible piece of text was measured: contrast between text colour and background was computed for 924 text elements across 17 screens. Two more cases of the same class were found and fixed - the footer Privacy and Share links were falling back to the browser's default link colour (dark blue, effectively invisible on a dark background), and the \"completed\" step circles used white text on a light teal fill. (3) A fourth automated gate (colour tokens) now blocks both classes of problem at commit time, so they cannot reach users before being caught. (4) A layout fix that only appeared in the Chinese UI: in Settings the left-hand labels were squeezed into a vertical stack by the long text on the right; they can no longer be compressed. Web and APK ship together this round, and the APK jumps from v0.23.4 to v0.23.9.",
