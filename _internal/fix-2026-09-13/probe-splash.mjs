@@ -150,13 +150,20 @@ async function withPage(ctx, base, fn, { delayMs, failImg, vp } = {}) {
 async function main() {
   fs.mkdirSync(SHOTS, { recursive: true });
   fs.mkdirSync(OLD, { recursive: true });
-  // 旧版对照：HEAD 的 index.html（开屏仍用 nono-splash + CSS 字标）
+  /* 旧版对照：**钉死到不可变 SHA**，不用 HEAD。
+     🔴 v0.23.12 修：原写 `git show HEAD:index.html` ⇒ 基线随每次提交前进，
+     而 S5 断言绑的是「v0.23.10 → v0.23.11 换图源」那一代 ⇒ 一提交就假红（实测 S5-1 红）。
+     这正是本项目 v0.23.9 记过的教训：**A/B 基线必须钉到不可变 SHA，取不到时跳过而非失败**。
+     这里钉 `6e287dd` = v0.23.10（换满版开屏图之前那一版，开屏仍是 nono-splash + CSS 字标）。 */
+  const BASE_SHA = '6e287dd';
+  let baselineOk = false;
   try {
-    const old = execFileSync('git', ['show', 'HEAD:index.html'], { cwd: APP, maxBuffer: 1 << 28, encoding: 'utf8' });
+    const old = execFileSync('git', ['show', BASE_SHA + ':index.html'], { cwd: APP, maxBuffer: 1 << 28, encoding: 'utf8' });
     fs.writeFileSync(path.join(OLD, 'index.html'), old, 'utf8');
-    info('旧版对照已就绪：tmp/oldapp/index.html（git HEAD）');
+    baselineOk = true;
+    info('旧版对照已就绪：tmp/oldapp/index.html（基线 ' + BASE_SHA + ' = v0.23.10，不可变）');
   } catch (e) {
-    info('取 HEAD 版 index.html 失败：' + e.message);
+    info('⚠ 基线 ' + BASE_SHA + ' 取不到（浅克隆 / 该 commit 不存在）⇒ S5 将**跳过而非失败**：' + String(e.message).slice(0, 80));
   }
 
   /* 🔴🔴 必须**分成两个 server**。首轮实测的错：把 oldapp 放在 roots 前面 ⇒ `/` 命中旧版
@@ -254,9 +261,11 @@ async function main() {
     await ctx.close();
   }
 
-  /* ═══ S5 A/B 对照 · 旧版 HEAD ═══ */
-  console.log('\n\u2500\u2500 S5 A/B 对照（HEAD 旧版，同条件图延迟 900ms）\u2500\u2500');
-  {
+  /* ═══ S5 A/B 对照 · 基线 6e287dd（v0.23.10，不可变） ═══ */
+  console.log('\n\u2500\u2500 S5 A/B 对照（基线 v0.23.10 / %s，同条件图延迟 900ms）\u2500\u2500', BASE_SHA);
+  if (!baselineOk) {
+    info('⏭ S5-1 / S5-2 跳过：基线不可用 —— **跳过而不是失败**（基线过期不该报红）');
+  } else {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
     const r = await withPage(ctx, baseOld, async (page) => {
       await page.goto(baseOld + '/', { waitUntil: 'domcontentloaded' });
@@ -272,6 +281,29 @@ async function main() {
       ok('S5-2', `旧版固定 ${r.tl.hide}ms 淡出 ⇒ **不等图**（同一 900ms 延迟下，新版等到了 ${'≥700'}ms）`);
     else no('S5-2', `旧版淡出 ${r.tl.hide}ms，与预期「固定 420ms」不符`);
     await ctx.close();
+  }
+
+  /* ═══ S6 静态顺序闸门：首屏元素的样式必须早于元素（v0.23.12 新增） ═══
+     这条对应 v0.23.11 真实出过的缺陷：`.sp-brand{display:none}` 落在 6500+ 行的样式块里，
+     而开屏 div 在 1138 行 ⇒ 首帧按默认 display:block 渲染，CSS 字标闪现，
+     且与满版图内自带的 LOGO 同时出现（限速实测 5.7s，其中 4.9s 两套字标并存）。
+     静态顺序断言是这类缺陷最便宜的防线：跑一次 grep 就能拦住。 */
+  console.log('\n\u2500\u2500 S6 首屏样式顺序（防「规则晚于元素」回归）\u2500\u2500');
+  {
+    const html = fs.readFileSync(path.join(APP, 'index.html'), 'utf8');
+    const elAt = html.indexOf('<div id="splash">');
+    const ruleAt = html.indexOf('#splash .sp-brand{display:none');
+    if (ruleAt > -1 && elAt > -1 && ruleAt < elAt)
+      ok('S6-1', `.sp-brand{display:none} 位置 ${ruleAt} < 开屏 div 位置 ${elAt} ⇒ 首帧不会漏出 CSS 字标`);
+    else
+      no('S6-1', `规则位置 ${ruleAt} 未早于元素位置 ${elAt} ⇒ 首帧会闪现 CSS 字标（与满版图内 LOGO 同时出现）`);
+    const n = (html.match(/#splash \.sp-brand\{display:none/g) || []).length;
+    if (n === 1) ok('S6-2', '.sp-brand{display:none} 全局仅此一份（不会因两处失同步而静默回流）');
+    else no('S6-2', `出现了 ${n} 份 —— 启动屏规则应只留 <head> 内一份`);
+    const rules = [...html.matchAll(/^[^\n]*#splash[^\n]*\{[^}]*\}$/gm)].map(m => m.index);
+    const late = rules.filter(i => i > elAt);
+    if (!late.length) ok('S6-3', `全部 ${rules.length} 条 #splash 规则都在元素之前`);
+    else no('S6-3', `有 ${late.length} 条 #splash 规则落在元素之后（首帧底色/布局会跳变）`);
   }
 
   await browser.close();

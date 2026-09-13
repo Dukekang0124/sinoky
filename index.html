@@ -494,10 +494,21 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
    v0.23.11：改为一整张满版开屏图 assets/splash/a8_9x16.webp（1080x1920 = 9:16）。
    底色取图内四角实测色 #0E3739(rgb 14,55,57)：手机竖屏 contain 时上下补色与图边缘无缝
    （9:16 屏如 1080x1920 则完全贴合，一像素都不补）。
-   注意两处 #splash 规则（此处 + 后面「启动屏」段）必须同步 —— 只改一处会留下旧值静默回流。 */
-#splash{position:fixed;inset:0;z-index:9999;background:#0E3739;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease}
+   🔴 v0.23.12：启动屏规则**只此一处**（原「启动屏」段的第二份已合并到这里）。
+   为什么必须合并：开屏 div 在 1138 行，而那份样式块在 6502+ 行 ⇒ **规则晚于元素**，
+   首帧按默认值渲染 —— `.sp-brand` 没有被 `display:none` 顶掉，就直接显示出来了。
+   实测（CDP 限速 60KB/s）：字标闪现 **5.7s**，其中 **4.9s 是「满版开屏图 + CSS 字标」两套字标并存**，
+   与 v0.23.11「CSS 字标退役为降级态」的设计意图正好相反。
+   顺带消除同一段里 `#splash` 底色的首帧跳变（v0.23.10 起是 var(--bg) → #17423D）。
+   ⇒ 首屏元素的样式必须写在元素之前；规则只留一处，也再没有「两处必须同步」的隐患。 */
+#splash{position:fixed;inset:0;z-index:9999;background:#0E3739;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;transition:opacity .45s ease}
 #splash.hide{opacity:0;pointer-events:none}
 #splash img{width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:0}
+#splash .sp-brand{display:none;font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
+#splash .sp-brand b{color:var(--red);font-weight:800}
+/* 降级：开屏图加载失败（首访慢网 / 离线未预热）时退回 CSS 字标 + 深青底，不留白屏 */
+#splash.sp-fallback .sp-brand{display:block}
+#splash.sp-fallback img{display:none}
 </style>
 </head>
 <body>
@@ -1192,7 +1203,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.11';
+var APP_VERSION = '0.23.12';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -6552,15 +6563,9 @@ header{position:relative;padding-bottom:16px}
 header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.28}
 
-/* 启动屏：v0.23.11 起主视觉 = 满版开屏图（a8_9x16.webp）整屏，CSS 字标退役为降级态。
-   底色必须与图内底色一致（#0E3739），否则 contain 补色处出现横向色带。 */
-#splash{background:#0E3739;flex-direction:column;gap:0}
-#splash img{width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:0}
-#splash .sp-brand{display:none;font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
-#splash .sp-brand b{color:var(--red);font-weight:800}
-/* 降级：开屏图加载失败（首访慢网 / 离线未预热）时退回 CSS 字标 + 深青底，不留白屏 */
-#splash.sp-fallback .sp-brand{display:block}
-#splash.sp-fallback img{display:none}
+/* v0.23.12：启动屏规则**已全部上移到 <head> 内的主样式块**（首屏元素样式必须早于元素）。
+   此处不再重复定义 —— 重复就是「规则晚于元素」的闪烁源，且两处极易失同步。
+   完整说明与实测数据见 <head> 内「v0.10.0：A8 开屏 splash」那一段注释。 */
 </style>
 
 <style id="cn-share">

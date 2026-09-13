@@ -30,3 +30,9 @@ _internal/_tmp_apk/
 _internal/fix-2026-09-13/analyze_light.py
 _internal/fix-2026-09-13/probe_light_geo.py
 _internal/fix-2026-09-13/probe-nav.mjs
+
+# v0.23.12 开屏字标闪现修复：一次性产物（结论已进交付文档 07-验收上线/2026-09-13-v02312-*.md 与 skill，不入库）
+_internal/fix-2026-09-13/_old_index.html.bak
+_internal/fix-2026-09-13/_dbg-*.mjs
+_internal/fix-2026-09-13/realfilm-*/
+_internal/fix-2026-09-13/patch_skill_*.py
