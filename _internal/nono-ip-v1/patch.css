@@ -112,3 +112,82 @@
 #v-home .nt-nono b{display:block;font-size:13.5px;color:var(--gold);margin-bottom:2px;
   font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
 #v-home .nt-nono span{font-size:11.5px;color:var(--sub);line-height:1.45}
+
+/* ==========================================================================
+   v0.23.3 诺诺「形象位」升级 —— 纯追加，index.html 一行不改
+   --------------------------------------------------------------------------
+   问题（有 A/B 截图实证）：诺诺是「中文学习陪伴者」，但在产品里只占两个小圆
+   （浮标头像 40px / 面板头 34px）。8 张姿态图 like·cheer·think·sorry·listen·
+   point·wave·note 在 34px 圆形裁剪下用户根本分辨不出换了哪张 ——
+   nonoState() 的姿态切换逻辑一直在跑，视觉上却等于没做，资产被埋没。
+
+   本层只做三件事，全部零新增资产 / 零新增预缓存 / 零 KV 写：
+     ① 浮标头像 40 → 50px（fab 外框 56px 一字未动）
+     ② 面板头 34px 圆裁 → 72px 半身立绘（底部柔和淡出），姿态第一次「看得见」
+     ③ idle 呼吸微动效，让角色是「活的」，而不是一张贴纸
+
+   红线核对：
+     · #nono-dock / #nono-fab 的外框尺寸与定位一字未动 ⇒ 零布局位移，
+       #nono-tip 的 right:74px（= 12 + 56 + 6）无需重算
+     · 状态动画 .st-listening 等的 specificity 高于本条 idle ⇒ 状态仍优先
+     · prefers-reduced-motion 下全部静止
+   ========================================================================== */
+
+/* ---- ① 浮标：放大 + 呼吸 ----
+   用 #nono-dock 前缀抬高 specificity，不依赖「注入块恰好排在最后」这一点（太脆）。 */
+#nono-dock #nono-fab img{
+  width:50px;height:50px;
+  animation:nonoBreath 3.6s ease-in-out infinite;
+}
+/* 50px 落在 56px 圆内留 3px 边；峰值 scale 1.03 → 51.5px，仍不溢出容器 */
+@keyframes nonoBreath{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-1.5px) scale(1.03)}
+}
+
+/* ---- ② 面板头：圆头像 → 半身立绘 ----
+   素材本就是带 alpha 的方图（512×512，内容占 0.82×0.86）⇒
+   去掉圆形裁剪 + 底部淡出后，头肩与卫衣完整露出，且不会出现硬切边。 */
+#nono-pose{
+  width:auto;height:72px;max-width:106px;
+  border-radius:0;object-fit:contain;
+  -webkit-mask-image:linear-gradient(180deg,#000 72%,rgba(0,0,0,0) 100%);
+  mask-image:linear-gradient(180deg,#000 72%,rgba(0,0,0,0) 100%);
+  animation:nonoBreathGentle 4.4s ease-in-out infinite;
+  cursor:pointer;
+}
+@keyframes nonoBreathGentle{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-2px)}
+}
+/* 立绘比原圆头像高得多 ⇒ 名称与操作按钮改顶对齐（否则会悬在半空）；
+   上下 padding 由 10/10 调为 14/6 让立绘重心上移，总高不变（72 + 14 + 6 + 1 边框）。
+   只写单边属性，免得把原 padding:10px 12px 的左右 12px 一起覆盖掉。 */
+#nono-panel .np-head{align-items:flex-start;padding-top:14px;padding-bottom:6px}
+#nono-panel .np-head b{margin-top:9px}
+#nono-panel .np-head .np-acts{margin-top:3px}
+
+/* ---- ③ 全身：二级位置（点头像展开），绝不占主路径 ----
+   素材用已入库的 assets/brand/nono-splash.webp（560×820 真全身 3D 渲染、带 alpha）。
+   sw.js 的预缓存清单**早已收录它** ⇒ 零新增下载、零 addAll 全有全无风险。
+
+   ⚠️ 用 [src*] 属性选择器判断展开态，而不是 class：
+     nonoState() 每次状态变化都会先跑 pose.className = ''，
+     若把展开态记在 class 上会被静默清掉，只剩「src 还是全身图 + 高度已回 72px」
+     的错误中间态。绑在 src 上则天然免疫，且状态一变就自动收回（预期行为）。 */
+#nono-pose[src*="nono-splash"]{
+  height:190px;max-height:190px;max-width:100%;
+  -webkit-mask-image:none;mask-image:none;
+}
+
+/* ---- ④ 小屏降级：矮屏（< 640px 高）压缩立绘，保证练习内容不被挤出首屏 ---- */
+@media (max-height: 640px){
+  #nono-pose{height:56px;max-width:84px}
+  #nono-pose[src*="nono-splash"]{height:150px;max-height:150px}
+}
+
+/* ---- ⑤ 无障碍降级：系统开了「减少动态效果」⇒ 全部静止 ---- */
+@media (prefers-reduced-motion: reduce){
+  #nono-dock #nono-fab img,
+  #nono-pose{animation:none}
+}

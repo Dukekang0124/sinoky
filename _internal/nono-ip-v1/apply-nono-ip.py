@@ -98,7 +98,10 @@ def step_index():
         for bad in (b"</style", b"</script", b"<style", b"<script"):
             assert bad not in blob, "%s 含标签字面量 %r" % (name, bad)
 
-    blk = (b"\r\n<!-- ===== v0.22.0 Nono IP \xe6\x8e\xa5\xe5\x85\xa5\xe5\xb1\x82"
+    # ⚠️ 块首**不带**前导 \r\n：b.rindex(MARK) 定位到 "<!--" 本身、不含它前面的换行，
+    #    若块自带前导 \r\n 且它已存在，每跑一次就多一个空行（+2 B，非幂等）。
+    #    v0.23.3 修：原写法带 \r\n，只有在「首次注入」时才正确，重跑会持续膨胀。
+    blk = (b"<!-- ===== v0.22.0 Nono IP \xe6\x8e\xa5\xe5\x85\xa5\xe5\xb1\x82"
            b"\xef\xbc\x88\xe7\xba\xaf\xe8\xbf\xbd\xe5\x8a\xa0\xef\xbc\x89"
            b" ===== -->\r\n"
            b'<style ' + CSS_ID + b">\r\n" + css + b"\r\n</style>\r\n"

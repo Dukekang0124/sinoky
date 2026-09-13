@@ -490,4 +490,53 @@
     btn.style.top = 'auto';
     btn.style.bottom = 'calc(72px + env(safe-area-inset-bottom))';
   })();
+
+  /* ==========================================================================
+     v0.23.3 诺诺形象位（纯追加）
+       ① 点面板里的头像 → 展开全身（assets/brand/nono-splash.webp，已入库）
+       ② 两个使用计数走既有「功能级使用统计」（v0.3.36 的 S.feat）：
+            S.feat.nono     = 与浮标互动的次数（入口吸引力）
+            S.feat.nonoFull = 展开全身的次数（新形象位是否被发现）
+          机制：只写 localStorage，随真实进度或会话结束 flush 上云，
+          零新增网络写（守 KV 1000 写/天配额红线）。
+       ③ 不新增任何用户可见文案 ⇒ 不需要新增 i18n key（零英文 fallback 验收线不动）。
+     ========================================================================== */
+
+  function stageCount(key) {
+    try {
+      if (typeof S === 'undefined' || !S) return;
+      S.feat = S.feat || {};
+      S.feat[key] = (S.feat[key] || 0) + 1;
+      if (typeof saveStateLocal === 'function') saveStateLocal();
+    } catch (e) {}
+  }
+
+  /* ---------- ① 形象位：点头像展开全身（「再点收回」） ----------
+     状态判断只看 src，不引入任何额外标志：
+       nonoState() / nonoHint() 每次都会重设 src，用 src 当唯一真相 ⇒
+       状态一变自动收回全身，且不会残留「小尺寸全身图」的错误中间态。 */
+  window.nonoStageToggle = function () {
+    var el = document.getElementById('nono-pose');
+    if (!el) return;
+    var src = el.getAttribute('src') || '';
+    if (src.indexOf('nono-splash') > -1) {
+      el.src = P('like');
+    } else {
+      el.src = 'assets/brand/nono-splash.webp';
+      stageCount('nonoFull');
+    }
+  };
+  /* 事件委托绑在 document：面板头的图可能被重渲染，委托最稳 */
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.id === 'nono-pose') window.nonoStageToggle();
+  }, false);
+
+  /* ---------- ② 入口计数：与浮标互动的次数 ----------
+     挂在 click 上而不是包装 nonoToggle()：不覆盖任何既有函数，保持可回退。 */
+  (function () {
+    var fab = document.getElementById('nono-fab');
+    if (!fab) return;
+    fab.addEventListener('click', function () { stageCount('nono'); }, false);
+  })();
 })();

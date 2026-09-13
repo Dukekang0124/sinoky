@@ -1,5 +1,5 @@
 /* ============================================================================
-   v0.23.0 —— 品牌图标 / 功能导览 / 视图覆盖：浏览器真跑验收
+   v0.23.0 + v0.23.3 —— 品牌图标 / 功能导览 / 视图覆盖 / 诺诺形象位：浏览器真跑验收
    ----------------------------------------------------------------------------
    为什么必须真跑（康哥铁律）：语法校验 / grep / diff 只证明「看起来对」。
    本脚本验证的是**行为**：
@@ -10,6 +10,8 @@
      · 「带我去」真的切到对应视图并收起面板
      · 3 个新视图真的出边角气泡且文案正确
      · 浮动邀请真的在 home 出现、真的可点开导览、真的可关
+     · v0.23.3 形象位：浮标放大但外框未动、立绘已取消圆裁、点头像真能展开全身、
+       动效在 prefers-reduced-motion 下真会关掉（见 G 段）
      · 注入本层后零横向溢出、零 JS 运行时错误
    ============================================================================ */
 const path = require('path');
@@ -435,6 +437,105 @@ async function main() {
   await page.evaluate(() => { window.NONO.mode = 'tour'; window.nonoTour(2); });
   await page.waitForTimeout(600);
   await page.screenshot({ path: path.join(APP, '_internal', 'nono-ip-v1', '_shot-tour.png') });
+
+  /* ==================== G. 诺诺形象位（v0.23.3 纯追加层） ====================
+     这批改动只动「同一张资产在更大容器里的呈现」，最容易出的两类问题是：
+       ① 靠改容器尺寸换视觉，结果撞了相邻定位 —— #nono-tip 的 right:74px
+          是按浮标 56px 精确算的（12 + 56 + 6）。
+       ② 给元素加无限动画后 Playwright 的稳定性断言失效（元素 rect 永远在变）。
+     所以既钉「真的变大了」，也钉「外框与相邻定位一字未动」。
+     尺寸一律读 offsetWidth/offsetHeight（布局尺寸，不含 transform），
+     否则动画峰值相位会让 rect 在 50/51 之间跳 ⇒ 伪 flaky。 */
+  await page.evaluate(() => { if (typeof window.nonoPose === 'function') window.nonoPose('like'); });
+  await page.waitForTimeout(250);
+
+  const stage = await page.evaluate(() => {
+    const g = (s) => document.querySelector(s);
+    const cs = (el) => (el ? getComputedStyle(el) : null);
+    const box = (el) => (el ? [el.offsetWidth, el.offsetHeight] : null);
+    const fabImg = g('#nono-fab img'), pose = g('#nono-pose'), head = g('#nono-panel .np-head');
+    const pcs = cs(pose);
+    return {
+      fab: box(g('#nono-fab')),
+      fabImg: box(fabImg),
+      fabAnim: cs(fabImg) ? cs(fabImg).animationName : null,
+      /* ⚠️ #nono-tip 是**懒创建**的：只有 nonoHint() 真被调用时才 appendChild，
+         此刻页面上通常没有这个元素（第一版断言直接 querySelector ⇒ 恒 null ⇒ 假失败）。
+         改从 CSSOM 读**声明值**：既钉住了「这条定位常量没被本次改动牵连」，
+         又不依赖任何时机，也不会因为元素不存在而假绿。 */
+      tipRight: (() => {
+        for (const ss of Array.from(document.styleSheets)) {
+          let rules; try { rules = ss.cssRules; } catch (e) { continue; }
+          for (const r of Array.from(rules || [])) {
+            if (r.selectorText === '#nono-tip' && r.style && r.style.right) return r.style.right;
+          }
+        }
+        return null;
+      })(),
+      pose: box(pose),
+      poseRadius: pcs ? pcs.borderRadius : null,
+      poseAnim: pcs ? pcs.animationName : null,
+      poseMask: pcs ? String(pcs.maskImage || pcs.webkitMaskImage || 'none') : 'none',
+      head: box(head),
+      headAlign: cs(head) ? cs(head).alignItems : null,
+    };
+  });
+  chk('浮标头像已放大到 50px（改前 40px）', !!stage.fabImg && stage.fabImg[0] === 50, JSON.stringify(stage.fabImg));
+  chk('浮标外框仍是 56×56 —— 零布局位移', !!stage.fab && stage.fab[0] === 56 && stage.fab[1] === 56, JSON.stringify(stage.fab));
+  chk('#nono-tip 的 right 仍是 74px 常量（没被浮标尺寸改动牵连）', stage.tipRight === '74px', String(stage.tipRight));
+  chk('浮标头像带 idle 呼吸动画 nonoBreath', stage.fabAnim === 'nonoBreath', String(stage.fabAnim));
+  chk('面板头立绘 72px 高且已取消圆形裁剪',
+      !!stage.pose && stage.pose[1] === 72 && stage.poseRadius === '0px',
+      JSON.stringify(stage.pose) + ' r=' + stage.poseRadius);
+  chk('面板头立绘带 idle 动画 nonoBreathGentle', stage.poseAnim === 'nonoBreathGentle', String(stage.poseAnim));
+  chk('立绘底部有渐隐遮罩（不出现硬切边）', /gradient/i.test(stage.poseMask), String(stage.poseMask).slice(0, 52));
+  chk('面板头改顶对齐且高度增至 ~93px（练习内容仍在首屏）',
+      !!stage.head && stage.head[1] >= 88 && stage.head[1] <= 100 && stage.headAlign === 'flex-start',
+      JSON.stringify(stage.head) + ' align=' + stage.headAlign);
+
+  /* 全身：点头像展开 / 再点收回。
+     ⚠️ 不能用普通 click：立绘带无限动画 ⇒ Playwright 的 stability 检查永不通过
+        ⇒ 会一路重试到超时（本轮踩过）。force 只跳过可操作性检查，仍是真实鼠标点击。 */
+  await page.click('#nono-pose', { force: true });
+  await page.waitForTimeout(320);
+  const full = await page.evaluate(() => {
+    const el = document.getElementById('nono-pose');
+    const cs = getComputedStyle(el);
+    return { src: el.getAttribute('src'), h: el.offsetHeight,
+             mask: String(cs.maskImage || cs.webkitMaskImage || 'none') };
+  });
+  chk('点头像 → 展开全身（切到已入库的 nono-splash.webp）', /nono-splash/.test(full.src || ''), String(full.src));
+  chk('展开态高度 190px（立绘的 2.6 倍，全身完整可见）', full.h === 190, 'h=' + full.h);
+  chk('展开态取消底部遮罩（全身不留渐隐）', full.mask === 'none', String(full.mask).slice(0, 40));
+
+  await page.click('#nono-pose', { force: true });
+  await page.waitForTimeout(320);
+  const back = await page.evaluate(() => {
+    const el = document.getElementById('nono-pose');
+    return { src: el.getAttribute('src'), h: el.offsetHeight };
+  });
+  chk('再点头像 → 收回立绘（回 like.webp / 72px）',
+      /like\.webp/.test(back.src || '') && back.h === 72, `${back.src} h=${back.h}`);
+
+  /* 埋点：走既有 S.feat 功能级统计（只写 localStorage，零新增 KV 写） */
+  const feat = await page.evaluate(() => {
+    try { return JSON.parse(localStorage.getItem('sinoky_state') || '{}').feat || null; } catch (e) { return null; }
+  });
+  chk('S.feat.nono 计数已落本地（浮标互动统计，零新增 KV 写）',
+      !!feat && typeof feat.nono === 'number' && feat.nono > 0, 'feat=' + JSON.stringify(feat));
+  chk('S.feat.nonoFull 计数已落本地（展开全身被主动触发过）',
+      !!feat && typeof feat.nonoFull === 'number' && feat.nonoFull > 0, 'feat=' + JSON.stringify(feat));
+
+  /* 无障碍降级：系统开了「减少动态效果」⇒ 动效必须全关 */
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.waitForTimeout(220);
+  const rm = await page.evaluate(() => {
+    const n = (s) => { const e = document.querySelector(s); return e ? getComputedStyle(e).animationName : null; };
+    return { fab: n('#nono-fab img'), pose: n('#nono-pose') };
+  });
+  chk('prefers-reduced-motion:reduce 下动效全关（无障碍降级）',
+      rm.fab === 'none' && rm.pose === 'none', JSON.stringify(rm));
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
 
   if (errors.length) errors.slice(0, 6).forEach((e) => chk('无 JS 运行时错误', false, e));
   else chk('无 JS 运行时错误', true, '');
