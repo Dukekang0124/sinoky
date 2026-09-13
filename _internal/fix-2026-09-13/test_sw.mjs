@@ -10,7 +10,7 @@
  *
  * A/B 设计（证明「这是本轮修好的」而不是「本来就好」）：
  *   A 组 = 当前工作区（sw.js 已修）
- *   B 组 = sw.js 换成 HEAD 版（15 条裸路径）—— 同一个 HTTP 服务只覆盖 /sw.js
+ *   B 组 = sw.js 换成基线版（307764a = v0.23.7，15 条裸路径）—— 同一个 HTTP 服务只覆盖 /sw.js
  *   同一套断言跑两遍，B 组必须**在超时内拿不到 ready**。
  *
  * 本机环境（见长期记忆）：
@@ -35,6 +35,16 @@ const APP = path.resolve(HERE, '..', '..');
 let pass = 0, fail = 0;
 const ok = (m) => { pass++; console.log('  \u2705 ' + m); };
 const no = (m) => { fail++; console.log('  \u274c ' + m); };
+/* 基线必须钉死到「修复前的那个提交」，不能取 git HEAD：
+   修复一旦提交，HEAD 就变成新版，A/B 前提当场失效 ——
+   脚本会以「旧版竟然已修复」的形式报假缺陷。
+   （本项目实测过一次：提交 v0.23.8 后 test_sw / test_tone_src / test_selfsrc
+     的 B 组集体变红，而产品侧毫无问题。）
+   307764a = v0.23.7，是这几件修复落地前的最后一个提交，永久存在于历史里。
+   基线过期时跳过而不是失败 —— 不让它伪装成产品缺陷。 */
+const BASE_REF = process.env.SINOKY_BASE_REF || '307764a';
+let skip = 0;
+const skp = (m) => { skip++; console.log('  ' + String.fromCharCode(0x23ed) + '  ' + m); };
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -99,7 +109,12 @@ async function probe(page, port, waitMs) {
   }, waitMs);
 }
 
-const HEAD_SW = spawnSync('git', ['show', 'HEAD:sw.js'], { cwd: APP, encoding: 'utf8' }).stdout;
+const BASE_SW = (() => {
+  const r = spawnSync('git', ['show', BASE_REF + ':sw.js'], { cwd: APP, encoding: 'utf8' });
+  return (r.status === 0 && r.stdout) ? r.stdout : '';
+})();
+/* 基线是否过期：基线里必须还有裸路径（即仍是语法错误），否则说明基线取晚了 */
+const BASE_STALE = !BASE_SW || !/(^|\n)\s*\.\/[^\s',\"]+,?\s*$/m.test(BASE_SW);
 
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome' });
@@ -153,24 +168,26 @@ const HEAD_SW = spawnSync('git', ['show', 'HEAD:sw.js'], { cwd: APP, encoding: '
       await ctx.close(); srv.close();
     }
 
-    // ─────────────── B. HEAD 版 sw.js（坏） ───────────────
-    console.log('\n=== B. HEAD 版 sw.js —— 应根本无法注册（证明是本次修好的）===');
-    {
-      const { srv, port } = await serve(HEAD_SW);
+    // ─────────────── B. 基线版 sw.js（坏，按 BASE_REF 取） ───────────────
+    console.log('\n=== B. 基线版 sw.js（' + BASE_REF + '）—— 应根本无法注册（证明是本次修好的）===');
+    if (!BASE_STALE) {
+      const { srv, port } = await serve(BASE_SW);
       const ctx = await browser.newContext();
       const page = await ctx.newPage();
       const r = await probe(page, port, 6000);
-      !r.ready ? ok('B1 ready 在 6s 内拿不到 ⇒ 旧版 SW 确实装不上（潜伏 bug 复核）')
-               : no('B1 旧版竟然 ready 了 —— A/B 前提不成立');
-      (r.cacheKeys || []).length === 0 ? ok('B2 旧版 Cache Storage 为空（install 从未成功）')
-                                       : no('B2 旧版却有 cache：' + JSON.stringify(r.cacheKeys));
+      !r.ready ? ok('B1 ready 在 6s 内拿不到 ⇒ 基线版 SW 确实装不上（潜伏 bug 复核）')
+               : no('B1 基线版竟然 ready 了 —— A/B 前提不成立');
+      (r.cacheKeys || []).length === 0 ? ok('B2 基线版 Cache Storage 为空（install 从未成功）')
+                                       : no('B2 基线版却有 cache：' + JSON.stringify(r.cacheKeys));
       await ctx.close(); srv.close();
+    } else {
+      skp('B1/B2 基线 ' + BASE_REF + ' 已不含裸路径（基线过期）⇒ 跳过 A/B；修复：把 BASE_REF 改成更早的提交');
     }
   } finally {
     await browser.close();
   }
   console.log('\n──────────────────────────────');
-  console.log('结果：' + pass + ' 通过 / ' + fail + ' 失败');
+  console.log('结果：' + pass + ' 通过 / ' + fail + ' 失败' + (skip ? ' / ' + skip + ' 跳过（A/B 基线过期）' : ''));
   console.log('──────────────────────────────');
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('FATAL', e); process.exit(2); });

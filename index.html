@@ -48,6 +48,10 @@
   --gold:#c9a86c;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* v0.23.9：裸 <a> 的作者色。不写的话 Privacy / Share 会落到 UA 默认 #0000EE，
+   在 --bg(#161a20) 上只有 1.86:1 —— 深色主题下等于看不见；:visited 的 UA 默认
+   紫 #551A8B 同理。这条只兜底，任何更具体的规则（如 .foot details.attr a）照常覆盖。 */
+a{color:var(--teal)}a:visited{color:var(--teal)}
 body{background-color:var(--bg);background-image:repeating-linear-gradient(0deg,rgba(201,168,108,.02) 0 1px,transparent 1px 26px),repeating-linear-gradient(90deg,rgba(201,168,108,.02) 0 1px,transparent 1px 26px);background-attachment:fixed;color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh}
 h1,h2,.brand,.p-hz,.np-line .hz,.hero h1{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
 .wrap{max-width:520px;margin:0 auto;padding:0 16px 90px}
@@ -195,12 +199,12 @@ nav button.on{color:var(--red)}
 .fc-actions .btn{margin-top:0;padding:11px;font-size:13px;border-radius:11px}
 .fc-empty{color:var(--sub);font-size:12.5px;text-align:center;padding:18px;line-height:1.6}
 .fc-levels{display:flex;gap:8px;flex-wrap:wrap}
-.fc-level-btn{flex:1;min-width:84px;padding:9px 8px;border:1px solid var(--line);background:var(--card);border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text);transition:.15s;font-family:inherit}
+.fc-level-btn{flex:1;min-width:84px;padding:9px 8px;border:1px solid var(--line);background:var(--card);border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--txt);transition:.15s;font-family:inherit}
 .fc-level-btn b{font-size:14px;font-weight:700}
 .fc-level-btn.on{border-color:var(--red);background:rgba(230,57,70,.10);box-shadow:0 0 0 1px var(--red) inset}
 .fc-level-count{font-size:11px;color:var(--sub);background:var(--bg);border-radius:10px;padding:1px 8px}
 .fc-level-pending{font-size:11px;color:#b8860b;background:#fff7e6;border-radius:10px;padding:1px 8px}
-.fc-pending-zh{display:block;margin-top:6px;color:var(--text)}
+.fc-pending-zh{display:block;margin-top:6px;color:var(--txt)}
 .fc-pending-note{display:block;margin-top:4px;color:var(--sub);font-size:11px}
 .fc-nav-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .nw-item{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:8px}
@@ -328,14 +332,14 @@ nav button.on{color:var(--red)}
 .day1-steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .day1-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;position:relative;
   background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 40px 11px 13px;
-  font-size:14px;font-weight:600;color:var(--fg);cursor:pointer}
-.day1-step .panda-practice{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--fg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;padding:0}
+  font-size:14px;font-weight:600;color:var(--txt);cursor:pointer}
+.day1-step .panda-practice{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--txt);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;padding:0}
 .day1-step .panda-practice:hover{background:var(--red);color:#fff;border-color:var(--red)}
 .day1-step .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
   display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
 .day1-step .st{margin-left:auto;font-size:11px;color:var(--sub);font-weight:500}
 .day1-step.done{background:rgba(127,179,176,.12);border-color:rgba(127,179,176,.35)}
-.day1-step.done .num{background:var(--teal)}
+.day1-step.done .num{background:var(--teal);color:#141a24}
 .day1-step.done .st{color:var(--teal)}
 .day1-cta{margin-top:13px;font-size:13px;font-weight:600;color:var(--teal);text-align:center;display:none}
 /* v0.3.34：Day 路径跳转后的短暂高亮，帮用户定位该练哪句 */
@@ -346,7 +350,7 @@ nav button.on{color:var(--red)}
 .review{background:linear-gradient(135deg,rgba(127,179,176,.13),rgba(127,179,176,.04));border-color:rgba(127,179,176,.32)}
 .rv-line{display:block;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);
   border-radius:12px;padding:13px 14px;margin-top:12px;cursor:pointer}
-.rv-en{display:block;font-size:15px;font-weight:700;color:var(--fg);line-height:1.35}
+.rv-en{display:block;font-size:15px;font-weight:700;color:var(--txt);line-height:1.35}
 .rv-hz{display:block;margin-top:8px;font-size:18px;font-weight:600;color:var(--teal);letter-spacing:.5px}
 .rv-hz.blur{filter:blur(6px);opacity:.6;user-select:none}
 .rv-peek{margin-top:9px;font-size:11.5px;color:var(--sub);background:none;border:none;padding:0;
@@ -357,7 +361,7 @@ nav button.on{color:var(--red)}
 /* ---------- v0.3.49 听辨卡（Ear check）：复用 --teal / --bg2 / .btn / 四个声调色，零新增设计语言 ---------- */
 .earcheck{background:linear-gradient(135deg,rgba(42,157,143,.13),rgba(42,157,143,.04));border-color:rgba(42,157,143,.32)}
 .ear-play{display:block;width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;
-  padding:14px;margin-top:12px;cursor:pointer;color:var(--fg);font-family:inherit;font-size:14px;font-weight:600}
+  padding:14px;margin-top:12px;cursor:pointer;color:var(--txt);font-family:inherit;font-size:14px;font-weight:600}
 .earbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
 .earbtn{border:1px solid var(--line);background:var(--bg2);border-radius:13px;padding:12px 4px;text-align:center;
   cursor:pointer;color:var(--txt);font-family:inherit}
@@ -366,7 +370,7 @@ nav button.on{color:var(--red)}
 .earbtn.right{border-color:var(--t2);background:rgba(42,157,143,.15)}
 .earbtn.wrong{border-color:var(--red);background:rgba(230,57,70,.13)}
 .earbtn:disabled{cursor:default}
-.ear-res{margin-top:12px;font-size:13px;text-align:center;color:var(--fg);line-height:1.5}
+.ear-res{margin-top:12px;font-size:13px;text-align:center;color:var(--txt);line-height:1.5}
 .ear-res b{color:var(--teal)}
 .ear-acts{display:flex;gap:8px;margin-top:12px}
 .ear-acts .btn{flex:1;margin:0}
@@ -482,7 +486,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .dayitem .num{flex:none;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
 .dayitem .st{margin-left:auto;font-size:11px;color:var(--sub);font-weight:500}
 .dayitem.done{background:rgba(127,179,176,.10);border-color:rgba(127,179,176,.30)}
-.dayitem.done .num{background:var(--teal)}
+.dayitem.done .num{background:var(--teal);color:#141a24}
 .dayitem.done .st{color:var(--teal)}
 .dayempty{font-size:12px;color:var(--sub);padding:6px 2px}
 .daylink{margin-top:9px;width:100%;background:none;border:none;color:var(--teal);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
@@ -1008,7 +1012,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
         <button type="button" data-e="cosy" data-emotion="gentle" onclick="setEmotion('gentle',this)">Gentle</button>
       </div>
     </div>
-      <div class="setrow"><span>About</span><span class="setctl" style="text-align:right;line-height:1.5"><b>Sinoky</b> · Your Chinese journey<br><small style="color:var(--text-sec)">Stop memorizing characters. Start answering people.</small></span></div>
+      <div class="setrow"><span>About</span><span class="setctl" style="text-align:right;line-height:1.5"><b>Sinoky</b> · Your Chinese journey<br><small style="color:var(--sub)">Stop memorizing characters. Start answering people.</small></span></div>
       <div class="setrow"><span>Version</span><span class="setctl"><b id="set-ver">—</b>
         <button class="btn ghost" onclick="checkUpdate()">Check update</button></span></div>
       <div class="rd-hint" id="set-updhint">Current version is shown above. Tap check to compare with the server.</div>
@@ -1181,7 +1185,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.8';
+var APP_VERSION = '0.23.9';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。

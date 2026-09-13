@@ -1,6 +1,6 @@
 // test_selfsrc.mjs —— v0.23.8 组 1 前端验收：自测设备标记（?src=test 持久化）
 //
-// A/B 对比：同一套断言跑「新版 index.html」与「HEAD 旧版」。
+// A/B 对比：同一套断言跑「新版 index.html」与「基线版 index.html」（BASE_REF）。
 //   新版必须全绿；旧版必须「压根没有 SELF_SRC」—— 这才证明是新改动引入的行为，
 //   而不是本来就有的东西（否则断言等于没测）。
 import http from 'node:http';
@@ -22,13 +22,22 @@ const ok = (name, cond, extra) => {
   if (cond) { pass++; console.log('  \u2705 ' + name); }
   else { fail++; console.log('  \u274c ' + name + (extra ? '   ' + extra : '')); }
 };
+/* 基线必须钉死到「修复前的那个提交」，不能取 git HEAD：
+   修复一旦提交 HEAD 就变成新版，A/B 前提当场失效 ——
+   脚本会以「旧版竟然已修复」的形式报假缺陷。
+   （实测：提交 v0.23.8 后三套测试的 B 组集体变红，而产品侧毫无问题。）
+   307764a = v0.23.7 = 这几件修复落地前的最后一个提交，永久在历史里。
+   基线过期时跳过而不是失败。 */
+const BASE_REF = process.env.SINOKY_BASE_REF || '307764a';
+let skip = 0;
+const skp = (name) => { skip++; console.log('  ' + String.fromCharCode(0x23ed) + '  ' + name); };
 
-// 取 HEAD 旧版（不经 git checkout，避免动工作区）
+// 取基线版（不经 git checkout，避免动工作区）
 const OLD = path.join(HERE, '_old_index.html');
 try {
-  const buf = execFileSync('git', ['show', 'HEAD:index.html'], { cwd: APP, maxBuffer: 64 * 1024 * 1024 });
+  const buf = execFileSync('git', ['show', BASE_REF + ':index.html'], { cwd: APP, maxBuffer: 64 * 1024 * 1024 });
   fs.writeFileSync(OLD, buf);
-} catch (e) { console.error('\u274c \u53d6 HEAD \u65e7\u7248\u5931\u8d25\uff1a' + e.message); process.exit(1); }
+} catch (e) { console.error('取基线版失败：' + e.message); process.exit(1); }
 
 function serve(filePath, port) {
   const s = http.createServer((req, res) => {
@@ -83,19 +92,22 @@ console.log('\n=== A. \u65b0\u7248\uff08\u5e26 SELF_SRC\uff09 ===');
   await ctx.close(); await ctx2.close();
 }
 
-console.log('\n=== B. \u65e7\u7248\uff08HEAD\uff09\u2014\u2014 \u5e94\u6839\u672c\u6ca1\u6709\u8fd9\u4e2a\u673a\u5236 ===');
-{
+const BASE_STALE = fs.readFileSync(OLD, 'utf8').includes('SELF_SRC');
+console.log('=== B. 基线版（' + BASE_REF + '）- 应根本没有这个机制 ===');
+if (!BASE_STALE) {
   const ctx = await browser.newContext();
   const b1 = await probe(P_OLD, '/?src=test', ctx);
   ok('B1 \u65e7\u7248\u65e0 SELF_SRC\uff08\u8bc1\u660e\u662f\u65b0\u589e\u884c\u4e3a\uff09', b1.has === false, JSON.stringify(b1));
   ok('B2 \u65e7\u7248 buildStat() \u4e0d\u5e26 src', b1.bs === undefined, String(b1.bs));
   await ctx.close();
+} else {
+  skp('B1/B2 基线 ' + BASE_REF + ' 已含 SELF_SRC（基线过期）⇒ 跳过 A/B；修复：把 BASE_REF 改成更早的提交');
 }
 
 await browser.close();
 sNew.close(); sOld.close();
 
 console.log('\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500');
-console.log('\u7ed3\u679c\uff1a' + pass + ' \u901a\u8fc7 / ' + fail + ' \u5931\u8d25');
+console.log('\u7ed3\u679c\uff1a' + pass + ' \u901a\u8fc7 / ' + fail + ' \u5931\u8d25' + (skip ? ' / ' + skip + ' \u8df3\u8fc7\uff08A/B \u57fa\u7ebf\u8fc7\u671f\uff09' : ''));
 console.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500');
 process.exit(fail ? 1 : 0);

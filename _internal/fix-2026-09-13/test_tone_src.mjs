@@ -5,7 +5,7 @@
  * 于是「新音频用 assets/tones/*.mp3 文件路径」会**静默失效**（播放键毫无反应）。
  * 修改后应同时接受 data URI 与文件路径，且无效 src 仍被挡住。
  *
- * A/B：同一套断言跑两遍 —— A 组当前工作区（已修），B 组 HEAD 版（未修）。
+ * A/B：同一套断言跑两遍 —— A 组当前工作区（已修），B 组基线版 BASE_REF（未修）。
  * B 组必须在「文件路径」这一项上失败，否则说明这个改动是多余的（前提不成立）。
  *
  * 判据取 `window.AUDIO.src`（播放器实际拿到的地址），不看 UI 文案 ——
@@ -27,6 +27,16 @@ const APP = path.resolve(HERE, '..', '..');
 let pass = 0, fail = 0;
 const ok = (m) => { pass++; console.log('    \u2705 ' + m); };
 const no = (m) => { fail++; console.log('    \u274c ' + m); };
+/* 基线必须钉死到「修复前的那个提交」，不能取 git HEAD：
+   修复一旦提交，HEAD 就变成新版，A/B 前提当场失效 ——
+   脚本会以「旧版竟然已修复」的形式报假缺陷。
+   （本项目实测过一次：提交 v0.23.8 后 test_sw / test_tone_src / test_selfsrc
+     的 B 组集体变红，而产品侧毫无问题。）
+   307764a = v0.23.7，是这几件修复落地前的最后一个提交，永久存在于历史里。
+   基线过期时跳过而不是失败 —— 不让它伪装成产品缺陷。 */
+const BASE_REF = process.env.SINOKY_BASE_REF || '307764a';
+let skip = 0;
+const skp = (m) => { skip++; console.log('    ' + String.fromCharCode(0x23ed) + '  ' + m); };
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
@@ -35,7 +45,12 @@ const MIME = {
   '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.mp3': 'audio/mpeg', '.txt': 'text/plain; charset=utf-8',
 };
 
-const HEAD_INDEX = spawnSync('git', ['show', 'HEAD:index.html'], { cwd: APP, encoding: 'utf8' }).stdout;
+const BASE_INDEX = (() => {
+  const r = spawnSync('git', ['show', BASE_REF + ':index.html'], { cwd: APP, encoding: 'utf8' });
+  return (r.status === 0 && r.stdout) ? r.stdout : '';
+})();
+/* 基线是否过期：基线里不该已经出现这次新增的 toneAudioOk() */
+const BASE_STALE = !BASE_INDEX || BASE_INDEX.includes('toneAudioOk');
 
 /** idxOverride 非空时用它替换 /index.html 的响应体 */
 function serve(idxOverride) {
@@ -123,30 +138,32 @@ async function probe(page, port) {
       await page.close(); srv.close();
     }
 
-    // ═══════ B 组：HEAD 版（未修） ═══════
-    console.log('\n=== B. HEAD 版（未修）—— 应在「文件路径」上失败 ===');
-    {
-      const { srv, port } = await serve(HEAD_INDEX);
+    // ═══════ B 组：基线版（按 BASE_REF 取，未修） ═══════
+    console.log('\n=== B. 基线版（' + BASE_REF + '，未修）—— 应在「文件路径」上失败 ===');
+    if (!BASE_STALE) {
+      const { srv, port } = await serve(BASE_INDEX);
       const page = await browser.newPage();
       const B = await probe(page, port);
-      !B.hasToneAudioOk ? ok('B0 旧版没有 toneAudioOk()（证明是新增能力）')
-                        : no('B0 旧版竟然已有 toneAudioOk() —— A/B 前提不成立');
+      !B.hasToneAudioOk ? ok('B0 基线版没有 toneAudioOk()（证明是新增能力）')
+                        : no('B0 基线版竟然已有 toneAudioOk() —— A/B 前提不成立');
       B.file.got === ''
-        ? ok('B1 **旧版拒绝文件路径**（AUDIO.src 保持空）⇒ 本改动确有必要')
-        : no('B1 旧版竟然接受了文件路径：' + B.file.got);
+        ? ok('B1 **基线版拒绝文件路径**（AUDIO.src 保持空）⇒ 本改动确有必要')
+        : no('B1 基线版竟然接受了文件路径：' + B.file.got);
       /^data:audio\/mpeg/.test(B.data.got)
-        ? ok('B2 旧版接受 data URI（两组唯一共同点）')
-        : no('B2 旧版连 data URI 都不认，A/B 不可比');
+        ? ok('B2 基线版接受 data URI（两组唯一共同点）')
+        : no('B2 基线版连 data URI 都不认，A/B 不可比');
       !/Tap to retry/.test(B.earBtnTextAfterJunk || '')
-        ? ok('B3 旧版坏音频时听辨卡键无反馈：' + JSON.stringify(B.earBtnTextAfterJunk))
-        : no('B3 旧版竟然有反馈');
+        ? ok('B3 基线版坏音频时听辨卡键无反馈：' + JSON.stringify(B.earBtnTextAfterJunk))
+        : no('B3 基线版竟然有反馈');
       await page.close(); srv.close();
+    } else {
+      skp('B0-B3 基线 ' + BASE_REF + ' 已有 toneAudioOk()（基线过期）⇒ 跳过 A/B；修复：把 BASE_REF 改成更早的提交');
     }
   } finally {
     await browser.close();
   }
   console.log('\n──────────────────────────────');
-  console.log('结果：' + pass + ' 通过 / ' + fail + ' 失败');
+console.log('结果：' + pass + ' 通过 / ' + fail + ' 失败' + (skip ? ' / ' + skip + ' 跳过（A/B 基线过期）' : ''));
   console.log('──────────────────────────────');
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('FATAL', e); process.exit(2); });

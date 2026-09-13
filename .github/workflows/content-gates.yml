@@ -21,8 +21,15 @@ name: Content gates
 #    v0.23.6 内联了 qrcode-generator（MIT）。源码版权头保留了（许可已履行），
 #    但**用户可见的鸣谢清单里没有它**。加一个库 = 一个静默的合规缺口。
 #
+# ④ 颜色令牌闸门（check-css-tokens.mjs）
+#    2026-09-13 康哥截图报障：Smart review 的英文是黑的，深色底上看不清。
+#    根因是 `.rv-en{color:var(--fg)}` 而 `--fg` **定义 0 次、被引用 5 次** ——
+#    语法完全合法、浏览器不报错、上面三道闸门全看不见。
+#    顺藤还摸到「页脚裸 <a> 掉到 UA 默认 #0000EE（1.86:1，等于看不见）」。
+#    两者同根：**深色主题上没写作者样式 ⇒ 落到浏览器默认值**。
+#
 # ── 为什么不用 npm ci ────────────────────────────────────────────────
-# 三个脚本都是**零依赖**（只用 node: 内置）。省掉 install 让本 job 常在 20s 内。
+# 四个脚本都是**零依赖**（只用 node: 内置）。省掉 install 让本 job 常在 20s 内。
 
 on:
   push:
@@ -35,7 +42,7 @@ permissions:
 
 jobs:
   gates:
-    name: syntax + i18n + credits
+    name: syntax + i18n + credits + css-tokens
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,7 +65,11 @@ jobs:
       - name: Credits gate — third-party notices present in both surfaces
         run: node scripts/check-credits.mjs
 
-      # ④ 构建清单：仓库根新条目必须归类（否则该进包的没进包 / 内部文件被上线）
+      # ④ 颜色令牌：var() 引用的变量都已定义（无 fallback 时）；裸 <a> 有作者色且可读
+      - name: CSS token gate — every var() resolves, every bare <a> has an author color
+        run: node scripts/check-css-tokens.mjs
+
+      # ⑤ 构建清单：仓库根新条目必须归类（否则该进包的没进包 / 内部文件被上线）
       #    这一步不部署，只跑构建脚本的归类与依赖闭包断言。
       - name: Build manifest gate — every root entry is classified
         run: node scripts/build-web.mjs
