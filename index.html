@@ -490,10 +490,14 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .dayitem.done .st{color:var(--teal)}
 .dayempty{font-size:12px;color:var(--sub);padding:6px 2px}
 .daylink{margin-top:9px;width:100%;background:none;border:none;color:var(--teal);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
-/* v0.10.0：A8 开屏 splash —— 首屏品牌图，app 初始化后淡出 */
-#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .45s ease}
+/* v0.10.0：A8 开屏 splash —— 首屏品牌图，app 初始化后淡出
+   v0.23.11：改为一整张满版开屏图 assets/splash/a8_9x16.webp（1080x1920 = 9:16）。
+   底色取图内四角实测色 #0E3739(rgb 14,55,57)：手机竖屏 contain 时上下补色与图边缘无缝
+   （9:16 屏如 1080x1920 则完全贴合，一像素都不补）。
+   注意两处 #splash 规则（此处 + 后面「启动屏」段）必须同步 —— 只改一处会留下旧值静默回流。 */
+#splash{position:fixed;inset:0;z-index:9999;background:#0E3739;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease}
 #splash.hide{opacity:0;pointer-events:none}
-#splash img{width:auto;height:78vh;max-width:92vw;object-fit:contain;border-radius:18px}
+#splash img{width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:0}
 </style>
 </head>
 <body>
@@ -1131,7 +1135,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 
 <nav><button id="nav-home" class="on" onclick="go('home')"><span class="navico navico-home"></span>Home</button><button id="nav-practice" onclick="go('practice')"><span class="navico navico-practice"></span>Practice</button><button id="nav-explore" onclick="go('explore')"><span class="navico navico-explore"></span>Explore</button><button id="nav-prog" onclick="go('prog')"><span class="navico navico-prog"></span>Progress</button><button id="nav-me" onclick="go('me')"><span class="navico navico-me"></span>Me</button></nav>
 <div class="toast" id="toast"></div>
-<div id="splash"><div class="sp-brand">Sino<b>k</b>y</div><img src="assets/brand/nono-splash.webp" alt="Sinoky" onerror="this.parentNode.remove()"></div>
+<div id="splash"><div class="sp-brand">Sino<b>k</b>y</div><img src="assets/splash/a8_9x16.webp" alt="Sinoky" onerror="this.parentNode.classList.add('sp-fallback')"></div>
 <div id="updatebar"></div>
 <div class="rd-pop" id="rd-pop" role="dialog" aria-label="Word details"></div>
 <div id="rd-mask"></div>
@@ -1188,7 +1192,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.10';
+var APP_VERSION = '0.23.11';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -6340,8 +6344,34 @@ if (!S.lang) {
 }
 loadLangPack(S.lang, function(){ applyI18n(document.body); });
 ensureI18nObserver();
-/* v0.10.0：A8 开屏 splash —— 初始化完成后淡出 */
-setTimeout(function(){ var s=document.getElementById('splash'); if(s){ s.classList.add('hide'); setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 520); } }, 420);
+/* v0.10.0：A8 开屏 splash —— 初始化完成后淡出
+   v0.23.11：开屏图 101 KB（旧角色图 48 KB），固定 420ms 会在慢网下「图刚出来就淡出」。
+   改为「>=420ms 且图已就绪」才淡出；1600ms 硬上限兜底，绝不把首屏拖住。
+   已缓存时 img.complete 立即为真 ⇒ 行为与旧版完全一致（420ms）。 */
+(function(){
+  var MIN_MS = 420, MAX_MS = 1600, t0 = Date.now();
+  var s = document.getElementById('splash');
+  if (!s) return;
+  var img = s.querySelector('img');
+  var pending = !(img && img.complete && img.naturalWidth > 0);
+  function dismiss(){
+    if (s.dataset.gone) return;
+    s.dataset.gone = '1';
+    s.classList.add('hide');
+    setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 520);
+  }
+  function go(){
+    var wait = Math.max(0, MIN_MS - (Date.now() - t0));
+    if (wait) setTimeout(dismiss, wait); else dismiss();
+  }
+  if (pending) {
+    img.addEventListener('load', go);
+    img.addEventListener('error', function(){ s.classList.add('sp-fallback'); go(); });
+  } else {
+    go();
+  }
+  setTimeout(dismiss, MAX_MS);
+})();
 /* v0.3.35 S3：存储被禁用时明确告诉用户"进度不会被保存"，而不是让他以为保存了 */
 if(!LS_OK) setTimeout(function(){ toast('Storage is blocked — progress will not be saved'); }, 1200);
 /* v0.19.0 HSK 分级：启动入口改为 initLevels()——拉取等级清单、渲染等级 tab、选中首个 ready 等级（默认 HSK1），
@@ -6522,11 +6552,15 @@ header{position:relative;padding-bottom:16px}
 header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.28}
 
-/* 启动屏：主视觉接回（深青品牌底 + Sino<k>y 衬线字标） */
-#splash{background:#17423D;flex-direction:column;gap:1.6vh}
-#splash img{width:100%;max-width:430px;height:auto;max-height:70vh;border-radius:0}
-#splash .sp-brand{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
+/* 启动屏：v0.23.11 起主视觉 = 满版开屏图（a8_9x16.webp）整屏，CSS 字标退役为降级态。
+   底色必须与图内底色一致（#0E3739），否则 contain 补色处出现横向色带。 */
+#splash{background:#0E3739;flex-direction:column;gap:0}
+#splash img{width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:0}
+#splash .sp-brand{display:none;font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
 #splash .sp-brand b{color:var(--red);font-weight:800}
+/* 降级：开屏图加载失败（首访慢网 / 离线未预热）时退回 CSS 字标 + 深青底，不留白屏 */
+#splash.sp-fallback .sp-brand{display:block}
+#splash.sp-fallback img{display:none}
 </style>
 
 <style id="cn-share">

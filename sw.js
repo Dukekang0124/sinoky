@@ -1,5 +1,5 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.23.10';
+var CACHE = 'sinoky-v0.23.11';
 var ASSETS = [
   './',
   './index.html',
@@ -17,6 +17,8 @@ var ASSETS = [
   './icons/favicon-32.png',
   /* v0.22.0 诺诺 IP：定妆图 + 8 姿态 + 3 空态。全部本地资源，接地即用。 */
   './icons/logo-header.png',
+  /* v0.23.11 满版开屏图（首屏第一眼，必须离线可用；未预热则离线启动开屏是空的） */
+  './assets/splash/a8_9x16.webp',
   './assets/brand/nono-splash.webp',
   './assets/brand/nono-hero.webp',
   './assets/brand/nono-share.webp',
