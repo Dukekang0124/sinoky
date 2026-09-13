@@ -18,7 +18,7 @@ NODE = r"C:\Users\Admin\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
 
 # 🔴 唯一版本真值：换版本号只改这一处（sw.js CACHE / version.json version / APP_VERSION 都对着它断言）。
 # 刻意不把版本号写死在断言里 —— v0.22.0 时硬编码 574 / 0.21.2 各误报过一轮。
-EXPECT_VER = "0.23.6"
+EXPECT_VER = "0.23.7"
 
 fails, warns, oks = [], [], []
 
@@ -254,7 +254,7 @@ if b"nono-hero-fig" in inner:
 else:
     bad("landing 样式未落在 style 块内")
 
-# ============================================ E. 注入层功能锚点（v0.23.4 / v0.23.5 / v0.23.6）
+# ============================================ E. 注入层功能锚点（v0.23.4 ~ v0.23.7）
 # 为什么需要这一段：本仓库自 v0.22.0 起「新增功能主要在注入层」，而主代码里搜不到
 # 注入层的实现 —— 2026-09-13 曾因此把「已做完的 3 件事」误判成待办。
 # 这里用「patch.js 源 与 index.html 产物**都**含该锚点」作为判据：
@@ -282,6 +282,18 @@ ANCHORS = [
     ("13 二维码·页脚锚位",        "cv.height - 254"),
     ("13 二维码·圆角 12px",       "roundRect(ctx, x, y, real, real, 12)"),
     ("13 二维码·内联库许可",      "qrcode-generator v1.4.4"),
+    # v0.23.7 —— Day 1 通关纪念卡（§14）。同样只咬实现方式：
+    # 「有没有这张卡」由 smoke-day1.js（57 项，含像素与拦截计数）负责。
+    ("14 Day1卡·段标",            "14. Day1 通关纪念卡"),
+    ("14 Day1卡·判据函数",        "function day1Info()"),
+    ("14 Day1卡·判据出口",        "window.__day1Info = day1Info"),
+    ("14 Day1卡·绘制出口",        "window.__day1Draw = drawDay1"),
+    ("14 Day1卡·入池权重 4",       "p.push({ id: 'day1', w: 4 })"),
+    ("14 Day1卡·主题名",          "SHARE.TNAME.day1 = 'Day 1 complete'"),
+    ("14 Day1卡·拦截手法",        "window._stack = function () { blocked++; }"),
+    ("14 Day1卡·拦截计数",        "window.__day1Blocked = (window.__day1Blocked || 0) + blocked"),
+    ("14 Day1卡·印章原语",        "function sealOf(ctx, ch, x, y, s)"),
+    ("14 Day1卡·分享文案",        "I finished Day 1 of spoken Chinese"),
 ]
 _missing = []
 for _name, _needle in ANCHORS:
