@@ -583,5 +583,7 @@
   "You last spoke Chinese {d} days ago — let’s pick up where you stopped.": "Ты в последний раз говорил по-китайски {d} дн. назад — продолжим с того места.",
   "Yesterday this line scored {s}. Beat it today?": "Вчера эта фраза набрала {s}. Побьёшь сегодня?",
   "Yesterday this line scored {s}. One more try — it will stick.": "Вчера эта фраза набрала {s}. Ещё разок — и запомнится.",
-  "Practice that line": "Отработать эту фразу"
+  "Practice that line": "Отработать эту фразу",
+  "Say it back to me.": "Повтори за мной.",
+  "Say it back": "Повторить"
 }

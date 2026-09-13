@@ -99,6 +99,12 @@ async function main() {
       localStorage.setItem('sinoky_state', JSON.stringify(s));
     } catch (e) {}
     ['sinoky_tour', 'sinoky_nono_tour', 'sinoky_nono_invite'].forEach((k) => localStorage.removeItem(k));
+    /* v0.23.5 位阶：零开口且「今天还没被邀请过」时，导览邀请要给 §12 招手邀请让位
+       （两者都在 home、都在 boot 后 8 秒）。本套测试的场景恰是零开口新用户，
+       所以这里显式落一个「今天已邀请过」标记 —— 表示招手邀请那一步已经发生过，
+       本套测的是「之后导览邀请该不该出现」。
+       真实链路：招手邀请 → 用户关掉面板 → 导览邀请出现（位阶是先后，不是二选一）。 */
+    localStorage.setItem('sinoky_nono_wave', new Date().toISOString().slice(0, 10));
   });
   await page.reload({ waitUntil: 'load' });
   await page.waitForTimeout(1500);          /* 过启动屏窗口（420ms hide / 520ms 移除） */

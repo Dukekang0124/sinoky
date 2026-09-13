@@ -583,5 +583,7 @@
   "You last spoke Chinese {d} days ago — let’s pick up where you stopped.": "Lần cuối bạn nói tiếng Trung là {d} ngày trước — mình tiếp tục từ chỗ đó nhé.",
   "Yesterday this line scored {s}. Beat it today?": "Hôm qua câu này được {s}. Hôm nay vượt qua nhé?",
   "Yesterday this line scored {s}. One more try — it will stick.": "Hôm qua câu này được {s}. Thử lại một lần là nhớ ngay.",
-  "Practice that line": "Luyện câu này"
+  "Practice that line": "Luyện câu này",
+  "Say it back to me.": "Nói lại cho tôi nghe.",
+  "Say it back": "Nói lại"
 }

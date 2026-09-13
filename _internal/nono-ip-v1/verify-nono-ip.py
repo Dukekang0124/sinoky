@@ -18,7 +18,7 @@ NODE = r"C:\Users\Admin\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
 
 # 🔴 唯一版本真值：换版本号只改这一处（sw.js CACHE / version.json version / APP_VERSION 都对着它断言）。
 # 刻意不把版本号写死在断言里 —— v0.22.0 时硬编码 574 / 0.21.2 各误报过一轮。
-EXPECT_VER = "0.23.4"
+EXPECT_VER = "0.23.5"
 
 fails, warns, oks = [], [], []
 
@@ -196,7 +196,7 @@ else:
 
 # ============================================================== C. 语言包
 print("\n[C] 语言包")
-NKEY = 585          # v0.23.4：580（v0.23.0）+ 5（诺诺记得你）
+NKEY = 587          # v0.23.5：580（v0.23.0）+ 5（诺诺记得你）+ 2（首访招手邀请）
 KEYS = [
     "No worries — try again",                                      # v0.22.0 state 文案
     "Tour", "Show me around",                                      # v0.23.0 导览入口
@@ -208,6 +208,8 @@ KEYS = [
     "You last spoke Chinese {d} days ago — let’s pick up where you stopped.",   # v0.23.4 记得你·召回
     "Yesterday this line scored {s}. Beat it today?",              # v0.23.4 记得你·超越
     "Yesterday this line scored {s}. One more try — it will stick.",  # v0.23.4 记得你·再来
+    "Say it back to me.",                                          # v0.23.5 招手邀请·邀请句
+    "Say it back",                                                 # v0.23.5 招手邀请·按钮
 ]
 LG_SET = None
 for lg in ["zh", "es", "ru", "vi", "id", "th"]:
@@ -251,6 +253,36 @@ if b"nono-hero-fig" in inner:
     ok("landing 样式写在自身的 style 块内")
 else:
     bad("landing 样式未落在 style 块内")
+
+# ============================================ E. 注入层功能锚点（v0.23.4 / v0.23.5）
+# 为什么需要这一段：本仓库自 v0.22.0 起「新增功能主要在注入层」，而主代码里搜不到
+# 注入层的实现 —— 2026-09-13 曾因此把「已做完的 3 件事」误判成待办。
+# 这里用「patch.js 源 与 index.html 产物**都**含该锚点」作为判据：
+# 只查产物 → 分不清是 patch 带的还是历史残留；只查源 → 分不清有没有真的注入。
+print("\n[E] 注入层功能锚点")
+_pb = rd(os.path.join(HERE, "patch.js"))
+ANCHORS = [
+    ("11 记得你·入口",          "window.nonoRecall = function"),
+    ("11 记得你·冷启动重试",     "if (n < 4) setTimeout(bootRecall, 2800)"),
+    ("11 记得你·不查 lockUntil", "故意不检查 NONO.lockUntil"),
+    ("12 招手邀请·入口",        "window.nonoWave = function"),
+    ("12 招手邀请·wave 姿态",    "pose: 'wave'"),
+    ("12 招手邀请·首句出口",     "nonoPracticeKey('arrival#0')"),
+    ("12 招手邀请·重试",        "if (waveLeft-- > 0)"),
+    ("12 招手邀请·兜底还原",     "if (waveFb && typeof _ncg2 === 'function')"),
+    ("8 导览让位·位阶条件",      "v0.23.5 位阶"),
+]
+_missing = []
+for _name, _needle in ANCHORS:
+    _nb = _needle.encode("utf-8")
+    _in_src, _in_prod = _nb in _pb, _nb in b
+    if _in_src and _in_prod:
+        pass
+    else:
+        _missing.append(_name)
+        bad("%s 锚点缺失（patch.js=%s / index.html=%s）" % (_name, _in_src, _in_prod))
+if not _missing:
+    ok("注入层功能锚点 %d/%d 全中（patch 源与 index 产物一致）" % (len(ANCHORS), len(ANCHORS)))
 
 # ============================================================ 汇总
 print("\n" + "=" * 62)

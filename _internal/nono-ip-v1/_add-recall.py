@@ -84,7 +84,13 @@ SEC11 = r'''  /* ---------- 11. 「诺诺记得你」：把 S.nono 里存着却�
       if ((typeof window.nonoView === 'function' ? window.nonoView() : '') !== 'home') return false;
       var N = window.NONO || {};
       if (N.closed) return false;                                  /* 尊重「关掉陪伴」开关 */
-      if (Date.now() < (N.lockUntil || 0)) return false;           /* 刚出过结果反馈，不抢 */
+      /* ⚠️ 这里**故意不检查 NONO.lockUntil**（2026-09-13 实测教训）：
+         lockUntil 的本意是「刚出过结果反馈，别被功能说明抢走」，设它的都是
+         priority:'result' 的气泡。而本函数发出的也是 result 级内容，且只在首页、
+         每天最多一次 —— 与结果条（在 scene / practice 页）根本不在同一屏，不存在打断。
+         实测：冷启动时 boot 早期先有一次 result 气泡把 lockUntil 设成 +2500ms，
+         与本函数的触发时刻只差几十毫秒 ⇒ 连续两轮冷启动都被这个「同类锁」锁死，
+         症状是「打开 App 什么都没有」。真正的打扰护栏是下面的 nonoBusy()。 */
       if (typeof window.nonoBusy === 'function' && window.nonoBusy()) return false;
       var today = rToday();
       if (rLGet('sinoky_nono_recall') === today) return false;      /* 每天最多一次 */
@@ -128,14 +134,24 @@ SEC11 = r'''  /* ---------- 11. 「诺诺记得你」：把 S.nono 里存着却�
 
   /* 冷启动补一次：既有 nonoDailyLine 只在 go('home') 时被调用，
      而「打开 app 就停在 home」这条最常见路径不经过 go() ⇒ 召回的黄金时刻会错过。
-     这里在 load 后补一次（同样每天一次、同样不额外占配额）；
+     这里在 load 后补一次（同样每天一次、同样不额外占配额）。
+     带重试（最多 4 次 / 间隔 2.8s）：boot 早期视图可能还没落定、或麦克风正忙，
+     一次没轮到就再试，而不是放弃 —— 首屏那一眼是召回最值钱的时刻。
      首启引导卡还没结束（sinoky_tour != 1）时不抢 —— I-014：新用户不被遮挡。 */
   (function () {
+    var n = 0;
     function bootRecall() {
-      try { if (rLGet('sinoky_tour') !== '1') return; window.nonoRecall(); } catch (e) {}
+      n++;
+      try {
+        if (rLGet('sinoky_tour') !== '1') return;
+        if (rLGet('sinoky_nono_recall') === rToday()) return;      /* 今天已经说过 → 收工 */
+        if (window.nonoRecall()) return;                           /* 说成功 → 收工 */
+        if (n < 4) setTimeout(bootRecall, 2800);
+      } catch (e) {}
     }
-    if (document.readyState === 'complete') setTimeout(bootRecall, 2400);
-    else window.addEventListener('load', function () { setTimeout(bootRecall, 2400); });
+    var kick = function () { setTimeout(bootRecall, 2400); };
+    if (document.readyState === 'complete') kick();
+    else window.addEventListener('load', kick);
   })();
 '''
 

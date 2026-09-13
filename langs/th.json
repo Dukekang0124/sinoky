@@ -583,5 +583,7 @@
   "You last spoke Chinese {d} days ago — let’s pick up where you stopped.": "ครั้งสุดท้ายที่คุณพูดภาษาจีนคือ {d} วันที่แล้ว — มาฝึกต่อจากจุดเดิมกัน",
   "Yesterday this line scored {s}. Beat it today?": "เมื่อวานประโยคนี้ได้ {s} คะแนน วันนี้ทำได้มากกว่านี้ไหม",
   "Yesterday this line scored {s}. One more try — it will stick.": "เมื่อวานประโยคนี้ได้ {s} คะแนน ลองอีกครั้งเดียวจะจำได้เลย",
-  "Practice that line": "ฝึกประโยคนี้"
+  "Practice that line": "ฝึกประโยคนี้",
+  "Say it back to me.": "พูดตามฉันสิ",
+  "Say it back": "พูดตาม"
 }

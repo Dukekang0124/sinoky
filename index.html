@@ -1179,7 +1179,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.4';
+var APP_VERSION = '0.23.5';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -8029,6 +8029,12 @@ SHARE.playDeepLink = function(){
     if (v !== 'home') return false;
     var panel = document.getElementById('nono-panel');
     if (panel && panel.style.display === 'block') return false;   /* 面板开着就不叠一层 */
+    /* v0.23.5 位阶：零开口用户先收「招手邀请」（§12，直接促开口）——
+       导览邀请是「介绍功能」，按 Edify Gate 属二级位置，等「已开口 或
+       今天已被邀请过」再出现。两个邀请都在 home、都在 boot 后 8 秒，
+       不定先后就会在首屏叠两层浮层。 */
+    if (typeof waveZeroSpeak === 'function' && waveZeroSpeak()
+        && rLGet('sinoky_nono_wave') !== rToday()) return false;
     return true;
   }
   function dismissInvite(remember) {
@@ -8282,6 +8288,134 @@ SHARE.playDeepLink = function(){
     var kick = function () { setTimeout(bootRecall, 2400); };
     if (document.readyState === 'complete') kick();
     else window.addEventListener('load', kick);
+  })();
+
+  /* ---------- 12. 首访招手邀请：「我先说中文，你回我一句」（S1-M3，P0） ----------
+     规划原文（2026-09-13 诺诺IP融合规划 §3.1）：
+       现状（实测）"Hi, I'm Nono 🐼 Your first line today: 你好 (nǐ hǎo).
+                     Tap it and say it out loud."
+         —— 这句是「关于诺诺的」：介绍自己 + 派作业，占掉首屏却换不来开口。
+       改为 [诺诺 wave 招手] 先说中文「你好！(nǐ hǎo)」→ 再邀请「Say it back to me.」
+         —— 第一秒就建立「我说 → 你说」的对话节律，为 S3「我问你答」铺路。
+     差别就是这一句：把首次打开的 60 秒从「看介绍」变成「已经开过口了」。
+     首句开口率是本产品唯一的北极星（S1 决定「会不会有第二句」）。
+
+     位阶（与 §8 导览邀请的关系）—— 两个邀请都在 home、都在 boot 后 8 秒，
+     不定先后就会在首屏叠两层浮层：
+       §8「诺诺带你认识产品」按 Edify Gate 是「不 edify 但必需」⇒ 二级位置、绝不占主路径；
+       本层「邀请你回一句」直接产出开口 ⇒ 主路径。
+       定案：零开口用户先收招手邀请；导览邀请等「已开口 或 今天已被邀请过」再出现
+       （§8 inviteOk() 里加 1 行条件，见同批改动）。
+
+     时机：boot 后 8 秒起检查（给用户看完首屏、过引导卡的缓冲），不满足则每 2.5s 重试，
+       最多 ~90s 窗口 —— 一次性 setTimeout 在冷启动时序竞争下会永久失败
+       （v0.23.4 实测教训，见 skill cold-start-timing-race-diagnosis）。
+       窗口用尽仍未发出（例如引导卡一直没关）⇒ 交还原分支，
+       保证「首访一定有一句问候」这条底线不因为本层而破。
+     条件：home && 零开口 && 首启引导卡已过（sinoky_tour === '1'）&& 面板没开
+           && 麦克风没在忙 && 今天没发过。
+     出口：「Say it back」→ nonoPracticeKey('arrival#0')
+       （SCENES 首场景首句 = 你好 / Nǐ hǎo / Hello!）——
+       不选场景、直接回一句；判分后 S.nono.last.key 记 arrival#0
+       ⇒ 次日由 §11「诺诺记得你」接上（首次开口 → 被记住，闭环）。
+     埋点：S.feat.nonoWave（本地计数，随进度/会话结束 flush，零新增 KV 写）。
+     i18n：新增 2 个 key × 6 语言（见 _add-wave.py）；
+       「你好！」是目标语内容，按主代码惯例不译（与 8 姿态表 wave.cn 一致）。
+     ========================================================================== */
+  var WAVE = {
+    hz: '你好！',                  /* 目标语内容：不译 */
+    py: 'nǐ hǎo',
+    invite: 'Say it back to me.', /* → T()，已入 6 语言字典 */
+    btn: 'Say it back'            /* → T()，已入 6 语言字典 */
+  };
+  var WAVE_DELAY = 8000, WAVE_RETRY = 2500, WAVE_TRIES = 33;   /* 8s 起 · 2.5s 一次 · 约 90s 窗口 */
+  var waveTimer = null, waveLeft = 0, waveFb = false;
+
+  /* 零开口 = 一句都没练过。这既是首访的判据，也覆盖「装了但一直没开口」的老用户
+     —— 这类人正是最需要被邀请一次的（I-018）。 */
+  function waveZeroSpeak() {
+    var n = 0;
+    try {
+      var ph = (typeof S !== 'undefined' && S && S.phrases) || {};
+      Object.keys(ph).forEach(function (k) { n += ((ph[k] || []).length); });
+    } catch (e) {}
+    return n === 0;
+  }
+  window.nonoWave = function () {
+    try {
+      if (!waveZeroSpeak()) return false;                            /* 已开过口 → 不需要邀请 */
+      if ((typeof window.nonoView === 'function' ? window.nonoView() : '') !== 'home') return false;
+      var N = window.NONO || {};
+      if (N.closed) return false;                                    /* 尊重「关掉陪伴」开关 */
+      if (rLGet('sinoky_tour') !== '1') return false;                /* 首启引导卡还没过 → 不抢（I-014） */
+      if (rLGet('sinoky_nono_wave') === rToday()) return false;      /* 每天最多邀请一次 */
+      /* 面板若已被**用户**用在别处（练习 / 聊天 / 导览）→ 不抢。
+         这里**故意不**检查「面板是否已开」：主代码的「今日句」nonoDailyLine()
+         比注入层更早执行（go('home') 是同步的），它会先说一句随机句并占住面板；
+         2026-09-13 实测：包装 window.nonoDailyLine 拦不住它（主代码调的是内部绑定）。
+         而对一句都没说过的人，那句随机句恰恰是该被本邀请替换掉的东西 ⇒ 允许覆盖。 */
+      if (panelOpen() && (N.mode === 'practice' || N.mode === 'chat' || N.mode === 'tour')) return false;
+      if (typeof window.nonoBusy === 'function' && window.nonoBusy()) return false;
+      var dd = (typeof window.nonoDaily === 'function') ? window.nonoDaily() : null;
+      if (dd && dd.n >= 4) return false;                             /* 走 nonoShow ⇒ 吃面板配额，满则让位 */
+
+      rLSet('sinoky_nono_wave', rToday());
+      stageCount('nonoWave');
+      window.nonoShow(
+        '<b>' + WAVE.hz + '</b> (' + WAVE.py + ')<br>' + T(WAVE.invite),
+        { pose: 'wave', priority: 'result',
+          actions: [
+            /* onclick 是双引号包裹的属性 ⇒ fn 里的字符串只能用单引号 */
+            { t: '🎙️ ' + T(WAVE.btn), fn: "nonoPracticeKey('arrival#0')" },
+            { t: T('Later'), fn: 'nonoMin()', ghost: true }
+          ] });
+      return true;
+    } catch (e) { return false; }   /* 任何异常都退回原逻辑，绝不影响开口 */
+  };
+  function waveTick() {
+    if (window.nonoWave()) { waveTimer = null; return; }
+    if (waveLeft-- > 0) { waveTimer = setTimeout(waveTick, WAVE_RETRY); return; }
+    waveTimer = null;
+    /* 窗口用尽仍未发出 → 交还原分支（原分支 = 老的「Hi, I'm Nono 🐼」问候）。
+       注意 _ncg2 指向 §3 包装后的函数，不是本函数 ⇒ 不会递归。 */
+    if (waveFb && typeof _ncg2 === 'function') { try { _ncg2.call(window, false); } catch (e) {} }
+  }
+  function waveKick(fb) {
+    if (fb) waveFb = true;
+    if (waveTimer) return;                       /* 已在等 → 不重复排（但保留可能升级的兜底许可） */
+    waveLeft = WAVE_TRIES;
+    waveTimer = setTimeout(waveTick, WAVE_DELAY);
+  }
+  if (typeof window.nonoContextGreet === 'function') {
+    var _ncg2 = window.nonoContextGreet;
+    window.nonoContextGreet = function (manual) {
+      if (!manual) {
+        try {
+          /* 首访零开口：拦下原「介绍自己 + 派作业」气泡（它会立刻 show 并吃掉配额），
+             改由 waveKick 在 8 秒后发「招手邀请」。
+             两者是同一件事的两种说法 ⇒ 由 waveTick 二选一，绝不两头都不发。 */
+          if ((typeof window.nonoView === 'function' ? window.nonoView() : '') === 'home'
+              && waveZeroSpeak() && rLGet('sinoky_nono_wave') !== rToday()) {
+            waveKick(true);
+            return;
+          }
+        } catch (e) {}
+      }
+      return _ncg2.apply(this, arguments);
+    };
+  }
+  /* 冷启动补一次：首访用户「打开就停在 home」，不经过 go() ⇒ 上面那条包装不会触发。
+     前置做廉价判断（不满足就没必要排 90 秒定时器）；故意不检查 sinoky_tour ——
+     让窗口覆盖「用户点掉引导卡」的那一刻，而不是一开局就放弃。 */
+  (function () {
+    var kick = function () {
+      try {
+        if (!waveZeroSpeak() || rLGet('sinoky_nono_wave') === rToday()) return;
+        waveKick(false);
+      } catch (e) {}
+    };
+    if (document.readyState === 'complete') setTimeout(kick, 1600);
+    else window.addEventListener('load', function () { setTimeout(kick, 1600); });
   })();
 
 })();
