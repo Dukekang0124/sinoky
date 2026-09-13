@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Credits &amp; licences · Sinoky</title>
+<meta name="description" content="Third-party components, licences and data sources used by Sinoky.">
+<link rel="icon" href="icons/favicon-32.png">
+<style>
+  :root{ --bg:#0e1020; --card:#1a1d33; --txt:#eef0f6; --sub:#9aa0b8; --t2:#2aa98f; --line:rgba(255,255,255,.12); --red:#e63946; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.7;padding:24px 18px calc(40px + env(safe-area-inset-bottom));max-width:680px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .tag{color:var(--sub);font-size:13px;margin-bottom:20px}
+  h2{font-size:16px;margin:26px 0 8px;color:var(--t2)}
+  p{font-size:14px;margin:8px 0}
+  .small{color:var(--sub);font-size:12.5px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
+  a{color:var(--t2);text-decoration:none}
+  .back{display:inline-block;margin-top:28px;padding:10px 16px;background:var(--t2);color:#fff;border-radius:10px;font-size:14px;font-weight:600}
+  ul{font-size:14px;padding-left:20px;margin:8px 0}
+  li{margin:6px 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px}
+  .lg{display:inline-block;font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:1px 8px;margin-left:6px;vertical-align:1px}
+</style>
+</head>
+<body>
+  <h1>Credits &amp; licences</h1>
+  <div class="tag">Sinoky — Speak Chinese where it matters · Last updated: 2026-09-13</div>
+
+  <div class="box">
+    <strong>Why this page exists.</strong> Sinoky is built on the work of others. This page lists every
+    third-party component and data set it uses, together with the licence it is used under, so that the
+    required copyright notices travel with the product.
+  </div>
+
+  <h2>1. Writing &amp; stroke order</h2>
+  <ul>
+    <li><b>Hanzi Writer</b><span class="lg">MIT</span> — stroke animation and quiz engine.
+      Copyright its respective authors. <code>vendor/hanzi-writer.min.js</code></li>
+    <li><b>Make Me a Hanzi</b> — stroke order data (<code>data/strokes/*.json</code>), derived from
+      glyphs of the Arphic Public Fonts. Distributed under the
+      <a href="ARPHICPL.TXT" target="_blank" rel="noopener">Arphic Public License</a>.</li>
+    <li><b>Arphic Public Fonts</b> — the glyph source for the stroke data above. The full licence text is
+      retained unaltered as <a href="ARPHICPL.TXT" target="_blank" rel="noopener">ARPHICPL.TXT</a>
+      in the root of the product, as required by §1 of that licence.</li>
+  </ul>
+
+  <h2>2. Pinyin</h2>
+  <ul>
+    <li><b>pinyin-pro</b><span class="lg">MIT</span> — pinyin conversion, tone marks and heteronym handling.
+      <code>vendor/pinyin-pro.bundle.mjs</code></li>
+  </ul>
+
+  <h2>3. QR codes</h2>
+  <ul>
+    <li><b>qrcode-generator v1.4.4</b><span class="lg">MIT</span> — QR encoding for share cards.
+      Copyright &copy; 2009 Kazuhiko Arase. Inlined into <code>index.html</code> with the original
+      copyright header preserved verbatim at the head of the block.</li>
+    <li class="small">&#8220;QR Code&#8221; is a registered trademark of DENSO WAVE INCORPORATED.</li>
+  </ul>
+
+  <h2>4. Debugging</h2>
+  <ul>
+    <li><b>vConsole</b><span class="lg">MIT</span> — on-device debug console, loaded only in debug builds.
+      Copyright Tencent. <code>vendor/vconsole.min.js</code></li>
+  </ul>
+
+  <h2>5. Audio</h2>
+  <ul>
+    <li><b>Scene and tone audio</b> — recorded by the author of Sinoky and owned by this project.</li>
+    <li><b>Microsoft Edge text-to-speech</b> — used at runtime to voice phrases that have no recording.
+      Generated audio is streamed for playback only, never stored, and is not part of the recorded corpus.</li>
+  </ul>
+
+  <h2>6. Fonts used for rendering</h2>
+  <p class="small">Sinoky does not ship any font files. Chinese text is rendered with the fonts already
+  installed on your device (falling back through a CJK stack such as Noto Sans CJK, PingFang SC, or
+  Microsoft YaHei). No webfont is downloaded and no font file is redistributed.</p>
+
+  <h2>7. Content</h2>
+  <p class="small">All 31 learning scenes, the HSK-graded flashcard sets, and every English/Chinese
+  sentence pair were written for Sinoky. City photographs are used with permission or generated for
+  this project. If you believe something here is mis-attributed, please write to
+  <a href="mailto:hello@sinoky.app">hello@sinoky.app</a> and we will correct it.</p>
+
+  <p class="small" style="margin-top:18px">Licence texts bundled with this product:
+    <a href="ARPHICPL.TXT" target="_blank" rel="noopener">ARPHICPL.TXT</a> (Arphic Public License).</p>
+
+  <a class="back" href="./">&#8592; Back to Sinoky</a>
+</body>
+</html>

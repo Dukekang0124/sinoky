@@ -283,7 +283,9 @@
   "A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.": "Un horizonte moderno y hotpot de res en Shenzhen. Toca, escucha y repítelo 3 veces.",
   "All landmarks": "Todos los hitos",
   "All paths": "Todas las rutas",
-  "All pronunciation audio in Sinoky is original content.": "Todo el audio de pronunciación en Sinoky es contenido original.",
+  "Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.": "El audio de escenas y tonos lo graba el autor de Sinoky. Las frases sin grabación usan la síntesis de voz de Microsoft Edge.",
+  "QR code: qrcode-generator (MIT License, Kazuhiko Arase).": "Código QR: qrcode-generator (licencia MIT, Kazuhiko Arase).",
+  "Full credits and license texts": "Créditos completos y textos de licencia",
   "All the places and situations you can practise.": "Todos los lugares y situaciones que puedes practicar.",
   "Arphic Public License": "Arphic Public License",
   "Arrange": "Organizar",
@@ -585,5 +587,6 @@
   "Yesterday this line scored {s}. One more try — it will stick.": "Ayer esta frase sacó {s}. Un intento más y se te queda.",
   "Practice that line": "Practicar esa frase",
   "Say it back to me.": "Repítelo conmigo.",
-  "Say it back": "Repetir"
+  "Say it back": "Repetir",
+  "That is the whole set — back to the first one. Nice work!": "Ese era el último — volvemos al primero. ¡Buen trabajo!"
 }

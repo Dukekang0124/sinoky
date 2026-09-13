@@ -299,7 +299,9 @@
   "A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.": "ท้องฟ้าแห่งเมืองและฮอทพอตเนื้อในเซินเจิ้น แตะ ฟัง แล้วพูดตาม 3 ครั้ง.",
   "All landmarks": "สถานที่ทั้งหมด",
   "All paths": "เส้นทางทั้งหมด",
-  "All pronunciation audio in Sinoky is original content.": "เสียงออกเสียงทั้งหมดใน Sinoky เป็นคอนเทนต์ต้นฉบับ",
+  "Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.": "เสียงของสถานการณ์และเสียงวรรณยุกต์บันทึกโดยผู้เขียน Sinoky ประโยคที่ยังไม่มีไฟล์เสียงใช้เสียงสังเคราะห์ของ Microsoft Edge",
+  "QR code: qrcode-generator (MIT License, Kazuhiko Arase).": "คิวอาร์โค้ด: qrcode-generator (สัญญาอนุญาต MIT, Kazuhiko Arase)",
+  "Full credits and license texts": "เครดิตฉบับเต็มและข้อความสัญญาอนุญาต",
   "All the places and situations you can practise.": "สถานที่และสถานการณ์ทั้งหมดที่คุณฝึกได้",
   "Arphic Public License": "Arphic Public License",
   "Arrange": "จัดเรียง",
@@ -585,5 +587,6 @@
   "Yesterday this line scored {s}. One more try — it will stick.": "เมื่อวานประโยคนี้ได้ {s} คะแนน ลองอีกครั้งเดียวจะจำได้เลย",
   "Practice that line": "ฝึกประโยคนี้",
   "Say it back to me.": "พูดตามฉันสิ",
-  "Say it back": "พูดตาม"
+  "Say it back": "พูดตาม",
+  "That is the whole set — back to the first one. Nice work!": "นั่นคือชุดทั้งหมด — กลับไปข้อแรก เก่งมาก!"
 }

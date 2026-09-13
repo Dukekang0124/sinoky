@@ -172,7 +172,9 @@
   "Pinyin:": "拼音：",
   "(MIT License). On-device debug console:": "（MIT 许可）。本机调试控制台：",
   "(MIT License, Tencent).": "（MIT 许可，腾讯）。",
-  "All pronunciation audio in Sinoky is original content.": "Sinoky 全部发音音频均为原创内容。",
+  "Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.": "场景与声调音频由 Sinoky 作者本人录制；没有录音的句子使用微软 Edge 语音合成。",
+  "QR code: qrcode-generator (MIT License, Kazuhiko Arase).": "二维码：qrcode-generator（MIT 许可，Kazuhiko Arase）。",
+  "Full credits and license texts": "完整鸣谢与许可全文",
   "Loading…": "加载中…",
   "★ 0 saved": "★ 已收藏 0 词",
   "Loading the HSK1 deck…": "正在加载 HSK1 字卡…",
@@ -585,5 +587,6 @@
   "Yesterday this line scored {s}. One more try — it will stick.": "昨天这句 {s} 分。再来一次，就记住了。",
   "Practice that line": "练这一句",
   "Say it back to me.": "说给我听。",
-  "Say it back": "回一句"
+  "Say it back": "回一句",
+  "That is the whole set — back to the first one. Nice work!": "这一组练完了 —— 回到第一题。做得好！"
 }

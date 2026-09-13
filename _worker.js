@@ -120,7 +120,8 @@ const ALLOWED_ORIGINS = ['https://sinoky.pages.dev', 'https://localhost', 'capac
 // 自定义域名（如 https://sinoky.com）上线后，同源访问会由 sameHost 自动放行，无需加进此白名单；
 // 此数组仅用于放行「非同源但合法的第三方站」（一般留空）。
 const RATE_WINDOW = 60_000;   // 滑动窗口 60 秒
-const RATE_MAX = 40;          // 每 IP 窗口内最多 40 次（正常用户连练 10 句也远不到）
+const RATE_MAX = 120;         // 每 IP 窗口内最多 120 次。v0.23.8（UX 评审 M14）：原为 40 —— 公司/校园网共享出口
+                              // 多用户会互相挤掉。防刷仍由 Origin allowlist + DO 强一致计数承担，单用户正常使用远不会到 120。
 const RATE_MAP = new Map();   // 兜底：无 DO/KV 绑定时（本地 dev）用 in-isolate 近似计数
 
 async function rateOk(ip, env) {
@@ -240,11 +241,26 @@ async function cosyTts(text, voiceShort, instruct) {
 async function recordStat(env, uid, st) {
   if (!env.PROFILES || !uid || !st) return;
   const key = 's:' + uid;
-  let s = { first: 0, last: 0, days: [], phrases: 0, tone: 0, day1Done: false, scenes: {} };
+  let s = { first: 0, last: 0, days: [], phrases: 0, tone: 0, day1Done: false, scenes: {}, src: '', funnel: {}, err: { n: 0, last: '' } };
   let s_before = null;  // v0.3.39：保留写入前的独立副本，用于判断业务字段是否真变化
   try {
     const raw = await env.PROFILES.get(key);
     if (raw) { try { s_before = JSON.parse(raw); s = Object.assign(s, s_before); } catch (e) { /* 脏数据则重建 */ } }
+  /* v0.23.8 FIX（真实缺陷，本轮测试咬出来的）：Object.assign 是**浅拷贝** ——
+     s.feat / s.scenes / s.err 这些嵌套对象与 s_before 的同名属性指向**同一个对象**。
+     后面原地改 s.err.n 会把 s_before 一起改掉 ⇒ 脏检查
+        before = sig(s_before)  与  sig(s)
+     恒相等（两边看的是同一块内存）⇒ 这些字段的**单独变化永远触发不了写入**。
+     （v0.3.36 / v0.3.39 起就在这个坑上，只是没人验过。）
+
+     这里只隔离**本组新增**的 funnel / err：它们的写放大有上界
+     （漏斗每位一生 0→1 一次，共 ≤4 次；错误用 3 档粗桶），不威胁每天 1000 写的配额。
+     feat / scenes 的同一缺陷**本轮不动** —— 修它会让「只浏览场景、不说话」的用户
+     每次 scene 计数变化都写一次 KV，那是**配额决策**，应交康哥单独拍板。 */
+  if (s_before) {
+    s.funnel = Object.assign({}, s_before.funnel || {});
+    s.err = Object.assign({}, s_before.err || { n: 0, last: '' });
+  }
   } catch (e) { /* 读失败用默认值 */ }
 
   const now = Date.now();
@@ -253,6 +269,8 @@ async function recordStat(env, uid, st) {
   s.last = now;
   if (!Array.isArray(s.days)) s.days = [];
   if (s.days.indexOf(today) < 0) s.days.push(today);
+  // v0.23.8（UX 评审 L6）：与前端同口径，日期数组上限 400 天
+  if (s.days.length > 400) s.days = s.days.slice(-400);
 
   // 幂等：累计量取 max（用户换设备/重复上报不会虚增）
   const ph = Math.max(0, Number(st.phrases) || 0);
@@ -260,6 +278,10 @@ async function recordStat(env, uid, st) {
   if (ph > (s.phrases || 0)) s.phrases = ph;
   if (tn > (s.tone || 0)) s.tone = tn;
   if (st.day1Done) s.day1Done = true;
+  /* v0.23.8 FIX：自测设备标记。src=test 不可逆——自测机不会“变回”真实用户，
+     否则一次误点 ?src=real 就把历史自测数据洗成真实数据。 */
+  if (String(st.src || '') === 'test') s.src = 'test';
+  else if (!s.src) s.src = 'real';
   // v0.3.36 功能级使用计数（tone/cards/reading/sentences/prog/scene 打开次数），同口径 max 幂等
   if (st.feat && typeof st.feat === 'object') {
     s.feat = s.feat || {};
@@ -267,6 +289,18 @@ async function recordStat(env, uid, st) {
       const v = Math.max(0, Number(st.feat[k]) || 0);
       if (v > (s.feat[k] || 0)) s.feat[k] = v;
     }
+  }
+  /* v0.23.8 FIX（审计 P3-13）：漏斗四步 —— OR 合并（走过就是走过）。 */
+  if (st.funnel && typeof st.funnel === 'object') {
+    s.funnel = s.funnel || {};
+    for (const fk of ['open', 'heard', 'spoke', 'verified']) if (st.funnel[fk]) s.funnel[fk] = 1;
+  }
+  /* 错误计数：n 取 max（幂等）；last 跟随 n 较大的一侧。 */
+  if (st.err && typeof st.err === 'object') {
+    const en = Math.max(0, Number(st.err.n) || 0);
+    s.err = s.err || { n: 0, last: '' };
+    if (en > (s.err.n || 0)) { s.err.n = en; if (st.err.last) s.err.last = String(st.err.last).slice(0, 160); }
+    else if (!s.err.last && st.err.last) s.err.last = String(st.err.last).slice(0, 160);
   }
   // 首次开口时间：只在 phrases 首次 >0 时记录（用于"首日完成首次挑战率"）
   if (ph > 0 && !s.firstPhraseAt) s.firstPhraseAt = now;
@@ -281,7 +315,13 @@ async function recordStat(env, uid, st) {
   // 业务字段 = phrases/tone/day1Done/feat/scenes/days；忽略 first/last/firstPhraseAt（时间戳每次变，非业务变化）。
   const sig = (o) => JSON.stringify([
     o.phrases || 0, o.tone || 0, !!o.day1Done,
-    o.feat || {}, o.scenes || {}, (o.days || []).slice().sort()
+    o.feat || {}, o.scenes || {}, (o.days || []).slice().sort(),
+    o.src || '',   /* v0.23.8：自测标记变化也要落盘 */
+    o.funnel || {},/* v0.23.8：漏斗四位各只从 0→1 一次 ⇒ 一生最多 4 次状态变化 */
+    /* v0.23.8（配额纪律）：错误数**必须用粗桶进 sig**。若直接放 n，就会
+       「每多一条错误 → 下一次上报多一次 KV 写」——错误越多写得越勤，
+       正好在最脆弱的时候加压。四档封顶，写放大上界是常数。 */
+    (function (n) { return n === 0 ? 0 : n < 3 ? 1 : n < 10 ? 2 : 3; })((o.err && o.err.n) || 0)
   ]);
   const before = s_before ? sig(s_before) : null;
   if (before !== null && before === sig(s)) {
@@ -305,19 +345,64 @@ async function summarizeStats(env) {
   const sceneDist = {};
   const featDist = {};   /* v0.3.36 功能使用分布 */
 
+  /* v0.23.8 FIX（审计 P0-2 / P0-3）：
+     - MAU：最近 7 / 30 个自然日内至少活跃 1 天（活跃日 = days 数组）。
+       这是“读时聚合”——复用本函数既有的全表遍历，**零新增 KV 写**。
+     - real 真实口径：把自测机（src=test）从比率里剔除。
+       否则自己在自己机器上刷的数字会假装成用户行为，判停线就是自欺。 */
+  const dayAgo = (n) => new Date(now - n * DAY).toISOString().slice(0, 10);
+  const c7 = dayAgo(6), c30 = dayAgo(29);   /* 含今天共 7 / 30 天 */
+  let mau7 = 0, mau30 = 0, mau7Real = 0, mau30Real = 0;
+  let usersReal = 0, usersTest = 0, dauReal = 0, day1Real = 0, toneReal = 0, phraseSumReal = 0;
+
+  /* v0.23.8 FIX（审计 P3-13）：漏斗四步 + 错误聚合（同样是读时聚合，零新增写） */
+  let fOpen = 0, fHeard = 0, fSpoke = 0, fVerif = 0;
+  let fOpenReal = 0, fHeardReal = 0, fSpokeReal = 0, fVerifReal = 0;
+  let errDevices = 0, errDevicesReal = 0, errTotal = 0;
+  const errTop = {};
+
   for (const k of keys) {
     const raw = await env.PROFILES.get(k.name);
     if (!raw) continue;
     let s; try { s = JSON.parse(raw); } catch (e) { continue; }
     users++;
+    const isTest = String(s.src || '') === 'test';
+    if (isTest) usersTest++; else usersReal++;
     const days = Array.isArray(s.days) ? s.days : [];
-    if (days.indexOf(today) >= 0) dau++;
+    if (days.indexOf(today) >= 0) { dau++; if (!isTest) dauReal++; }
     const ph = Number(s.phrases) || 0;
     phraseSum += ph;
-    if ((Number(s.tone) || 0) > 0) toneUsers++;
-    if (s.day1Done) day1Users++;
+    if (!isTest) phraseSumReal += ph;
+    if ((Number(s.tone) || 0) > 0) { toneUsers++; if (!isTest) toneReal++; }
+    if (s.day1Done) { day1Users++; if (!isTest) day1Real++; }
     if (s.scenes) for (const sc in s.scenes) sceneDist[sc] = (sceneDist[sc] || 0) + (Number(s.scenes[sc]) || 0);
     if (s.feat) for (const f in s.feat) featDist[f] = (featDist[f] || 0) + (Number(s.feat[f]) || 0);
+
+    /* 漏斗（v0.23.8）：每一步都按"走到过这一步的设备数"计，比率以 open 为分母。 */
+    const fu = s.funnel || {};
+    if (fu.open)     { fOpen++;     if (!isTest) fOpenReal++; }
+    if (fu.heard)    { fHeard++;    if (!isTest) fHeardReal++; }
+    if (fu.spoke)    { fSpoke++;    if (!isTest) fSpokeReal++; }
+    if (fu.verified) { fVerif++;    if (!isTest) fVerifReal++; }
+
+    /* 错误（v0.23.8）：设备数 / 总次数 / 最近一条的分布（取 top 5） */
+    const errN = (s.err && Number(s.err.n)) || 0;
+    if (errN > 0) {
+      errDevices++; errTotal += errN;
+      if (!isTest) errDevicesReal++;
+      const em = String((s.err && s.err.last) || 'unknown').slice(0, 80);
+      errTop[em] = (errTop[em] || 0) + 1;
+    }
+
+    /* MAU：days 里有无活跃日落在窗口内。
+       'YYYY-MM-DD' 的字典序即时间序 ⇒ 直接比字符串（避开 Date 解析）。 */
+    let a7 = false, a30 = false;
+    for (const d of days) {
+      if (d >= c7) { a7 = true; a30 = true; break; }
+      if (d >= c30) a30 = true;
+    }
+    if (a7) { mau7++; if (!isTest) mau7Real++; }
+    if (a30) { mau30++; if (!isTest) mau30Real++; }
 
     const first = Number(s.first) || 0;
     if (!first) continue;
@@ -336,9 +421,21 @@ async function summarizeStats(env) {
   const ppu = users ? Math.round((phraseSum / users) * 10) / 10 : 0;
   const fdr = pct(firstDayDone, e1), tur = pct(toneUsers, users);
 
+  /* v0.23.8：真实口径（排除自测机）—— 判停线只该看这一组 */
+  const rUsers = usersReal;
+  const rPpu = rUsers ? Math.round((phraseSumReal / rUsers) * 10) / 10 : 0;
+  const rDay1 = pct(day1Real, rUsers);
+
   return {
     ok: true, asOf: new Date(now).toISOString(),
     users, dau, phraseSum,
+    mau7, mau30,
+    real: {
+      users: usersReal, test: usersTest, dau: dauReal,
+      mau7: mau7Real, mau30: mau30Real,
+      phrasesPerUser: rPpu, day1DoneRate: rDay1, toneUsageRate: pct(toneReal, rUsers),
+      note: 'real = 排除 src=test 的自测设备；本机自测请用 ?src=test 打开一次（永久生效）'
+    },
     retention: {
       d1: d1, d3: d3, d7: d7,
       eligible: { d1: e1, d3: e3, d7: e7 },   // 分母：满对应天数的用户数
@@ -350,6 +447,24 @@ async function summarizeStats(env) {
     day1DoneRate: pct(day1Users, users),
     sceneDist,
     featDist,
+    /* v0.23.8 FIX（审计 P3-13）：漏斗四步 + 错误。比率分母统一用 open（"打开过的人里有多少…"）。 */
+    funnel: {
+      open: fOpen, heard: fHeard, spoke: fSpoke, verified: fVerif,
+      heardRate: pct(fHeard, fOpen), spokeRate: pct(fSpoke, fOpen), verifiedRate: pct(fVerif, fOpen),
+      note: 'open→heard→spoke→verified；verified = 判分成功过至少一次（唯一非自述的开口证据）'
+    },
+    funnelReal: {
+      open: fOpenReal, heard: fHeardReal, spoke: fSpokeReal, verified: fVerifReal,
+      spokeRate: pct(fSpokeReal, fOpenReal), verifiedRate: pct(fVerifReal, fOpenReal),
+      note: 'real = 排除 src=test 自测设备'
+    },
+    errors: {
+      devices: errDevices, devicesReal: errDevicesReal, total: errTotal,
+      deviceRate: pct(errDevices, users),
+      top: Object.keys(errTop).sort((a, b) => errTop[b] - errTop[a]).slice(0, 5)
+             .map((k) => ({ msg: k, devices: errTop[k] })),
+      note: '设备本地计数随 stat 上云（v0.23.8）；不是实时通道，采样偏差已消除但延迟到下次上报'
+    },
     // 判停线（OB §6.2）一眼对照；null 表示样本还不够，别急着下结论
     gate: {
       d7:        { target: 15, actual: d7,  pass: d7  !== null && d7  >= 15, enough: e7  > 0 },

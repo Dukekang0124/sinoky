@@ -299,7 +299,9 @@
   "A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.": "Современный город и говядина-хого в Шэньчжэне. Нажми, послушай и повтори 3 раза.",
   "All landmarks": "Все достопримечательности",
   "All paths": "Все пути",
-  "All pronunciation audio in Sinoky is original content.": "Всё аудио произношения в Sinoky — оригинальный контент.",
+  "Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.": "Аудио сцен и тонов записано автором Sinoky. Фразы без записи озвучиваются синтезом речи Microsoft Edge.",
+  "QR code: qrcode-generator (MIT License, Kazuhiko Arase).": "QR-код: qrcode-generator (лицензия MIT, Kazuhiko Arase).",
+  "Full credits and license texts": "Полные благодарности и тексты лицензий",
   "All the places and situations you can practise.": "Все места и ситуации для тренировки.",
   "Arphic Public License": "Arphic Public License",
   "Arrange": "Упорядочить",
@@ -585,5 +587,6 @@
   "Yesterday this line scored {s}. One more try — it will stick.": "Вчера эта фраза набрала {s}. Ещё разок — и запомнится.",
   "Practice that line": "Отработать эту фразу",
   "Say it back to me.": "Повтори за мной.",
-  "Say it back": "Повторить"
+  "Say it back": "Повторить",
+  "That is the whole set — back to the first one. Nice work!": "Это была вся серия — возвращаемся к первой. Отличная работа!"
 }

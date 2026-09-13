@@ -299,7 +299,9 @@
   "A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.": "Chân trời hiện đại và lẩu bò ở Thâm Quyến. Chạm, nghe rồi nói 3 lần.",
   "All landmarks": "Tất cả danh thắng",
   "All paths": "Tất cả lộ trình",
-  "All pronunciation audio in Sinoky is original content.": "Mọi audio phát âm trong Sinoky đều là nội dung gốc.",
+  "Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.": "Âm thanh của tình huống và thanh điệu do tác giả Sinoky thu âm. Các câu chưa có bản thu dùng giọng đọc tổng hợp của Microsoft Edge.",
+  "QR code: qrcode-generator (MIT License, Kazuhiko Arase).": "Mã QR: qrcode-generator (giấy phép MIT, Kazuhiko Arase).",
+  "Full credits and license texts": "Ghi công đầy đủ và toàn văn giấy phép",
   "All the places and situations you can practise.": "Mọi nơi và tình huống bạn có thể luyện tập.",
   "Arphic Public License": "Arphic Public License",
   "Arrange": "Sắp xếp",
@@ -585,5 +587,6 @@
   "Yesterday this line scored {s}. One more try — it will stick.": "Hôm qua câu này được {s}. Thử lại một lần là nhớ ngay.",
   "Practice that line": "Luyện câu này",
   "Say it back to me.": "Nói lại cho tôi nghe.",
-  "Say it back": "Nói lại"
+  "Say it back": "Nói lại",
+  "That is the whole set — back to the first one. Nice work!": "Hết cả bộ rồi — quay lại câu đầu nhé. Làm tốt lắm!"
 }

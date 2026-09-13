@@ -1,0 +1,64 @@
+name: Content gates
+
+# v0.23.8（审计 P1-3 / P2-4 / 组 3）：把「静态资源三层闸门」做成 CI。
+#
+# ── 为什么建这三道闸门 ────────────────────────────────────────────────
+# 三个都已经真实发生过、而且**在事件当场的所有检查里都是静默的**：
+#
+# ① 语法闸门（verify_syntax.mjs）
+#    v0.22.0 往 sw.js 的 ASSETS 里加了 15 条**没加引号**的路径 ⇒ 整个文件是
+#    SyntaxError ⇒ `navigator.serviceWorker.register('sw.js')` 每次都失败。
+#    因为 index.html 的 .catch(function(){}) 是**空 catch**，用户侧/控制台零痕迹。
+#    线上 sw.js 实测 http 200 + SyntaxError，**从 v0.23.0 一路带到 v0.23.7**。
+#    根因不是手滑，是**原来的验证脚本只校验 index.html 内联块 + 几个 JSON，
+#    从来没碰过 sw.js** —— 闸门不覆盖会出错的文件 = 假绿。
+#
+# ② i18n 闸门（check-i18n.mjs）
+#    v0.21.1 出过「字典有译文、界面仍显示英文」：新增 UI 文案只写了英文原文、
+#    忘了同步 langs/*.json。T() 查不到就返回原串 ⇒ 静默。
+#
+# ③ 署名闸门（check-credits.mjs）
+#    v0.23.6 内联了 qrcode-generator（MIT）。源码版权头保留了（许可已履行），
+#    但**用户可见的鸣谢清单里没有它**。加一个库 = 一个静默的合规缺口。
+#
+# ── 为什么不用 npm ci ────────────────────────────────────────────────
+# 三个脚本都是**零依赖**（只用 node: 内置）。省掉 install 让本 job 常在 20s 内。
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    name: syntax + i18n + credits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # ① 语法：index.html 三个内联块 + sw.js（经典脚本）+ _worker.js（ESM）
+      - name: Syntax gate — inline scripts, sw.js, _worker.js, data JSON
+        run: node _internal/verify_syntax.mjs
+
+      # ② i18n：T() 字面量 ⊆ 每个字典；6 个字典 key 集合一致；值不为空
+      - name: i18n gate — T() literals covered by all 6 dictionaries
+        run: node scripts/check-i18n.mjs
+
+      # ③ 署名：vendor/ 与内联库都在登记表内，且都写进「产品内鸣谢块 + credits.html」
+      - name: Credits gate — third-party notices present in both surfaces
+        run: node scripts/check-credits.mjs
+
+      # ④ 构建清单：仓库根新条目必须归类（否则该进包的没进包 / 内部文件被上线）
+      #    这一步不部署，只跑构建脚本的归类与依赖闭包断言。
+      - name: Build manifest gate — every root entry is classified
+        run: node scripts/build-web.mjs

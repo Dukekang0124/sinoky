@@ -1,8 +1,9 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.23.7';
+var CACHE = 'sinoky-v0.23.8';
 var ASSETS = [
   './',
   './index.html',
+  './credits.html',   /* v0.23.8：合规页应离线可达（从产品内鸣谢块链出） */
   './manifest.webmanifest',
   './version.json',
   './data/flashcards.hsk1.json',
@@ -15,21 +16,21 @@ var ASSETS = [
   './icons/icon-512.webp',
   './icons/favicon-32.png',
   /* v0.22.0 诺诺 IP：定妆图 + 8 姿态 + 3 空态。全部本地资源，接地即用。 */
-  ./icons/logo-header.png,
-  ./assets/brand/nono-splash.webp,
-  ./assets/brand/nono-hero.webp,
-  ./assets/brand/nono-share.webp,
-  ./assets/mascot/like.webp,
-  ./assets/mascot/cheer.webp,
-  ./assets/mascot/think.webp,
-  ./assets/mascot/listen.webp,
-  ./assets/mascot/sorry.webp,
-  ./assets/mascot/point.webp,
-  ./assets/mascot/wave.webp,
-  ./assets/mascot/note.webp,
-  ./assets/empty/general.webp,
-  ./assets/empty/network.webp,
-  ./assets/empty/study.webp,
+  './icons/logo-header.png',
+  './assets/brand/nono-splash.webp',
+  './assets/brand/nono-hero.webp',
+  './assets/brand/nono-share.webp',
+  './assets/mascot/like.webp',
+  './assets/mascot/cheer.webp',
+  './assets/mascot/think.webp',
+  './assets/mascot/listen.webp',
+  './assets/mascot/sorry.webp',
+  './assets/mascot/point.webp',
+  './assets/mascot/wave.webp',
+  './assets/mascot/note.webp',
+  './assets/empty/general.webp',
+  './assets/empty/network.webp',
+  './assets/empty/study.webp',
 ];
 
 self.addEventListener('install', function (e) {
@@ -72,7 +73,15 @@ self.addEventListener('fetch', function (e) {
       return res;
     }).catch(function () {
       return caches.match(e.request).then(function (hit) {
-        return hit || caches.match('./index.html');
+        if (hit) return hit;
+        /* v0.23.8（UX 评审 M13）：只给「文档导航」回落 app shell。
+           旧实现无条件回落 index.html —— 于是 data/strokes/*.json、vendor/*.js、
+           data/flashcards.*.json 抓不到时也拿到一坨 HTML，上层 r.json() 抛
+           `Unexpected token '<'`，用户看到的是解析错误而不是「离线不可用」。
+           数据/脚本请求改为直接失败，让调用方走自己的降级文案。 */
+        var acc = e.request.headers.get('accept') || '';
+        var isDoc = e.request.mode === 'navigate' || acc.indexOf('text/html') > -1;
+        return isDoc ? caches.match('./index.html') : Response.error();
       });
     })
   );

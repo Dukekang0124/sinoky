@@ -299,7 +299,9 @@
   "A modern skyline and beef hotpot in Shenzhen. Tap, listen, then say it 3 times.": "Cakrawala modern dan hotpot daging sapi di Shenzhen. Ketuk, dengar, lalu ucapkan 3 kali.",
   "All landmarks": "Semua landmark",
   "All paths": "Semua jalur",
-  "All pronunciation audio in Sinoky is original content.": "Semua audio pelafalan di Sinoky adalah konten asli.",
+  "Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.": "Audio skena dan nada direkam oleh penulis Sinoky. Frasa yang belum ada rekamannya memakai sintesis suara Microsoft Edge.",
+  "QR code: qrcode-generator (MIT License, Kazuhiko Arase).": "Kode QR: qrcode-generator (Lisensi MIT, Kazuhiko Arase).",
+  "Full credits and license texts": "Kredit lengkap dan teks lisensi",
   "All the places and situations you can practise.": "Semua tempat dan situasi yang bisa kamu praktikkan.",
   "Arphic Public License": "Arphic Public License",
   "Arrange": "Atur",
@@ -585,5 +587,6 @@
   "Yesterday this line scored {s}. One more try — it will stick.": "Kemarin kalimat ini dapat {s}. Coba sekali lagi, pasti nempel.",
   "Practice that line": "Latih kalimat itu",
   "Say it back to me.": "Ucapkan kembali padaku.",
-  "Say it back": "Ulangi"
+  "Say it back": "Ulangi",
+  "That is the whole set — back to the first one. Nice work!": "Itu tadi seluruh setnya — kembali ke yang pertama. Kerja bagus!"
 }

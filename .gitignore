@@ -13,3 +13,9 @@ www/
 android/
 android/app/build/
 .gradle/
+
+# v0.23.8 审计整改（fix-2026-09-13）的临时产物：全部可由脚本重建，不入库
+_internal/fix-2026-09-13/tmp/
+_internal/fix-2026-09-13/_old_index.html
+_internal/fix-2026-09-13/_worker_testable*.mjs
+_internal/fix-2026-09-13/checklist-report.md

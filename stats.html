@@ -42,6 +42,38 @@
       <div class="card"><div class="n" id="day1">—</div><div class="l">Finished Day 1</div></div>
     </div>
 
+    <h2>Real vs self-test <span style="text-transform:none;font-weight:400;color:#6b7f94">mark a test device: open with ?src=test once</span></h2>
+    <div class="grid">
+      <div class="card"><div class="n" id="rusers">&#8212;</div><div class="l">Real users</div><div class="h">excludes self-test</div></div>
+      <div class="card"><div class="n" id="tusers">&#8212;</div><div class="l">Self-test devices</div></div>
+      <div class="card"><div class="n" id="rmau30">&#8212;</div><div class="l">MAU 30d (real)</div><div class="h">monthly active</div></div>
+      <div class="card"><div class="n" id="rmau7">&#8212;</div><div class="l">MAU 7d (real)</div><div class="h">weekly active</div></div>
+      <div class="card"><div class="n" id="mau30">&#8212;</div><div class="l">MAU 30d (all)</div></div>
+      <div class="card"><div class="n" id="mau7">&#8212;</div><div class="l">MAU 7d (all)</div></div>
+      <div class="card"><div class="n" id="rppu">&#8212;</div><div class="l">Phrases / real user</div><div class="h">north star, clean</div></div>
+      <div class="card"><div class="n" id="rday1">&#8212;</div><div class="l">Finished Day 1 (real)</div></div>
+    </div>
+
+    <h2>Funnel <span style="text-transform:none;font-weight:400;color:#6b7f94">of those who opened &middot; real = excludes self-test</span></h2>
+    <div class="grid">
+      <div class="card"><div class="n" id="fu_open">&#8212;</div><div class="l">Opened</div><div class="h">real: <span id="fu_open_r">&#8212;</span></div></div>
+      <div class="card"><div class="n" id="fu_heard">&#8212;</div><div class="l">Heard Chinese</div><div class="h">real: <span id="fu_heard_r">&#8212;</span></div></div>
+      <div class="card"><div class="n" id="fu_spoke">&#8212;</div><div class="l">Spoke out loud</div><div class="h">real: <span id="fu_spoke_r">&#8212;</span></div></div>
+      <div class="card"><div class="n" id="fu_verif">&#8212;</div><div class="l">Verified by score</div><div class="h">real: <span id="fu_verif_r">&#8212;</span></div></div>
+      <div class="card"><div class="n" id="fu_spoke_rate">&#8212;</div><div class="l">Open &rarr; spoke</div><div class="h">all devices</div></div>
+      <div class="card"><div class="n" id="fu_verif_rate">&#8212;</div><div class="l">Open &rarr; verified</div><div class="h">all devices</div></div>
+      <div class="card"><div class="n" id="fu_spoke_rate_r">&#8212;</div><div class="l">Open &rarr; spoke (real)</div></div>
+      <div class="card"><div class="n" id="fu_verif_rate_r">&#8212;</div><div class="l">Open &rarr; verified (real)</div></div>
+    </div>
+
+    <h2>Errors <span style="text-transform:none;font-weight:400;color:#6b7f94">reported with stats, not real-time</span></h2>
+    <div class="grid">
+      <div class="card"><div class="n" id="err_dev">&#8212;</div><div class="l">Devices with errors</div><div class="h">real: <span id="err_dev_r">&#8212;</span></div></div>
+      <div class="card"><div class="n" id="err_total">&#8212;</div><div class="l">Total errors caught</div></div>
+      <div class="card"><div class="n" id="err_rate">&#8212;</div><div class="l">Devices affected</div><div class="h">share of all users</div></div>
+    </div>
+    <table><tbody id="errtop"></tbody></table>
+
     <h2>Retention (only counts users old enough)</h2>
     <div class="grid">
       <div class="card"><div class="n" id="d1">—</div><div class="l">Day 1</div><div class="h" id="d1e"></div></div>
@@ -113,6 +145,37 @@ fetch('api/stats' + (TOK ? '?token=' + encodeURIComponent(TOK) : '')).then(funct
     document.getElementById(id + 'e').textContent = el + ' users old enough';
   }
   setRet('d1', r.d1, e.d1); setRet('d3', r.d3, e.d3); setRet('d7', r.d7, e.d7);
+  /* v0.23.8 FIX：真实口径（排除 src=test 自测设备）+ MAU 窗口 */
+  (function(){
+    var R = j.real || {};
+    function num(id, v){ document.getElementById(id).textContent = (v == null ? '—' : v); }
+    function pctOf(id, v){ document.getElementById(id).textContent = (v == null ? '—' : v + '%'); }
+    num('rusers', R.users); num('tusers', R.test);
+    num('rmau30', R.mau30); num('rmau7', R.mau7);
+    num('mau30', j.mau30);  num('mau7', j.mau7);
+    num('rppu', R.phrasesPerUser); pctOf('rday1', R.day1DoneRate);
+  })();
+
+  /* v0.23.8 FIX（审计 P3-13）：漏斗 + 错误。缺字段时一律显示 —（老接口降级安全）。 */
+  (function(){
+    var F = j.funnel, FR = j.funnelReal || {}, E = j.errors || {};
+    function num(id, v){ var el = document.getElementById(id); if (el) el.textContent = (v == null ? '\u2014' : v); }
+    function pctOf(id, v){ var el = document.getElementById(id); if (el) el.textContent = (v == null ? '\u2014' : v + '%'); }
+    if (F) {
+      num('fu_open', F.open); num('fu_heard', F.heard); num('fu_spoke', F.spoke); num('fu_verif', F.verified);
+      pctOf('fu_spoke_rate', F.spokeRate); pctOf('fu_verif_rate', F.verifiedRate);
+    }
+    num('fu_open_r', FR.open); num('fu_heard_r', FR.heard); num('fu_spoke_r', FR.spoke); num('fu_verif_r', FR.verified);
+    pctOf('fu_spoke_rate_r', FR.spokeRate); pctOf('fu_verif_rate_r', FR.verifiedRate);
+    num('err_dev', E.devices); num('err_dev_r', E.devicesReal);
+    num('err_total', E.total); pctOf('err_rate', E.deviceRate);
+    var top = E.top || [];
+    var tb = document.getElementById('errtop');
+    if (tb) tb.innerHTML = top.length
+      ? top.map(function(x){ return '<tr><td>' + x.msg.replace(/[<>]/g, '') + '</td><td>' + x.devices + ' device(s)</td></tr>'; }).join('')
+      : '<tr><td style="color:#6b7f94">no errors reported yet</td><td></td></tr>';
+  })();
+
 
   var g = j.gate;
   var rows = [

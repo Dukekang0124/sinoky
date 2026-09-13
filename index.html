@@ -956,7 +956,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div class="reader-box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <b style="font-size:15px">📖 Reader</b>
-        <button class="btn ghost" style="padding:6px 10px" onclick="closeReader()">✕</button>
+        <button class="btn ghost" style="padding:6px 10px" onclick="closeReader()" aria-label="Close the reader">✕</button>
       </div>
       <img id="reader-img" src="" alt="">
       <div class="reader-words" id="reader-words"></div>
@@ -1044,7 +1044,9 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
         <summary>Credits &amp; open-source licenses</summary>
         <p>Writing engine: <b>Hanzi Writer</b> (MIT License). Stroke order data via the <b>Make Me a Hanzi</b> project, based on glyphs from Arphic Public Fonts, distributed under the <a href="ARPHICPL.TXT" target="_blank" rel="noopener">Arphic Public License</a>.</p>
         <p>Pinyin: <b>pinyin-pro</b> (MIT License). On-device debug console: <b>vConsole</b> (MIT License, Tencent).</p>
-        <p>All pronunciation audio in Sinoky is original content.</p>
+        <p>Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.</p>
+        <p>QR code: qrcode-generator (MIT License, Kazuhiko Arase).</p>
+        <p><a href="credits.html" target="_blank" rel="noopener">Full credits and license texts</a></p>
       </details>
     </div>
   </section>
@@ -1104,8 +1106,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <img id="nono-pose" src="assets/mascot/like.webp" alt="Nono">
       <b>Nono</b>
       <span class="np-acts">
-        <button onclick="nonoMin()" title="Minimise">–</button>
-        <button onclick="nonoClose()" title="Hide for today">✕</button>
+        <button onclick="nonoMin()" title="Minimise" aria-label="Minimise the assistant">–</button>
+        <button onclick="nonoClose()" title="Hide for today" aria-label="Hide the assistant for today">✕</button>
       </span>
     </div>
     <div class="np-body" id="nono-msg"></div>
@@ -1179,7 +1181,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.7';
+var APP_VERSION = '0.23.8';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2618,6 +2620,40 @@ async function pushProfile(useBeacon){
 /* v0.3.33 M2 埋点：从本地状态推导匿名统计。
    只算"说过多少句 / 练了多少声调题 / Day1 是否通关 / 各场景分布"，不含任何内容或个人身份信息。
    后端用 max 语义幂等入库，重复上报不会虚增；统计失败绝不影响进度保存。 */
+/* ===== v0.23.8 FIX · 自测设备标记（审计 P0-3）=====
+   问题：看板上的“设备数 / 留存 / 北极星”里混着我自己的测试机，
+        看不出真实用户到底有几个 ⇒ 所有结论都可能是自己刷出来的。
+   做法：URL 带一次 ?src=test 即永久生效（存本地），?src=real 可清除。
+        上报只多一个 'test'/'real' 字符串，不含任何身份或内容信息；零新增请求、零 KV 写。
+   用法：开一次 https://sinoky.pages.dev/?src=test 就行（之后带不带参数都算自测）。 */
+var SELF_SRC = 'real';
+try {
+  if (lsGet('sinoky_self') === '1') SELF_SRC = 'test';
+  var _srcQ = (location.search.match(/[?&]src=(test|real)(?:&|$)/) || [])[1];
+  if (_srcQ === 'test') { lsSet('sinoky_self', '1'); SELF_SRC = 'test'; }
+  else if (_srcQ === 'real') { lsSet('sinoky_self', ''); SELF_SRC = 'real'; }
+} catch (e) { /* 读不了就默认 real */ }
+/* ===== v0.23.8 FIX end ===== */
+
+/* ===== v0.23.8 FIX · 错误计数 + 漏斗四步（审计 P3-13）=====
+   原方案（window.onerror → /api/err → Analytics Engine writeDataPoint）需要 CF 后台
+   加 binding（人工步骤）+ 新增一条上报通道。这里改用「复用已有的节流上报」：
+   把计数附在 buildStat() 上，随 /api/profile 一起走，后端读时聚合。
+   ⇒ 零新增请求、零新增 KV 键。详见 _internal/fix-2026-09-13/fix_6_metering.py 头注。
+
+   另：错误捕获本身 v0.3.8 就有了（logErr + ERR_LOG），但它只存本地、
+   只在用户主动提交反馈时才被带走 —— 而崩溃的用户恰恰不会提交反馈。
+   这里补的是断掉的上报路径。 */
+var FUNNEL = { open: 0, heard: 0, spoke: 0, verified: 0 };
+try { var _fnRaw = lsGet('sinoky-funnel'); if (_fnRaw) FUNNEL = JSON.parse(_fnRaw) || FUNNEL; } catch (e) {}
+function funMark(k){
+  try { if (FUNNEL[k]) return; FUNNEL[k] = 1; lsSet('sinoky-funnel', JSON.stringify(FUNNEL)); } catch (e) {}
+}
+funMark('open');                       /* 执行到这里 = App 已成功打开 */
+
+var ERRSTAT = { n: 0, last: '' };
+try { var _esRaw = lsGet('sinoky-errstat'); if (_esRaw) ERRSTAT = JSON.parse(_esRaw) || ERRSTAT; } catch (e) {}
+
 function buildStat(){
   try{
     var ph = S.phrases || {}, phrases = 0, scenes = {};
@@ -2636,8 +2672,10 @@ function buildStat(){
         return !!sc && ((ph[id]||[]).length >= sc.phrases.length);
       });
     }
-    return { phrases: phrases, scenes: scenes, tone: (S.tone && S.tone.total) || 0, day1Done: day1Done, feat: S.feat || {} };
-  }catch(e){ return { phrases: 0, scenes: {}, tone: 0, day1Done: false, feat: {} }; }
+    return { phrases: phrases, scenes: scenes, tone: (S.tone && S.tone.total) || 0, day1Done: day1Done, feat: S.feat || {}, src: SELF_SRC,
+             /* v0.23.8 FIX（审计 P3-13）：漏斗四步 + 错误计数。零新增请求，随本条 stat 一起走。 */
+             funnel: FUNNEL, err: ERRSTAT };
+  }catch(e){ return { phrases: 0, scenes: {}, tone: 0, day1Done: false, feat: {}, src: 'real' }; }
 }
 async function pullProfile(){
   try{
@@ -2878,6 +2916,7 @@ function playLocal(url, btn, onFail){
   setTimeout(function(){ if(!started) fail(); }, 6000);   /* 本地文件也可能 404/断网，超时兜底 */
 }
 function speak(text, btn){
+  funMark('heard');   /* v0.23.8 漏斗：真的播了中文发音 */
   /* v0.3.35 S5：点击立刻进入 wait（呼吸）状态。
      兜底链最长 20+ 秒（服务端 8s×2 → 有道 6s → 系统语音 1.5s），
      此前等待期间按钮毫无变化，用户以为没点上 → 反复点（叠加播放）→ 判定"没声音"。
@@ -3150,7 +3189,7 @@ function dayPhraseRow(it, i){
   return '<div class="dayitem'+(daySaid(it.x)?' done':'')+'" onclick="openScene(\''+it.x.scene.id+'\','+it.x.idx+',\'days\')">'+
     '<span class="num">'+(i+1)+'</span><span>'+it.x.p.en+'</span>'+
     '<span class="st">'+(daySaid(it.x)?'\u2713 done':'Start')+'</span>'+
-    '<button class="jab" onclick="event.stopPropagation();nonoPracticeLine(\''+it.x.scene.id+'\','+it.x.idx+')" title="Practise with Nono">🐼</button>'+
+    '<button class="jab" onclick="event.stopPropagation();nonoPracticeLine(\''+it.x.scene.id+'\','+it.x.idx+')" title="Practise with Nono" aria-label="Practise this line with Nono">🐼</button>'+
   '</div>';
 }
 function toggleDay(n){
@@ -3355,7 +3394,10 @@ function listenCur(){
 function listenPlay(){
   var it = listenCur();
   if(!it || !it.q) return;
-  playToneAudio(it.q);      /* 复用 Tone Gym 的播放器（同一套真人音频，零重复实现） */
+  /* v0.23.8：复用 Tone Gym 的播放器，但**必须指定本卡的按钮**。
+     原来不传按钮 ⇒ playToneAudio 去找 $('tone-play')（Tone Gym 的），
+     而听辨卡的键是 ear-play ⇒ 点了无论成功失败都零反馈。 */
+  playToneAudio(it.q, 'ear-play');
 }
 function answerListen(x){
   if(listenAns >= 0) return;                 /* 一题只判一次 */
@@ -3621,7 +3663,7 @@ function renderReview(){
       '<div class="rv-acts">'+
         '<button class="btn primary" onclick="revMark(\''+k+'\',true,'+REV_PASS[mode]+')">Got it</button>'+
         '<button class="btn ghost" onclick="revMark(\''+k+'\',false,40)">Missed it</button>'+
-        '<button class="btn ghost" style="flex:0 0 auto;width:auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+it.scene.id+'\','+it.idx+')">🐼</button>'+
+        '<button class="btn ghost" style="flex:0 0 auto;width:auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+it.scene.id+'\','+it.idx+')" aria-label="Practise this line with Nono">🐼</button>'+
       '</div></div>';
   });
   box.innerHTML = h;
@@ -4348,7 +4390,7 @@ function nonoChatControls(){
   pm.innerHTML = '<div class="nctrl">'+
     '<div class="nctrl-main">'+
       '<button class="nctrl-mic" id="nctrl-mic" ontouchstart="nonoRecordStart(event)" ontouchend="nonoRecordEnd(event)" onmousedown="nonoRecordStart(event)" onmouseup="nonoRecordEnd(event)" onmouseleave="nonoRecordEnd(event)">🎙️ '+T('Hold to speak')+'</button>'+
-      '<button class="nctrl-ico" onclick="nonoChatTextToggle()" title="'+T('Type')+'">✏️</button>'+
+      '<button class="nctrl-ico" onclick="nonoChatTextToggle()" title="'+T('Type')+'" aria-label="'+T('Type')+'">✏️</button>'+
     '</div>'+
     '<div class="nctrl-txt" id="nono-txt">'+
       '<input id="nono-input" placeholder="'+T('Type in Chinese…')+'" />'+
@@ -4731,7 +4773,7 @@ function weakLinesHtml(){
     items.push('<div class="weak-row">'+
       '<div class="wr-txt"><b>'+ph.hz+'</b><span>'+(ph.py||'')+'</span></div>'+
       '<span class="wr-n">'+weak[k]+'×</span>'+
-      '<button class="btn ghost" onclick="nonoPracticeKey(\''+k+'\')">🐼</button></div>');
+      '<button class="btn ghost" onclick="nonoPracticeKey(\''+k+'\')" aria-label="Practise this line with Nono">🐼</button></div>');
   });
   if (!items.length) return '';
   return '<div class="card"><div class="top"><h2>🐼 Your tricky lines</h2><span class="badge">from Nono</span></div>'+
@@ -4754,7 +4796,7 @@ function renderHome(){
     '<p class="desc">'+cdInfo.d+' Tap a line to open it — play, cover, say it 3×.</p>'+
     '<div class="day1-steps">';
   cItems.forEach(function(x,i){
-    var pandaBtn = '<button class="panda-practice" onclick="event.stopPropagation();nonoPracticeLine(\''+x.scene.id+'\','+x.idx+')" title="Practise with Nono">🐼</button>';
+    var pandaBtn = '<button class="panda-practice" onclick="event.stopPropagation();nonoPracticeLine(\''+x.scene.id+'\','+x.idx+')" title="Practise with Nono" aria-label="Practise this line with Nono">🐼</button>';
     d1 += '<div class="day1-step'+(daySaid(x)?' done':'')+'" onclick="openScene(\''+x.scene.id+'\','+x.idx+')">'+
       '<span class="num">'+(i+1)+'</span><span>'+x.p.en+'</span>'+
       '<span class="st">'+(daySaid(x)?'✓ done':'Start')+'</span>'+pandaBtn+'</div>';
@@ -4904,7 +4946,7 @@ function renderSceneList(){
       '<div class="p-actions">'+
       '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+(p.tts||p.hz).replace(/'/g,'')+'\',this)" title="'+T('Next tap: ')+T(SPEEDS[0].tip)+'">'+SPEEDS[0].label+'</button>'+
       '<button class="btn record" id="sc-btn-'+i+'" onclick="scorePhrase('+i+')">🎤 Score</button>'+
-         '<button class="btn ghost" style="flex:0 0 auto;width:auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+curScene.id+'\','+i+')">🐼</button>'+
+         '<button class="btn ghost" style="flex:0 0 auto;width:auto;padding:0 12px" title="Practise with Nono" onclick="nonoPracticeLine(\''+curScene.id+'\','+i+')" aria-label="Practise this line with Nono">🐼</button>'+
       '<button class="btn done-btn" style="flex:1" onclick="markDone('+i+')">'+(isDone?'✓ Done':'I said it 3×')+'</button>'+
       '</div>' + realHtml(i, p) + '<div class="score-result" id="score-'+i+'"></div></div>';
   });
@@ -5065,6 +5107,8 @@ async function blobToWav(blob){
   return encodeWAV(rendered.getChannelData(0), 16000);
 }
 async function asrText(buf, target){
+  /* v0.23.8 漏斗：所有录音路径（reader/场景跟读/诺诺跟读/自由聊天）都经过这里 */
+  funMark('spoke');
   /* 返回 {ok, text, status, err} —— 不再静默吞错，方便上层给出具体原因 */
   try{
     console.log('[ASR] sending', buf.byteLength, 'bytes, target=', target);
@@ -5216,6 +5260,7 @@ async function sendScore(p, transcript, i){
   }
 }
 function renderScore(d){
+  funMark('verified');   /* v0.23.8 漏斗：只有判分成功才会走到这里 */
   /* v0.3.58：错因从 title(hover) 提升为明文行——手机上 hover 不存在，旧版错因等于没展示。
      Worker 侧 errs 本就是声调级（tone/initial/final/neutral），此处只做英文人话翻译。 */
   var h = '<div class="score-card"><div class="score-overall">'+d.overall+'<span>'+d.verdict+'</span></div><div class="score-sylls">';
@@ -5261,6 +5306,9 @@ function finishScene(){
     S.lastDone = d;
   }
   if(S.days.indexOf(d)===-1){ S.days.push(d); }
+  /* v0.23.8（UX 评审 L6）：日期数组设 400 天上限。分享卡热力图只看最近 14 天、MAU 看 30 天，
+     400 天远超任何用途；不设限则一年 365 条只增不减。 */
+  if(S.days.length > 400) S.days = S.days.slice(-400);
   markDaysDone();          /* v0.3.47：记下本次完成的 Day（幂等，只记第一次） */
   saveState();
   toast(grace
@@ -5317,14 +5365,27 @@ function playToneQ(){
   playToneAudio(TONES[toneSel-1]);
 }
 
-function playToneAudio(t){
-  if(!t || !t.audio || t.audio.indexOf('data:audio') !== 0){
-    var btn = $('tone-play'); if(btn){ btn.textContent = '↻ Tap to retry'; } return;
+function toneAudioOk(src){
+  /* v0.23.8（审计 P1-1）：原来只认 `data:audio` 开头的 src，等于把「扩充听辨题库」
+     锁死在 base64 内联上 —— 5 组 × 4 条 ≈ 240 KB，而 index.html 才 664 KB。
+     改为「data URI / 相对路径 / 绝对 URL / 带音频后缀」都收，
+     这样新组可以用 assets/tones/*.mp3 文件（v0.22.0 就在那了，只是没人引用）。 */
+  if(!src || typeof src !== 'string') return false;
+  if(src.indexOf('data:audio') === 0) return true;
+  if(/^[./]/.test(src) || /^https?:/i.test(src)) return true;
+  return /\.(mp3|m4a|ogg|oga|wav|webm|aac)(\?|#|$)/i.test(src);
+}
+function playToneAudio(t, btnId){
+  /* btnId 默认 'tone-play'（向后兼容 Tone Gym 的 4 个调用点）。
+     听辨卡传 'ear-play' —— 否则播放出问题时按钮毫无反馈。 */
+  var btn = $(btnId || 'tone-play');
+  if(!toneAudioOk(t && t.audio)){
+    if(btn){ btn.textContent = '↻ Tap to retry'; } return;
   }
+  funMark('heard');   /* v0.23.8 漏斗 */
   var a = AUDIO || (AUDIO = new Audio());
   try { a.pause(); } catch(e){}
   a.volume = 1;
-  var btn = $('tone-play');
   a.onplaying = function(){ if(btn){ btn.innerHTML = PLAY_ICON + ' Play the sound'; } };
   a.onended = function(){ if(btn){ btn.innerHTML = PLAY_ICON + ' Play the sound'; } };
   a.onerror = function(){ if(btn){ btn.textContent = '↻ Tap to retry'; } };
@@ -5551,8 +5612,8 @@ function renderNW(){
     var meanTxt = c ? c.meaning : 'saved while reading';
     html += '<div class="nw-item"><span class="hz">' + esc(hz) + '</span>' +
       '<span class="mn">' + (pyTxt ? '<span class="py">' + esc(pyTxt) + '</span> · ' : '') + esc(meanTxt) + '</span>' +
-      '<button class="btn ghost mini" onclick="speak(\'' + esc(hz) + '\',this)">🔊</button>' +
-      '<button class="btn ghost mini" onclick="fcRemove(\'' + esc(hz) + '\')">✕</button></div>';
+      '<button class="btn ghost mini" onclick="speak(\'' + esc(hz) + '\',this)" aria-label="Play audio">🔊</button>' +
+      '<button class="btn ghost mini" onclick="fcRemove(\'' + esc(hz) + '\')" aria-label="Remove from saved">✕</button></div>';
   });
   box.innerHTML = html || '<div class="fc-empty">No saved characters yet.</div>';
 }
@@ -5672,8 +5733,12 @@ function recordSent(passed){
 function sentNext(){
   var list = (SENT_TEMPLATES && SENT_TEMPLATES[SENT_MODE]) || [];
   if(!list.length) return;
+  var wasLast = SENT_IDX >= list.length - 1;   /* v0.23.8（UX 评审 L3） */
   SENT_IDX = (SENT_IDX + 1) % list.length;
   renderSentence();
+  /* v0.23.8（UX 评审 L3）：做到最后一题会无声绕回第一题，
+     看起来像卡住了。只在真的绕回时说一声（不是每换一题都弹）。 */
+  if(wasLast) toast(T('That is the whole set — back to the first one. Nice work!'));
 }
 function renderSentence(){
   if(!SENT_TEMPLATES){ $('sent-area').innerHTML = '<div class="fc-empty">Loading sentence templates…</div>'; return; }
@@ -5929,6 +5994,11 @@ function logErr(kind, msg){
     ERR_LOG.push({ t: Date.now(), kind: kind, msg: String(msg).slice(0, 300) });
     if(ERR_LOG.length > 20) ERR_LOG = ERR_LOG.slice(-20);
     localStorage.setItem('sinoky-errs', JSON.stringify(ERR_LOG));
+    /* v0.23.8 FIX：ERR_LOG 有 20 条上限、且从不上报；这里维护一个**单调计数** +
+       最近一条，随 buildStat() 上云（后端读时聚合）。 */
+    ERRSTAT.n = (ERRSTAT.n||0) + 1;
+    ERRSTAT.last = (kind + ': ' + String(msg)).slice(0, 160);
+    lsSet('sinoky-errstat', JSON.stringify(ERRSTAT));
   }catch(e){}
 }
 window.addEventListener('error', function(e){ logErr('error', (e.message||'') + ' @' + (e.filename||'').split('/').pop() + ':' + (e.lineno||'')); });
@@ -6214,7 +6284,12 @@ function shareSinoky(){
 
 /* ---------- pwa: sw register + version check ---------- */
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(function(){});
+  /* v0.23.8 FIX：原来是空 catch —— sw.js 语法错导致注册失败时
+     用户侧、控制台都看不到任何痕迹，这个 bug 因此潜伏了 8 个版本。
+     改成留一行 warn（仍然不影响主流程，绝不 throw）。 */
+  navigator.serviceWorker.register('sw.js').catch(function(e){
+    try { console.warn('[sw] register failed', e && e.message); } catch(_) {}
+  });
 }
 /* v0.11.1：去掉 API_BASE==='' 门——原生壳 API_BASE 非空，此前整个自动检测（网页刷新横幅+APK 更新横幅）在 App 内从不执行 */
 fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(async function(j){
@@ -6329,7 +6404,7 @@ function openDialog(id){
       '<div class="hz hidden">'+l.hz+'</div>'+
       '<div style="display:flex;gap:8px;align-items:center">'+
       '<button class="spk" onclick="speak(\''+l.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button>'+
-      '<button class="jab" title="Practise with Nono" onclick="nonoPracticeDialog(\''+id+'\','+idx+')">🐼</button>'+
+      '<button class="jab" title="Practise with Nono" onclick="nonoPracticeDialog(\''+id+'\','+idx+')" aria-label="Practise this line with Nono">🐼</button>'+
       '</div></div></div>';
   });
   h += '<div class="d-flip"><b>🔄 Role reversal — now YOU start.</b>'+

@@ -13,7 +13,7 @@ const out = path.join(src, 'www');
 const DIRS = ['assets', 'audio', 'data', 'icons', 'vendor', 'langs', 'landing'];
 const FILES = [
   'index.html', 'sw.js', 'version.json', 'manifest.webmanifest',
-  'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'robots.txt', 'sitemap.xml',
+  'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'credits.html', 'robots.txt', 'sitemap.xml',
   '_headers',
   '_redirects',        // ⚠️ 部署配置：承载边缘 302 收口（/www/*、/_internal/*、/badge-backend.mjs…）。漏带 → tag CI 部署后收口规则整体失效
   'download.html',     // ⚠️ 线上 /download 下载引导页。漏带 → tag CI 部署后下载页退化成 SPA 兜底
