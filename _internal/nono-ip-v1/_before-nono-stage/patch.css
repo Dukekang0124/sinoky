@@ -1,0 +1,114 @@
+/* ==========================================================================
+   v0.22.0 诺诺 IP 产品内接入层（纯追加，零改动旧规则）
+   —— 只新增 id 命名空间下的规则；不覆盖任何既有选择器
+   —— 唯一例外检查：`.st-listening` 的动画在 index.html L592 已定义，
+      故此处**不重复声明**，只补浮标那一侧的联动样式。
+   ========================================================================== */
+
+/* ---- 边角提示气泡（氛围位）：不展开面板、不挤占主路径注意力 ----
+   为什么必须新做这个：nonoShow() 会把 340px 的面板整个展开，
+   在主练习页(v-scene)会覆盖句子 —— 违反「主路径必须让给句子」的铁律。
+   位置：浮标左侧一档（浮标 right:12 + 宽 56 = 68，故 74 起步留 6px 间隙），
+   底边与浮标上沿错开；z-index 59 < 浮标坞 60，面板展开时自动被盖住。 */
+#nono-tip{
+  position:fixed; right:74px; bottom:104px; z-index:59;
+  max-width:min(66vw,268px); padding:9px 13px;
+  border-radius:16px 16px 5px 16px;
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  border:1px solid rgba(201,168,108,.30);
+  color:var(--txt); font-size:12.5px; line-height:1.5;
+  box-shadow:0 10px 26px rgba(0,0,0,.55),0 0 0 1px rgba(201,168,108,.05);
+  opacity:0; transform:translateY(8px) scale(.97);
+  transition:opacity .28s ease,transform .28s ease;
+  pointer-events:none; font-family:inherit;
+}
+#nono-tip.on{opacity:1;transform:translateY(0) scale(1)}
+#nono-tip b{color:var(--gold);font-weight:700}
+#nono-tip i{font-style:normal;color:var(--red)}
+
+/* ---- 结果动作条：打分后出现在底部居中（导航栏之上）----
+   v-scene 的录音按钮是列表内联的、没有固定底栏，所以这里不会与任何
+   固定控件抢位；30s 自动收起 + 可手动关闭，绝不常驻挡内容。 */
+#nono-again{
+  position:fixed; left:50%; bottom:88px; z-index:59;
+  transform:translateX(-50%);
+  display:none; align-items:center; gap:6px;
+  padding:6px 7px 6px 7px; border-radius:99px;
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  border:1px solid rgba(201,168,108,.34);
+  box-shadow:0 10px 26px rgba(0,0,0,.6);
+  font-family:inherit; white-space:nowrap;
+}
+#nono-again.on{display:flex;animation:nonoAgainIn .32s cubic-bezier(.2,.9,.3,1)}
+@keyframes nonoAgainIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+#nono-again button{
+  border:none; border-radius:99px; padding:7px 13px;
+  font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer;
+  background:var(--red); color:#fff;
+}
+#nono-again button.ghost{background:none;border:1px solid var(--line);color:var(--sub);font-weight:600;padding:7px 10px}
+#nono-again button:active{transform:scale(.96)}
+
+/* 注：落地页 hero 的诺诺样式不在此文件 —— landing/index.html 是独立文档、
+   不加载本 CSS，故那部分样式写在 landing 自己的样式块里（避免 App 侧死代码）。
+   另：本文件内**不得出现任何 HTML 标签字面量**（哪怕在注释里），
+   否则注入后「自己的 style 是最后一个」这类位置断言会失效。 */
+
+/* ---- 浮标侧：录音中给浮标一圈朱砂微光（姿态图本身已在 index.html 里换） ---- */
+#nono-fab img.nono-fab-listening{box-shadow:0 0 0 3px rgba(230,57,70,.22)}
+
+/* ==========================================================================
+   v0.23.0 功能导览（纯追加）
+   —— 面板内的导览正文：复用 #nono-msg / #nono-acts 两个既有容器，
+      不新增面板结构，因此不改 index.html 的面板 HTML。
+   ========================================================================== */
+
+/* 站点标签（TOUR · 3/6） */
+#nono-panel .nt-top{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+/* 站点标题 */
+#nono-panel .nt-h{margin:0 0 7px;font-size:16px;line-height:1.25;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
+/* 功能说明（英文，与既有的教学提示文案同风格：硬编码不走 i18n） */
+#nono-panel .nt-b{margin:0 0 11px;font-size:12.5px;line-height:1.55;color:var(--sub)}
+#nono-panel .nt-b b{color:var(--gold)}
+/* 每站绑的那句中文 —— Edify Gate 的落点，视觉上给足权重 */
+#nono-panel .nt-cn{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:12px;
+  background:rgba(230,57,70,.10);border:1px solid rgba(230,57,70,.28)}
+#nono-panel .nt-cn b{font-size:19px;line-height:1.2;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;color:#f2f4f7}
+#nono-panel .nt-cn i{font-style:normal;font-size:12px;font-weight:700;color:var(--red);letter-spacing:.02em}
+#nono-panel .nt-cn span{font-size:12px;color:var(--sub)}
+/* 进度点 */
+#nono-panel .nt-prog{display:flex;gap:5px;margin-top:12px}
+#nono-panel .nt-prog i{flex:1;height:3px;border-radius:99px;background:var(--line)}
+#nono-panel .nt-prog i.on{background:var(--red)}
+
+/* ---- 浮动邀请（首次，只在 home，可点可关，只出一次）----
+   位置与 #nono-tip 相同 —— 出现前 JS 会先 nonoHintHide() 清掉胶囊，不会叠。 */
+#nono-invite{
+  position:fixed;right:74px;bottom:104px;z-index:59;
+  max-width:min(70vw,272px);padding:11px 26px 11px 13px;
+  border-radius:16px 16px 5px 16px;
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  border:1px solid rgba(230,57,70,.42);
+  color:var(--txt);font-size:12.5px;line-height:1.45;cursor:pointer;
+  box-shadow:0 10px 28px rgba(0,0,0,.58),0 0 0 1px rgba(201,168,108,.06);
+  opacity:0;transform:translateY(8px) scale(.97);
+  transition:opacity .3s ease,transform .3s ease;font-family:inherit;
+}
+#nono-invite.on{opacity:1;transform:translateY(0) scale(1)}
+#nono-invite b{display:block;color:var(--gold);font-size:13px;margin-bottom:3px}
+#nono-invite .ni-en{color:var(--sub);font-size:11.5px}
+#nono-invite .ni-x{position:absolute;top:4px;right:6px;font-size:11px;color:var(--sub);
+  padding:3px 5px;line-height:1;border-radius:6px}
+#nono-invite .ni-x:hover{color:var(--txt)}
+
+/* ---- 既有「首视图轻引导」卡（tourHtml）里的诺诺行 ----
+   只加这一段，卡片其余样式全部沿用既有的 .card / .tour-steps。 */
+#v-home .nt-nono{display:flex;align-items:center;gap:11px;padding:0 0 12px;margin-bottom:12px;
+  border-bottom:1px solid var(--line)}
+#v-home .nt-nono img{width:54px;height:54px;border-radius:50%;flex:0 0 auto;object-fit:cover;
+  background:rgba(230,57,70,.14);border:1px solid rgba(201,168,108,.28)}
+#v-home .nt-nono b{display:block;font-size:13.5px;color:var(--gold);margin-bottom:2px;
+  font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
+#v-home .nt-nono span{font-size:11.5px;color:var(--sub);line-height:1.45}

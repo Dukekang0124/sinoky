@@ -1,0 +1,4 @@
+# 572 KB 的 index.html 快照不入库 —— git 历史已可精确恢复：
+#   git show e05db2d^:index.html > index.html      （本机须注意 CRLF：还原后 572,668 B / 8039 CRLF / 0 裸 LF）
+# patch.css / patch.js 体积小，入库便于肉眼 diff 与快速回滚。
+index.html
