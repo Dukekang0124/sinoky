@@ -22,3 +22,6 @@ _internal/fix-2026-09-13/checklist-report.md
 
 # v0.23.9 自检截图（可由 smoke-live-check.mjs 重建，不入库）
 _internal/fix-2026-09-13/shots/
+
+# 回填脚本的临时下载目录（24MB APK，不能入库）
+_internal/_tmp_apk/
