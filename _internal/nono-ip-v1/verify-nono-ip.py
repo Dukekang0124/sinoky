@@ -18,7 +18,7 @@ NODE = r"C:\Users\Admin\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
 
 # 🔴 唯一版本真值：换版本号只改这一处（sw.js CACHE / version.json version / APP_VERSION 都对着它断言）。
 # 刻意不把版本号写死在断言里 —— v0.22.0 时硬编码 574 / 0.21.2 各误报过一轮。
-EXPECT_VER = "0.23.5"
+EXPECT_VER = "0.23.6"
 
 fails, warns, oks = [], [], []
 
@@ -254,7 +254,7 @@ if b"nono-hero-fig" in inner:
 else:
     bad("landing 样式未落在 style 块内")
 
-# ============================================ E. 注入层功能锚点（v0.23.4 / v0.23.5）
+# ============================================ E. 注入层功能锚点（v0.23.4 / v0.23.5 / v0.23.6）
 # 为什么需要这一段：本仓库自 v0.22.0 起「新增功能主要在注入层」，而主代码里搜不到
 # 注入层的实现 —— 2026-09-13 曾因此把「已做完的 3 件事」误判成待办。
 # 这里用「patch.js 源 与 index.html 产物**都**含该锚点」作为判据：
@@ -271,6 +271,17 @@ ANCHORS = [
     ("12 招手邀请·重试",        "if (waveLeft-- > 0)"),
     ("12 招手邀请·兜底还原",     "if (waveFb && typeof _ncg2 === 'function')"),
     ("8 导览让位·位阶条件",      "v0.23.5 位阶"),
+    # v0.23.6 —— 分享卡二维码（§13）。注意这里咬的是「实现方式」（段标 / 常量 / 包装链），
+    # 不是「用户看到二维码」这种期望效果 —— 后者属行为层，由 smoke-qr.js + 独立解码脚本负责。
+    ("13 二维码·段标",           "13. 分享卡二维码"),
+    ("13 二维码·纠错级别 M",      "var QR_EC = 'M'"),
+    ("13 二维码·quiet zone 4",   "var QUIET = 4"),
+    ("13 二维码·矩阵生成",        "function qrOf(text)"),
+    ("13 二维码·验收出口",        "window.__qrDrawInto = drawInto"),
+    ("13 二维码·包装链",          "var _drawQR = window.SHARE.draw"),
+    ("13 二维码·页脚锚位",        "cv.height - 254"),
+    ("13 二维码·圆角 12px",       "roundRect(ctx, x, y, real, real, 12)"),
+    ("13 二维码·内联库许可",      "qrcode-generator v1.4.4"),
 ]
 _missing = []
 for _name, _needle in ANCHORS:

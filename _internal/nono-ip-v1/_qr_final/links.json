@@ -1,0 +1,14 @@
+{
+  "start_square": "https://sinoky.pages.dev/?s=test1234&t=start",
+  "line_square": "https://sinoky.pages.dev/?s=test1234&t=line&l=arrival:0",
+  "streak_square": "https://sinoky.pages.dev/?s=test1234&t=streak",
+  "city_square": "https://sinoky.pages.dev/?s=test1234&t=city",
+  "badge_square": "https://sinoky.pages.dev/?s=test1234&t=badge",
+  "report_square": "https://sinoky.pages.dev/?s=test1234&t=report",
+  "start_story": "https://sinoky.pages.dev/?s=test1234&t=start",
+  "line_story": "https://sinoky.pages.dev/?s=test1234&t=line&l=arrival:0",
+  "streak_story": "https://sinoky.pages.dev/?s=test1234&t=streak",
+  "city_story": "https://sinoky.pages.dev/?s=test1234&t=city",
+  "badge_story": "https://sinoky.pages.dev/?s=test1234&t=badge",
+  "report_story": "https://sinoky.pages.dev/?s=test1234&t=report"
+}
