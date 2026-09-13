@@ -9,15 +9,21 @@
  *   G1 JavaScript 运行时异常（pageerror）            —— 白屏/功能静默失效的根源
  *   G2 本地资源加载失败（4xx/5xx，排除 /api/）        —— 破图标/破音/破样式
  *   G3 横向溢出（scrollWidth > clientWidth）          —— 手机上「页面能左右晃」
- *   G4 破图（img 已 complete 但 naturalWidth 0）      —— 露出 alt 或空白块
- *   G5 低对比度可见文字（< 3.0）                      —— 就是康哥报的那类
+ *   G4 破图（img 已 complete 但 naturalWidth 0）       —— 露出 alt 或空白块
+ *   G5 低对比度可见文字（< 3.0）                      —— 康哥报过的那类
  *   G6 nav 切换真的生效（点 → 视图真的换）            —— 「点了没反应」
- *   G7 关键旅程走通（首页→场景→练习→判分→复习→诺诺）  —— 主链路
+ *   G7 关键旅程走通                                    —— 主链路
+ *   G8 **裸 HTML 标记泄漏**（v0.23.10 新增）           —— `textContent = '<svg …>'` ⇒ 界面显示源码
+ *   G9 **内容残缺**（undefined / NaN / {占位} 未替换） —— 半成品文案漏出
+ *   G10 可点元素无名称（无文字/aria-label/title）      —— 用户不知道点它会发生什么
+ *   G11 触控目标过小（< 24px）                        —— 手机上点不中
+ *   G12 **装饰层被裁切**（伪元素超出父盒且父 overflow 隐藏） —— 徽标/纹饰缺一角
  *
  * ⚠️ 纪律（本项目踩过的坑）：
  *   ① page.evaluate 的第一个参数必须是**真函数**，传字符串模板不传参 ⇒ 静默 undefined
  *   ② route 后注册优先 ⇒ 通用规则先注册、具体 mock 后注册
  *   ③ 断言不咬「我打算怎么实现」，只咬「用户能不能用/能不能看清」
+ *   ④ 「两个断言互相矛盾」本身就是线索（曾靠 G1 报 404 / G2 报 0 条 反推出 SW 绕过 mock）
  *
  * 用法：node _internal/fix-2026-09-13/smoke-live-check.mjs
  *      node _internal/fix-2026-09-13/smoke-live-check.mjs --no-shot   # 不截图
@@ -164,6 +170,153 @@ const SWEEP = function () {
   return { bad, checked };
 };
 
+/* ★ v0.23.10 新增：裸 HTML 标记泄漏
+   形态：代码走 `el.textContent = '…<svg …>…'`，浏览器把标记**转义成纯文本** ⇒
+        用户在按钮/卡片上读到几十个字符的源码（如本轮康哥报的速度按钮）。
+   判据：元素**自己的直接文本节点**里出现「标签形状」或 SVG 专有属性。
+        只看直接文本节点 ⇒ 不会把真正渲染出来的 <svg> 子元素误判。 */
+const MARKUP = function () {
+  const TAG = /<\/?[a-z][a-z0-9-]*(\s[^<>]*)?\/?>/i;
+  const SVG_ATTR = /viewBox=|stroke-width=|fill="currentColor"|stroke-linecap=/;
+  const out = [];
+  document.querySelectorAll('body *').forEach((el) => {
+    if (el.getClientRects().length === 0) return;
+    let own = '';
+    [...el.childNodes].forEach((n) => { if (n.nodeType === 3) own += n.textContent; });
+    own = own.replace(/\s+/g, ' ').trim();
+    if (!own) return;
+    if (TAG.test(own) || SVG_ATTR.test(own)) {
+      out.push({ tag: el.tagName, cls: String(el.className || '').slice(0, 36), id: el.id || '', text: own.slice(0, 80) });
+    }
+  });
+  return out;
+};
+
+/* ★ v0.23.10 新增：内容残缺（半成品文案漏到界面） */
+const CONTENT = function () {
+  const PAT = /\bundefined\b|\bNaN\b|\[object Object\]|\{[a-zA-Z_][a-zA-Z0-9_]*\}|%s|\bTODO\b|\bFIXME\b|\bnull\b/;
+  const out = [];
+  document.querySelectorAll('body *').forEach((el) => {
+    if (el.getClientRects().length === 0) return;
+    if (el.offsetWidth === 0 || el.offsetHeight === 0) return;
+    let own = '';
+    [...el.childNodes].forEach((n) => { if (n.nodeType === 3) own += n.textContent; });
+    own = own.replace(/\s+/g, ' ').trim();
+    if (!own || own.length > 300) return;
+    const m = own.match(PAT);
+    if (m) out.push({ cls: String(el.className || el.tagName).slice(0, 36), hit: m[0], text: own.slice(0, 70) });
+  });
+  return out;
+};
+
+/* ★ v0.23.10 新增：可点元素无名称（用户不知道点它会怎样） */
+const NOA11Y = function () {
+  const out = [];
+  document.querySelectorAll('button,a,[onclick],[role="button"]').forEach((el) => {
+    if (el.getClientRects().length === 0) return;
+    const name = (el.innerText || '').replace(/\s+/g, ' ').trim()
+      || el.getAttribute('aria-label') || el.getAttribute('title') || '';
+    if (!name) out.push(String(el.className || el.tagName).slice(0, 36) + (el.id ? '#' + el.id : ''));
+  });
+  return out;
+};
+
+/* ★ v0.23.10 新增：触控目标过小（WCAG 2.5.8 下限 24×24） */
+const TAP = function () {
+  const small = [];
+  document.querySelectorAll('button,a,[onclick],[role="button"],input,select').forEach((el) => {
+    if (el.getClientRects().length === 0) return;
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return;
+    if (r.width < 24 || r.height < 24) {
+      small.push({
+        cls: String(el.className || el.tagName).slice(0, 30), w: Math.round(r.width), h: Math.round(r.height),
+        txt: (el.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 12),
+        /* 报缺陷必须给出可定位证据：把 outerHTML 摘要一并带出来 */
+        html: el.outerHTML.replace(/\s+/g, ' ').slice(0, 130),
+      });
+    }
+  });
+  return small;
+};
+
+/* ★ v0.23.10 新增：装饰层被裁切（伪元素超出父盒且父 overflow 隐藏 ⇒ 徽标缺一角） */
+const CLIPPED = function () {
+  const out = [];
+  const num = (v) => (parseFloat(v) || 0);
+  document.querySelectorAll('body *').forEach((el) => {
+    if (el.getClientRects().length === 0) return;
+    const pr = el.getBoundingClientRect();
+    if (pr.width < 4 || pr.height < 4) return;
+    ['::before', '::after'].forEach((which) => {
+      let cs;
+      try { cs = getComputedStyle(el, which); } catch (e) { return; }
+      if (!cs || cs.content === 'none' || cs.display === 'none') return;
+      const hasVisual = /url\(/.test(cs.backgroundImage) || cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || cs.borderTopWidth !== '0px';
+      if (!hasVisual) return;
+      const w = num(cs.width), h = num(cs.height);
+      if (w < 2 || h < 2) return;
+      // 伪元素定位基准是 el 的 padding box（这里用 border box 近似，只做「明显超出」判定）
+      const left = cs.left === 'auto' ? null : num(cs.left);
+      const right = cs.right === 'auto' ? null : num(cs.right);
+      const top = cs.top === 'auto' ? null : num(cs.top);
+      const bottom = cs.bottom === 'auto' ? null : num(cs.bottom);
+      let outside = false, why = [];
+      if (left !== null && left + w > pr.width + 2) { outside = true; why.push('右出' + Math.round(left + w - pr.width) + 'px'); }
+      if (left !== null && left < -2) { outside = true; why.push('左出' + Math.round(-left) + 'px'); }
+      if (top !== null && top + h > pr.height + 2) { outside = true; why.push('下出' + Math.round(top + h - pr.height) + 'px'); }
+      if (top !== null && top < -2) { outside = true; why.push('上出' + Math.round(-top) + 'px'); }
+      if (bottom !== null && bottom < -2) { outside = true; why.push('底部错位'); }
+      if (!outside) return;
+      out.push({
+        who: el.tagName + '.' + String(el.className || '').slice(0, 30) + (el.id ? '#' + el.id : '') + which,
+        box: Math.round(pr.width) + 'x' + Math.round(pr.height),
+        pseudo: Math.round(w) + 'x' + Math.round(h) + ' @' + (left === null ? 'auto' : Math.round(left)) + ',' + (top === null ? 'auto' : Math.round(top)),
+        why: why.join('/'),
+        parentOverflow: getComputedStyle(el).overflow + '/' + getComputedStyle(el).overflowX,
+      });
+    });
+  });
+  return out;
+};
+
+/* ------------------------------- 视图清单与装填 ------------------------------- */
+
+const VIEWS = ['v-onboard', 'v-home', 'v-scene', 'v-dialog', 'v-cities', 'v-days', 'v-tone', 'v-review',
+  'v-practice', 'v-explore', 'v-scenes-read', 'v-me', 'v-settings', 'v-prog', 'v-cards', 'v-sentences', 'v-reading'];
+
+const SETUP = function (vid) {
+  try {
+    switch (vid) {
+      case 'v-onboard': go('onboard'); window.renderOnboard && renderOnboard(); break;
+      case 'v-home': go('home'); window.renderHome && renderHome(); window.renderSceneList && renderSceneList(); break;
+      case 'v-scene': {
+        go('home'); window.renderHome && renderHome();
+        var b = document.querySelector('#home-scenes .card button[onclick*="openScene"]');
+        if (b) b.click();
+        break;
+      }
+      case 'v-dialog': go('dialog'); window.renderDialogList && renderDialogList(); break;
+      case 'v-cities': go('cities'); window.renderCities && renderCities(); break;
+      case 'v-days': go('days'); window.renderDays && renderDays(); break;
+      case 'v-tone': go('tone'); window.renderToneBtns && renderToneBtns(); break;
+      case 'v-review':
+        S.phrases = S.phrases || {}; S.phrases['arrival'] = [0, 1, 2]; S.rev = S.rev || {};
+        go('review'); window.renderReview && renderReview(); break;
+      case 'v-practice': go('practice'); break;
+      case 'v-explore': go('explore'); break;
+      case 'v-scenes-read': go('scenes-read'); window.renderScenesRead && renderScenesRead(); break;
+      case 'v-me': go('me'); window.renderMe && renderMe(); break;
+      case 'v-settings': go('settings'); window.renderSettings && renderSettings(); window.renderLangList && renderLangList(); break;
+      case 'v-prog': go('prog'); break;
+      case 'v-cards': go('cards'); break;
+      case 'v-sentences': go('sentences'); break;
+      case 'v-reading': go('reading'); break;
+      default: go(vid.slice(2));
+    }
+  } catch (e) { /* 装填失败由后续探针体现 */ }
+};
+
 /* ---------------------------------- 主流程 ---------------------------------- */
 
 (async () => {
@@ -184,9 +337,7 @@ const SWEEP = function () {
   /* ---- mock：通用规则**先**注册，具体 mock **后**注册（后注册优先） ---- */
   await page.route('**/*', (route) => {
     const u = route.request().url();
-    // 本地静态资源放行；BADGE_API(8787) 由下方更具体的规则接管
     if (u.startsWith(base)) return route.continue();
-    // 其余（外部域名 / 8787 兜底）一律拦掉 —— 离线可复现，不碰真实网络
     return route.fulfill({
       status: 200, contentType: 'application/json',
       body: JSON.stringify({ ok: true, score: 88, degraded: false, badges: [], uid: 'smoketest', transcript: '你好' }),
@@ -202,10 +353,9 @@ const SWEEP = function () {
 
   /* ---- 观测器 ---- */
   const pageErrors = [];
-  const netFailsLocal = [], netFailsExt = [];   // 4xx/5xx：分开统计，否则「外域被 mock 后的假 404」会污染本地判据
+  const netFailsLocal = [], netFailsExt = [];
   const httpLog = [];
   page.on('pageerror', (e) => pageErrors.push('[pageerror] ' + String(e.message || e).slice(0, 160)));
-  // 资源加载失败由 G2 专职统计；这里过滤掉，避免与 G2 重复计数（G1 只留真正的 JS 异常）
   page.on('console', (m) => {
     if (m.type() !== 'error') return;
     const t = m.text();
@@ -224,33 +374,52 @@ const SWEEP = function () {
   await page.waitForTimeout(700);
 
   const viewIds = await page.evaluate(() => [...document.querySelectorAll('.views')].map((e) => e.id));
-  console.log('\n\u2550\u2550\u2550\u2550\u2550\u2550 A. 逐视图健康扫描（' + viewIds.length + ' 个视图） \u2550\u2550\u2550\u2550\u2550\u2550');
+  console.log('\u2550\u2550\u2550\u2550\u2550\u2550 A. 逐视图健康扫描（' + viewIds.length + ' 个视图 · 每视图 8 类探针） \u2550\u2550\u2550\u2550\u2550\u2550');
+  info('视图清单：' + viewIds.join(' '));
+  if (viewIds.length !== VIEWS.length) info('\u26a0 硬编码 VIEWS(' + VIEWS.length + ') 与实际(' + viewIds.length + ') 不一致，请同步');
 
-  const allBad = [];
-  let totalChecked = 0, ovf = 0, broken = 0;
+  const allBad = [], allMarkup = [], allContent = [], allNoA11y = [], allTap = [], allClipped = [];
+  let totalChecked = 0, ovf = 0, broken = 0, emptyViews = [];
   for (const vid of viewIds) {
     const before = pageErrors.length;
-    await page.evaluate((v) => {
-      try { go(v.slice(2)); } catch (e) {}
-      ['renderHome', 'renderReview', 'renderMe', 'renderSettings', 'renderProg', 'renderCards', 'renderSentences'].forEach((f) => { try { window[f] && window[f](); } catch (e) {} });
-    }, vid);
-    await page.waitForTimeout(vid === 'v-home' ? 500 : 220);
+    await page.evaluate(SETUP, vid);
+    await page.waitForTimeout(vid === 'v-home' || vid === 'v-scene' ? 520 : 260);
 
     const h = await page.evaluate(HEALTH);
     const sw = await page.evaluate(SWEEP);
+    const mk = await page.evaluate(MARKUP);
+    const ct = await page.evaluate(CONTENT);
+    const na = await page.evaluate(NOA11Y);
+    const tp = await page.evaluate(TAP);
+    const cl = await page.evaluate(CLIPPED);
+
     totalChecked += sw.checked;
     sw.bad.forEach((b) => allBad.push(b));
+    mk.forEach((b) => allMarkup.push({ view: vid, ...b }));
+    ct.forEach((b) => allContent.push({ view: vid, ...b }));
+    na.forEach((b) => allNoA11y.push({ view: vid, who: b }));
+    tp.forEach((b) => allTap.push({ view: vid, ...b }));
+    cl.forEach((b) => allClipped.push({ view: vid, ...b }));
+
     const newErr = pageErrors.length - before;
     if (h.overflow) ovf++;
     if (h.brokenImgs.length) broken++;
+    if (!h.txt) emptyViews.push(vid);
 
-    const flag = (newErr || h.overflow || h.brokenImgs.length || sw.bad.length) ? '\u274c' : '\u2705';
-    console.log('  ' + flag + ' ' + vid.padEnd(14) +
-      '文字 ' + String(sw.checked).padStart(3) + ' 处' +
-      (sw.bad.length ? ' \u00b7 ' + sw.bad.length + ' 处 <3.0' : '') +
-      (h.overflow ? ' \u00b7 横向溢出(' + h.scrollW + '>' + h.clientW + (h.widest ? ' \u2190 ' + h.widest : '') + ')' : '') +
-      (h.brokenImgs.length ? ' \u00b7 破图 ' + h.brokenImgs.length + ' (' + h.brokenImgs[0] + ')' : '') +
-      (newErr ? ' \u00b7 JS 异常 ' + newErr : ''));
+    const flags = [];
+    if (newErr) flags.push('JS异常' + newErr);
+    if (h.overflow) flags.push('横向溢出(' + h.scrollW + '>' + h.clientW + (h.widest ? ' \u2190 ' + h.widest : '') + ')');
+    if (h.brokenImgs.length) flags.push('破图' + h.brokenImgs.length);
+    if (sw.bad.length) flags.push('低对比' + sw.bad.length);
+    if (mk.length) flags.push('裸标记' + mk.length);
+    if (ct.length) flags.push('内容残缺' + ct.length);
+    if (na.length) flags.push('无名称可点' + na.length);
+    if (tp.length) flags.push('小触控' + tp.length);
+    if (cl.length) flags.push('装饰被裁' + cl.length);
+
+    console.log('  ' + (flags.length ? '\u274c' : '\u2705') + ' ' + vid.padEnd(15) +
+      '文字' + String(sw.checked).padStart(3) + (h.txt ? '/' + String(h.txt).padStart(3) + '字' : '/空') +
+      (flags.length ? ' \u00b7 ' + flags.join(' \u00b7 ') : ''));
 
     if (!NO_SHOT) await page.screenshot({ path: path.join(SHOTS, vid + '.png') });
   }
@@ -300,12 +469,11 @@ const SWEEP = function () {
   await step('C1 首页渲染出场景卡', async () => {
     await page.evaluate(() => { try { go('home'); renderHome(); } catch (e) {} });
     await page.waitForTimeout(400);
-    // 真实结构：场景卡 = #home-scenes 里带 openScene(...) 的按钮（不是 .scene / [data-scene]）
     const n = await page.evaluate(() => document.querySelectorAll('#home-scenes .card button[onclick*="openScene"]').length);
     return { detail: '首页场景卡按钮 ' + n + ' 个', n, err: n > 0 ? null : '首页 #home-scenes 里找不到 openScene 按钮' };
   });
   await step('C2 进入第一个场景', async () => {
-    const r = await page.evaluate(async () => {
+    return await page.evaluate(async () => {
       const el = document.querySelector('#home-scenes .card button[onclick*="openScene"]');
       if (!el) return { err: '首页找不到场景入口按钮' };
       el.click(); await new Promise((r) => setTimeout(r, 420));
@@ -313,13 +481,11 @@ const SWEEP = function () {
       const title = (document.getElementById('sc-title') || {}).textContent || '';
       return { detail: '视图 ' + act.join(',') + ' · 场景标题「' + title.trim() + '」', act, err: (act.includes('v-scene') && title.trim()) ? null : '未进入 v-scene 或标题为空' };
     });
-    return r;
   });
   await step('C3 练习 hub 可跳转技能页', async () => {
-    const r = await page.evaluate(async () => {
+    return await page.evaluate(async () => {
       try { go('practice'); } catch (e) {}
       await new Promise((r) => setTimeout(r, 320));
-      // v-practice 是「技能 hub」，卡片类名是 .hub（不是答题选项）
       const hubs = [...document.querySelectorAll('#v-practice .hub')].filter((b) => b.getClientRects().length > 0);
       if (!hubs.length) return { err: 'v-practice 里找不到 .hub 技能入口' };
       const label = (hubs[0].innerText || '').replace(/\s+/g, ' ').trim().slice(0, 16);
@@ -327,10 +493,9 @@ const SWEEP = function () {
       const act = [...document.querySelectorAll('.views')].filter((v) => v.getClientRects().length > 0).map((v) => v.id);
       return { detail: '共 ' + hubs.length + ' 个技能入口，点「' + label + '」→ ' + act.join(','), act, err: act.includes('v-practice') ? '点了技能入口但没离开 v-practice' : null };
     });
-    return r;
   });
   await step('C4 复习队列可渲染（Smart review）', async () => {
-    const r = await page.evaluate(async () => {
+    return await page.evaluate(async () => {
       try {
         S.phrases = S.phrases || {}; S.phrases['arrival'] = [0, 1, 2]; S.rev = S.rev || {};
         go('review'); if (window.renderReview) renderReview();
@@ -341,10 +506,9 @@ const SWEEP = function () {
       const cs = en ? getComputedStyle(en).color : null;
       return { detail: '复习卡渲染' + (card ? ' OK' : ' 无') + (en ? '，.rv-en 色 = ' + cs : ''), color: cs };
     });
-    return r;
   });
   await step('C5 诺诺浮标可点开面板', async () => {
-    const r = await page.evaluate(async () => {
+    return await page.evaluate(async () => {
       try { go('home'); } catch (e) {}
       await new Promise((r) => setTimeout(r, 300));
       const fab = document.getElementById('nono-fab');
@@ -355,20 +519,17 @@ const SWEEP = function () {
       const vis = panel ? panel.getClientRects().length > 0 : null;
       return { detail: '浮标 className ' + JSON.stringify(before) + ' \u2192 面板可见=' + vis };
     });
-    return r;
   });
   await step('C6 设置视图可进入且无异常', async () => {
-    const r = await page.evaluate(async () => {
+    return await page.evaluate(async () => {
       try { go('settings'); if (window.renderSettings) renderSettings(); } catch (e) { return { err: String(e).slice(0, 100) }; }
       await new Promise((r) => setTimeout(r, 320));
       const rows = document.querySelectorAll('#v-settings .setrow').length;
       return { detail: '设置行 ' + rows + ' 条' };
     });
-    return r;
   });
-
   await step('C7 场景内标记「说过了」回路生效', async () => {
-    const r = await page.evaluate(async () => {
+    return await page.evaluate(async () => {
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       try { go('home'); renderHome(); } catch (e) {}
       await sleep(320);
@@ -383,10 +544,44 @@ const SWEEP = function () {
       const doneN = document.querySelectorAll('#sc-list .phrase.done').length;
       return { detail: '场景 ' + phrases.length + ' 句，点「I said it 3×」后 done 标记 ' + doneN + ' 处', err: doneN > 0 ? null : '点了按钮但 done 标记没出现' };
     });
+  });
+
+  /* C8 —— 语速按钮四连点：本轮康哥报的缺陷就在这里（第 3 档含 SVG 图标）
+     修前：点第 2 次起，按钮上出现 `<svg class="play-icon-sm" viewBox="0 0 24 24" wid…` 纯文本 */
+  await step('C8 语速按钮四连点不吐 HTML 源码', async () => {
+    const r = await page.evaluate(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      try { go('home'); renderHome(); } catch (e) {}
+      await sleep(320);
+      const entry = document.querySelector('#home-scenes .card button[onclick*="openScene"]');
+      if (!entry) return { err: '首页找不到场景入口' };
+      entry.click(); await sleep(460);
+      const btn = document.querySelector('#sc-list .phrase .btn.speed');
+      if (!btn) return { err: '找不到语速按钮 #sc-list .phrase .btn.speed' };
+      const log = [];
+      for (let i = 0; i < 4; i++) {
+        btn.click(); await sleep(140);
+        let own = '';
+        [...btn.childNodes].forEach((n) => { if (n.nodeType === 3) own += n.textContent; });
+        own = own.replace(/\s+/g, ' ').trim();
+        log.push({
+          tap: i + 1,
+          own: own.slice(0, 40),
+          svgEls: btn.querySelectorAll('svg').length,
+          leaked: /<svg|viewBox=|stroke-width=/.test(btn.textContent || ''),
+        });
+      }
+      const leak = log.filter((x) => x.leaked);
+      return {
+        log,
+        detail: log.map((x) => '第' + x.tap + '点「' + x.own + '」svg=' + x.svgEls).join(' · '),
+        err: leak.length ? '第 ' + leak.map((x) => x.tap).join(',') + ' 次点击后按钮里出现 HTML 源码' : null,
+      };
+    });
+    if (r && r.log) r.log.forEach((x) => console.log('        \u21b3 第' + x.tap + '点 文本节点「' + x.own + '」· 真 svg 元素 ' + x.svgEls + ' 个 · 泄漏=' + x.leaked));
     return r;
   });
 
-  // 旅程关键张截图（人眼复核用）
   if (!NO_SHOT) {
     await page.evaluate(() => { try { go('home'); renderHome(); } catch (e) {} });
     await page.waitForTimeout(320);
@@ -403,8 +598,39 @@ const SWEEP = function () {
     info('旅程截图 4 张已写入 shots/');
   }
 
+  console.log('\n\u2550\u2550\u2550\u2550\u2550\u2550 D. 导航栏装饰层定位（Me 页签上下金饰） \u2550\u2550\u2550\u2550\u2550\u2550');
+  const deco = await page.evaluate(() => {
+    const me = document.getElementById('nav-me');
+    if (!me) return { err: '#nav-me 不存在' };
+    const r = me.getBoundingClientRect();
+    const shot = (el) => {
+      if (!el) return null;
+      const cs = getComputedStyle(el);
+      const b = getComputedStyle(el, '::before'), a = getComputedStyle(el, '::after');
+      return {
+        who: el.tagName + '.' + String(el.className || '').slice(0, 40) + (el.id ? '#' + el.id : ''),
+        rect: Math.round(el.getBoundingClientRect().width) + 'x' + Math.round(el.getBoundingClientRect().height),
+        bgImage: cs.backgroundImage.slice(0, 70), bg: cs.backgroundColor, overflow: cs.overflow,
+        before: b.content === 'none' ? null : { img: b.backgroundImage.slice(0, 60), wh: b.width + 'x' + b.height, pos: b.left + ',' + b.top },
+        after: a.content === 'none' ? null : { img: a.backgroundImage.slice(0, 60), wh: a.width + 'x' + a.height, pos: a.left + ',' + a.top },
+      };
+    };
+    const at = (x, y) => shot(document.elementFromPoint(x, y));
+    const cx = r.left + r.width / 2;
+    return {
+      me: shot(me),
+      above24: at(cx, Math.max(1, r.top - 24)),
+      above10: at(cx, Math.max(1, r.top - 10)),
+      onIcon: at(cx, r.top + 10),
+      below12: at(cx, r.bottom + 12),
+      navSelf: shot(document.querySelector('nav')),
+      navBefore: (function () { const s = getComputedStyle(document.querySelector('nav'), '::before'); return { content: s.content, img: s.backgroundImage.slice(0, 70), wh: s.width + 'x' + s.height, pos: s.left + ',' + s.top }; })(),
+      navAfter: (function () { const s = getComputedStyle(document.querySelector('nav'), '::after'); return { content: s.content, img: s.backgroundImage.slice(0, 70), wh: s.width + 'x' + s.height, pos: s.left + ',' + s.top }; })(),
+    };
+  });
+  console.log(JSON.stringify(deco, null, 2).split('\n').map((l) => '  ' + l).join('\n'));
+
   console.log('\n\u2550\u2550\u2550\u2550\u2550\u2550 E. Service Worker 能否真注册（v0.23.8 修复成果） \u2550\u2550\u2550\u2550\u2550\u2550');
-  // 主 context 为了 mock 生效 block 掉了 SW ⇒ 这里用独立 context（不 block）实测注册
   const ctx2 = await browser.newContext({ viewport: { width: 430, height: 932 } });
   const p2 = await ctx2.newPage();
   try { await p2.goto(base + '/index.html', { waitUntil: 'load' }); } catch (e) {}
@@ -425,9 +651,6 @@ const SWEEP = function () {
   await ctx2.close();
 
   console.log('\n\u2550\u2550\u2550\u2550\u2550\u2550 F. 设置行标签未被挤压换行 \u2550\u2550\u2550\u2550\u2550\u2550');
-  /* 现象：`.setrow{display:flex}` 左侧标签是可被压缩的 flex item，
-     右侧 `.setctl` 内容长且无宽度上限 ⇒ 中文标签（可在任意字间断行）被压成竖排。
-     英文标签是不可断单词，所以**只在中文界面显形** —— 典型的「只在一种语言下坏」缺陷。 */
   const LABELS = function () {
     const out = [];
     document.querySelectorAll('#v-settings .setrow').forEach((row) => {
@@ -447,13 +670,12 @@ const SWEEP = function () {
   await page.evaluate(() => { try { go('settings'); renderSettings(); } catch (e) {} });
   await page.waitForTimeout(340);
   const labels = await page.evaluate(LABELS);
-  let labelFails = 0;
   labels.forEach((l, i) => {
-    if (l.wrapped) { labelFails++; no('F' + (i + 1), '标签「' + l.txt + '」被压成多行（宽 ' + l.w + 'px · 高 ' + l.h + 'px / 行高 ' + l.lh + '）'); }
+    if (l.wrapped) no('F' + (i + 1), '标签「' + l.txt + '」被压成多行（宽 ' + l.w + 'px · 高 ' + l.h + 'px / 行高 ' + l.lh + '）');
     else ok('F' + (i + 1), '标签「' + l.txt + '」宽 ' + l.w + 'px，单行');
   });
 
-  console.log('\n\u2550\u2550\u2550\u2550\u2550\u2550 D. 汇总判定 \u2550\u2550\u2550\u2550\u2550\u2550');
+  console.log('\n\u2550\u2550\u2550\u2550\u2550\u2550 G. 汇总判定 \u2550\u2550\u2550\u2550\u2550\u2550');
   if (pageErrors.length === 0) ok('G1', 'JavaScript 运行时异常 0 条');
   else { no('G1', 'JavaScript 运行时异常 ' + pageErrors.length + ' 条'); pageErrors.slice(0, 6).forEach((e) => console.log('        \u21b3 ' + e)); }
 
@@ -479,6 +701,41 @@ const SWEEP = function () {
   const jBad = journey.filter((j) => j.newErr > 0 || (j.r && j.r.err)).length;
   if (jBad === 0) ok('G7', '关键旅程 ' + journey.length + ' 步全部走通');
   else no('G7', '关键旅程 ' + jBad + ' / ' + journey.length + ' 步有问题');
+
+  if (allMarkup.length === 0) ok('G8', '裸 HTML 标记泄漏 0 处（17 视图 × 直接文本节点）');
+  else {
+    no('G8', '裸 HTML 标记泄漏 ' + allMarkup.length + ' 处');
+    allMarkup.slice(0, 10).forEach((b) => console.log('        \u21b3 ' + b.view.padEnd(13) + b.tag + '.' + b.cls + (b.id ? '#' + b.id : '') + ' \u300c' + b.text + '\u300d'));
+  }
+
+  if (allContent.length === 0) ok('G9', '内容残缺（undefined / NaN / 未替换占位）0 处');
+  else {
+    no('G9', '内容残缺 ' + allContent.length + ' 处');
+    allContent.slice(0, 10).forEach((b) => console.log('        \u21b3 ' + b.view.padEnd(13) + '【' + b.hit + '】.' + b.cls + ' \u300c' + b.text + '\u300d'));
+  }
+
+  if (allNoA11y.length === 0) ok('G10', '可点元素无名称 0 处');
+  else {
+    info('可点元素无名称 ' + allNoA11y.length + ' 处（不影响可用性，但用户不知道点它会怎样）：');
+    allNoA11y.slice(0, 10).forEach((b) => console.log('        \u21b3 ' + b.view.padEnd(13) + b.who));
+  }
+
+  if (allTap.length === 0) ok('G11', '触控目标 < 24px 的 0 处');
+  else {
+    no('G11', '触控目标过小 ' + allTap.length + ' 处（< 24px）');
+    allTap.slice(0, 12).forEach((b) => {
+      console.log('        \u21b3 ' + b.view.padEnd(13) + b.w + 'x' + b.h + ' .' + b.cls + ' \u300c' + b.txt + '\u300d');
+      if (b.html) console.log('            ' + b.html);
+    });
+  }
+
+  if (allClipped.length === 0) ok('G12', '装饰层被裁切 0 处');
+  else {
+    no('G12', '装饰层被裁切 ' + allClipped.length + ' 处');
+    allClipped.slice(0, 12).forEach((b) => console.log('        \u21b3 ' + b.view.padEnd(13) + b.who + ' 盒' + b.box + ' 伪元素' + b.pseudo + ' (' + b.why + ') overflow=' + b.parentOverflow));
+  }
+
+  if (emptyViews.length) info('可见文字为 0 的视图（可能为空态，仅报数）：' + emptyViews.join(' '));
 
   console.log('\n\u2500\u2500\u2500 结果：' + pass + ' 通过 / ' + fail + ' 失败 \u2500\u2500\u2500');
   if (!NO_SHOT) console.log('截图：' + SHOTS);

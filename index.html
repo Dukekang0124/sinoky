@@ -1188,7 +1188,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.9';
+var APP_VERSION = '0.23.10';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -4987,7 +4987,12 @@ function speedSpeak(text, btn){
   speak(text, btn);
   if(btn){
     btn.setAttribute('data-sp', String(next));
-    btn.textContent = SPEEDS[next].label;
+    /* v0.23.10 FIX：这里原来是 btn.textContent。SPEEDS[2].label 里含 <svg class="play-icon-sm" …>
+       标记 —— 首帧渲染走 innerHTML（正确解析成图标），但点切换时用 textContent 写回，
+       浏览器会把标记**转义成纯文本**直接吐在按钮上（康哥真机截图：一串 <svg class="play-icon-sm" viewBox="0 0 24 24" wid…）。
+       必须用 innerHTML 与首帧同一条路径；且本页 i18n 层用 TreeWalker 遍历**文本节点**按字典翻译，
+       innerHTML 产生的真实子元素会被正常跳过，textContent 反而会被当成可翻译文本。 */
+    btn.innerHTML = SPEEDS[next].label;
     btn.title = T('Next tap: ') + T(SPEEDS[next].tip);
   }
   if(rateTimer) clearTimeout(rateTimer);
@@ -7268,6 +7273,17 @@ SHARE.playDeepLink = function(){
 #v-days .dz{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;
   -webkit-box-orient:vertical;line-height:1.4;max-height:2.8em}   /* P1-8 单行截断→两行 */
 #v-onboard h1 .hl{white-space:nowrap}            /* P1-8 引导页高亮短语不再断在半字 */
+/* v0.23.10 G11 触控目标下限（WCAG 2.5.8：≥24×24）——
+   内置浏览器全站自检报 9 处 <24px，实测只有 3 类控件（同一控件在多个视图复现）：
+     ① 首页分段切换 chip「句子收藏 / 场景」 57x23 / 31x23
+     ② 页脚内联链接（Privacy / Share / 文鼎公版授权 / 完整鸣谢全文）高仅 14px
+     ③ 诺诺面板「–」收起键 20x24（宽不足）
+   做法：**扩盒不改版式** —— 内联链接用「padding + 等量负 margin」把可点区撑到 24px，
+   文字位置/行高完全不动（inline-block 的负 margin 会参与行盒计算）；chip 与圆钮直接补 min-*。 */
+a[href="privacy.html"],a[href="credits.html"],a[href="ARPHICPL.TXT"],a[onclick^="openShare"]{
+  display:inline-block;padding:5px 3px;margin:-5px -3px}
+button[onclick^="switchListen"]{min-height:26px}      /* 23 -> 26 */
+button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 */
 </style>
 <script id="cn-audit-js">
 /* 语言包是异步 fetch 的；在它到位之前渲染的「模板串」会把英文焊进 DOM（applyI18n 只认整串，改不回来）。
