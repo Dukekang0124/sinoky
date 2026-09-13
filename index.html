@@ -1179,7 +1179,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.3';
+var APP_VERSION = '0.23.4';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -8162,6 +8162,128 @@ SHARE.playDeepLink = function(){
     if (!fab) return;
     fab.addEventListener('click', function () { stageCount('nono'); }, false);
   })();
+
+  /* ---------- 11. 「诺诺记得你」：把 S.nono 里存着却从没说过的话说出来 ----------
+     查后结论：主代码从 v0.7.0 起就一直在写
+       S.nono = { n 判分次数, best 历史最高分, last{key,score,at} 最近一次, weak{key:错次} }
+     但**没有任何一处把它读出来讲给用户听** —— 用户练了 20 次、卡了某句 4 遍、
+     最高拿过 92 分，诺诺一个字都没提过。于是它是「每次重置的 NPC」，
+     而不是「记得你的对象」；而用户洞察 I-018 的原话恰是
+       「I just need to be able to express myself… I don't have Chinese friends」
+     —— 缺的正是「被记住」这一层。
+
+     落点：包装 nonoDailyLine()（go('home') 时调用、每天一次的位置）
+       · 不新建触发时机 ⇒ 除既有的每日 1 次气泡外不多占配额
+       · 有素材就说 recall 版（带「练这一句」动作，直接回到卡住的那句）
+       · 没素材就走原逻辑（今日句），一行不改
+       · 同时写 sinoky_nono_daily 标记，避免原函数当天再给一条
+
+     挑句优先级：weak（错得最多的那句）> last（最近一次）——
+     「你卡住的那句」比「你最后练的那句」更像「我记着你」。
+     埋点：S.feat.nonoRecall（本地计数，随进度/会话结束 flush，零新增 KV 写）。
+     i18n：新增 5 个 key × 6 语言，已入 langs/*.json（见 _add-recall.py）。
+     ========================================================================== */
+  var RECALL = {
+    hard:  'This line has tripped you up {c} times \u2014 today we crack it.',
+    away:  'You last spoke Chinese {d} days ago \u2014 let\u2019s pick up where you stopped.',
+    beat:  'Yesterday this line scored {s}. Beat it today?',
+    stick: 'Yesterday this line scored {s}. One more try \u2014 it will stick.',
+    btn:   'Practice that line'
+  };
+  function rLGet(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function rLSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function rToday() { return new Date().toISOString().slice(0, 10); }
+  /* 与 S.nono.last.at 同口径（都取 UTC 日期串），避免半日偏移 */
+  function rGap(fromISO, toISO) {
+    var a = String(fromISO).split('-'), b = String(toISO).split('-');
+    if (a.length !== 3 || b.length !== 3) return -1;
+    return Math.round((Date.UTC(+a[0], +a[1] - 1, +a[2]) - Date.UTC(+b[0], +b[1] - 1, +b[2])) / 86400000);
+  }
+  function rPick(sn) {
+    var w = sn.weak || {}, best = null, n = 0;
+    Object.keys(w).forEach(function (k) { if ((w[k] || 0) > n) { n = w[k]; best = k; } });
+    if (best && n >= 2) return { key: best, hard: true, n: n };
+    if (sn.last && sn.last.key) return { key: sn.last.key, hard: false, n: 0 };
+    return null;
+  }
+  window.nonoRecall = function () {
+    try {
+      if (typeof S === 'undefined' || !S || !S.nono) return false;
+      var sn = S.nono;
+      if (!sn.n) return false;                                     /* 从没判过分 → 不冒充「记得你」 */
+      if ((typeof window.nonoView === 'function' ? window.nonoView() : '') !== 'home') return false;
+      var N = window.NONO || {};
+      if (N.closed) return false;                                  /* 尊重「关掉陪伴」开关 */
+      /* ⚠️ 这里**故意不检查 NONO.lockUntil**（2026-09-13 实测教训）：
+         lockUntil 的本意是「刚出过结果反馈，别被功能说明抢走」，设它的都是
+         priority:'result' 的气泡。而本函数发出的也是 result 级内容，且只在首页、
+         每天最多一次 —— 与结果条（在 scene / practice 页）根本不在同一屏，不存在打断。
+         实测：冷启动时 boot 早期先有一次 result 气泡把 lockUntil 设成 +2500ms，
+         与本函数的触发时刻只差几十毫秒 ⇒ 连续两轮冷启动都被这个「同类锁」锁死，
+         症状是「打开 App 什么都没有」。真正的打扰护栏是下面的 nonoBusy()。 */
+      if (typeof window.nonoBusy === 'function' && window.nonoBusy()) return false;
+      var today = rToday();
+      if (rLGet('sinoky_nono_recall') === today) return false;      /* 每天最多一次 */
+      var dd = (typeof window.nonoDaily === 'function') ? window.nonoDaily() : null;
+      if (dd && dd.n >= 4) return false;                           /* 当日气泡配额已满 → 不写标记 */
+      var last = sn.last;
+      if (!last || !last.at) return false;
+      var gap = rGap(today, last.at);
+      if (gap < 1 || gap > 60) return false;                       /* 今天刚练过不说；>60 天当新用户 */
+      var pick = rPick(sn);
+      if (!pick) return false;
+
+      var sc = Math.round(last.score || 0);
+      var tpl = pick.hard ? RECALL.hard
+              : (gap >= 2 ? RECALL.away : (sc >= 70 ? RECALL.beat : RECALL.stick));
+      var msg = T(tpl).replace('{d}', gap).replace('{s}', sc).replace('{c}', pick.n);
+
+      rLSet('sinoky_nono_recall', today);
+      try { localStorage.setItem('sinoky_nono_daily', JSON.stringify({ day: today, key: pick.key })); } catch (e) {}
+      stageCount('nonoRecall');
+      window.nonoShow(msg, {
+        pose: gap >= 2 ? 'listen' : 'cheer',
+        priority: 'result',
+        actions: [
+          /* onclick 是双引号包裹的属性 ⇒ fn 里只能用单引号，并转义 key 中的单引号 */
+          { t: T(RECALL.btn), fn: 'nonoPracticeKey(\'' + String(pick.key).replace(/[\\']/g, '\\$&') + '\')' },
+          { t: T('Later'), fn: 'nonoMin()', ghost: true }
+        ]
+      });
+      return true;
+    } catch (e) { return false; }   /* 任何异常都退回原逻辑，绝不影响开口 */
+  };
+
+  if (typeof window.nonoDailyLine === 'function') {
+    var _ndl = window.nonoDailyLine;
+    window.nonoDailyLine = function () {
+      try { if (window.nonoRecall()) return; } catch (e) {}
+      return _ndl.apply(this, arguments);
+    };
+  }
+
+  /* 冷启动补一次：既有 nonoDailyLine 只在 go('home') 时被调用，
+     而「打开 app 就停在 home」这条最常见路径不经过 go() ⇒ 召回的黄金时刻会错过。
+     这里在 load 后补一次（同样每天一次、同样不额外占配额）。
+     带重试（最多 4 次 / 间隔 2.8s）：boot 早期视图可能还没落定、或麦克风正忙，
+     一次没轮到就再试，而不是放弃 —— 首屏那一眼是召回最值钱的时刻。
+     首启引导卡还没结束（sinoky_tour != 1）时不抢 —— I-014：新用户不被遮挡。 */
+  (function () {
+    var n = 0;
+    function bootRecall() {
+      n++;
+      try {
+        if (rLGet('sinoky_tour') !== '1') return;
+        if (rLGet('sinoky_nono_recall') === rToday()) return;      /* 今天已经说过 → 收工 */
+        if (window.nonoRecall()) return;                           /* 说成功 → 收工 */
+        if (n < 4) setTimeout(bootRecall, 2800);
+      } catch (e) {}
+    }
+    var kick = function () { setTimeout(bootRecall, 2400); };
+    if (document.readyState === 'complete') kick();
+    else window.addEventListener('load', kick);
+  })();
+
 })();
 
 </script>

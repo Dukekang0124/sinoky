@@ -18,7 +18,7 @@ NODE = r"C:\Users\Admin\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
 
 # 🔴 唯一版本真值：换版本号只改这一处（sw.js CACHE / version.json version / APP_VERSION 都对着它断言）。
 # 刻意不把版本号写死在断言里 —— v0.22.0 时硬编码 574 / 0.21.2 各误报过一轮。
-EXPECT_VER = "0.23.3"
+EXPECT_VER = "0.23.4"
 
 fails, warns, oks = [], [], []
 
@@ -196,14 +196,20 @@ else:
 
 # ============================================================== C. 语言包
 print("\n[C] 语言包")
-NKEY = 580          # v0.23.0：574（v0.22.0）+ 6（导览）
+NKEY = 585          # v0.23.4：580（v0.23.0）+ 5（诺诺记得你）
 KEYS = [
     "No worries — try again",                                      # v0.22.0 state 文案
     "Tour", "Show me around",                                      # v0.23.0 导览入口
     "Not sure where to start? Let me show you around.",            # v0.23.0 浮动邀请
     "You've seen the whole place.",                                # v0.23.0 收尾站
     "Finish", "Take me there",                                     # v0.23.0 骨架按钮
+    "Practice that line",                                          # v0.23.4 记得你·按钮
+    "This line has tripped you up {c} times — today we crack it.",  # v0.23.4 记得你·卡句
+    "You last spoke Chinese {d} days ago — let’s pick up where you stopped.",   # v0.23.4 记得你·召回
+    "Yesterday this line scored {s}. Beat it today?",              # v0.23.4 记得你·超越
+    "Yesterday this line scored {s}. One more try — it will stick.",  # v0.23.4 记得你·再来
 ]
+LG_SET = None
 for lg in ["zh", "es", "ru", "vi", "id", "th"]:
     p = os.path.join(APP, "langs", lg + ".json")
     d = json.loads(rd(p).decode("utf-8"))
@@ -214,6 +220,17 @@ for lg in ["zh", "es", "ru", "vi", "id", "th"]:
         bad("%s.json 缺 key %r" % (lg, miss))
     else:
         print("  ✓ %s.json %d key，%d 个关键 key 齐" % (lg, len(d), len(KEYS)))
+    # 跨语言一致性：六个文件的 key 集合必须完全相同。
+    # 这是「零英文 fallback」的**真实判据** —— 只数总数的话，
+    # 「一处多译、另一处漏译」会互相抵消，总数照样对得上。
+    s = set(d.keys())
+    if LG_SET is None:
+        LG_SET = (lg, s)
+    elif s != LG_SET[1]:
+        bad("%s.json 与 %s.json key 集合不一致（%s 多 %r / %s 多 %r）"
+            % (lg, LG_SET[0], LG_SET[0], sorted(LG_SET[1] - s)[:3], lg, sorted(s - LG_SET[1])[:3]))
+if LG_SET:
+    print("  ✓ 六个语言文件 key 集合完全一致（%d 键）" % len(LG_SET[1]))
 
 # ============================================================ D. landing
 print("\n[D] landing")
