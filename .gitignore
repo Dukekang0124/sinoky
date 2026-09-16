@@ -37,5 +37,6 @@ _internal/fix-2026-09-13/_dbg-*.mjs
 _internal/fix-2026-09-13/realfilm-*/
 _internal/fix-2026-09-13/patch_skill_*.py
 
-# v0.23.13 配图升级（fix-2026-09-16）的一次性产物：旧图对照/刺绣放大图/拼图，可由 verify_images.py 重建
+# v0.23.13 配图升级（fix-2026-09-16）的一次性产物：旧图对照/刺绣放大图/拼图/真机截图，可由 verify_images.py / live-read-visual.mjs 重建
 _internal/fix-2026-09-16/_*
+_internal/fix-2026-09-16/shots/
