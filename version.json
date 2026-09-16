@@ -6,8 +6,8 @@
     "versionCode": 2313,
     "version": "0.23.13",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.13-release.apk",
-    "md5": "e14f92b7b8500b3ec559a19e9b830334",
-    "size": 24668570
+    "md5": "c34116c79d91088e7c34fe57a0277926",
+    "size": 25409946
   },
   "noteEn": [
     "v0.23.13: artwork upgrade (round one). (1) Fixed the cut-out quality of 16 3D Nono pose / empty-state / onboarding images - their edges had a ring of residual white fringe (21%-37% near-white on the edge, versus 0.2% on the character's own key-art baseline), which looked grey and cheap on the dark UI, and all of them sit in the first-load precache so every new user cached them immediately. This round only redoes the alpha edge with the pose and composition frozen (silhouette overlap >=97%), bringing edge near-white down to <=1.1% with all four corners cleared. (2) The six Daily Sentence images are replaced with a new 'Nono in real scenes' set - the 3D Nono placed in real Chinese everyday scenes (breakfast, metro, seeing a doctor, friends' hotpot, wet market, travel), in a stylized-realism style, at 800x450, 44-57KB each. Web and APK ship together this round.",
