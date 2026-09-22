@@ -665,5 +665,15 @@
  "<b>One line each — you play the \"you\".</b>": "<b>สลับกันคนละประโยค — คุณรับบท «คุณ»</b>",
  "AI coach insights": "AI coach insights",
  "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
- "AI spotted this needs more drills": "AI spotted this needs more drills"
+ "AI spotted this needs more drills": "AI spotted this needs more drills",
+ "AI effect self-check": "ตรวจสอบผลลัพธ์ AI เอง",
+ "Does Nono's AI coaching make you speak more? Here is the loop.": "การโค้วชิ่ง AI ของนอนนอทำให้คุณพูดมากขึ้นไหม? นี่คือลูป.",
+ "AI coached you": "นอนนอโค้วชิ่งคุณแล้ว",
+ "times Nono gave a tailored tip": "ครั้งที่นอนนอให้คำแนะนำเฉพาะตัว",
+ "You came back to drill": "คุณกลับมาฝึกซ้อม",
+ "times you practiced after a tip": "ครั้งที่คุณฝึกหลังได้คำแนะนำ",
+ "Loop rate": "อัตราลูป",
+ "coaching → you speak again": "โค้วชิ่ง → คุณพูดอีกครั้ง",
+ "Offline fallback": "สำรองออฟไลน์",
+ "coach missed (offline/timeout)": "โค้ชพลาด (ออฟไลน์/หมดเวลา)"
 }

@@ -665,5 +665,15 @@
  "<b>One line each — you play the \"you\".</b>": "<b>Bergantian satu kalimat — kamu memerankan «kamu».</b>",
  "AI coach insights": "AI coach insights",
  "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
- "AI spotted this needs more drills": "AI spotted this needs more drills"
+ "AI spotted this needs more drills": "AI spotted this needs more drills",
+ "AI effect self-check": "Cek efek AI",
+ "Does Nono's AI coaching make you speak more? Here is the loop.": "Apakah coaching AI Nono membuatmu lebih banyak bicara? Ini loop-nya.",
+ "AI coached you": "Nono melatih kamu",
+ "times Nono gave a tailored tip": "kali Nono memberi tips khusus",
+ "You came back to drill": "Kamu kembali berlatih",
+ "times you practiced after a tip": "kali kamu berlatih setelah tips",
+ "Loop rate": "Rasio loop",
+ "coaching → you speak again": "coaching → kamu bicara lagi",
+ "Offline fallback": "Cadangan offline",
+ "coach missed (offline/timeout)": "coach gagal (offline/timeout)"
 }

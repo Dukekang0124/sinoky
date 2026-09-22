@@ -665,5 +665,15 @@
  "<b>One line each — you play the \"you\".</b>": "<b>Una frase cada uno — tú haces de «tú».</b>",
  "AI coach insights": "AI coach insights",
  "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
- "AI spotted this needs more drills": "AI spotted this needs more drills"
+ "AI spotted this needs more drills": "AI spotted this needs more drills",
+ "AI effect self-check": "Autochequeo del efecto de la IA",
+ "Does Nono's AI coaching make you speak more? Here is the loop.": "¿El entrenamiento con IA de Nono te hace hablar más? Este es el bucle.",
+ "AI coached you": "Nono te entrenó",
+ "times Nono gave a tailored tip": "veces que Nono dio un consejo a medida",
+ "You came back to drill": "Volviste a practicar",
+ "times you practiced after a tip": "veces que practicaste tras un consejo",
+ "Loop rate": "Tasa de bucle",
+ "coaching → you speak again": "entrenamiento → hablas otra vez",
+ "Offline fallback": "Respaldo sin conexión",
+ "coach missed (offline/timeout)": "entrenador falló (offline/timeout)"
 }

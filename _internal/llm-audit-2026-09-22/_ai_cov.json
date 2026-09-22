@@ -1,0 +1,2905 @@
+{
+ "entries": [
+  {
+   "src": "inline",
+   "fn": "openShare",
+   "ctx": "openShare();return false;",
+   "line": 827,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "finishScene",
+   "ctx": "finishScene()",
+   "line": 843,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "goBack",
+   "ctx": "goBack()",
+   "line": 844,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "renderDialogList",
+   "ctx": "renderDialogList()",
+   "line": 882,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "renderCities",
+   "ctx": "renderCities()",
+   "line": 888,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('home')",
+   "line": 891,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setDayMode",
+   "ctx": "setDayMode('timeline')",
+   "line": 899,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setDayMode",
+   "ctx": "setDayMode('topic')",
+   "line": 900,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "playToneQ",
+   "ctx": "playToneQ()",
+   "line": 914,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "toneToggleQuiz",
+   "ctx": "toneToggleQuiz()",
+   "line": 916,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nextTone",
+   "ctx": "nextTone()",
+   "line": 917,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('cards')",
+   "line": 947,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('reading')",
+   "line": 948,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('sentences')",
+   "line": 949,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "startTone",
+   "ctx": "startTone()",
+   "line": 950,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('scenes-read')",
+   "line": 951,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('days')",
+   "line": 960,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('cities')",
+   "line": 961,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('dialog')",
+   "line": 962,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('review')",
+   "line": 963,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "if",
+   "ctx": "if(event.target===this)closeReader()",
+   "line": 977,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "closeReader",
+   "ctx": "if(event.target===this)closeReader()",
+   "line": 977,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "closeReader",
+   "ctx": "closeReader()",
+   "line": 981,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "readerHear",
+   "ctx": "readerHear()",
+   "line": 986,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "readerFollow",
+   "ctx": "readerFollow()",
+   "line": 987,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "readerScore",
+   "ctx": "readerScore()",
+   "line": 988,
+   "direct": [],
+   "indirect": [],
+   "score": [
+    "/api/score (评分模型)"
+   ],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "toggleReaderPy",
+   "ctx": "toggleReaderPy()",
+   "line": 989,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('settings')",
+   "line": 1001,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('prog')",
+   "line": 1002,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoOpen",
+   "ctx": "nonoOpen()",
+   "line": 1003,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "shareSinoky",
+   "ctx": "shareSinoky()",
+   "line": 1005,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setVoice",
+   "ctx": "setVoice('zh-CN-XiaoxiaoNeural',this)",
+   "line": 1023,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setVoice",
+   "ctx": "setVoice('zh-CN-YunxiNeural',this)",
+   "line": 1024,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setEngine",
+   "ctx": "setEngine('edge',this)",
+   "line": 1027,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setEmotion",
+   "ctx": "setEmotion('happy',this)",
+   "line": 1028,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setEmotion",
+   "ctx": "setEmotion('serious',this)",
+   "line": 1029,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "setEmotion",
+   "ctx": "setEmotion('gentle',this)",
+   "line": 1030,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "checkUpdate",
+   "ctx": "checkUpdate()",
+   "line": 1035,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('me')",
+   "line": 1039,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "exportProgress",
+   "ctx": "exportProgress()",
+   "line": 1058,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "importProgress",
+   "ctx": "importProgress()",
+   "line": 1059,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentMode",
+   "ctx": "sentMode('completion')",
+   "line": 1096,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentMode",
+   "ctx": "sentMode('connectors')",
+   "line": 1097,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentMode",
+   "ctx": "sentMode('keywords')",
+   "line": 1098,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "rdRead",
+   "ctx": "rdRead()",
+   "line": 1114,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "rdSample",
+   "ctx": "rdSample()",
+   "line": 1115,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "rdTogglePy",
+   "ctx": "rdTogglePy()",
+   "line": 1116,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoMin",
+   "ctx": "nonoMin()",
+   "line": 1131,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoClose",
+   "ctx": "nonoClose()",
+   "line": 1132,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoToggle",
+   "ctx": "nonoToggle()",
+   "line": 1142,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('practice')",
+   "line": 1147,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go('explore')",
+   "line": 1147,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "onMaskTap",
+   "ctx": "onMaskTap()",
+   "line": 1156,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "closeFB",
+   "ctx": "closeFB()",
+   "line": 1175,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sendFB",
+   "ctx": "sendFB(this)",
+   "line": 1176,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "closeShare",
+   "ctx": "closeShare()",
+   "line": 1180,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "copyShare",
+   "ctx": "copyShare()",
+   "line": 1188,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "openReader",
+   "ctx": "openReader('+i+')",
+   "line": 1317,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "stopPropagation",
+   "ctx": "event.stopPropagation();speak(\\''+it.hz.replace(/'/g,'')+'\\',this)",
+   "line": 1319,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "event.stopPropagation();speak(\\''+it.hz.replace(/'/g,'')+'\\',this)",
+   "line": 1319,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "event.stopPropagation();speak(\\''+it.hz.replace(/'/g,'')+'\\',this)",
+   "line": 1319,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "stopPropagation",
+   "ctx": "event.stopPropagation();toggleRPop('+k+')",
+   "line": 1334,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "toggleRPop",
+   "ctx": "event.stopPropagation();toggleRPop('+k+')",
+   "line": 1334,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go(\\'home\\')",
+   "line": 3125,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "openScene",
+   "ctx": "openScene(\\''+sc.id+'\\',undefined,\\''+from+'\\')",
+   "line": 3130,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "openScene",
+   "ctx": "openScene(\\''+sc.id+'\\')",
+   "line": 3149,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go(\\'cities\\')",
+   "line": 3155,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "openScene",
+   "ctx": "openScene(\\''+it.x.scene.id+'\\','+it.x.idx+',\\'days\\')",
+   "line": 3211,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "stopPropagation",
+   "ctx": "event.stopPropagation();nonoPracticeLine(\\''+it.x.scene.id+'\\','+it.x.idx+')",
+   "line": 3214,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "nonoPracticeLine",
+   "ctx": "event.stopPropagation();nonoPracticeLine(\\''+it.x.scene.id+'\\','+it.x.idx+')",
+   "line": 3214,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "toggleDay",
+   "ctx": "toggleDay('+n+')",
+   "line": 3233,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "endTour",
+   "ctx": "endTour()",
+   "line": 3286,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go(\\'review\\')",
+   "line": 3377,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "listenPlay",
+   "ctx": "listenPlay()",
+   "line": 3463,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "answerListen",
+   "ctx": "answerListen('+n+')",
+   "line": 3470,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "listenSay",
+   "ctx": "listenSay()",
+   "line": 3480,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "listenNext",
+   "ctx": "listenNext()",
+   "line": 3481,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "listenSPlay",
+   "ctx": "listenSPlay(this)",
+   "line": 3570,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "answerListenS",
+   "ctx": "answerListenS('+i+')",
+   "line": 3577,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "listenSSay",
+   "ctx": "listenSSay()",
+   "line": 3585,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "listenSNext",
+   "ctx": "listenSNext()",
+   "line": 3586,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "openScene",
+   "ctx": "openScene(\\''+it.scene.id+'\\','+it.idx+')",
+   "line": 3682,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "revMark",
+   "ctx": "revMark(\\''+k+'\\',true,'+REV_PASS[mode]+')",
+   "line": 3686,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "revMark",
+   "ctx": "revMark(\\''+k+'\\',false,40)",
+   "line": 3687,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoPracticeLine",
+   "ctx": "nonoPracticeLine(\\''+it.scene.id+'\\','+it.idx+')",
+   "line": 3688,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoStop",
+   "ctx": "nonoStop()",
+   "line": 4355,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoStartPractice",
+   "ctx": "nonoStartPractice()",
+   "line": 4369,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoStartChat",
+   "ctx": "nonoStartChat()",
+   "line": 4370,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoChatTextToggle",
+   "ctx": "nonoChatTextToggle()",
+   "line": 4415,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoChatSendText",
+   "ctx": "nonoChatSendText()",
+   "line": 4419,
+   "direct": [],
+   "indirect": [
+    "/api/chat (GLM-4-Flash)"
+   ],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoRecord",
+   "ctx": "nonoRecord()",
+   "line": 4545,
+   "direct": [],
+   "indirect": [],
+   "score": [
+    "/api/score (评分模型)"
+   ],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoSay",
+   "ctx": "nonoSay()",
+   "line": 4606,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoNewLine",
+   "ctx": "nonoNewLine()",
+   "line": 4608,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoPracticeKey",
+   "ctx": "nonoPracticeKey(\\''+k+'\\')",
+   "line": 4798,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "stopPropagation",
+   "ctx": "event.stopPropagation();nonoPracticeLine(\\''+x.scene.id+'\\','+x.idx+')",
+   "line": 4821,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "nonoPracticeLine",
+   "ctx": "event.stopPropagation();nonoPracticeLine(\\''+x.scene.id+'\\','+x.idx+')",
+   "line": 4821,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "openScene",
+   "ctx": "openScene(\\''+x.scene.id+'\\','+x.idx+')",
+   "line": 4822,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go(\\'days\\')",
+   "line": 4832,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "toggleMoreScenes",
+   "ctx": "toggleMoreScenes()",
+   "line": 4853,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "switchListen",
+   "ctx": "switchListen(1,this)",
+   "line": 4857,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "switchListen",
+   "ctx": "switchListen(2,this)",
+   "line": 4858,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "stopPropagation",
+   "ctx": "event.stopPropagation();speak(\\'' + x.zi.replace(/'/g,'') +\n         '\\',this)",
+   "line": 4946,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "event.stopPropagation();speak(\\'' + x.zi.replace(/'/g,'') +\n         '\\',this)",
+   "line": 4946,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "event.stopPropagation();speak(\\'' + x.zi.replace(/'/g,'') +\n         '\\',this)",
+   "line": 4946,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\''+p.hear.hz.replace(/'/g,'')+'\\',this)",
+   "line": 4962,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "speak(\\''+p.hear.hz.replace(/'/g,'')+'\\',this)",
+   "line": 4962,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "toggleZh",
+   "ctx": "toggleZh('+i+')",
+   "line": 4964,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\''+(p.tts||p.hz).replace(/'/g,'')+'\\',this)",
+   "line": 4967,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "speak(\\''+(p.tts||p.hz).replace(/'/g,'')+'\\',this)",
+   "line": 4967,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "speedSpeak",
+   "ctx": "speedSpeak(\\''+(p.tts||p.hz).replace(/'/g,'')+'\\',this)",
+   "line": 4969,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "speedSpeak(\\''+(p.tts||p.hz).replace(/'/g,'')+'\\',this)",
+   "line": 4969,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "scorePhrase",
+   "ctx": "scorePhrase('+i+')",
+   "line": 4970,
+   "direct": [],
+   "indirect": [],
+   "score": [
+    "/api/score (评分模型)"
+   ],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoPracticeLine",
+   "ctx": "nonoPracticeLine(\\''+curScene.id+'\\','+i+')",
+   "line": 4971,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "markDone",
+   "ctx": "markDone('+i+')",
+   "line": 4972,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\'' + (r.tts||r.hz).replace(/'/g,'') + '\\',this)",
+   "line": 5023,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "speak(\\'' + (r.tts||r.hz).replace(/'/g,'') + '\\',this)",
+   "line": 5023,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "toggleReal",
+   "ctx": "toggleReal(' + i + ')",
+   "line": 5033,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "toneTap",
+   "ctx": "toneTap('+n+')",
+   "line": 5372,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\'' + esc(c.hanzi) + '\\',this)",
+   "line": 5604,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "esc",
+   "ctx": "speak(\\'' + esc(c.hanzi) + '\\',this)",
+   "line": 5604,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "fcToggle",
+   "ctx": "fcToggle()",
+   "line": 5605,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "fcStar",
+   "ctx": "fcStar()",
+   "line": 5606,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "fcMove",
+   "ctx": "fcMove(-1)",
+   "line": 5609,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "fcStrokes",
+   "ctx": "fcStrokes()",
+   "line": 5610,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "fcMove",
+   "ctx": "fcMove(1)",
+   "line": 5611,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\'' + esc(hz) + '\\',this)",
+   "line": 5642,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "esc",
+   "ctx": "speak(\\'' + esc(hz) + '\\',this)",
+   "line": 5642,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "fcRemove",
+   "ctx": "fcRemove(\\'' + esc(hz) + '\\')",
+   "line": 5643,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "esc",
+   "ctx": "fcRemove(\\'' + esc(hz) + '\\')",
+   "line": 5643,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "hwPlay",
+   "ctx": "hwPlay()",
+   "line": 5689,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "hwQuiz",
+   "ctx": "hwQuiz()",
+   "line": 5690,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentCheck",
+   "ctx": "sentCheck()",
+   "line": 5783,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentReveal",
+   "ctx": "sentReveal()",
+   "line": 5784,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentNext",
+   "ctx": "sentNext()",
+   "line": 5785,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentPick",
+   "ctx": "sentPick(' + i + ',this)",
+   "line": 5798,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "sentWord",
+   "ctx": "sentWord(this)",
+   "line": 5807,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "rdTap",
+   "ctx": "rdTap(' + i + ')",
+   "line": 5944,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\'' + esc(w) + '\\',this)",
+   "line": 5983,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "esc",
+   "ctx": "speak(\\'' + esc(w) + '\\',this)",
+   "line": 5983,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "rdStar",
+   "ctx": "rdStar(\\'' + esc(w) + '\\')",
+   "line": 5984,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "esc",
+   "ctx": "rdStar(\\'' + esc(w) + '\\')",
+   "line": 5984,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "rdClose",
+   "ctx": "rdClose()",
+   "line": 5985,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "go",
+   "ctx": "go(\\'dialog\\')",
+   "line": 6429,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "openDialog",
+   "ctx": "openDialog(\\''+id+'\\')",
+   "line": 6441,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\''+l.hz.replace(/'/g,'')+'\\',this)",
+   "line": 6459,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "speak(\\''+l.hz.replace(/'/g,'')+'\\',this)",
+   "line": 6459,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "nonoPracticeDialog",
+   "ctx": "nonoPracticeDialog(\\''+id+'\\','+idx+')",
+   "line": 6460,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "speak",
+   "ctx": "speak(\\''+d.flip.hz.replace(/'/g,'')+'\\',this)",
+   "line": 6467,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replace",
+   "ctx": "speak(\\''+d.flip.hz.replace(/'/g,'')+'\\',this)",
+   "line": 6467,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "markDialog",
+   "ctx": "markDialog(\\''+id+'\\')",
+   "line": 6468,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "replayDialog",
+   "ctx": "replayDialog(\\''+id+'\\')",
+   "line": 6469,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "toggleDialogHz",
+   "ctx": "toggleDialogHz()",
+   "line": 6470,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "swap",
+   "ctx": "SHARE.swap()",
+   "line": 7038,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "setFmt",
+   "ctx": "SHARE.setFmt(\\'square\\')",
+   "line": 7041,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "setFmt",
+   "ctx": "SHARE.setFmt(\\'story\\')",
+   "line": 7042,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "setNick",
+   "ctx": "SHARE.setNick(this.value)",
+   "line": 7044,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "doShare",
+   "ctx": "SHARE.doShare()",
+   "line": 7045,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "doSave",
+   "ctx": "SHARE.doSave()",
+   "line": 7046,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "open",
+   "ctx": "SHARE.open(\\'' + theme + '\\')",
+   "line": 7195,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "copyWechat",
+   "ctx": "SK.copyWechat()",
+   "line": 7442,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "doUnlock",
+   "ctx": "SK.doUnlock()",
+   "line": 7443,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "tryUnlockCode",
+   "ctx": "SK.tryUnlockCode(document.getElementById(\\'ucode\\').value)",
+   "line": 7445,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "getElementById",
+   "ctx": "SK.tryUnlockCode(document.getElementById(\\'ucode\\').value)",
+   "line": 7445,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "closeOvl",
+   "ctx": "closeOvl(\\'limitWall\\')",
+   "line": 7446,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "resetUnlock",
+   "ctx": "SK.resetUnlock()",
+   "line": 7488,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "showLimitWall",
+   "ctx": "SK.showLimitWall(\\'chat\\')",
+   "line": 7491,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "closeOvl",
+   "ctx": "closeOvl(\\'extendModal\\')",
+   "line": 7514,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "inline",
+   "fn": "nonoAgain",
+   "ctx": "nonoAgain()",
+   "line": 7924,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "nonoAgainHide",
+   "ctx": "nonoAgainHide()",
+   "line": 7925,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "nonoTour",
+   "ctx": "nonoTour(' + (i + 1) + ')",
+   "line": 8127,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "inline",
+   "fn": "nonoTourGo",
+   "ctx": "nonoTourGo(\\'' + t.view + '\\')",
+   "line": 8129,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "listener",
+   "fn": "function",
+   "ctx": "function(e",
+   "line": 3838,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "listener",
+   "fn": "function",
+   "ctx": "function(ev",
+   "line": 3841,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "listener",
+   "fn": "function",
+   "ctx": "function(",
+   "line": 6411,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "listener",
+   "fn": "function",
+   "ctx": "function (e",
+   "line": 8296,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "listener",
+   "fn": "function",
+   "ctx": "function (",
+   "line": 8306,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "onclick-assign",
+   "fn": "function",
+   "ctx": "function",
+   "line": 3823,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": false
+  },
+  {
+   "src": "onclick-assign",
+   "fn": "dismiss",
+   "ctx": "dismiss",
+   "line": 3940,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  },
+  {
+   "src": "onclick-assign",
+   "fn": "rdClose",
+   "ctx": "rdClose",
+   "line": 5991,
+   "direct": [],
+   "indirect": [],
+   "score": [],
+   "defined": true
+  }
+ ],
+ "funcs": {
+  "lsGet": {
+   "line": 8050
+  },
+  "lsSet": {
+   "line": 8051
+  },
+  "renderScenesRead": {
+   "line": 1314
+  },
+  "openReader": {
+   "line": 1326
+  },
+  "closeReader": {
+   "line": 1346
+  },
+  "toggleRPop": {
+   "line": 1347
+  },
+  "toggleReaderPy": {
+   "line": 1352
+  },
+  "readerHear": {
+   "line": 1356
+  },
+  "clearRCur": {
+   "line": 1357
+  },
+  "highlightRWord": {
+   "line": 1358
+  },
+  "clearRHighlight": {
+   "line": 1359
+  },
+  "readerFollow": {
+   "line": 1361
+  },
+  "readerScore": {
+   "line": 1376
+  },
+  "allDayPhrases": {
+   "line": 2546
+  },
+  "dayItems": {
+   "line": 2553
+  },
+  "daySaid": {
+   "line": 2554
+  },
+  "isDayDone": {
+   "line": 2555
+  },
+  "currentDay": {
+   "line": 2560
+  },
+  "seedDayDone": {
+   "line": 2572
+  },
+  "markDaysDone": {
+   "line": 2582
+  },
+  "dayDoneLabel": {
+   "line": 2596
+  },
+  "loadState": {
+   "line": 2604
+  },
+  "saveStateLocal": {
+   "line": 2607
+  },
+  "saveState": {
+   "line": 2608
+  },
+  "pushProfileSoon": {
+   "line": 2613
+  },
+  "pushProfile": {
+   "line": 2619
+  },
+  "funMark": {
+   "line": 2671
+  },
+  "buildStat": {
+   "line": 2679
+  },
+  "pullProfile": {
+   "line": 2702
+  },
+  "flushProfileNow": {
+   "line": 2750
+  },
+  "setVoice": {
+   "line": 2772
+  },
+  "setEngine": {
+   "line": 2774
+  },
+  "setEmotion": {
+   "line": 2777
+  },
+  "unlockAudio": {
+   "line": 2811
+  },
+  "playBlob": {
+   "line": 2825
+  },
+  "serverSpeak": {
+   "line": 2838
+  },
+  "retryOrFail": {
+   "line": 2846
+  },
+  "webSpeak": {
+   "line": 2877
+  },
+  "youdaoSpeak": {
+   "line": 2894
+  },
+  "fail": {
+   "line": 2923
+  },
+  "playLocal": {
+   "line": 2920
+  },
+  "speak": {
+   "line": 2940
+  },
+  "chain": {
+   "line": 2948
+  },
+  "$": {
+   "line": 2971
+  },
+  "humanizeApiErr": {
+   "line": 2974
+  },
+  "toast": {
+   "line": 2991
+  },
+  "today": {
+   "line": 2996
+  },
+  "go": {
+   "line": 6374
+  },
+  "isCity": {
+   "line": 3041
+  },
+  "cityList": {
+   "line": 3042
+  },
+  "cityDoneN": {
+   "line": 3043
+  },
+  "litCount": {
+   "line": 3045
+  },
+  "escHtml": {
+   "line": 3046
+  },
+  "cityEn": {
+   "line": 3047
+  },
+  "phrasePic": {
+   "line": 3055
+  },
+  "cityThumbHtml": {
+   "line": 3061
+  },
+  "progRingSvg": {
+   "line": 3068
+  },
+  "mapThumbHtml": {
+   "line": 3078
+  },
+  "sceneHeroHtml": {
+   "line": 3088
+  },
+  "badgeGalleryHtml": {
+   "line": 3092
+  },
+  "bannerHtml": {
+   "line": 3124
+  },
+  "cityRowHtml": {
+   "line": 3128
+  },
+  "cityBlockHtml": {
+   "line": 3137
+  },
+  "renderCities": {
+   "line": 3158
+  },
+  "dayState": {
+   "line": 3198
+  },
+  "dayItemHtml": {
+   "line": 3204
+  },
+  "dayPhraseRow": {
+   "line": 3210
+  },
+  "toggleDay": {
+   "line": 3217
+  },
+  "setDayMode": {
+   "line": 3222
+  },
+  "dayDoneCell": {
+   "line": 3224
+  },
+  "dayRowHtml": {
+   "line": 3229
+  },
+  "renderDays": {
+   "line": 3247
+  },
+  "tourNeeded": {
+   "line": 3269
+  },
+  "endTour": {
+   "line": 3274
+  },
+  "tourHtml": {
+   "line": 3275
+  },
+  "reviewPool": {
+   "line": 3293
+  },
+  "reviewToday": {
+   "line": 3302
+  },
+  "fnv": {
+   "line": 3312
+  },
+  "dayDiff": {
+   "line": 3323
+  },
+  "rvDue": {
+   "line": 3324
+  },
+  "pickReview": {
+   "line": 3329
+  },
+  "reviewPeek": {
+   "line": 3337
+  },
+  "reviewNext": {
+   "line": 3338
+  },
+  "reviewCardHtml": {
+   "line": 3364
+  },
+  "listenPool": {
+   "line": 3387
+  },
+  "listenToday": {
+   "line": 3396
+  },
+  "pickListen": {
+   "line": 3402
+  },
+  "listenCur": {
+   "line": 3411
+  },
+  "listenPlay": {
+   "line": 3416
+  },
+  "answerListen": {
+   "line": 3424
+  },
+  "listenNext": {
+   "line": 3437
+  },
+  "listenSay": {
+   "line": 3446
+  },
+  "listenCardHtml": {
+   "line": 3452
+  },
+  "listenSPool": {
+   "line": 3492
+  },
+  "listenSToday": {
+   "line": 3505
+  },
+  "pickListenS": {
+   "line": 3510
+  },
+  "listenSCur": {
+   "line": 3525
+  },
+  "listenSPlay": {
+   "line": 3530
+  },
+  "answerListenS": {
+   "line": 3534
+  },
+  "listenSNext": {
+   "line": 3546
+  },
+  "listenSSay": {
+   "line": 3555
+  },
+  "listenCardSHtml": {
+   "line": 3559
+  },
+  "revKey": {
+   "line": 3597
+  },
+  "revModeOf": {
+   "line": 3598
+  },
+  "revState": {
+   "line": 3604
+  },
+  "revQueue": {
+   "line": 3609
+  },
+  "revSchedule": {
+   "line": 3627
+  },
+  "shiftDate": {
+   "line": 3646
+  },
+  "rvMarkError": {
+   "line": 3653
+  },
+  "rvMarkGood": {
+   "line": 3661
+  },
+  "revMark": {
+   "line": 3670
+  },
+  "renderReview": {
+   "line": 3671
+  },
+  "renderMe": {
+   "line": 3694
+  },
+  "renderSettings": {
+   "line": 3706
+  },
+  "curLang": {
+   "line": 3721
+  },
+  "T": {
+   "line": 3722
+  },
+  "loadLangPack": {
+   "line": 3726
+  },
+  "applyI18n": {
+   "line": 3733
+  },
+  "ensureI18nObserver": {
+   "line": 3773
+  },
+  "setLang": {
+   "line": 3782
+  },
+  "applyLang": {
+   "line": 3788
+  },
+  "renderLangList": {
+   "line": 3789
+  },
+  "buildPanel": {
+   "line": 3811
+  },
+  "closeLangPanel": {
+   "line": 3827
+  },
+  "checkUpdate": {
+   "line": 3860
+  },
+  "getLocalApkVersionCode": {
+   "line": 3888
+  },
+  "checkApkUpdate": {
+   "line": 3897
+  },
+  "showApkUpdateDialog": {
+   "line": 3912
+  },
+  "dismiss": {
+   "line": 6368
+  },
+  "updStoreGet": {
+   "line": 3945
+  },
+  "updStoreSet": {
+   "line": 3946
+  },
+  "showApkUpdateBar": {
+   "line": 3947
+  },
+  "updOverlay": {
+   "line": 3968
+  },
+  "startApkUpdate": {
+   "line": 3995
+  },
+  "toggleMoreScenes": {
+   "line": 4066
+  },
+  "switchListen": {
+   "line": 4073
+  },
+  "nonoPose": {
+   "line": 4089
+  },
+  "nonoBusy": {
+   "line": 4090
+  },
+  "nonoDaily": {
+   "line": 4096
+  },
+  "nonoShown": {
+   "line": 4102
+  },
+  "nonoShow": {
+   "line": 4106
+  },
+  "nonoMin": {
+   "line": 4128
+  },
+  "nonoClose": {
+   "line": 4129
+  },
+  "nonoOpen": {
+   "line": 4134
+  },
+  "nonoToggle": {
+   "line": 4135
+  },
+  "nonoView": {
+   "line": 4140
+  },
+  "nonoContextGreet": {
+   "line": 4143
+  },
+  "badgeReport": {
+   "line": 4199
+  },
+  "badgeSync": {
+   "line": 4210
+  },
+  "nonoResetIdle": {
+   "line": 4245
+  },
+  "nonoState": {
+   "line": 4279
+  },
+  "push": {
+   "line": 4294
+  },
+  "nonoSay": {
+   "line": 4311
+  },
+  "nonoRecord": {
+   "line": 4319
+  },
+  "nonoStop": {
+   "line": 4363
+  },
+  "nonoModeChips": {
+   "line": 4367
+  },
+  "nonoModeMenu": {
+   "line": 4372
+  },
+  "nonoStartChat": {
+   "line": 4385
+  },
+  "nonoChatOpen": {
+   "line": 4386
+  },
+  "nonoChatControls": {
+   "line": 4410
+  },
+  "nonoRecordStart": {
+   "line": 4423
+  },
+  "nonoRecordEnd": {
+   "line": 4431
+  },
+  "nonoChatTextToggle": {
+   "line": 4439
+  },
+  "nonoChatSendText": {
+   "line": 4444
+  },
+  "nonoChatBubble": {
+   "line": 4451
+  },
+  "nonoChatScrollToBottom": {
+   "line": 4476
+  },
+  "nonoChatSend": {
+   "line": 4480
+  },
+  "nonoChatReply": {
+   "line": 4494
+  },
+  "nonoPanelFlex": {
+   "line": 4529
+  },
+  "nonoGrade": {
+   "line": 4538
+  },
+  "bar": {
+   "line": 4616
+  },
+  "nonoStartPractice": {
+   "line": 4621
+  },
+  "nonoNewLine": {
+   "line": 4646
+  },
+  "nonoStartPracticeWith": {
+   "line": 4647
+  },
+  "nonoPracticeLine": {
+   "line": 4665
+  },
+  "nonoPracticeDialog": {
+   "line": 4679
+  },
+  "nonoToneTip": {
+   "line": 4695
+  },
+  "nonoHearTone": {
+   "line": 4705
+  },
+  "nonoDailyLine": {
+   "line": 4714
+  },
+  "nonoPracticeKey": {
+   "line": 4729
+  },
+  "nonoWatchBadges": {
+   "line": 4745
+  },
+  "nonoGraduation": {
+   "line": 4762
+  },
+  "weakLinesHtml": {
+   "line": 4778
+  },
+  "renderHome": {
+   "line": 4806
+  },
+  "goBack": {
+   "line": 4868
+  },
+  "openScene": {
+   "line": 4869
+  },
+  "splitSyllables": {
+   "line": 4894
+  },
+  "toneOfSyl": {
+   "line": 4912
+  },
+  "toneColorPy": {
+   "line": 4919
+  },
+  "sylHtml": {
+   "line": 4926
+  },
+  "renderSceneList": {
+   "line": 4952
+  },
+  "speedSpeak": {
+   "line": 4993
+  },
+  "realHtml": {
+   "line": 5020
+  },
+  "toggleReal": {
+   "line": 5037
+  },
+  "toggleZh": {
+   "line": 5048
+  },
+  "markDone": {
+   "line": 5060
+  },
+  "stopRecording": {
+   "line": 5103
+  },
+  "encodeWAV": {
+   "line": 5106
+  },
+  "wstr": {
+   "line": 5110
+  },
+  "blobToWav": {
+   "line": 5122
+  },
+  "asrText": {
+   "line": 5136
+  },
+  "scorePhrase": {
+   "line": 5159
+  },
+  "sendScore": {
+   "line": 5258
+  },
+  "renderScore": {
+   "line": 5289
+  },
+  "errHuman": {
+   "line": 5314
+  },
+  "toneLabel": {
+   "line": 5323
+  },
+  "toneLabelEn": {
+   "line": 5324
+  },
+  "finishScene": {
+   "line": 5325
+  },
+  "startTone": {
+   "line": 5357
+  },
+  "renderToneBtns": {
+   "line": 5369
+  },
+  "toneTap": {
+   "line": 5379
+  },
+  "playToneQ": {
+   "line": 5387
+  },
+  "toneAudioOk": {
+   "line": 5395
+  },
+  "playToneAudio": {
+   "line": 5405
+  },
+  "nextTone": {
+   "line": 5424
+  },
+  "toneToggleQuiz": {
+   "line": 5432
+  },
+  "toneNewQuiz": {
+   "line": 5447
+  },
+  "answerTone": {
+   "line": 5458
+  },
+  "renderProgress": {
+   "line": 5480
+  },
+  "saveNW": {
+   "line": 5501
+  },
+  "esc": {
+   "line": 5502
+  },
+  "fallbackLevels": {
+   "line": 5506
+  },
+  "initLevels": {
+   "line": 5513
+  },
+  "renderLevelTabs": {
+   "line": 5525
+  },
+  "selectLevel": {
+   "line": 5539
+  },
+  "fcState": {
+   "line": 5545
+  },
+  "loadCards": {
+   "line": 5553
+  },
+  "showLevelPending": {
+   "line": 5573
+  },
+  "renderCard": {
+   "line": 5586
+  },
+  "fcToggle": {
+   "line": 5616
+  },
+  "fcMove": {
+   "line": 5617
+  },
+  "fcStar": {
+   "line": 5623
+  },
+  "renderNW": {
+   "line": 5629
+  },
+  "fcRemove": {
+   "line": 5647
+  },
+  "loadHW": {
+   "line": 5657
+  },
+  "fcStrokes": {
+   "line": 5670
+  },
+  "hwPlay": {
+   "line": 5706
+  },
+  "hwQuiz": {
+   "line": 5711
+  },
+  "saveSentStats": {
+   "line": 5731
+  },
+  "loadSentences": {
+   "line": 5733
+  },
+  "renderSentStats": {
+   "line": 5742
+  },
+  "sentMode": {
+   "line": 5747
+  },
+  "recordSent": {
+   "line": 5755
+  },
+  "sentNext": {
+   "line": 5760
+  },
+  "renderSentence": {
+   "line": 5770
+  },
+  "sentCheck": {
+   "line": 5824
+  },
+  "sentPick": {
+   "line": 5855
+  },
+  "sentWord": {
+   "line": 5874
+  },
+  "sentReveal": {
+   "line": 5880
+  },
+  "rdLoadPY": {
+   "line": 5901
+  },
+  "rdSample": {
+   "line": 5910
+  },
+  "rdTogglePy": {
+   "line": 5911
+  },
+  "rdCardOf": {
+   "line": 5917
+  },
+  "rdRead": {
+   "line": 5922
+  },
+  "rdTap": {
+   "line": 5959
+  },
+  "rdClose": {
+   "line": 5994
+  },
+  "rdStar": {
+   "line": 6008
+  },
+  "logErr": {
+   "line": 6019
+  },
+  "openFB": {
+   "line": 6041
+  },
+  "onMaskTap": {
+   "line": 6047
+  },
+  "closeFB": {
+   "line": 6051
+  },
+  "sendFB": {
+   "line": 6056
+  },
+  "applyDefault": {
+   "line": 6103
+  },
+  "pt": {
+   "line": 6119
+  },
+  "onDown": {
+   "line": 6125
+  },
+  "onMove": {
+   "line": 6146
+  },
+  "onUp": {
+   "line": 6160
+  },
+  "openShare": {
+   "line": 7169
+  },
+  "closeShare": {
+   "line": 7170
+  },
+  "copyShare": {
+   "line": 7176
+  },
+  "fallbackCopy": {
+   "line": 6239
+  },
+  "exportProgress": {
+   "line": 6251
+  },
+  "importProgress": {
+   "line": 6260
+  },
+  "copyText": {
+   "line": 6289
+  },
+  "shareSinoky": {
+   "line": 7175
+  },
+  "renderOnboard": {
+   "line": 6396
+  },
+  "finishOnboard": {
+   "line": 6406
+  },
+  "dialogBlockHtml": {
+   "line": 6426
+  },
+  "renderDialogList": {
+   "line": 6431
+  },
+  "openDialog": {
+   "line": 6450
+  },
+  "markDialog": {
+   "line": 6476
+  },
+  "toggleDialogHz": {
+   "line": 6477
+  },
+  "replayDialog": {
+   "line": 6482
+  },
+  "step": {
+   "line": 6489
+  },
+  "_hui": {
+   "line": 6747
+  },
+  "_corner": {
+   "line": 6757
+  },
+  "_brand": {
+   "line": 6768
+  },
+  "_seal": {
+   "line": 6780
+  },
+  "_fit": {
+   "line": 6796
+  },
+  "_cjkLines": {
+   "line": 6801
+  },
+  "_stack": {
+   "line": 6815
+  },
+  "_scales": {
+   "line": 6839
+  },
+  "_rr": {
+   "line": 6857
+  },
+  "_tiles": {
+   "line": 6868
+  },
+  "_heat": {
+   "line": 6887
+  },
+  "isApp": {
+   "line": 7394
+  },
+  "isUnlocked": {
+   "line": 7395
+  },
+  "loadQuota": {
+   "line": 7396
+  },
+  "saveQuota": {
+   "line": 7403
+  },
+  "quotaLimit": {
+   "line": 7404
+  },
+  "quotaLeft": {
+   "line": 7410
+  },
+  "quotaBlocked": {
+   "line": 7415
+  },
+  "quotaInc": {
+   "line": 7416
+  },
+  "quotaBadge": {
+   "line": 7422
+  },
+  "closeOvl": {
+   "line": 7430
+  },
+  "buildOvl": {
+   "line": 7432
+  },
+  "showLimitWall": {
+   "line": 7434
+  },
+  "copyWechat": {
+   "line": 7463
+  },
+  "doUnlock": {
+   "line": 7464
+  },
+  "tryUnlockCode": {
+   "line": 7470
+  },
+  "renderQuotaUI": {
+   "line": 7476
+  },
+  "maybeExtendSentence": {
+   "line": 7507
+  },
+  "startExtend": {
+   "line": 7520
+  },
+  "hookRenderMe": {
+   "line": 7547
+  },
+  "panelOpen": {
+   "line": 7784
+  },
+  "ensureTip": {
+   "line": 7804
+  },
+  "ensureAgain": {
+   "line": 7917
+  },
+  "warm": {
+   "line": 8012
+  },
+  "hideOtherAreas": {
+   "line": 8076
+  },
+  "inviteOk": {
+   "line": 8162
+  },
+  "dismissInvite": {
+   "line": 8177
+  },
+  "showInvite": {
+   "line": 8181
+  },
+  "inviteTick": {
+   "line": 8200
+  },
+  "stageCount": {
+   "line": 8271
+  },
+  "rLGet": {
+   "line": 8336
+  },
+  "rLSet": {
+   "line": 8337
+  },
+  "rToday": {
+   "line": 8338
+  },
+  "rGap": {
+   "line": 8340
+  },
+  "rPick": {
+   "line": 8345
+  },
+  "bootRecall": {
+   "line": 8416
+  },
+  "waveZeroSpeak": {
+   "line": 8476
+  },
+  "waveTick": {
+   "line": 8515
+  },
+  "waveKick": {
+   "line": 8523
+  },
+  "qrPolynomial": {
+   "line": 9772
+  },
+  "toUTF8Array": {
+   "line": 10844
+  },
+  "qrOf": {
+   "line": 10895
+  },
+  "roundRect": {
+   "line": 10902
+  },
+  "drawInto": {
+   "line": 10912
+  },
+  "day1Info": {
+   "line": 11003
+  },
+  "sealOf": {
+   "line": 11027
+  },
+  "drawDay1": {
+   "line": 11061
+  }
+ },
+ "matrix": {
+  "诺诺聊天": {
+   "total": 9,
+   "llm_direct": 1,
+   "llm_indirect": 2,
+   "score": 0
+  },
+  "诺诺跟读评分": {
+   "total": 13,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 2
+  },
+  "场景/情境对话": {
+   "total": 5,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "每日一句": {
+   "total": 2,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "字卡/HSK": {
+   "total": 6,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "复习引擎": {
+   "total": 14,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "声调训练": {
+   "total": 9,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "首页/导航": {
+   "total": 3,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "设置/语言": {
+   "total": 4,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "徽章/成就": {
+   "total": 3,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "限流/解锁": {
+   "total": 5,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  },
+  "反馈/埋点": {
+   "total": 1,
+   "llm_direct": 0,
+   "llm_indirect": 0,
+   "score": 0
+  }
+ },
+ "chat_callers": [
+  "listenSPool",
+  "nonoChatReply"
+ ]
+}

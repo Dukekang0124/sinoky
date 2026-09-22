@@ -665,5 +665,15 @@
  "<b>One line each — you play the \"you\".</b>": "<b>一人一句 —— 你来演那个「你」。</b>",
  "AI coach insights": "AI coach insights",
  "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
- "AI spotted this needs more drills": "AI spotted this needs more drills"
+ "AI spotted this needs more drills": "AI spotted this needs more drills",
+ "AI effect self-check": "AI 效果自检",
+ "Does Nono's AI coaching make you speak more? Here is the loop.": "诺诺的 AI 点评真的让你更愿意开口吗？这是闭环数据。",
+ "AI coached you": "诺诺已为你点评",
+ "times Nono gave a tailored tip": "诺诺给出专属建议的次数",
+ "You came back to drill": "你回来重练了",
+ "times you practiced after a tip": "收到建议后你练习的次数",
+ "Loop rate": "闭环率",
+ "coaching → you speak again": "点评 → 你再次开口",
+ "Offline fallback": "离线兜底",
+ "coach missed (offline/timeout)": "点评未命中（离线/超时）"
 }

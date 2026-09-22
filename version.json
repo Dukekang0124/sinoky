@@ -1,7 +1,7 @@
 {
-  "version": "0.23.15",
+  "version": "0.23.16",
   "updated": "2026-09-22",
-  "note": "v0.23.15：免费大模型（GLM-4-Flash）渗透进练习主战场。给 /api/chat 加 coach 模式，跟读评分后由诺诺用 AI 生成个性化点评（中英混排、指出最该改进的点），离线回落模板点评；新增 S.aiWeak 维度弱点账本（声调/声母/流利度），AI 发现的弱点驱动复习挑句更积极，并在 Progress 页展示「AI coach insights」。仅网页发布，APK 沿用 0.23.13，用户经 SW 更新生效。",
+  "note": "v0.23.16：L3 闭环度量（效果可被验证）。新增 S.aiFunnel 漏斗账本——记录诺诺 AI 点评触达次数（hit）、离线兜底次数（miss）、被点评后用户回来重练的闭环次数（loop）与闭环率；闭环检测经 nonoGrade 包装覆盖跟读/复习/情境对话全部开口场景，不改动旧函数体。漏斗随 buildStat 经由 pushProfile（8s 防抖+脏检查）零新增写地上云，Progress 页读时聚合展示「AI 效果自检」卡。仅网页发布，APK 沿用 0.23.13，用户经 SW 更新生效。",
   "apk": {
     "versionCode": 2313,
     "version": "0.23.13",
@@ -10,6 +10,7 @@
     "size": 25409946
   },
   "noteEn": [
+    "v0.23.16: L3 closed-loop measurement (effect is now verifiable). New S.aiFunnel ledger records Nono AI-coaching reach (hit), offline fallback (miss), and the closed-loop count (loop) plus loop rate - how often a user came back to drill after a tip. Loop detection is woven through a nonoGrade wrapper covering read-score, review and scenario-dialogue (every speaking moment), without touching the original function bodies. The funnel ships to the cloud via buildStat inside pushProfile (8s debounce + dirty-check), zero extra KV writes respecting the 1000/day quota; an \"AI effect self-check\" card renders on Progress from local state. Web-only; APK stays 0.23.13, App users get it via SW update.",
     "v0.23.15: the free LLM (GLM-4-Flash) now permeates the core practice loop. Added a coach mode to /api/chat; after each read-and-score Nono generates a personalised AI comment (mixed CN/EN, pinpointing the one thing to improve), falling back to the template comment when offline. New S.aiWeak dimension ledger (tones/initials/fluency) drives more aggressive review picking and surfaces on Progress as AI coach insights. Web-only; APK stays 0.23.13, App users get it via SW update.",
     "v0.23.14: i18n hardcoded-Chinese gap fix (web-only release). In v0.23.13 and earlier, many user-facing strings were hardcoded in Chinese - the quota/limit wall, the 'add-one-sentence' modal, the quota card, the practice-entry button, Nono's corner hints, and the score/dictation error messages - so any non-Chinese UI (Spanish/Russian/Vietnamese/Indonesian/Thai) still showed Chinese (screenshot evidence: a fully-Chinese modal). This release wraps those strings in T() and adds 75 new dictionary keys (aligned across all 6 languages), plus fixes 3 purely-Chinese instruction hints (explore/days/dialog). The APK stays on 0.23.13; App users get the new dictionaries automatically via the Service Worker update.",
     "v0.23.13: artwork upgrade (round one). (1) Fixed the cut-out quality of 16 3D Nono pose / empty-state / onboarding images - their edges had a ring of residual white fringe (21%-37% near-white on the edge, versus 0.2% on the character's own key-art baseline), which looked grey and cheap on the dark UI, and all of them sit in the first-load precache so every new user cached them immediately. This round only redoes the alpha edge with the pose and composition frozen (silhouette overlap >=97%), bringing edge near-white down to <=1.1% with all four corners cleared. (2) The six Daily Sentence images are replaced with a new 'Nono in real scenes' set - the 3D Nono placed in real Chinese everyday scenes (breakfast, metro, seeing a doctor, friends' hotpot, wet market, travel), in a stylized-realism style, at 800x450, 44-57KB each. Web and APK ship together this round.",

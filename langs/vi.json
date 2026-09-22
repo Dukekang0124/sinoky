@@ -665,5 +665,15 @@
  "<b>One line each — you play the \"you\".</b>": "<b>Mỗi người một câu — bạn đóng vai «bạn».</b>",
  "AI coach insights": "AI coach insights",
  "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
- "AI spotted this needs more drills": "AI spotted this needs more drills"
+ "AI spotted this needs more drills": "AI spotted this needs more drills",
+ "AI effect self-check": "Tự kiểm tra hiệu quả AI",
+ "Does Nono's AI coaching make you speak more? Here is the loop.": "Huấn luyện AI của Nono có giúp bạn nói nhiều hơn không? Đây là vòng lặp.",
+ "AI coached you": "Nono đã huấn luyện bạn",
+ "times Nono gave a tailored tip": "số lần Nono đưa ra lời khuyên riêng",
+ "You came back to drill": "Bạn quay lại luyện tập",
+ "times you practiced after a tip": "số lần bạn tập sau một lời khuyên",
+ "Loop rate": "Tỷ lệ vòng lặp",
+ "coaching → you speak again": "huấn luyện → bạn nói lại",
+ "Offline fallback": "Dự phòng ngoại tuyến",
+ "coach missed (offline/timeout)": "huấn luyện viên trượt (offline/timeout)"
 }

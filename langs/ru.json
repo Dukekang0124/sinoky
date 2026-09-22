@@ -665,5 +665,15 @@
  "<b>One line each — you play the \"you\".</b>": "<b>По фразе каждый — вы играете «себя».</b>",
  "AI coach insights": "AI coach insights",
  "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
- "AI spotted this needs more drills": "AI spotted this needs more drills"
+ "AI spotted this needs more drills": "AI spotted this needs more drills",
+ "AI effect self-check": "Самопроверка эффекта ИИ",
+ "Does Nono's AI coaching make you speak more? Here is the loop.": "ИИ-тренировка Ноно заставляет вас говорить больше? Вот цикл.",
+ "AI coached you": "Ноно тренировал вас",
+ "times Nono gave a tailored tip": "раз Ноно давал персональный совет",
+ "You came back to drill": "Вы вернулись тренироваться",
+ "times you practiced after a tip": "раз вы тренировались после совета",
+ "Loop rate": "Коэффициент цикла",
+ "coaching → you speak again": "тренировка → вы снова говорите",
+ "Offline fallback": "Резерв офлайн",
+ "coach missed (offline/timeout)": "тренер пропустил (офлайн/таймаут)"
 }
