@@ -243,6 +243,13 @@ nav button.on{color:var(--red)}
 .rd-input{width:100%;min-height:110px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;line-height:1.6;font-family:inherit;color:var(--txt);resize:vertical}
 .rd-input:focus{outline:none;border-color:var(--teal)}
 .rd-hint{font-size:11.5px;color:var(--sub);margin-top:8px;line-height:1.5}
+/* v0.23.20 B2 写作教练卡（wcx- 前缀，避免与 .wr-txt/.wc-steps 撞名） */
+.wcx-task{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.6;margin:4px 0 8px}
+.wcx-input{width:100%;min-height:64px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.6;font-family:inherit;color:var(--txt);resize:vertical}
+.wcx-input:focus{outline:none;border-color:var(--teal)}
+.wcx-res{margin-top:10px}
+.wcx-hz{display:block;background:rgba(127,179,176,.12);border-radius:12px;padding:10px 12px;font-size:19px;font-weight:700;line-height:1.9;letter-spacing:.5px}
+.wcx-fb{font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:8px}
 .rd-text{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;line-height:2.5;font-size:20px;margin-top:12px}
 .rd-seg{display:inline-block;cursor:pointer;padding:1px 2px;border-radius:5px;transition:background .15s}
 .rd-seg:hover{background:rgba(127,179,176,.18)}
@@ -1201,7 +1208,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.19';
+var APP_VERSION = '0.23.20';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -11576,6 +11583,115 @@ async function fetchDailyPlan(box){
   var _rh = renderHome;
   renderHome = function(){ var r=_rh.apply(null,arguments); try{ var dp=(S.dailyPlan)||{}; if(dp.date!==today()||!dp.text){ setTimeout(function(){ var box=document.getElementById('home-ai-plan'); if(box) fetchDailyPlan(box); }, 90); } }catch(e){} return r; };
 })();
+
+/* ===== 场景8（v0.23.20 新增）：语法/写作教练（mode:'correct' / B2）=====
+   落点：首页"✍️ 写一句中文"卡。用户在输入框写一句中文 → 免费大模型批改
+   （第一行=改正句，以下=1-2 句说明）→ 点"读出来"复用诺诺跟读闭环
+   （nonoStartPracticeWith → coach 点评 + aiWeak + aiFunnel 自动触发）。
+   Edify Gate：写作本身不产生开口，故结果必带"读出来"按钮闭环到"说"；缺它不做。
+   成本纪律：每次提交 1 次 AI 调用，软上限 ≤10/天（S.writeCap）；离线/超时回落。
+   全部追加/包装，不改旧函数体。 */
+function ensureWriteCoach(){ S.writeCoach = S.writeCoach || { date:null, task:'', answer:'', corrected:'', feedback:'' }; return S.writeCoach; }
+function ensureWriteCap(){ S.writeCap = S.writeCap || { date:null, n:0 }; if(S.writeCap.date !== today()){ S.writeCap.date = today(); S.writeCap.n = 0; } return S.writeCap; }
+function writeLearnedWords(){
+  try{
+    var out = [];
+    (CARDS||[]).slice(0, 12).forEach(function(c){ if(c && c.hanzi && out.indexOf(c.hanzi) < 0) out.push(c.hanzi); });
+    return out;
+  }catch(e){ return []; }
+}
+function writeTaskOfDay(){
+  try{
+    var t = today(), seed = 0;
+    for(var i=0;i<t.length;i++){ seed = (seed*31 + t.charCodeAt(i)) >>> 0; }
+    var w = writeLearnedWords();
+    var tasks = [
+      function(){ return (w.length >= 2)
+          ? T('Write one sentence with each of these characters:') + ' ' + w.slice(0,3).join('、')
+          : T('Write a short sentence in Chinese about today.'); },
+      function(){ return T('Introduce yourself in Chinese (name, where you are from, what you like).'); },
+      function(){ return T('Write one sentence in Chinese about what you did today.'); },
+      function(){ return T('Translate into Chinese:') + ' \u201c' + T('I would like to drink tea.') + '\u201d'; }
+    ];
+    return tasks[seed % tasks.length]();
+  }catch(e){ return T('Write a short sentence in Chinese about today.'); }
+}
+function writeEligible(){
+  try{
+    var said = 0; if(S.phrases) for(var k in S.phrases) said += (S.phrases[k]||[]).length;
+    var dn = 0; if(S.dayDone) for(var d in S.dayDone) if(S.dayDone[d]) dn++;
+    return said >= 3 || dn >= 1;
+  }catch(e){ return false; }
+}
+function writeResultHtml(corrected, feedback){
+  return '<div class="wcx-res"><span class="wcx-hz">' + escHtml(corrected) + '</span>'
+    + (feedback ? '<div class="wcx-fb">' + escHtml(feedback).replace(/\n/g,'<br>') + '</div>' : '')
+    + '<button class="btn primary" id="wcx-read" onclick="writeReadOut()" style="width:100%;margin-top:8px">' + T('Read it out') + ' 🐼</button></div>';
+}
+function writeOfflineHtml(){ return '<div class="rd-offline">' + T('Coach offline — try again in a moment.') + '</div>'; }
+function writeCardHtml(){
+  try{
+    if(!writeEligible()) return '';
+    var wc = ensureWriteCoach();
+    var task = wc.task || writeTaskOfDay();
+    var ans = (wc.date === today() && wc.answer) ? escHtml(wc.answer) : '';
+    var res = (wc.date === today() && wc.corrected) ? writeResultHtml(wc.corrected, wc.feedback) : '';
+    return '<div class="card review-drill write-card"><div class="top"><h2>✍️ ' + T('Write a sentence') + '</h2><span class="badge">AI</span></div>'
+      + '<p class="desc">' + T('Nono checks your Chinese and helps you say it right.') + '</p>'
+      + '<div class="wcx-task">' + escHtml(task) + '</div>'
+      + '<textarea id="wcx-input" class="wcx-input" rows="2" placeholder="' + T('Write your Chinese sentence here…') + '"'
+      + ' oninput="try{S.writeCoach=ensureWriteCoach();S.writeCoach.date=today();S.writeCoach.answer=this.value}catch(e){}">' + ans + '</textarea>'
+      + '<button class="btn primary" id="wcx-btn" onclick="writeSubmit()" style="width:100%">' + T('Check my Chinese') + '</button>'
+      + '<div id="wcx-result">' + res + '</div></div>';
+  }catch(e){ return ''; }
+}
+async function writeSubmit(){
+  try{
+    var box = document.getElementById('wcx-result');
+    var inp = document.getElementById('wcx-input');
+    if(!inp) return;
+    var ans = String(inp.value || '').replace(/^\s+|\s+$/g, '');
+    if(!ans){ if(box) box.innerHTML = '<div class="rd-offline">' + T('Write something first') + '</div>'; return; }
+    if(ans.length > 300) ans = ans.slice(0, 300);
+    if(ensureWriteCap().n >= 10){ if(box) box.innerHTML = writeOfflineHtml(); return; }
+    var wc = ensureWriteCoach();
+    if(wc.date !== today()){ wc.date = today(); wc.corrected = ''; wc.feedback = ''; }
+    wc.task = wc.task || writeTaskOfDay();
+    wc.answer = ans;
+    if(box) box.innerHTML = '<div class="rd-skel">' + T('Nono is checking…') + '</div>';
+    var text = '【学生背景】' + (learnerCtx() || '新用户') + '。\n题目：' + wc.task + '\n我的中文：' + ans;
+    var resp = await fetch(API_BASE + 'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'correct' }) });
+    var d = await resp.json().catch(function(){ return {}; });
+    if(resp.ok && d.reply && d.reply.trim()){
+      ensureWriteCap().n++;
+      var raw = d.reply.trim();
+      var nl = raw.indexOf('\n');
+      var corrected = (nl >= 0 ? raw.slice(0, nl) : raw).replace(/^[•\-\*\s]+/, '').trim();
+      var feedback = (nl >= 0 ? raw.slice(nl + 1) : ''); /* 保留换行，渲染时转 <br> */
+      corrected = corrected.replace(/^["\u201c\u2018'「]+|["\u201d\u2019'」]+$/g, '').trim();
+      if(!corrected) corrected = ans;
+      wc.corrected = corrected; wc.feedback = feedback;
+      if(typeof saveState === 'function') saveState();
+      if(box) box.innerHTML = writeResultHtml(corrected, feedback);
+    } else {
+      if(box) box.innerHTML = writeOfflineHtml();
+    }
+  }catch(e){ try{ var b=document.getElementById('wcx-result'); if(b) b.innerHTML = writeOfflineHtml(); }catch(e2){} }
+}
+function writeReadOut(){
+  try{
+    var wc = ensureWriteCoach(); if(!wc.corrected) return;
+    NONO.closed = false;
+    var panel = document.getElementById('nono-panel'); if(panel) panel.style.display = 'block';
+    var msg = document.getElementById('nono-msg'); if(msg) msg.innerHTML = T('Let us say this one together.') + ' <b>' + T('Read after me') + '</b>';
+    nonoStartPracticeWith({ hz: wc.corrected, py:'', en:'', key:'write', scene:'write' });
+    if(typeof nonoState === 'function') nonoState('idle');
+  }catch(e){}
+}
+/* 包装 reviewCardHtml：追加写作教练卡，不改旧体 */
+(function(){ if(typeof reviewCardHtml!=='function') return; var _rc=reviewCardHtml; reviewCardHtml=function(){ var h=''; try{ h=_rc.apply(null,arguments)||''; }catch(e){} try{ h=h+writeCardHtml(); }catch(e){} return h; }; })();
+/* ===== /B2 语法写作教练 ===== */
 
 /* ===== /v0.23.18 渗透收口 ===== */
 </script>

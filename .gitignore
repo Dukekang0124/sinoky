@@ -40,3 +40,7 @@ _internal/fix-2026-09-13/patch_skill_*.py
 # v0.23.13 配图升级（fix-2026-09-16）的一次性产物：旧图对照/刺绣放大图/拼图/真机截图，可由 verify_images.py / live-read-visual.mjs 重建
 _internal/fix-2026-09-16/_*
 _internal/fix-2026-09-16/shots/
+
+# v0.23.20 B2 写作教练：真跑自检截图与抽取产物（可由 smoke_write_b2.mjs / check_inline.mjs 重建，不入库）
+_internal/fix-2026-09-22/shots/
+_internal/fix-2026-09-22/_ai_block.js

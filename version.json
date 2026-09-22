@@ -1,7 +1,7 @@
 {
-  "version": "0.23.19",
+  "version": "0.23.20",
   "updated": "2026-09-22",
-  "note": "v0.23.19：智能化深度升级（A1/A2/A3/B1）。A1 记忆化教练——诺诺现在\"记得\"你的发音弱点与最近读错的字，跟读点评/情境接话/复习出题/自由对话都会带上你的学习背景，点评更准；A3 语义兜底——点评顺带提醒同音错字（如\"买/卖\"）；A2 字卡 grounding——收藏汉字时诺诺依据真实已学字表造记忆锚点；B1 自适应日计划——首页新增\"诺诺为你定的今日计划\"卡，按全量进度生成 ≤3 条今日行动、末条必为开口说（每日≤1次 AI 调用）。全部复用免费 GLM-4-Flash，零新增 KV 写，离线/超时均回落。仅网页发布，APK 经 CI 出包后同版本上线。",
+  "note": "v0.23.20：新增「语法/写作教练」（B2）。首页多了一张\"✍️ 写一句中文\"卡：诺诺出题（用你学过的字造句 / 自我介绍 / 说说今天做了什么 / 翻译一句），你写下中文，诺诺当场批改——先给改正后最自然的一句话，再用 1-2 句讲清改了什么、为什么。改完点\"读出来\"就直接接着跟读打分与点评，把\"写\"闭环到\"说\"。每次提交 1 次 AI 调用、每天最多 10 次，全程走免费 GLM-4-Flash，离线/超时回落。仅网页发布，APK 经 CI 出包后同版本上线。",
   "apk": {
     "versionCode": 2319,
     "version": "0.23.19",
@@ -10,6 +10,7 @@
     "size": 25442714
   },
   "noteEn": [
+    "v0.23.20: new Grammar & Writing Coach (B2). A new \"Write a sentence\" card on Home: Nono sets the task (build a sentence with characters you have learned / introduce yourself / say what you did today / translate a line), you write it in Chinese, and Nono corrects it on the spot - first the most natural corrected sentence, then one or two short lines explaining what changed and why. Tap \"Read it out\" to go straight into read-after-me scoring and the coaching tip, closing the loop from writing to speaking. One AI call per submission, capped at 10/day, all on free GLM-4-Flash with offline/timeout fallbacks. Web-only until the CI-built APK ships at the same version.",
     "v0.23.19: intelligence depth upgrade (A1/A2/A3/B1). A1 memory coach - Nono now \"remembers\" your pronunciation weak spots and recent misread characters; coach comment, scene reply, review drill and free chat all carry your learning context for sharper tips. A3 semantic fallback - the coach also flags homophone mistakes (e.g. mai/mmai). A2 flashcard grounding - when you star a character Nono builds the memory anchor against your real learned word list. B1 adaptive daily plan - a new \"Nono's plan for you\" Home card generates <=3 daily actions from your full progress, the last one always a speak task (<=1 AI call/day). All on free GLM-4-Flash, zero extra KV writes, with offline/time-out fallbacks. Web-only until the CI-built APK ships at the same version.",
     "v0.23.18: LLM permeation closeout (scenarios 3/4/5/6 + L4). Scenario dialogue: after each read-and-score Nono replies as the local person to keep a real conversation going (<=8/day). Daily sentence: the free LLM now generates a fresh beginner-level practice sentence each day (<=1/day, falls back to a static line offline). Flashcards: starring a new character auto-generates a memory trick + confusable-character note (once per character). Tone gym: on a wrong answer Nono appends a plain-language explanation (no overwrite). L4: backend /api/agg aggregates retention and sample size (devices / D1-returned / AI-users / hit / loop / weak, zero writes). Web-only; APK stays 0.23.13, App users get it via SW update.",
     "v0.23.17: AI review drill (free LLM permeates scenario 2). When a dimension in S.aiWeak reaches >=2 misses, Nono uses the free LLM (/api/chat drill mode) to generate a short Chinese practice sentence targeting that weak spot, shown on the Home review card. Tapping \"Read after me\" reuses the Nono practice loop (coach comment + aiWeak + checkAiLoop auto-triggered). At most 1 AI call per day (S.revDrill cache), respecting the API budget. Web-only; APK stays 0.23.13, App users get it via SW update.",

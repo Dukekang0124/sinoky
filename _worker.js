@@ -498,6 +498,11 @@ const TONE_SYSTEM = '你是"诺诺"，中文老师。用户刚在声调训练里
    沿用免费 GLM-4-Flash 链，零服务端重构，仅新增一个 mode 分支。 */
 const PLAN_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫学习规划师。用户会给你他的学习状态（已学天数、已练句数、连续天数、发音弱点）。请基于状态生成今天的练习计划：最多 3 条，每条一句中文具体行动（如"再练一遍三声词：你好吗"），最后一条必须是开口说的任务。不要解释，用换行分隔每条，每条以 • 开头。';
 
+/* v0.23.20 B2 语法/写作教练：批改初学者写的中文。
+   输出格式硬约束——第一行必须是可直接朗读的改正句（前端靠首个换行切分），
+   使写作练习能闭环到"读出来"（Edify Gate）。 */
+const CORRECT_SYSTEM = '你是给中文初学者（母语非中文）批改写作的教练。用户会给你一道题和 ta 写的中文。请严格分两段回复：\n第一行：改正后最自然、适合初学者的完整中文句子（只一句，可直接朗读；不要拼音、不要引号、不要任何解释）。\n第二行起：最多两句简单中文（可夹极少英文）说明改了什么、为什么。\n如果原句已经很好，第一行就给一个更地道的说法。不要输出题目，不要长篇解释。';
+
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
 // 聊天专属限流（复用全局 RATE_MAP 兜底 + env.RL DO 强一致计数，独立 key 前缀 chat:）
@@ -531,6 +536,7 @@ async function chatGLM(userText, hist, env, mode) {
     : (mode === 'card') ? CARD_SYSTEM
     : (mode === 'tone') ? TONE_SYSTEM
     : (mode === 'plan') ? PLAN_SYSTEM
+    : (mode === 'correct') ? CORRECT_SYSTEM
     : CHAT_SYSTEM;
   const messages = [{ role: 'system', content: sysPrompt }];
   (hist || []).forEach(function (h) {
