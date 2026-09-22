@@ -3,11 +3,11 @@
   "updated": "2026-09-22",
   "note": "v0.23.20：新增「语法/写作教练」（B2）。首页多了一张\"✍️ 写一句中文\"卡：诺诺出题（用你学过的字造句 / 自我介绍 / 说说今天做了什么 / 翻译一句），你写下中文，诺诺当场批改——先给改正后最自然的一句话，再用 1-2 句讲清改了什么、为什么。改完点\"读出来\"就直接接着跟读打分与点评，把\"写\"闭环到\"说\"。每次提交 1 次 AI 调用、每天最多 10 次，全程走免费 GLM-4-Flash，离线/超时回落。仅网页发布，APK 经 CI 出包后同版本上线。",
   "apk": {
-    "versionCode": 2319,
-    "version": "0.23.19",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.19-release.apk",
-    "md5": "d73bef34652d5d5ab934e69433dc2d60",
-    "size": 25442714
+    "versionCode": 2320,
+    "version": "0.23.20",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.20-release.apk",
+    "md5": "188a9e8655013dcabc142cf7bb089446",
+    "size": 25446810
   },
   "noteEn": [
     "v0.23.20: new Grammar & Writing Coach (B2). A new \"Write a sentence\" card on Home: Nono sets the task (build a sentence with characters you have learned / introduce yourself / say what you did today / translate a line), you write it in Chinese, and Nono corrects it on the spot - first the most natural corrected sentence, then one or two short lines explaining what changed and why. Tap \"Read it out\" to go straight into read-after-me scoring and the coaching tip, closing the loop from writing to speaking. One AI call per submission, capped at 10/day, all on free GLM-4-Flash with offline/timeout fallbacks. Web-only until the CI-built APK ships at the same version.",
