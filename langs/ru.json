@@ -675,5 +675,9 @@
  "Loop rate": "Коэффициент цикла",
  "coaching → you speak again": "тренировка → вы снова говорите",
  "Offline fallback": "Резерв офлайн",
- "coach missed (offline/timeout)": "тренер пропустил (офлайн/таймаут)"
+ "coach missed (offline/timeout)": "тренер пропустил (офлайн/таймаут)",
+ "Nono made you a drill": "Ноно приготовил тебе упражнение",
+ "Based on your weak spots, try saying this:": "По твоим слабым местам, попробуй сказать это:",
+ "Nono is preparing a drill for you…": "Ноно готовит для тебя упражнение…",
+ "Coach offline — tap any line above to practise": "Тренер офлайн — нажми любую фразу выше"
 }

@@ -483,6 +483,10 @@ async function summarizeStats(env) {
 const GLM_CHAT_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 const CHAT_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的熊猫。请用简单、口语化的简体中文回复，每轮1-3句。不要写英文解释，不要纠正对方语法（除非对方主动问）。每轮结尾抛一个开放式的简单问题，鼓励对方用中文回答。语气像朋友聊天，自然友好。';
 const COACH_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的熊猫口语教练。用户刚跟读了一句中文，你会看到他的评分数据。请用诺诺鼓励、朋友的口吻，给一句不超过 30 字的中文为主简短点评：指出他最该改进的那一个点（声调、声母、流利度或完整度），并给一句具体小建议。可以夹 1-2 个英文关键词（如 tone、rhythm）。不要抛开放式问题，不要写长篇解释。';
+/* ===== v0.23.17 DRILL_SYSTEM (AI 复习出题) ===== */
+const DRILL_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫出题教练。用户在某方面有发音弱点（如三声、声母、流利度）。请基于这个弱点，造一句超简单、日常、不超过 8 个字的中文练习句，让 ta 开口练这个弱点。格式严格为：中文句子 | English translation。不要解释，不要多余标点。例：你好吗 | How are you';
+/* ===== v0.23.17 DRILL_SYSTEM (AI 复习出题) ===== */_END
+
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
 // 聊天专属限流（复用全局 RATE_MAP 兜底 + env.RL DO 强一致计数，独立 key 前缀 chat:）
@@ -509,7 +513,7 @@ async function chatRateOk(ip, env) {
 }
 
 async function chatGLM(userText, hist, env, mode) {
-  const sysPrompt = (mode === 'coach') ? COACH_SYSTEM : CHAT_SYSTEM;
+  const sysPrompt = (mode === 'coach') ? COACH_SYSTEM : (mode === 'drill') ? DRILL_SYSTEM : CHAT_SYSTEM;
   const messages = [{ role: 'system', content: sysPrompt }];
   (hist || []).forEach(function (h) {
     if (h && h.t) messages.push({ role: h.r === 'assistant' ? 'assistant' : 'user', content: h.t });

@@ -675,5 +675,9 @@
  "Loop rate": "อัตราลูป",
  "coaching → you speak again": "โค้วชิ่ง → คุณพูดอีกครั้ง",
  "Offline fallback": "สำรองออฟไลน์",
- "coach missed (offline/timeout)": "โค้ชพลาด (ออฟไลน์/หมดเวลา)"
+ "coach missed (offline/timeout)": "โค้ชพลาด (ออฟไลน์/หมดเวลา)",
+ "Nono made you a drill": "โนโน่สร้างแบบฝึกสำหรับคุณ",
+ "Based on your weak spots, try saying this:": "ตามจุดอ่อนของคุณ ลองพูดประโยคนี้:",
+ "Nono is preparing a drill for you…": "โนโน่กำลังเตรียมแบบฝึกให้คุณ…",
+ "Coach offline — tap any line above to practise": "โค้ชออฟไลน์ — แตะประโยคใดก็ได้ด้านบนเพื่อฝึก"
 }

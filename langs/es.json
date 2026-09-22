@@ -675,5 +675,9 @@
  "Loop rate": "Tasa de bucle",
  "coaching → you speak again": "entrenamiento → hablas otra vez",
  "Offline fallback": "Respaldo sin conexión",
- "coach missed (offline/timeout)": "entrenador falló (offline/timeout)"
+ "coach missed (offline/timeout)": "entrenador falló (offline/timeout)",
+ "Nono made you a drill": "Nono te preparó un ejercicio",
+ "Based on your weak spots, try saying this:": "Según tus puntos débiles, intenta decir esto:",
+ "Nono is preparing a drill for you…": "Nono está preparando un ejercicio para ti…",
+ "Coach offline — tap any line above to practise": "Coach sin conexión — toca cualquier frase de arriba"
 }

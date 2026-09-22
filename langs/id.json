@@ -675,5 +675,9 @@
  "Loop rate": "Rasio loop",
  "coaching → you speak again": "coaching → kamu bicara lagi",
  "Offline fallback": "Cadangan offline",
- "coach missed (offline/timeout)": "coach gagal (offline/timeout)"
+ "coach missed (offline/timeout)": "coach gagal (offline/timeout)",
+ "Nono made you a drill": "Nono membuat latihan untukmu",
+ "Based on your weak spots, try saying this:": "Berdasarkan kelemahanmu, coba ucapkan ini:",
+ "Nono is preparing a drill for you…": "Nono sedang menyiapkan latihan untukmu…",
+ "Coach offline — tap any line above to practise": "Coach offline — ketuk kalimat mana saja di atas"
 }

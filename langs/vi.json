@@ -675,5 +675,9 @@
  "Loop rate": "Tỷ lệ vòng lặp",
  "coaching → you speak again": "huấn luyện → bạn nói lại",
  "Offline fallback": "Dự phòng ngoại tuyến",
- "coach missed (offline/timeout)": "huấn luyện viên trượt (offline/timeout)"
+ "coach missed (offline/timeout)": "huấn luyện viên trượt (offline/timeout)",
+ "Nono made you a drill": "Nono đã tạo một bài tập cho bạn",
+ "Based on your weak spots, try saying this:": "Dựa trên điểm yếu của bạn, hãy thử nói câu này:",
+ "Nono is preparing a drill for you…": "Nono đang chuẩn bị bài tập cho bạn…",
+ "Coach offline — tap any line above to practise": "Huấn luyện viên offline — chạm câu nào cũng được bên trên"
 }

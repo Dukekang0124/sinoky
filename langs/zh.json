@@ -675,5 +675,9 @@
  "Loop rate": "闭环率",
  "coaching → you speak again": "点评 → 你再次开口",
  "Offline fallback": "离线兜底",
- "coach missed (offline/timeout)": "点评未命中（离线/超时）"
+ "coach missed (offline/timeout)": "点评未命中（离线/超时）",
+ "Nono made you a drill": "诺诺为你出了道题",
+ "Based on your weak spots, try saying this:": "针对你的薄弱点，试着说这句：",
+ "Nono is preparing a drill for you…": "诺诺正在为你出题…",
+ "Coach offline — tap any line above to practise": "教练离线——点上面任意一句练习"
 }
