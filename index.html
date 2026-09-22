@@ -1042,6 +1042,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <section id="v-prog" class="views">
     <div id="prog-badges"></div>
     <div id="prog-weak"></div>
+    <div id="prog-aiweak"></div>
     <div class="card">
       <div class="top"><h2>Your progress</h2></div>
       <p class="desc">Last 14 days — red means you completed a challenge.</p>
@@ -1203,7 +1204,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.14';
+var APP_VERSION = '0.23.15';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3008,6 +3009,7 @@ function go(v){
   if(v==='prog'){ renderProgress(); var pb=$('prog-badges'); if(pb && typeof badgeGalleryHtml==='function') pb.innerHTML = badgeGalleryHtml();
     try{ badgeSync(); }catch(e){} /* v0.14.4：拉服务端勋章（失败静默降级到本地） */
     var pw=$('prog-weak'); if(pw && typeof weakLinesHtml==='function') pw.innerHTML = weakLinesHtml();
+    var aw=$('prog-aiweak'); if(aw && typeof aiWeakHtml==='function') aw.innerHTML = aiWeakHtml();
     try{ nonoWatchBadges(); }catch(e){} }
   if(v==='scenes-read'){ renderScenesRead(); }
   if(v==='home'){ renderHome(); try{ nonoDailyLine(); nonoGraduation(); }catch(e){} }
@@ -4302,9 +4304,11 @@ NONO.pickLine = function(){
     });
   }
   if(!pool.length) return null;
-  /* 个性化：优先挑"老出错"的句子（weak 记录） */
+  /* 个性化：优先挑"老出错"的句子（weak 记录）+ AI 维度弱点 boost */
   var weak = (S.nono && S.nono.weak) || {};
-  var bad = pool.filter(function(l){ return (weak[l.key]||0) >= 2; });
+  var aiw = (S.aiWeak && S.aiWeak.dims) || {};
+  var aiBoost = Object.keys(aiw).some(function(k){ return (aiw[k]||0) >= 2; }) ? 1 : 0;
+  var bad = pool.filter(function(l){ return (weak[l.key]||0) + aiBoost >= 2; });
   var arr = bad.length ? bad : pool;
   return arr[Math.floor(Math.random()*arr.length)];
 };
@@ -4601,7 +4605,7 @@ async function nonoGrade(wav){
         return '<b>'+(f.target||'')+'</b> → you said <b>'+(f.user||'?')+'</b> · '+ms;
       }).join('<br>') +'</div>' : '')+
     weakNote +
-    '<div class="np-fix" style="margin-top:8px">'+comment+(verdict?' <span style="color:var(--sub)">('+verdict+')</span>':'')+'</div>'+
+    '<div class="np-fix" id="np-comment" style="margin-top:8px">'+comment+(verdict?' <span style="color:var(--sub)">('+verdict+')</span>':'')+'</div>'+
     '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
       '<button onclick="nonoSay()">🔊 Hear Nono</button>'+
       '<button class="ghost" onclick="nonoRecord()">🎙️ Again</button>'+
@@ -4610,6 +4614,7 @@ async function nonoGrade(wav){
     '<div class="np-fix" style="margin-top:6px;color:var(--sub)">Fluency is estimated from your speaking speed (~3.2 chars/s is natural).</div>';
 
   if(p) p.innerHTML = h;
+  coachGradeComment(line, acc, comp, flu, fixes, p);
   nonoState(acc >= 70 ? 'cheer' : 'sorry');
   setTimeout(function(){ nonoState('idle'); }, 2000);
 }
@@ -11167,5 +11172,77 @@ var qrcode = function() {
 })();
 
 </script>
+<!-- ===== v0.23.15 AI coach ===== -->
+<script>
+/* v0.23.15 AI 点评增强（P0-A）+ aiWeak 闭环（P0-B）
+   设计：跟读评分后由诺诺用免费大模型（/api/chat coach 模式）生成个性化点评；
+   离线/超时回落 nonoGrade 内硬编码 comment。AI 发现的维度弱点写入 S.aiWeak，
+   驱动复习挑句更积极，并在 Progress 页展示。所有新函数挂全局，纯追加不改写旧码。 */
+function escHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+function ensureAiWeak(){ S.aiWeak = S.aiWeak || { dims:{}, updated:null }; return S.aiWeak; }
+function buildCoachPrompt(line, acc, comp, flu, fixes){
+  var errs = (fixes||[]).map(function(f){
+    var p = [(f.target||'?'), '→', (f.user||'?')];
+    if(f.toneOk===false) p.push('tone'+(f.tExp||''));
+    return p.join(' ');
+  }).slice(0,4).join(' | ');
+  return '用户刚跟读中文：「'+(line.hz||'')+'」（英文：'+(line.en||'')+'）。\n'
+    + '评分：准确度 '+acc+'，完整度 '+comp+'，流利度 '+flu+'。\n'
+    + '错误点：'+(errs||'无明显错误')+'\n'
+    + '请作为口语教练诺诺，给一句不超过 30 字的中文为主简短点评，指出最该改进的一个点并给具体小建议。';
+}
+async function coachGradeComment(line, acc, comp, flu, fixes, p){
+  try{
+    if(!p || !line) return;
+    var prompt = buildCoachPrompt(line, acc, comp, flu, fixes);
+    var resp = await fetch(API_BASE+'api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: UID, hist:[], text: prompt, mode:'coach' })
+    });
+    var d = await resp.json().catch(function(){ return {}; });
+    if(resp.ok && d.reply){
+      var txt = String(d.reply).replace(/<[^>]+>/g,'').slice(0,80);
+      var box = p.querySelector('#np-comment');
+      if(box) box.innerHTML = escHtml(txt);
+      recordAiWeak(fixes, flu);
+    }
+  }catch(e){ /* 离线/超时 → 保留 nonoGrade 内硬编码兜底 comment，不报错 */ }
+}
+function recordAiWeak(fixes, flu){
+  try{
+    var ai = ensureAiWeak();
+    (fixes||[]).forEach(function(f){
+      if(f.toneOk===false && f.tExp){ var k='tone'+(f.tExp||''); ai.dims[k]=(ai.dims[k]||0)+1; }
+      var e = (f.errs||[]).join('');
+      if(e.indexOf('声母')>=0) ai.dims.initial=(ai.dims.initial||0)+1;
+      if(e.indexOf('韵母')>=0) ai.dims.final=(ai.dims.final||0)+1;
+    });
+    if(flu < 60) ai.dims.fluency = (ai.dims.fluency||0)+1;
+    ai.updated = new Date().toISOString().slice(0,10);
+    if(typeof saveState==='function') saveState();
+  }catch(e){}
+}
+function aiWeakLabel(k){
+  var m = { tone2:'Tone 2 · 二声', tone3:'Tone 3 · 三声', tone4:'Tone 4 · 四声',
+            initial:'Initials · 声母', final:'Finals · 韵母', fluency:'Fluency · 流利度' };
+  return m[k] || k;
+}
+function aiWeakHtml(){
+  var ai = (S.aiWeak && S.aiWeak.dims) || {};
+  var ks = Object.keys(ai).filter(function(k){ return (ai[k]||0) >= 1; })
+            .sort(function(a,b){ return (ai[b]||0)-(ai[a]||0); });
+  if(!ks.length) return '';
+  var items = ks.slice(0, 6).map(function(k){
+    return '<div class="weak-row"><div class="wr-txt"><b>'+aiWeakLabel(k)+'</b>'
+      + '<span>'+T('AI spotted this needs more drills')+'</span></div>'
+      + '<span class="wr-n">'+ai[k]+'×</span></div>';
+  }).join('');
+  return '<div class="card"><div class="top"><h2>🤖 '+T('AI coach insights')
+    + '</h2><span class="badge">from Nono</span></div><p class="desc">'
+    + T('AI spotted your weak dimensions — drill them more.')+'</p>'+items+'</div>';
+}
+
+</script>
+<!-- ===== /v0.23.15 AI coach ===== -->
 </body>
 </html>

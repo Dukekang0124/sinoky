@@ -662,5 +662,8 @@
  "Unlock features": "Desbloquear funciones",
  "<b>Pick a scene you will actually use tomorrow.</b>": "<b>Elige un escenario que usarás mañana de verdad.</b>",
  "<b>One step today — one line is enough.</b><br>Say it to me.": "<b>Hoy un paso — basta una frase.</b><br>Dímela.",
- "<b>One line each — you play the \"you\".</b>": "<b>Una frase cada uno — tú haces de «tú».</b>"
+ "<b>One line each — you play the \"you\".</b>": "<b>Una frase cada uno — tú haces de «tú».</b>",
+ "AI coach insights": "AI coach insights",
+ "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
+ "AI spotted this needs more drills": "AI spotted this needs more drills"
 }

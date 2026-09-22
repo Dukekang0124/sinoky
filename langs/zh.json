@@ -662,5 +662,8 @@
  "Unlock features": "功能解锁",
  "<b>Pick a scene you will actually use tomorrow.</b>": "<b>挑一个你明天就会用到的场景。</b>",
  "<b>One step today — one line is enough.</b><br>Say it to me.": "<b>今天这一步，只要一句。</b><br>说给我听。",
- "<b>One line each — you play the \"you\".</b>": "<b>一人一句 —— 你来演那个「你」。</b>"
+ "<b>One line each — you play the \"you\".</b>": "<b>一人一句 —— 你来演那个「你」。</b>",
+ "AI coach insights": "AI coach insights",
+ "AI spotted your weak dimensions — drill them more.": "AI spotted your weak dimensions — drill them more.",
+ "AI spotted this needs more drills": "AI spotted this needs more drills"
 }

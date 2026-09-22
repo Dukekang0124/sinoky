@@ -482,6 +482,7 @@ async function summarizeStats(env) {
    再兜底温柔降级文案。状态权归端上（前端 S.nonoChat 存最近 12 轮），模型侧无状态。 */
 const GLM_CHAT_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 const CHAT_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的熊猫。请用简单、口语化的简体中文回复，每轮1-3句。不要写英文解释，不要纠正对方语法（除非对方主动问）。每轮结尾抛一个开放式的简单问题，鼓励对方用中文回答。语气像朋友聊天，自然友好。';
+const COACH_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的熊猫口语教练。用户刚跟读了一句中文，你会看到他的评分数据。请用诺诺鼓励、朋友的口吻，给一句不超过 30 字的中文为主简短点评：指出他最该改进的那一个点（声调、声母、流利度或完整度），并给一句具体小建议。可以夹 1-2 个英文关键词（如 tone、rhythm）。不要抛开放式问题，不要写长篇解释。';
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
 // 聊天专属限流（复用全局 RATE_MAP 兜底 + env.RL DO 强一致计数，独立 key 前缀 chat:）
@@ -507,8 +508,9 @@ async function chatRateOk(ip, env) {
   return e.count <= CHAT_MAX;
 }
 
-async function chatGLM(userText, hist, env) {
-  const messages = [{ role: 'system', content: CHAT_SYSTEM }];
+async function chatGLM(userText, hist, env, mode) {
+  const sysPrompt = (mode === 'coach') ? COACH_SYSTEM : CHAT_SYSTEM;
+  const messages = [{ role: 'system', content: sysPrompt }];
   (hist || []).forEach(function (h) {
     if (h && h.t) messages.push({ role: h.r === 'assistant' ? 'assistant' : 'user', content: h.t });
   });
@@ -819,13 +821,13 @@ export default {
       自动继承 guardApi（Origin + 全局 40/60s 限流），此处再叠加聊天专属 20/60s/UID 限流。 */
     if (url.pathname === '/api/chat' && req.method === 'POST') {
       try {
-        const { text, uid, hist } = await req.json();
+        const { text, uid, hist, mode } = await req.json();
         if (!text || !String(text).trim()) return json({ ok: false, error: 'empty text' }, 400);
         if (!chatRateOk(clientIp(req), env)) {
           return json({ ok: false, error: 'rate limited', degraded: true, reply: '诺诺有点忙，稍等一下再聊～' }, 429);
         }
         const history = Array.isArray(hist) ? hist.slice(-12) : [];
-        const reply = await chatGLM(String(text).trim(), history, env);
+        const reply = await chatGLM(String(text).trim(), history, env, mode);
         try { await recordChatStat(env, uid, reply); } catch (e) { /* 统计失败不影响回复 */ }
         return json({ ok: true, reply: reply.text, model: reply.model, degraded: reply.degraded });
       } catch (e) {
