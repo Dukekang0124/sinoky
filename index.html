@@ -1201,7 +1201,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.17';
+var APP_VERSION = '0.23.18';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -6200,7 +6200,7 @@ document.querySelectorAll('#fb-cats .fb-cat').forEach(function(el){
     if(ta){
       ta.placeholder = (FB_CAT === 'wantline')
         ? T("In English, what did you want to say? e.g. \"ask the taxi driver to wait 5 minutes\"")
-        : T("e.g. The Score button stays on Listening\u2026 and never gives a result.");
+        : T("e.g. The Score button stays on Listening… and never gives a result.");
     }
   };
 });
@@ -11310,6 +11310,181 @@ function revDrillSpeak(){
    保证无论语言与首次加载路径，首页复习卡都含 AI 出题区块。 */
 (function(){ try{ if(typeof renderHome==='function' && document.getElementById('home-scenes')) renderHome(); }catch(e){} })();
 /* ===== /v0.23.17 复习 AI 弱点出题 ===== */
+
+/* ===== v0.23.18 大模型渗透收口：场景3/4/5/6 + L4 前端落地 =====
+   复用 _worker.js 已加的 scene/daily/card/tone 四模式（chatGLM 仅按 mode 切系统提示，零服务端重构）。
+   成本纪律：每日句 ≤1/天（S.dailyGen 缓存）；情境接话 ≤8/天（S.sceneReplyCap 软上限）；
+   字卡妙招每字一次（S.cardTips）；声调解释每次判错一次、仅追加不覆盖。全部追加/包装，不改旧函数体。 */
+function parseTwoCol(t){
+  if(!t) return null;
+  var parts = String(t).split('|');
+  return { zh: (parts[0]||'').trim(), en: (parts[1]||'').trim() };
+}
+
+/* ===== 场景3：情境对话自由接话（mode:'scene'）=====
+   落点：用户每在情景里跟读打分一句（sendScore 拿到真实 transcript），诺诺以"当地人"身份自然接一句，
+   把机械跟读变成真对话。软上限 ≤8/天，面板关闭/忙碌时不浪费调用。 */
+function sceneReply(p, transcript){
+  try{
+    if(!p || !transcript) return;
+    if(NONO && NONO.closed) return;
+    var sceneName = (curScene && (curScene.title||curScene.name||curScene.id)) || '';
+    var text = '情景：' + sceneName + '。\n用户刚说的中文：' + transcript + '\n请用本地人身份自然接一句话（可附一句英文提示）。';
+    fetch(API_BASE+'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'scene' }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.reply){
+          nonoShow(escHtml(d.reply), { pose:'like', priority:'result', id:'scene-reply-'+Date.now(), actions:[] });
+          try{ S.sceneReplyCap = S.sceneReplyCap || { date:null, n:0 }; if(S.sceneReplyCap.date!==today()){ S.sceneReplyCap.date=today(); S.sceneReplyCap.n=0; } S.sceneReplyCap.n++; saveState(); }catch(e){}
+        }
+      })
+      .catch(function(){});
+  }catch(e){}
+}
+(function(){
+  if(typeof sendScore!=='function') return;
+  var _ss = sendScore;
+  sendScore = async function(p, transcript, i){
+    var r = await _ss.apply(null, arguments);
+    try{
+      if(transcript && curScene){
+        var cap = S.sceneReplyCap || { date:null, n:0 };
+        if(cap.date!==today()){ cap.date=today(); cap.n=0; }
+        if(cap.n < 8) sceneReply(p, transcript);
+      }
+    }catch(e){}
+    return r;
+  };
+})();
+
+/* ===== 场景4：每日一句 AI 生成（mode:'daily'）=====
+   落点：每天首次进 Home 的"今日句"，从静态 pickLine 升级为免费大模型按初学者水平现造一句（≤1 次/天）。
+   AI 失败/离线回落原版 pickLine，保证每天都有今日句。 */
+function ensureDailyGen(){ S.dailyGen = S.dailyGen || { date:null, hz:'', en:'' }; return S.dailyGen; }
+function dailyGenLine(){
+  return new Promise(function(resolve){
+    try{
+      var dg = ensureDailyGen();
+      if(dg.date === today() && dg.hz){ resolve({ hz:dg.hz, en:dg.en }); return; }
+      var text = '请给我今天的练习句（用户是中文初学者）。';
+      fetch(API_BASE+'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'daily' }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d && d.reply){
+            var c = parseTwoCol(d.reply);
+            if(c && c.zh && c.en){ dg.date=today(); dg.hz=c.zh; dg.en=c.en; saveState(); resolve({ hz:c.zh, en:c.en }); return; }
+          }
+          resolve(null);
+        })
+        .catch(function(){ resolve(null); });
+    }catch(e){ resolve(null); }
+  });
+}
+function showDailyAiLine(hz, en){
+  try{
+    window.__aiDailyLine = { hz:hz, en:en };
+    nonoShow(T('Your line for today: <b>{hz}</b>').replace('{hz}', hz)
+      + '<br><span style="color:var(--sub)">' + (en||'') + '</span>'
+      + '<br><span style="color:var(--sub)">' + T('Say it out loud once, then go about your day.') + '</span>',
+      { pose:'like', priority:'result', actions:[
+        { t:'Hear Nono', fn:'nonoPracticeAiDaily()' },
+        { t:'Later', fn:'nonoMin()', ghost:true }
+      ] });
+  }catch(e){}
+}
+function nonoPracticeAiDaily(){
+  try{ if(window.__aiDailyLine) nonoStartPracticeWith({ hz:window.__aiDailyLine.hz, py:'', en:window.__aiDailyLine.en||'', key:'aidaily', scene:'aidaily' }); }catch(e){}
+}
+(function(){
+  if(typeof nonoDailyLine!=='function') return;
+  var _ndl = nonoDailyLine;
+  window.nonoDailyLine = async function(){
+    var ai = await dailyGenLine();
+    if(ai){ showDailyAiLine(ai.hz, ai.en); return; }
+    return _ndl.apply(null, arguments);
+  };
+})();
+/* 首屏补正：go('home') 早于本块已用原版 nonoDailyLine 给过今日句；清掉原版 flag 后用包装版补渲染一次
+   （当天≤1次 AI 调用），保证首页今日句走 AI 生成。 */
+(function(){
+  try{
+    if(typeof nonoDailyLine==='function' && document.getElementById('home-scenes')){
+      localStorage.removeItem('sinoky_nono_daily');
+      nonoDailyLine();
+    }
+  }catch(e){}
+})();
+
+/* ===== 场景5：字卡 AI 自适应记忆锚点（mode:'card'）=====
+   落点：用户每新收藏一个汉字（fcStar），诺诺用免费大模型给一个记字妙招（谐音/画面/例句）+ 易混字辨析，
+   存进 S.cardTips（每字一次），并弹 toast 提示。离线/超时静默，不阻断收藏。 */
+function ensureCardTips(){ S.cardTips = S.cardTips || {}; return S.cardTips; }
+function cardAiAnchor(){
+  try{
+    if(!CARDS.length) return;
+    var c = CARDS[fcIdx]; if(!c) return;
+    var hz = c.hanzi;
+    var ct = ensureCardTips();
+    if(ct[hz]) return;                                   /* 每字至多一次 */
+    var text = '汉字：' + hz + '（拼音 ' + (c.pinyin||'') + '，意思 ' + (c.meaning||'') + '）。';
+    fetch(API_BASE+'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'card' }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.reply){
+          var c2 = parseTwoCol(d.reply);
+          if(c2 && c2.zh){ ct[hz] = { anchor:c2.zh, diff:c2.en||'' }; saveState(); toast(T('Nono saved a memory trick for {hz} ✦').replace('{hz}', hz)); }
+        }
+      })
+      .catch(function(){});
+  }catch(e){}
+}
+(function(){
+  if(typeof fcStar!=='function') return;
+  var _fs = fcStar;
+  fcStar = function(){
+    var r = _fs.apply(null, arguments);
+    try{
+      var c = CARDS[fcIdx];
+      var hz = c && c.hanzi;
+      var starred = hz && (typeof NW!=='undefined') && NW.indexOf(hz) > -1;
+      if(starred) cardAiAnchor();                        /* 仅新收藏生成，取消收藏不触发 */
+    }catch(e){}
+    return r;
+  };
+})();
+
+/* ===== 场景6：声调 AI 人话解释（mode:'tone'）=====
+   落点：声调训练判错时，诺诺用免费大模型对"这个具体字为什么是这个声调"给一句人话解释，
+   追加到诺诺面板的提示里（不覆盖原判分反馈）。判对不打扰。 */
+function toneAiExplain(correct, hz){
+  try{
+    var text = '声调：' + correct + ' 声。汉字：' + (hz||'') + '。请用一句人话（中文为主）解释为什么是这个声调、怎么听怎么读，并给一个含该声调的例词。';
+    fetch(API_BASE+'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'tone' }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.reply){
+          var nm = document.getElementById('nono-msg');
+          if(nm) nm.innerHTML += '<div style="margin-top:6px;color:var(--gold)">' + escHtml(d.reply) + '</div>';
+        }
+      })
+      .catch(function(){});
+  }catch(e){}
+}
+(function(){
+  if(typeof nonoToneTip!=='function') return;
+  var _nt = nonoToneTip;
+  nonoToneTip = function(ok, picked, correct, hz){
+    var r = _nt.apply(null, arguments);
+    try{ if(!ok) toneAiExplain(correct, hz); }catch(e){}
+    return r;
+  };
+})();
+
+/* ===== /v0.23.18 渗透收口 ===== */
 </script>
 
 <!-- ===== /v0.23.15 AI coach ===== -->

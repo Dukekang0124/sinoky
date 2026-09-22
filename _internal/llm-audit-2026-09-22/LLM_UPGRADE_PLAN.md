@@ -47,7 +47,8 @@
 - **大模型进（v0.23.17 落地形态）**：Home 复习卡加「诺诺出的练习句」——取 `S.aiWeak` 最弱维（count≥2 降序）→ `/api/chat mode:'drill'`（`DRILL_SYSTEM` 生成 ≤8 字日常薄弱句，格式 `中文 | English`）→ 存 `S.revDrill`；点开复用 `nonoStartPracticeWith` 开口练，经 `nonoGrade` 自动回灌 aiWeak + 触发 L3 `S.aiFunnel` 闭环。**闭环从「boost 旧句」升级为「造新句练弱点」**。原计划的「变体句进 reviewPool」为更重形态，本期以更轻的「独立薄弱句卡」达成同等闭环，后续可再升级为进队列。
 - **闭环**：AI 薄弱句被说出 → `nonoGrade` 计分 → 写回 `S.aiWeak` + `S.aiFunnel.loop`，与点评/情境对话共享同一账本。
 
-### 场景 3 · 场景/情境对话 → AI 扮演对话对手 + 即时纠正
+### 场景 3 · 场景/情境对话 → AI 扮演对话对手 + 即时纠正  ✅ **已落地 v0.23.18**
+- **落地形态（v0.23.18）**：包装 `sendScore`，跟读打分拿到真实 transcript 后调 `/api/chat mode:'scene'`（`SCENE_SYSTEM` 本地人接话），诺诺以场景中人身份自然接一句（可附英文提示），不教学不纠正；软上限 ≤8/天（`S.sceneReplyCap`），面板关闭/忙碌不打扰。闭环：接话本身即"开口延续"，与 L3 `S.aiFunnel` 共享诺诺开口链路。
 - **现在**：`openScene`/`renderSceneList`(L 场景家族) 是「Someone says X — you answer Y」脚本对，无真实交互。
 - **大模型进**：在「你答完」环节调 `/api/chat`，系统提示 = 「你是对话里的本地人，先用一句中文自然回应，再用英文点出他刚才的用词/语法小问题（如有）」。
 - **闭环**：纠正点写 `state.aiWeak`（跨场景累积），下次同场景优先练该点。
@@ -72,8 +73,8 @@
 - **大模型进**：请求体加 `role`（「教老外学中文的教练，用简短中文+母语提示纠正」）与 `weak`（从 `state.aiWeak` 注入用户常错点）；聊天中纠正的点实时写回 `state.aiWeak`。
 - **闭环**：聊天 → 评分 → 复习 → 字卡 五处共享同一个 `state.aiWeak` 账本，形成「指出一次、处处优先练」的全局闭环。
 
-### 横向 · 反馈/埋点 → 让 AI 反馈进账本 + L3 可见
-- 新增结构化学习事件（复用 `api/feedback` 通道扩展 `{dev, line, score, aiWeakDelta, d1}`），服务端按 `dev` 去重聚合 → 把 L4「不可知」变为「可证伪」。
+### 横向 · 反馈/埋点 → 让 AI 反馈进账本 + L3 可见 + L4 聚合  ✅ **L4 已落地 v0.23.18**
+- **L4 落地形态（v0.23.18）**：不新增 KV 写，后端 `_worker.js` 加 `GET /api/agg`（STATS_TOKEN 保护）+ `aggregateAiEffect` 游标分页聚合 `p:` 全量 profile 镜像（devices / D1-returned（≥2 天且跨度≥1d）/ aiUsers（aiFunnel.hit>0）/ hit / loop / loopRate / weak（aiWeak 维度求和），CAP 2000，零写）→ 把 L4「不可知」变为「可证伪」。注：原计划的「扩展 api/feedback 结构化事件」为更重形态，本期以「读时聚合已上云的 p: 镜像」达成同等可证伪目标，零额外写配额。
 
 ---
 

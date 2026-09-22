@@ -485,7 +485,14 @@ const CHAT_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的�
 const COACH_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的熊猫口语教练。用户刚跟读了一句中文，你会看到他的评分数据。请用诺诺鼓励、朋友的口吻，给一句不超过 30 字的中文为主简短点评：指出他最该改进的那一个点（声调、声母、流利度或完整度），并给一句具体小建议。可以夹 1-2 个英文关键词（如 tone、rhythm）。不要抛开放式问题，不要写长篇解释。';
 /* ===== v0.23.17 DRILL_SYSTEM (AI 复习出题) ===== */
 const DRILL_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫出题教练。用户在某方面有发音弱点（如三声、声母、流利度）。请基于这个弱点，造一句超简单、日常、不超过 8 个字的中文练习句，让 ta 开口练这个弱点。格式严格为：中文句子 | English translation。不要解释，不要多余标点。例：你好吗 | How are you';
-/* ===== v0.23.17 DRILL_SYSTEM (AI 复习出题) ===== */_END
+/* ===== v0.23.17 DRILL_SYSTEM (AI 复习出题) ===== */
+
+/* ===== v0.23.18 大模型渗透场景 3/4/5/6 四模式 + L4 聚合（AI 渗透收口） ===== */
+/* 复用现有 GLM-4-Flash 链（chatGLM 仅按 mode 切换系统提示），零服务端重构。 */
+const SCENE_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫。用户在情景对话里刚说了一句中文。请扮演情景里的本地人，用一句自然、简短的日常中文接着聊天回应（像真人接话），可以附一句英文提示。不要教学、不要纠正，只要自然接话。如果用户有发音弱项，可以自然地带一句小提醒。';
+const DAILY_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫。请基于用户的中文学习情况，造一句超简单、日常、不超过 10 字的中文练习句，让他今天开口练。格式严格：中文句子 | English translation。不要解释。例：今天天气真好 | The weather is nice today';
+const CARD_SYSTEM = '你是"诺诺"，中文老师。用户收藏了一个汉字。请给一个帮他记住这个字的记忆锚点（谐音 / 画面 / 例句），并辨析一个易混字。格式严格：记忆锚点 | 易混字辨析。中文为主，简短。';
+const TONE_SYSTEM = '你是"诺诺"，中文老师。用户刚在声调训练里听错了声调。请用一句人话（中文为主，不超过 40 字）解释为什么是这个声调、怎么听怎么读，并给一个含该声调的例词。不要列规则条文。';
 
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
@@ -513,7 +520,13 @@ async function chatRateOk(ip, env) {
 }
 
 async function chatGLM(userText, hist, env, mode) {
-  const sysPrompt = (mode === 'coach') ? COACH_SYSTEM : (mode === 'drill') ? DRILL_SYSTEM : CHAT_SYSTEM;
+  const sysPrompt = (mode === 'coach') ? COACH_SYSTEM
+    : (mode === 'drill') ? DRILL_SYSTEM
+    : (mode === 'scene') ? SCENE_SYSTEM
+    : (mode === 'daily') ? DAILY_SYSTEM
+    : (mode === 'card') ? CARD_SYSTEM
+    : (mode === 'tone') ? TONE_SYSTEM
+    : CHAT_SYSTEM;
   const messages = [{ role: 'system', content: sysPrompt }];
   (hist || []).forEach(function (h) {
     if (h && h.t) messages.push({ role: h.r === 'assistant' ? 'assistant' : 'user', content: h.t });
@@ -580,6 +593,48 @@ async function recordChatStat(env, uid, reply) {
     await env.FEEDBACK.put(key, JSON.stringify(rec));
   } catch (e) { /* 统计失败不影响回复 */ }
 }
+/* v0.23.18 L4 聚合：遍历 p:<uid> 全量镜像，统计 AI 效果与留存。
+   p: 存的是完整 S（含 aiFunnel / aiWeak / days），与 s: 派生统计分开。
+   只读数，零新增写；游标分页 + 上限保护，避免大库遍历打爆。 */
+async function aggregateAiEffect(env) {
+  const DAY = 86400000;
+  let cursor = null, scanned = 0, devs = 0, returned = 0, hit = 0, loop = 0, weak = 0, aiUsers = 0;
+  const CAP = 2000;
+  do {
+    const opts = { prefix: 'p:' };
+    if (cursor) opts.cursor = cursor;
+    let list;
+    try { list = await env.PROFILES.list(opts); } catch (e) { break; }
+    for (const k of (list.keys || [])) {
+      scanned++;
+      try {
+        const raw = await env.PROFILES.get(k.name);
+        if (!raw) continue;
+        const s = JSON.parse(raw);
+        devs++;
+        const days = Array.isArray(s.days) ? s.days : [];
+        if (days.length >= 2) {
+          const sorted = days.slice().sort();
+          const span = (new Date(sorted[sorted.length - 1]) - new Date(sorted[0])) / DAY;
+          if (span >= 1) returned++;
+        }
+        const af = s.aiFunnel || {};
+        const h = Number(af.hit) || 0, l = Number(af.loop) || 0;
+        hit += h; loop += l; if (h > 0) aiUsers++;
+        const dims = (s.aiWeak && s.aiWeak.dims) || {};
+        for (const kk in dims) weak += (Number(dims[kk]) || 0);
+      } catch (e) { /* 坏记录跳过 */ }
+      if (scanned >= CAP) break;
+    }
+    cursor = (list && list.list_complete) ? null : (list && list.cursor ? list.cursor : null);
+  } while (cursor && scanned < CAP);
+  return {
+    ok: true, devs, returned, d1Rate: devs ? Math.round(100 * returned / devs) : 0,
+    aiUsers, hit, loop, loopRate: hit ? Math.round(100 * loop / hit) : 0,
+    weak, scanned
+  };
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -970,6 +1025,19 @@ export default {
         }
       }
       return json({ ok: false, error: 'method not allowed' }, 405);
+    }
+
+    /* v0.23.18 L4：GET /api/agg 聚合「AI 是否让用户多开口 / 留存」（把 L4 从不可知变为可证伪）。
+       读 p:<uid> 全量镜像（含 aiFunnel / aiWeak / days），零新增写（只读 KV）。
+       仅 operator 可用：必须带 ?token= 或 x-stats-token 头，且 env.STATS_TOKEN 已设；否则 403。
+       前端 Progress 页不调用（避免暴露 token），聚合经 _internal/agg_kv.py 离线查证。 */
+    if (url.pathname === '/api/agg' && req.method === 'GET') {
+      const wantTok = env.STATS_TOKEN || '';
+      if (!wantTok) return json({ ok: false, error: 'AGG disabled: set STATS_TOKEN' }, 403);
+      const gotTok = url.searchParams.get('token') || req.headers.get('x-stats-token') || '';
+      if (gotTok !== wantTok) return json({ ok: false, error: 'unauthorized' }, 403);
+      try { const r = await aggregateAiEffect(env); return json(r, 200); }
+      catch (e) { return json({ ok: false, error: String((e && e.message) || e) }, 500); }
     }
 
     /* v0.3.33 看板：GET /api/stats 返回聚合汇总（只有数字，无个人信息）。

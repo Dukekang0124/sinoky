@@ -1,7 +1,7 @@
 {
-  "version": "0.23.17",
+  "version": "0.23.18",
   "updated": "2026-09-22",
-  "note": "v0.23.17：复习 AI 弱点出题（大模型渗透场景2落地）。当 S.aiWeak 某维度弱点≥2次，诺诺用免费大模型（/api/chat drill 模式）生成针对该弱点的简短中文练习句，显示在首页复习卡；用户点「跟我读」复用诺诺练习闭环（coach 点评+aiWeak+checkAiLoop 自动触发）。当天最多1次 AI 调用（S.revDrill 缓存），尊重 API 红线。仅网页发布，APK 沿用 0.23.13，用户经 SW 更新生效。",
+  "note": "v0.23.18：大模型渗透收口（场景3/4/5/6 + L4）。情境对话：每句跟读打分后诺诺以当地人身份自然接话（≤8/天）；每日一句：免费大模型按初学者水平现造一句（≤1/天，离线回落静态句）；字卡：新收藏汉字自动生成记忆妙招+易混字辨析（每字一次）；声调：判错时诺诺给一句人话解释（追加不覆盖）。L4：后端 /api/agg 聚合留存与样本规模（device/D1/aiUser/hit/loop/weak，零写）。仅网页发布，APK 沿用 0.23.13。",
   "apk": {
     "versionCode": 2313,
     "version": "0.23.13",
@@ -10,6 +10,7 @@
     "size": 25409946
   },
   "noteEn": [
+    "v0.23.18: LLM permeation closeout (scenarios 3/4/5/6 + L4). Scenario dialogue: after each read-and-score Nono replies as the local person to keep a real conversation going (<=8/day). Daily sentence: the free LLM now generates a fresh beginner-level practice sentence each day (<=1/day, falls back to a static line offline). Flashcards: starring a new character auto-generates a memory trick + confusable-character note (once per character). Tone gym: on a wrong answer Nono appends a plain-language explanation (no overwrite). L4: backend /api/agg aggregates retention and sample size (devices / D1-returned / AI-users / hit / loop / weak, zero writes). Web-only; APK stays 0.23.13, App users get it via SW update.",
     "v0.23.17: AI review drill (free LLM permeates scenario 2). When a dimension in S.aiWeak reaches >=2 misses, Nono uses the free LLM (/api/chat drill mode) to generate a short Chinese practice sentence targeting that weak spot, shown on the Home review card. Tapping \"Read after me\" reuses the Nono practice loop (coach comment + aiWeak + checkAiLoop auto-triggered). At most 1 AI call per day (S.revDrill cache), respecting the API budget. Web-only; APK stays 0.23.13, App users get it via SW update.",
     "v0.23.16: L3 closed-loop measurement (effect is now verifiable). New S.aiFunnel ledger records Nono AI-coaching reach (hit), offline fallback (miss), and the closed-loop count (loop) plus loop rate - how often a user came back to drill after a tip. Loop detection is woven through a nonoGrade wrapper covering read-score, review and scenario-dialogue (every speaking moment), without touching the original function bodies. The funnel ships to the cloud via buildStat inside pushProfile (8s debounce + dirty-check), zero extra KV writes respecting the 1000/day quota; an \"AI effect self-check\" card renders on Progress from local state. Web-only; APK stays 0.23.13, App users get it via SW update.",
     "v0.23.15: the free LLM (GLM-4-Flash) now permeates the core practice loop. Added a coach mode to /api/chat; after each read-and-score Nono generates a personalised AI comment (mixed CN/EN, pinpointing the one thing to improve), falling back to the template comment when offline. New S.aiWeak dimension ledger (tones/initials/fluency) drives more aggressive review picking and surfaces on Progress as AI coach insights. Web-only; APK stays 0.23.13, App users get it via SW update.",
