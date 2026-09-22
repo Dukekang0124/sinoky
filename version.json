@@ -3,11 +3,11 @@
   "updated": "2026-09-23",
   "note": "v0.23.21：新增「反馈智能分诊」（B3，运营侧能力，用户界面无变化）。以前每一条用户反馈都要人工一条条读，现在后台会把近期反馈交给 AI 自动做摘要 + 主题聚类：先给你 2-3 句整体结论，再把反馈归成 3-6 个主题簇（每簇带条数、代表性原话和一条可执行建议），并单独标出最该立刻修的那一条。只读不写、走免费 GLM-4-Flash，模型不可用时自动降级为原文可读，绝不影响任何用户功能。仅网页发布，APK 经 CI 出包后同版本上线。",
   "apk": {
-    "versionCode": 2320,
-    "version": "0.23.20",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.20-release.apk",
-    "md5": "188a9e8655013dcabc142cf7bb089446",
-    "size": 25446810
+    "versionCode": 2321,
+    "version": "0.23.21",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.21-release.apk",
+    "md5": "55f168046c7311551913e99f82200dc7",
+    "size": 25450906
   },
   "noteEn": [
     "v0.23.21: new Feedback Triage (B3), an operator-side capability with no user-facing change. Instead of reading every user-feedback message by hand, the backend now hands recent feedback to the model for automatic summarisation and topic clustering: a two-to-three sentence overall read, then three to six clusters (each with a count, representative quotes and one actionable suggestion), plus a separate callout of the single issue that most needs fixing right now. Read-only, on free GLM-4-Flash, degrading gracefully to plain readable text when the model is unavailable, and never affecting any user-facing feature. Web-only until the CI-built APK ships at the same version.",
