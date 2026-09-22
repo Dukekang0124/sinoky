@@ -3,11 +3,11 @@
   "updated": "2026-09-22",
   "note": "v0.23.19：智能化深度升级（A1/A2/A3/B1）。A1 记忆化教练——诺诺现在\"记得\"你的发音弱点与最近读错的字，跟读点评/情境接话/复习出题/自由对话都会带上你的学习背景，点评更准；A3 语义兜底——点评顺带提醒同音错字（如\"买/卖\"）；A2 字卡 grounding——收藏汉字时诺诺依据真实已学字表造记忆锚点；B1 自适应日计划——首页新增\"诺诺为你定的今日计划\"卡，按全量进度生成 ≤3 条今日行动、末条必为开口说（每日≤1次 AI 调用）。全部复用免费 GLM-4-Flash，零新增 KV 写，离线/超时均回落。仅网页发布，APK 经 CI 出包后同版本上线。",
   "apk": {
-    "versionCode": 2318,
-    "version": "0.23.18",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.18-release.apk",
-    "md5": "920647bb8e5df0a09d3d843e5e0e1f0a",
-    "size": 25438618
+    "versionCode": 2319,
+    "version": "0.23.19",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.19-release.apk",
+    "md5": "d73bef34652d5d5ab934e69433dc2d60",
+    "size": 25442714
   },
   "noteEn": [
     "v0.23.19: intelligence depth upgrade (A1/A2/A3/B1). A1 memory coach - Nono now \"remembers\" your pronunciation weak spots and recent misread characters; coach comment, scene reply, review drill and free chat all carry your learning context for sharper tips. A3 semantic fallback - the coach also flags homophone mistakes (e.g. mai/mmai). A2 flashcard grounding - when you star a character Nono builds the memory anchor against your real learned word list. B1 adaptive daily plan - a new \"Nono's plan for you\" Home card generates <=3 daily actions from your full progress, the last one always a speak task (<=1 AI call/day). All on free GLM-4-Flash, zero extra KV writes, with offline/time-out fallbacks. Web-only until the CI-built APK ships at the same version.",
