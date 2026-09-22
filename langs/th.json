@@ -680,5 +680,10 @@
   "Based on your weak spots, try saying this:": "ตามจุดอ่อนของคุณ ลองพูดประโยคนี้:",
   "Nono is preparing a drill for you…": "โนโน่กำลังเตรียมแบบฝึกให้คุณ…",
   "Coach offline — tap any line above to practise": "โค้ชออฟไลน์ — แตะประโยคใดก็ได้ด้านบนเพื่อฝึก",
-  "Nono saved a memory trick for {hz} ✦": "โนโนบันทึกเทคนิคจำสำหรับ {hz} ✦"
+  "Nono saved a memory trick for {hz} ✦": "โนโนบันทึกเทคนิคจำสำหรับ {hz} ✦",
+  "Nono's plan for you": "แผนของโนโนสำหรับคุณ",
+  "A short daily plan based on your progress.": "แผนประจำวันสั้นๆ ตามความก้าวหน้าของคุณ",
+  "Start with a line": "เริ่มจากประโยคหนึ่งประโยค",
+  "Nono is planning your day…": "โนโนกำลังวางแผนวันของคุณ…",
+  "Coach offline — just open any scene and say a line.": "โค้ชออฟไลน์ — เปิดฉากใดก็ได้แล้วพูดหนึ่งประโยค"
 }

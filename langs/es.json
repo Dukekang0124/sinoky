@@ -680,5 +680,10 @@
   "Based on your weak spots, try saying this:": "Según tus puntos débiles, intenta decir esto:",
   "Nono is preparing a drill for you…": "Nono está preparando un ejercicio para ti…",
   "Coach offline — tap any line above to practise": "Coach sin conexión — toca cualquier frase de arriba",
-  "Nono saved a memory trick for {hz} ✦": "Nono guardó un truco para recordar {hz} ✦"
+  "Nono saved a memory trick for {hz} ✦": "Nono guardó un truco para recordar {hz} ✦",
+  "Nono's plan for you": "Plan de Nono para ti",
+  "A short daily plan based on your progress.": "Un breve plan diario según tu progreso.",
+  "Start with a line": "Empieza con una frase",
+  "Nono is planning your day…": "Nono está planeando tu día…",
+  "Coach offline — just open any scene and say a line.": "Coach desconectado — abre cualquier escena y di una frase."
 }

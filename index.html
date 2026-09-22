@@ -1201,7 +1201,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.18';
+var APP_VERSION = '0.23.19';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -4490,9 +4490,11 @@ async function nonoChatReply(userText){
   nonoState('thinking');
   try{
     var hist = (S.nonoChat||[]).slice(-12);
+    var ctx = learnerCtx();
+    var chatText = ctx ? ('【背景：' + ctx + '】' + userText) : userText;
     var resp = await fetch(API_BASE+'api/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ uid: UID, hist: hist, text: userText })
+      body: JSON.stringify({ uid: UID, hist: hist, text: chatText })
     });
     var d = await resp.json().catch(function(){ return {}; });
     var reply = (resp.ok && d.reply) ? d.reply : '诺诺有点累了，待会再聊 😴';
@@ -4577,6 +4579,8 @@ async function nonoGrade(wav){
   /* 错误音节与声调提示 */
   var fixes = [];
   syll.forEach(function(x){ if(!(x.score>=0.99)) fixes.push(x); });
+  /* v0.23.19 A1：把真实错字写入 aiErrLog（最近 12 条），供记忆化教练上下文使用 */
+  try{ fixes.forEach(function(f){ var lg = ensureAiErrLog(); lg.push({ t:(f.target||''), u:(f.user||'?') }); if(lg.length>12) lg.shift(); }); if(typeof saveState==='function') saveState(); }catch(e){}
 
   var weakNote = '';
   if((S.nono.weak[line.key]||0) >= 2) weakNote = '<div class="np-fix" style="margin-top:6px">This line has tripped you up a few times — that is exactly why Nono picked it. <b>我们再来一次。</b></div>';
@@ -11157,16 +11161,37 @@ var qrcode = function() {
    驱动复习挑句更积极，并在 Progress 页展示。所有新函数挂全局，纯追加不改写旧码。 */
 function escHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 function ensureAiWeak(){ S.aiWeak = S.aiWeak || { dims:{}, updated:null }; return S.aiWeak; }
+/* v0.23.19 A1 记忆化教练：把"学生背景"浓缩成一句上下文，喂给 coach/scene/drill/chat，
+   让诺诺"记得"用户的弱点与最近错字（此前这些场景全是 hist:[] 无状态）。纯端上聚合，零服务端改动。 */
+function ensureAiErrLog(){ S.aiErrLog = S.aiErrLog || []; return S.aiErrLog; }
+function learnerCtx(){
+  try{
+    var ai = (S.aiWeak && S.aiWeak.dims) || {};
+    var weak = Object.keys(ai).filter(function(k){ return (ai[k]||0) > 0; })
+      .sort(function(a,b){ return (ai[b]||0) - (ai[a]||0); })
+      .slice(0,4).map(function(k){ return aiWeakLabel(k) + '(' + ai[k] + '×)'; });
+    var log = (S.aiErrLog||[]).slice(-5).map(function(e){ return (e.t||'') + '→' + (e.u||'?'); });
+    var dn = 0; if(S.dayDone) for(var k in S.dayDone) if(S.dayDone[k]) dn++;
+    var lvl = '初级'; if(dn >= 10) lvl = '中级'; else if(dn >= 4) lvl = '初中级';
+    var parts = ['水平：' + lvl + '（已完成 ' + dn + ' 天）'];
+    if(weak.length) parts.push('发音弱点：' + weak.join('、'));
+    if(log.length) parts.push('最近读错的字：' + log.join('；'));
+    return parts.join('。');
+  }catch(e){ return ''; }
+}
 function buildCoachPrompt(line, acc, comp, flu, fixes){
   var errs = (fixes||[]).map(function(f){
     var p = [(f.target||'?'), '→', (f.user||'?')];
     if(f.toneOk===false) p.push('tone'+(f.tExp||''));
     return p.join(' ');
   }).slice(0,4).join(' | ');
-  return '用户刚跟读中文：「'+(line.hz||'')+'」（英文：'+(line.en||'')+'）。\n'
+  var ctx = learnerCtx();
+  return '【学生背景】' + (ctx || '新用户') + '。\n'
+    + '用户刚跟读中文：「'+(line.hz||'')+'」（英文：'+(line.en||'')+'）。\n'
     + '评分：准确度 '+acc+'，完整度 '+comp+'，流利度 '+flu+'。\n'
     + '错误点：'+(errs||'无明显错误')+'\n'
-    + '请作为口语教练诺诺，给一句不超过 30 字的中文为主简短点评，指出最该改进的一个点并给具体小建议。';
+    + '请作为口语教练诺诺，给一句不超过 30 字的中文为主简短点评，指出最该改进的一个点并给具体小建议。'
+    + '如果用户把某个字读成了同音但意思不同的错字（例如把"买"读成"卖"），也请顺带用 1 句提醒他注意这个同音字区别（A3 语义兜底）。';
 }
 async function coachGradeComment(line, acc, comp, flu, fixes, p){
   try{
@@ -11255,7 +11280,8 @@ function topWeakDim(){
 function buildDrillPrompt(dim){
   var m={tone2:'第三声（先降后升）',tone3:'第三声',tone4:'第四声（短促下降）',initial:'声母（辅音开头）',final:'韵母',fluency:'流利度/节奏'};
   var w=m[dim]||'发音';
-  return '用户常在'+w+'上出错。请造一句超简单日常中文（不超过 8 字）让 ta 开口练这个弱点，'
+  var ctx=learnerCtx();
+  return '【学生背景】'+(ctx||'新用户')+'。用户常在'+w+'上出错。请造一句超简单日常中文（不超过 8 字）让 ta 开口练这个弱点，'
     +'格式严格：中文句子 | English translation。例：你好吗 | How are you。只输出这一行。';
 }
 function revDrillCard(hz, en, dim){
@@ -11329,7 +11355,8 @@ function sceneReply(p, transcript){
     if(!p || !transcript) return;
     if(NONO && NONO.closed) return;
     var sceneName = (curScene && (curScene.title||curScene.name||curScene.id)) || '';
-    var text = '情景：' + sceneName + '。\n用户刚说的中文：' + transcript + '\n请用本地人身份自然接一句话（可附一句英文提示）。';
+    var ctx = learnerCtx();
+    var text = '【学生背景】' + (ctx||'新用户') + '。\n情景：' + sceneName + '。\n用户刚说的中文：' + transcript + '\n请用本地人身份自然接一句话（可附一句英文提示）。';
     fetch(API_BASE+'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'scene' }) })
       .then(function(r){ return r.json(); })
@@ -11428,7 +11455,13 @@ function cardAiAnchor(){
     var hz = c.hanzi;
     var ct = ensureCardTips();
     if(ct[hz]) return;                                   /* 每字至多一次 */
-    var text = '汉字：' + hz + '（拼音 ' + (c.pinyin||'') + '，意思 ' + (c.meaning||'') + '）。';
+    /* v0.23.19 A2 字卡 grounding：把真实已学字表塞进提示，让锚点贴合用户学过的词，而非凭空编造 */
+    var ground = '';
+    try{
+      var sample = (CARDS||[]).slice(0, 16).map(function(x){ return (x.hanzi||'') + (x.meaning?('('+x.meaning+')'):''); }).filter(Boolean).join('、');
+      if(sample) ground = '\n已学字表（挑其中相关的字做联想）：' + sample;
+    }catch(e){}
+    var text = '汉字：' + hz + '（拼音 ' + (c.pinyin||'') + '，意思 ' + (c.meaning||'') + '）。' + ground;
     fetch(API_BASE+'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'card' }) })
       .then(function(r){ return r.json(); })
@@ -11482,6 +11515,66 @@ function toneAiExplain(correct, hz){
     try{ if(!ok) toneAiExplain(correct, hz); }catch(e){}
     return r;
   };
+})();
+
+
+/* ===== 场景7（v0.23.19 新增）：自适应日计划 Agent（mode:'plan' / B1）=====
+   落点：首页"诺诺为你定的今日计划"卡。每日首次进 Home 调用一次（S.dailyPlan 缓存，≤1/天），
+   把全量学习状态摘要喂给免费大模型，生成 ≤3 条今日行动、末条必为开口说。
+   Edify Gate：卡内按钮"开始练一句"直接触发跟读，保证 AI 功能闭环到开口而非聊天玩具。
+   离线/超时回落静态建议，不阻断。全部追加/包装，不改旧函数体。 */
+function ensureDailyPlan(){ S.dailyPlan = S.dailyPlan || { date:null, text:'' }; return S.dailyPlan; }
+function planStateSummary(){
+  try{
+    var dn = 0; if(S.dayDone) for(var k in S.dayDone) if(S.dayDone[k]) dn++;
+    var said = 0; if(S.phrases) for(var k in S.phrases) said += (S.phrases[k]||[]).length;
+    var ai = (S.aiWeak && S.aiWeak.dims) || {};
+    var weak = Object.keys(ai).filter(function(k){ return (ai[k]||0) > 0; })
+      .sort(function(a,b){ return ai[b] - ai[a]; }).slice(0,3).map(aiWeakLabel);
+    return '已学天数：' + dn + '。已练句数：' + said + '。连续天数：' + (S.streak||0) + '。弱点：' + (weak.join('、') || '暂无');
+  }catch(e){ return '新用户'; }
+}
+function planCardHtml(){
+  try{
+    var dp = (S.dailyPlan) || {};
+    var inner = (dp.date === today() && dp.text)
+      ? '<div class="plan-txt">' + escHtml(dp.text).replace(/\n/g,'<br>') + '</div>'
+      : '<div class="rd-skel">' + T('Nono is planning your day…') + '</div>';
+    return '<div class="card review-drill plan-card"><div class="top"><h2>🤖 ' + T("Nono's plan for you") + '</h2><span class="badge">AI</span></div>'
+      + '<p class="desc">' + T('A short daily plan based on your progress.') + '</p>'
+      + '<div id="home-ai-plan">' + inner + '</div>'
+      + '<button class="btn primary" onclick="planStartSpeak()" style="margin-top:8px;width:100%">' + T('Start with a line') + ' 🐼</button></div>';
+  }catch(e){ return ''; }
+}
+function planStartSpeak(){ try{ var l = (typeof NONO!=='undefined' && NONO.pickLine) ? NONO.pickLine() : null; if(l) nonoStartPracticeWith(l); }catch(e){} }
+async function fetchDailyPlan(box){
+  try{
+    if(!box) return;
+    var dp = ensureDailyPlan();
+    if(dp.date === today() && dp.text){ box.innerHTML = '<div class="plan-txt">' + escHtml(dp.text).replace(/\n/g,'<br>') + '</div>'; return; }
+    var text = '我的状态：' + planStateSummary() + '。请给我今天的练习计划。';
+    var resp = await fetch(API_BASE + 'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'plan' }) });
+    var d = await resp.json().catch(function(){ return {}; });
+    if(resp.ok && d.reply && d.reply.trim()){
+      dp.date = today(); dp.text = d.reply.trim(); if(typeof saveState==='function') saveState();
+      box.innerHTML = '<div class="plan-txt">' + escHtml(d.reply.trim()).replace(/\n/g,'<br>') + '</div>';
+    } else {
+      box.innerHTML = '<div class="rd-offline">' + T('Coach offline — just open any scene and say a line.') + '</div>';
+    }
+  }catch(e){ try{ if(box) box.innerHTML = '<div class="rd-offline">' + T('Coach offline — just open any scene and say a line.') + '</div>'; }catch(e2){} }
+}
+/* 包装 reviewCardHtml：追加今日计划卡，不改旧体 */
+(function(){
+  if(typeof reviewCardHtml!=='function') return;
+  var _rc = reviewCardHtml;
+  reviewCardHtml = function(){ var h=''; try{ h=_rc.apply(null,arguments)||''; }catch(e){} try{ h=h+planCardHtml(); }catch(e){} return h; };
+})();
+/* 包装 renderHome：渲染后异步拉取计划（当天缓存≤1次调用），不改旧体 */
+(function(){
+  if(typeof renderHome!=='function') return;
+  var _rh = renderHome;
+  renderHome = function(){ var r=_rh.apply(null,arguments); try{ var dp=(S.dailyPlan)||{}; if(dp.date!==today()||!dp.text){ setTimeout(function(){ var box=document.getElementById('home-ai-plan'); if(box) fetchDailyPlan(box); }, 90); } }catch(e){} return r; };
 })();
 
 /* ===== /v0.23.18 渗透收口 ===== */

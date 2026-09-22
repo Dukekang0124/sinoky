@@ -493,6 +493,10 @@ const SCENE_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊�
 const DAILY_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫。请基于用户的中文学习情况，造一句超简单、日常、不超过 10 字的中文练习句，让他今天开口练。格式严格：中文句子 | English translation。不要解释。例：今天天气真好 | The weather is nice today';
 const CARD_SYSTEM = '你是"诺诺"，中文老师。用户收藏了一个汉字。请给一个帮他记住这个字的记忆锚点（谐音 / 画面 / 例句），并辨析一个易混字。格式严格：记忆锚点 | 易混字辨析。中文为主，简短。';
 const TONE_SYSTEM = '你是"诺诺"，中文老师。用户刚在声调训练里听错了声调。请用一句人话（中文为主，不超过 40 字）解释为什么是这个声调、怎么听怎么读，并给一个含该声调的例词。不要列规则条文。';
+/* ===== v0.23.19 自适应日计划（B1）=====
+   输入用户全量学习状态摘要，输出今日练习清单（≤3 条、末条必为开口说）。
+   沿用免费 GLM-4-Flash 链，零服务端重构，仅新增一个 mode 分支。 */
+const PLAN_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫学习规划师。用户会给你他的学习状态（已学天数、已练句数、连续天数、发音弱点）。请基于状态生成今天的练习计划：最多 3 条，每条一句中文具体行动（如"再练一遍三声词：你好吗"），最后一条必须是开口说的任务。不要解释，用换行分隔每条，每条以 • 开头。';
 
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
@@ -526,6 +530,7 @@ async function chatGLM(userText, hist, env, mode) {
     : (mode === 'daily') ? DAILY_SYSTEM
     : (mode === 'card') ? CARD_SYSTEM
     : (mode === 'tone') ? TONE_SYSTEM
+    : (mode === 'plan') ? PLAN_SYSTEM
     : CHAT_SYSTEM;
   const messages = [{ role: 'system', content: sysPrompt }];
   (hist || []).forEach(function (h) {

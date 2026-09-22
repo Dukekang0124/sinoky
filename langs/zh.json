@@ -680,5 +680,10 @@
   "Based on your weak spots, try saying this:": "针对你的薄弱点，试着说这句：",
   "Nono is preparing a drill for you…": "诺诺正在为你出题…",
   "Coach offline — tap any line above to practise": "教练离线——点上面任意一句练习",
-  "Nono saved a memory trick for {hz} ✦": "诺诺为 {hz} 存了个记忆妙招 ✦"
+  "Nono saved a memory trick for {hz} ✦": "诺诺为 {hz} 存了个记忆妙招 ✦",
+  "Nono's plan for you": "诺诺为你定的今日计划",
+  "A short daily plan based on your progress.": "根据你的进度生成的一份简短每日计划。",
+  "Start with a line": "从一句开始练",
+  "Nono is planning your day…": "诺诺正在为你规划今天…",
+  "Coach offline — just open any scene and say a line.": "教练离线——随便打开一个场景说一句就好。"
 }
