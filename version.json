@@ -3,11 +3,11 @@
   "updated": "2026-09-22",
   "note": "v0.23.18：大模型渗透收口（场景3/4/5/6 + L4）。情境对话：每句跟读打分后诺诺以当地人身份自然接话（≤8/天）；每日一句：免费大模型按初学者水平现造一句（≤1/天，离线回落静态句）；字卡：新收藏汉字自动生成记忆妙招+易混字辨析（每字一次）；声调：判错时诺诺给一句人话解释（追加不覆盖）。L4：后端 /api/agg 聚合留存与样本规模（device/D1/aiUser/hit/loop/weak，零写）。仅网页发布，APK 沿用 0.23.13。",
   "apk": {
-    "versionCode": 2313,
-    "version": "0.23.13",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.13-release.apk",
-    "md5": "c34116c79d91088e7c34fe57a0277926",
-    "size": 25409946
+    "versionCode": 2318,
+    "version": "0.23.18",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.23.18-release.apk",
+    "md5": "920647bb8e5df0a09d3d843e5e0e1f0a",
+    "size": 25438618
   },
   "noteEn": [
     "v0.23.18: LLM permeation closeout (scenarios 3/4/5/6 + L4). Scenario dialogue: after each read-and-score Nono replies as the local person to keep a real conversation going (<=8/day). Daily sentence: the free LLM now generates a fresh beginner-level practice sentence each day (<=1/day, falls back to a static line offline). Flashcards: starring a new character auto-generates a memory trick + confusable-character note (once per character). Tone gym: on a wrong answer Nono appends a plain-language explanation (no overwrite). L4: backend /api/agg aggregates retention and sample size (devices / D1-returned / AI-users / hit / loop / weak, zero writes). Web-only; APK stays 0.23.13, App users get it via SW update.",
