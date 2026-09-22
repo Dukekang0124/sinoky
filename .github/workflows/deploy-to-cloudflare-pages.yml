@@ -20,11 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build deploy dir (exclude dev/internal assets)
+        run: bash scripts/build-deploy-dir.sh . dist
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
           apiToken: "${{ inputs.cf_token != '' && inputs.cf_token || secrets.CLOUDFLARE_API_TOKEN }}"
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: sinoky
-          directory: .
+          directory: dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}

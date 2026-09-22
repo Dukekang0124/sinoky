@@ -1,10 +1,32 @@
-verify-cards.cjs
-verify-*.png
+# ⚠️ 重要事实（2026-09-22 实测）：Cloudflare Pages 的「直接上传」路径（wrangler pages deploy / cloudflare/pages-action）
+#    不读取本文件——实测会把 _internal/ scripts/ .github/ 全部原样上传。本项目走直接上传，真正生效的排除在
+#    scripts/build-deploy-dir.sh（先构建精简 dist/ 再部署该目录）。本 .assetsignore 只对「Git 集成自动构建」部署生效，
+#    保留它与 build-deploy-dir.sh 的 EXCLUDES 对齐，作为双保险与文档。
+#
+# 列出的文件/目录「绝不上线」（仅影响部署产物，不影响 git 跟踪）。
+# 目的：仓库根全量部署时，剔除一切「开发期/构建期」资源，避免内部脚本与文档公网可直下（static-asset-leak-audit）。
+
 # v0.16.0：内部工作区（补丁脚本/设计方案/验收截图/日志）绝不上线
 _internal/
-badge-backend.mjs
+
+# CI 闸门脚本：仅仓库开发期跑内容校验，非运行时资源
+scripts/
+
+# GitHub Actions 工作流：仅仓库 CI 用，不应出现在公网站点根
+.github/
+
+# 构建/配置文件：非运行时，公开无意义且可能与部署环境混淆
 package.json
 package-lock.json
+capacitor.config.json
+
+# 根目录一次性脚本：verify-cards.cjs 若不存在则本条自动忽略；
+# ⚠️ badge-backend.mjs 被 _worker.js import（Worker 运行时依赖），【绝不能排除】，否则后端构建失败！
+verify-cards.cjs
+
 # v0.21.2：data/ 下的构建器与字段规范属内部文档，此前公网可直下（实测 200 + application/javascript、text/markdown），不上线
 data/build-flashcards.mjs
 data/flashcards.schema.md
+
+# 审计临时产物（已由 .gitignore 忽略，双保险）
+_audit_i18n.txt
