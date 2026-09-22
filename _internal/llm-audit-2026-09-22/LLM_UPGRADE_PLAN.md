@@ -42,10 +42,10 @@
 - **闭环**：AI 指出的弱音节写入 `state.aiWeak[line.key]` → 复习排序读它优先排（见场景 2）。
 - **多语言**：点评语言跟随 `curLang()`，默认中文透传（入口级指令改写，零行为变化）。
 
-### 场景 2 · 复习引擎 → AI 弱点出题 + 变体句
-- **现在**：`revQueue`/`revSchedule`/`rvMarkError`(L 复习家族) 用 SM-2 + 规则排序，内容来自静态 `SCENES`。
-- **大模型进**：当某句 `state.aiWeak[key]>=2`，调 `/api/chat` 生成「同语法点但替换关键词的变体句」让用户再练，避免死记硬背。
-- **闭环**：AI 生成的变体句直接进入当日复习队列（复用 `reviewPool`），命中即计分、再写回 `aiWeak`。
+### 场景 2 · 复习引擎 → AI 弱点出题 + 变体句  ✅ **已落地 v0.23.17**
+- **现在（v0.23.17 之前）**：`revQueue`/`revSchedule`/`rvMarkError`(L 复习家族) 用 SM-2 + 规则排序，内容来自静态 `SCENES`。
+- **大模型进（v0.23.17 落地形态）**：Home 复习卡加「诺诺出的练习句」——取 `S.aiWeak` 最弱维（count≥2 降序）→ `/api/chat mode:'drill'`（`DRILL_SYSTEM` 生成 ≤8 字日常薄弱句，格式 `中文 | English`）→ 存 `S.revDrill`；点开复用 `nonoStartPracticeWith` 开口练，经 `nonoGrade` 自动回灌 aiWeak + 触发 L3 `S.aiFunnel` 闭环。**闭环从「boost 旧句」升级为「造新句练弱点」**。原计划的「变体句进 reviewPool」为更重形态，本期以更轻的「独立薄弱句卡」达成同等闭环，后续可再升级为进队列。
+- **闭环**：AI 薄弱句被说出 → `nonoGrade` 计分 → 写回 `S.aiWeak` + `S.aiFunnel.loop`，与点评/情境对话共享同一账本。
 
 ### 场景 3 · 场景/情境对话 → AI 扮演对话对手 + 即时纠正
 - **现在**：`openScene`/`renderSceneList`(L 场景家族) 是「Someone says X — you answer Y」脚本对，无真实交互。
