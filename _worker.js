@@ -503,6 +503,11 @@ const PLAN_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫
    使写作练习能闭环到"读出来"（Edify Gate）。 */
 const CORRECT_SYSTEM = '你是给中文初学者（母语非中文）批改写作的教练。用户会给你一道题和 ta 写的中文。请严格分两段回复：\n第一行：改正后最自然、适合初学者的完整中文句子（只一句，可直接朗读；不要拼音、不要引号、不要任何解释）。\n第二行起：最多两句简单中文（可夹极少英文）说明改了什么、为什么。\n如果原句已经很好，第一行就给一个更地道的说法。不要输出题目，不要长篇解释。';
 
+/* ===== v0.23.21 B3 反馈智能分诊（运营侧，用户不可见）=====
+   把用户反馈做「AI 摘要 + 主题聚类」，产出给康哥的周报素材。
+   只读 KV（零新增写），复用免费 GLM-4-Flash 链；鉴权与 GET /api/feedback 一致（token）。 */
+const DIGEST_SYSTEM = '你是 Sinoky（教外国人学中文的 PWA）的产品运营分析助手。用户会给你一批近期用户反馈，JSON 数组，字段含义：cat=分类(bug/audio/mic/confusing/idea/wantline/other)、msg=原文、v=版本、country=国家、t=时间。请：\n1) 用 2-3 句中文总结整体状况（数量、主要情绪、最紧迫的问题）。\n2) 把反馈聚成 3-6 个主题簇，每簇给出：topic(主题名，不超过 10 字)、cat(主导分类)、count(条数)、samples(1-2 条代表性原文摘录，保留用户原话)、action(一句可执行的处理建议)。\n3) 若存在"完全不能用"级别的 bug，填入 urgent；否则 urgent 为 null。\n只输出 JSON，不要 markdown 代码块，不要任何解释。严格格式：\n{"summary":"...","clusters":[{"topic":"...","cat":"bug","count":3,"samples":["..."],"action":"..."}],"urgent":{"topic":"...","why":"..."}}';
+
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
 // 聊天专属限流（复用全局 RATE_MAP 兜底 + env.RL DO 强一致计数，独立 key 前缀 chat:）
@@ -585,6 +590,90 @@ async function chatGLM(userText, hist, env, mode) {
   // L3：两层都挂 → 温柔降级 + 记录原因（看板 model 字段可观测）
   console.log('[CHAT] degraded -> glm:' + glmErr + ' | ai:' + aiErr);
   return { text: '诺诺有点累了，待会再聊 😴', model: 'degraded:' + glmErr + '|' + aiErr, degraded: true };
+}
+
+/* v0.23.21 B3：把反馈条目交给 LLM 做摘要 + 主题聚类，返回结构化 digest。
+   纯只读（不写 KV）；自带 GLM-4-Flash → Workers AI 双层兜底与温柔降级；
+   JSON 解析失败时把原文带回去（人工仍可读），绝不因模型抽风而 500。 */
+async function feedbackDigest(env, items) {
+  const list = (items || []).slice(0, 80);
+  if (!list.length) {
+    return { summary: '本周期暂无用户反馈。', clusters: [], urgent: null, model: 'none', degraded: false, count: 0 };
+  }
+  /* 精简：丢掉 errs/ua 等噪声，msg 截断 200 字，控制 token 量 */
+  const slim = list.map(function (it) {
+    return {
+      cat: String((it && it.cat) || 'other').slice(0, 20),
+      msg: String((it && it.msg) || '').slice(0, 200),
+      v: String((it && it.v) || '').slice(0, 12),
+      country: String((it && it.country) || '').slice(0, 4),
+      t: String((it && it.t) || '').slice(0, 10),
+    };
+  });
+  const messages = [
+    { role: 'system', content: DIGEST_SYSTEM },
+    { role: 'user', content: '共 ' + list.length + ' 条反馈：\n' + JSON.stringify(slim) },
+  ];
+
+  let raw = '', model = '', glmErr = '', aiErr = '';
+
+  // L1：GLM-4-Flash（免费）。digest 输出较长，max_tokens 上调到 1200，temperature 调低求稳。
+  try {
+    const r = await fetch(GLM_CHAT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (env.GLM_KEY || ''),
+      },
+      body: JSON.stringify({ model: 'glm-4-flash', messages: messages, temperature: 0.3, top_p: 0.9, max_tokens: 1200 }),
+    });
+    if (r.ok) {
+      const d = await r.json().catch(function () { return null; });
+      const t = (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content || '').trim();
+      if (t) { raw = t; model = 'glm-4-flash'; }
+      else glmErr = 'glm-empty-body';
+    } else glmErr = 'glm-http' + r.status;
+  } catch (e) { glmErr = 'glm-exc:' + String((e && e.message) || e); }
+
+  // L2：Workers AI（env.AI 绑定，零密钥）
+  if (!raw) {
+    const AI_MODELS = ['@cf/qwen/qwen2.5-7b-instruct', '@cf/meta/llama-3-8b-instruct'];
+    for (const m of AI_MODELS) {
+      try {
+        const r = await env.AI.run(m, { messages: messages, max_tokens: 1200 });
+        const t = (
+          (r && r.response) ||
+          (r && r.result && r.result.response) ||
+          (r && r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) ||
+          (r && r.text) || ''
+        ).trim();
+        if (t) { raw = t; model = 'workers-ai:' + m; break; }
+        aiErr = 'ai-empty@' + m;
+      } catch (e) { aiErr = 'ai-exc@' + m + ':' + String((e && e.message) || e); }
+    }
+  }
+
+  // L3：两层都挂 → 温柔降级（不阻塞运营查看原始反馈）
+  if (!raw) {
+    console.log('[DIGEST] degraded -> glm:' + glmErr + ' | ai:' + aiErr);
+    return { summary: '（AI 摘要暂时不可用，请直接查看原始反馈）', clusters: [], urgent: null, raw: '', model: 'degraded:' + glmErr + '|' + aiErr, degraded: true, count: list.length };
+  }
+
+  /* 解析：模型可能包 ```json 或前后带话 —— 先剥壳，再取首个 { 到末个 } */
+  const txt = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+  let parsed = null;
+  if (a >= 0 && b > a) { try { parsed = JSON.parse(txt.slice(a, b + 1)); } catch (e) { parsed = null; } }
+  if (parsed && typeof parsed === 'object') {
+    return {
+      summary: String(parsed.summary || '').slice(0, 1000),
+      clusters: Array.isArray(parsed.clusters) ? parsed.clusters.slice(0, 12) : [],
+      urgent: (parsed.urgent && typeof parsed.urgent === 'object') ? parsed.urgent : null,
+      raw: '', model: model, degraded: false, count: list.length,
+    };
+  }
+  /* JSON 解析失败 → 原文兜底，人工可读 */
+  return { summary: txt.slice(0, 1500), clusters: [], urgent: null, raw: txt.slice(0, 2000), model: model + ':unparsed', degraded: false, count: list.length };
 }
 
 // 聊天埋点（寄生写入 KV FEEDBACK，key 前缀 chat: 已被 feedback 读端点跳过，不污染看板）
@@ -807,6 +896,12 @@ export default {
           if (v) { try { items.push(JSON.parse(v)); } catch (e) { items.push({ raw: v }); } }
         }
         items.sort((a, b) => String(b.t || '').localeCompare(String(a.t || '')));
+        /* v0.23.21 B3：?digest=1 → 交给 AI 做摘要 + 主题聚类（给康哥周报用）。
+           只读 KV，零新增写；与普通读取共用同一套 token 鉴权。 */
+        if (url.searchParams.get('digest') === '1') {
+          const digest = await feedbackDigest(env, items);
+          return json({ ok: true, count: items.length, digest: digest });
+        }
         return json({ ok: true, count: items.length, items });
       } catch (e) {
         return json({ ok: false, error: String((e && e.message) || e) }, 500);
