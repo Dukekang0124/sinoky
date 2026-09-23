@@ -46,6 +46,12 @@
   --red:#e63946; --teal:#8ab8b2; --txt:#eef2f7; --sub:#9aa7b8;
   --t1:#e63946; --t2:#2a9d8f; --t3:#457b9d; --t4:#8d99ae;
   --gold:#c9a86c;
+  /* v0.23.23 视觉设计系统补充 token（P0 止血）—— 见 00-总览与结论/界面视觉与智能化升级方案
+     --txt-3 / --line-strong：收编 --text-sec / --border 两枚孤儿变量的多种 fallback 灰；
+     --red-text：品牌红 #e63946 在深底上对比度仅 4.19:1（< WCAG AA 4.5），小号红字改用此值（6.33:1）；
+     --ok / --warn：把语义色从 --t2 的双重职责（既是二声又是成功）中解耦出来。 */
+  --txt-3:#6b7686; --line-strong:#3a4553;
+  --red-text:#ff6b75; --ok:#3fb950; --warn:#d29922;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* v0.23.9：裸 <a> 的作者色。不写的话 Privacy / Share 会落到 UA 默认 #0000EE，
@@ -88,9 +94,9 @@ header img{width:34px;height:34px;border-radius:9px}
 .p-en{font-size:14.5px;font-weight:600;line-height:1.4}
   .p-hear{margin:2px 0 8px;border-left:3px solid var(--red);background:rgba(230,57,70,.06);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .p-hear .p-hz{color:#1b2430;font-weight:600}
-  .p-hear .p-py{color:var(--red)}
+  .p-hear .p-py{color:var(--red-text)}
   .p-hear .spk{margin-left:auto}
-  .p-en.them{color:var(--red);font-weight:600}
+  .p-en.them{color:var(--red-text);font-weight:600}
 .p-zh{margin-top:8px;cursor:pointer}
 .p-hz{font-size:24px;font-weight:700;letter-spacing:1px}
 .p-py{font-size:14px;color:var(--teal);margin-top:3px}
@@ -514,6 +520,28 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 /* 降级：开屏图加载失败（首访慢网 / 离线未预热）时退回 CSS 字标 + 深青底，不留白屏 */
 #splash.sp-fallback .sp-brand{display:block}
 #splash.sp-fallback img{display:none}
+/* ===== v0.23.23：攻略中心（#v-cityguide）样式补齐 =====
+   cgZoneHtml()/cgDialogHtml() 生成的 .cg-zone/.cg-zhead/.zi/.zt/.zc/.chev/.cg-zbody/.cg-dialog
+   共 8 个类**此前全文件零 CSS 定义** ⇒ 裸 <button> 落到 UA 默认样式（白底黑字、2px outset），
+   与暗色主题完全脱节，这是「攻略页像未完成页面」的直接成因。
+   另：.zt 与 .zc 在模板里是相邻 <span> 且无任何间隔 ⇒ "Airport Arrival0/4"。
+   这里 .cg-zhead 用 grid 分四栏（图标/标题/计数/箭头），从结构上根除该问题。 */
+#cg-zones{display:flex;flex-direction:column;gap:10px;margin:4px 0 14px}
+.cg-zone{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:border-color .2s}
+.cg-zone.open{border-color:var(--line-strong)}
+.cg-zhead{display:grid;grid-template-columns:24px minmax(0,1fr) auto 18px;gap:10px;align-items:center;width:100%;background:none;border:none;color:var(--txt);font-family:inherit;font-size:15px;font-weight:600;line-height:1.35;text-align:left;padding:14px;cursor:pointer}
+.cg-zhead:active{background:var(--bg2)}
+.cg-zone .zi{font-size:18px;line-height:1;text-align:center}
+.cg-zone .zt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 计数用 --sub 而非 --txt-3：--txt-3 在 --bg2 上仅 3.43:1，达不到 4.5（--sub 为 6.47:1） */
+.cg-zone .zc{font-size:11px;font-weight:700;color:var(--sub);background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:2px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cg-zone .zc.done{color:var(--red-text);border-color:rgba(230,57,70,.35)}
+.cg-zone .chev{color:var(--sub);font-size:16px;line-height:1;text-align:center;transition:transform .2s}
+.cg-zone.open .chev{transform:rotate(90deg)}
+.cg-zbody{padding:0 14px 14px;border-top:1px solid var(--line)}
+.cg-dialog{margin-top:6px}
+.cg-dialog .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
+.cg-dialog h2{font-size:16px}
 </style>
 </head>
 <body>
@@ -874,22 +902,28 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <section id="v-dialog" class="views">
     <style>
       #v-dialog{background:var(--bg);color:#f2f4f7;padding:16px;overflow:auto;font-family:-apple-system,"SF Pro",Arial,sans-serif}
-      #v-dialog .d-line{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
-      #v-dialog .d-line .who{min-width:44px;font-size:11px;font-weight:700;padding-top:2px}
-      #v-dialog .d-line .who.them{color:#4cc9f0}
-      #v-dialog .d-line .who.you{color:var(--red)}
-      #v-dialog .d-line .body{flex:1}
-      #v-dialog .d-line .py{font-size:16px;font-weight:600;letter-spacing:.3px}
-      #v-dialog .d-line .en{font-size:12px;color:var(--sub);margin-top:3px}
-      #v-dialog .d-line.you{border:1px solid rgba(230,57,70,.3);border-radius:12px;padding:14px;background:rgba(230,57,70,.06)}
-      #v-dialog .d-line.you .py{color:#e63946}
-      #v-dialog .d-flip{margin-top:16px;background:rgba(76,201,240,.08);border:1px dashed rgba(76,201,240,.4);border-radius:14px;padding:16px;font-size:14px}
-      #v-dialog .d-flip b{color:#4cc9f0}
-      #v-dialog .d-flip .py{font-size:16px;font-weight:600;margin-top:8px}
-      #v-dialog .d-flip .en{font-size:13px;color:var(--sub);margin-top:3px}
-      #v-dialog .hz.hidden{display:none}
+      /* v0.23.23 修复：对话卡样式原先只挂在 #v-dialog 作用域下，而 cgDialogHtml() 生成的
+         攻略区对话卡位于 #v-cityguide 内的 .cg-dialog 中 —— 选择器不命中，整块渲染成裸文本
+         （无行距、无说话人色、无 YOU 行红框）。此处为 .cg-dialog 补同源选择器；
+         #v-dialog 原规则一字未改，避免动到既有对话卡页。
+         同时把 11px 的 YOU 标签由 --red 换 --red-text：品牌红 #e63946 在深底上仅 4.19:1，
+         低于 WCAG AA 的 4.5，小号红字必须用 --red-text（6.33:1）。 */
+      #v-dialog .d-line, .cg-dialog .d-line{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
+      #v-dialog .d-line .who, .cg-dialog .d-line .who{min-width:44px;font-size:11px;font-weight:700;padding-top:2px}
+      #v-dialog .d-line .who.them, .cg-dialog .d-line .who.them{color:#4cc9f0}
+      #v-dialog .d-line .who.you, .cg-dialog .d-line .who.you{color:var(--red-text)}
+      #v-dialog .d-line .body, .cg-dialog .d-line .body{flex:1}
+      #v-dialog .d-line .py, .cg-dialog .d-line .py{font-size:16px;font-weight:600;letter-spacing:.3px}
+      #v-dialog .d-line .en, .cg-dialog .d-line .en{font-size:12px;color:var(--sub);margin-top:3px}
+      #v-dialog .d-line.you, .cg-dialog .d-line.you{border:1px solid rgba(230,57,70,.3);border-radius:12px;padding:14px;background:rgba(230,57,70,.06)}
+      #v-dialog .d-line.you .py, .cg-dialog .d-line.you .py{color:var(--red-text)}
+      #v-dialog .d-flip, .cg-dialog .d-flip{margin-top:16px;background:rgba(76,201,240,.08);border:1px dashed rgba(76,201,240,.4);border-radius:14px;padding:16px;font-size:14px}
+      #v-dialog .d-flip b, .cg-dialog .d-flip b{color:#4cc9f0}
+      #v-dialog .d-flip .py, .cg-dialog .d-flip .py{font-size:16px;font-weight:600;margin-top:8px}
+      #v-dialog .d-flip .en, .cg-dialog .d-flip .en{font-size:13px;color:var(--sub);margin-top:3px}
+      #v-dialog .hz.hidden, .cg-dialog .hz.hidden{display:none}
       #v-dialog .spk{color:var(--sub);font-size:16px;cursor:pointer;background:none;border:none;padding-top:2px}
-      #v-dialog .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+      #v-dialog .actions, .cg-dialog .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
     </style>
     <div id="dialog-list"></div>
     <div id="dialog-card" style="display:none"></div>
@@ -1042,7 +1076,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <div class="setrow"><span>Interface language</span>
         <span class="setctl">
           <div id="lang-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-          <div style="font-size:.72rem;color:var(--text-sec,#888);margin-top:6px;">More languages coming · 更多语言陆续支持</div>
+          <div style="font-size:.72rem;color:var(--txt-3);margin-top:6px;">More languages coming · 更多语言陆续支持</div>
         </span></div>
       <div class="setrow"><span>Voice</span></div>
     <div class="voicebar" id="voicebar">
@@ -1232,7 +1266,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.22';
+var APP_VERSION = '0.23.23';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3540,7 +3574,7 @@ function cgZoneHtml(zone){
   var h = '<div class="cg-zone'+(open?' open':'')+'">'+
     '<button class="cg-zhead" onclick="cgToggleZone(\''+zone.id+'\')">'+
       '<span class="zi">'+zone.icon+'</span><span class="zt">'+escHtml(zone.title)+'</span>'+
-      '<span class="zc">'+done+'/'+zone.phrases.length+'</span><span class="chev">›</span></button>';
+      '<span class="zc'+(done?' done':'')+'">'+done+'/'+zone.phrases.length+'</span><span class="chev">›</span></button>';
   if(open){
     h += '<div class="cg-zbody">';
     zone.phrases.forEach(function(p,i){ h += cgPhraseHtml(zone, p, i); });
@@ -4311,7 +4345,7 @@ function renderLangList(){
   panel.setAttribute('data-noi18n', '');
   panel.setAttribute('role', 'listbox');
   panel.setAttribute('aria-label', 'Interface language');
-  panel.style.cssText = 'display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:80;background:var(--card,#fff);border:1px solid var(--border,#e6e6e6);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.18);max-height:42vh;overflow-y:auto;min-width:230px;padding:6px;-webkit-overflow-scrolling:touch;';
+  panel.style.cssText = 'display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:80;background:var(--card,#fff);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.18);max-height:42vh;overflow-y:auto;min-width:230px;padding:6px;-webkit-overflow-scrolling:touch;';
   function buildPanel(){
     panel.innerHTML = '';
     var c = curLang();
@@ -4429,10 +4463,10 @@ function showApkUpdateDialog(apk){
     + '<span id="apk-upd-x" style="position:absolute;top:8px;right:12px;font-size:1.3rem;line-height:1;cursor:pointer;padding:4px 6px;">×</span>'
     + '<div style="font-size:1.5rem;margin-bottom:6px;">🆕</div>'
     + '<div style="font-size:1.05rem;font-weight:700;margin-bottom:2px;">' + T('New version') + ' ' + (apk.version || ('v' + apk.versionCode)) + '</div>'
-    + (apk.size ? '<div style="font-size:.75rem;color:var(--text-sec,#666);margin-bottom:4px;">' + T('Install package ≈ ') + (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') + T(' · verified by MD5') + '</div>' : '')
+    + (apk.size ? '<div style="font-size:.75rem;color:var(--txt-3);margin-bottom:4px;">' + T('Install package ≈ ') + (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') + T(' · verified by MD5') + '</div>' : '')
     + noteHtml
     + '<div style="display:flex;gap:10px;margin-top:6px;">'
-    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--border,#ccc);border-radius:10px;background:transparent;color:var(--text-sec,#666);font-size:.95rem;cursor:pointer;">' + T('Not now') + '</button>'
+    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--txt-3);font-size:.95rem;cursor:pointer;">' + T('Not now') + '</button>'
     + '<button id="apk-upd-now" style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--accent,var(--red));color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">⬇️ ' + T('Download') + '</button>'
     + '</div></div>';
   document.body.appendChild(ov);
@@ -4477,11 +4511,11 @@ function updOverlay(){
   ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;';
   ov.innerHTML = '<div style="background:var(--bg,#fff);color:var(--text,#222);max-width:360px;width:100%;border-radius:16px;padding:20px;">'
     + '<div style="font-size:1rem;font-weight:600;margin-bottom:12px;">⬇️ Downloading update…</div>'
-    + '<div style="height:8px;background:var(--border,#ddd);border-radius:4px;overflow:hidden;margin-bottom:10px;">'
+    + '<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:10px;">'
     + '<div id="upd-ov-bar" style="height:100%;width:0;background:var(--accent,var(--red));transition:width .3s;"></div></div>'
-    + '<div id="upd-ov-txt" style="font-size:.82rem;color:var(--text-sec,#666);text-align:center;min-height:2.4em;line-height:1.5;">Preparing download…</div>'
+    + '<div id="upd-ov-txt" style="font-size:.82rem;color:var(--txt-3);text-align:center;min-height:2.4em;line-height:1.5;">Preparing download…</div>'
     + '<div style="display:flex;gap:10px;margin-top:12px;">'
-    + '<button id="upd-ov-cancel" style="flex:1;padding:10px;border:1px solid var(--border,#ccc);border-radius:10px;background:transparent;color:var(--text-sec,#666);font-size:.9rem;cursor:pointer;">Cancel</button>'
+    + '<button id="upd-ov-cancel" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--txt-3);font-size:.9rem;cursor:pointer;">Cancel</button>'
     + '<button id="upd-ov-retry" style="flex:1;padding:10px;border:none;border-radius:10px;background:var(--accent,var(--red));color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;display:none;">Retry</button>'
     + '</div></div>';
   document.body.appendChild(ov);
@@ -7947,7 +7981,7 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
 </script>
 <!-- ============ v0.21.0 限额 / 解锁码 / 接一句（append-only：不改动上方任何逻辑） ============ -->
 <style>
-.qt-chip{ display:inline-block; font-size:.72rem; color:var(--text-sec,#888); background:rgba(127,127,127,.12);
+.qt-chip{ display:inline-block; font-size:.72rem; color:var(--txt-3); background:rgba(127,127,127,.12);
   border:1px solid rgba(127,127,127,.2); border-radius:999px; padding:2px 10px; margin:4px 0; }
 .qt-chip.warn{ color:#ffb3b9; border-color:rgba(230,57,70,.4); background:rgba(230,57,70,.1); }
 .qt-chip.unl{ color:#9be29b; border-color:rgba(46,160,67,.4); background:rgba(46,160,67,.12); }
@@ -7956,14 +7990,14 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
 #quotaCard .qrow:last-child{ border-bottom:none; }
 .ovl{ position:fixed; inset:0; background:rgba(0,0,0,.62); display:flex; align-items:center; justify-content:center;
   padding:20px; z-index:9000; }
-.ovl .panel{ background:var(--card,#17171c); border:1px solid var(--border,#2a2a31); border-radius:18px; padding:22px; max-width:380px; width:100%; }
+.ovl .panel{ background:var(--card,#17171c); border:1px solid var(--line); border-radius:18px; padding:22px; max-width:380px; width:100%; }
 .ovl h3{ margin:0 0 6px; font-size:1.15rem; }
-.ovl p{ color:var(--text-sec,#9a9aa3); font-size:.9rem; line-height:1.6; margin:0 0 14px; }
+.ovl p{ color:var(--txt-3); font-size:.9rem; line-height:1.6; margin:0 0 14px; }
 .ovl .two{ display:flex; gap:10px; margin-top:6px; }
 .ovl .two .btn{ flex:1; }
 .wc-steps{ background:rgba(217,136,0,.1); border:1px solid rgba(217,136,0,.35); border-radius:10px; padding:10px 12px;
   font-size:.82rem; line-height:1.7; margin:10px 0; color:#f0c060; }
-.codeinput{ width:100%; padding:10px; border-radius:10px; border:1px solid var(--border,#2a2a31); background:#0d0d10; color:#fff; font-size:1rem; margin:8px 0; }
+.codeinput{ width:100%; padding:10px; border-radius:10px; border:1px solid var(--line); background:#0d0d10; color:#fff; font-size:1rem; margin:8px 0; }
 .unl-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
 .extend-prompt{ background:rgba(230,57,70,.08); border:1px solid rgba(230,57,70,.3); border-radius:12px; padding:12px 14px; margin:10px 0; line-height:1.6; }
 .extend-prompt b{ color:#fff; }
