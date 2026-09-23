@@ -1,5 +1,5 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.23.23';
+var CACHE = 'sinoky-v0.24.0';
 var ASSETS = [
   './',
   './index.html',
@@ -33,6 +33,14 @@ var ASSETS = [
   './assets/empty/general.webp',
   './assets/empty/network.webp',
   './assets/empty/study.webp',
+  /* v0.24.0 UI 图标（Lucide · ISC）：攻略页首屏即用，必须离线可达 */
+  './assets/icons/ui/zone-airport.svg','./assets/icons/ui/zone-payment.svg','./assets/icons/ui/zone-metro.svg',
+  './assets/icons/ui/zone-taxi.svg','./assets/icons/ui/zone-food.svg','./assets/icons/ui/zone-ticket.svg',
+  './assets/icons/ui/zone-hotel.svg','./assets/icons/ui/zone-emergency.svg','./assets/icons/ui/zone-departure.svg',
+  './assets/icons/ui/icon-ask.svg','./assets/icons/ui/icon-pin.svg','./assets/icons/ui/icon-mic.svg',
+  './assets/icons/ui/icon-check.svg','./assets/icons/ui/icon-eye.svg','./assets/icons/ui/icon-slow.svg',
+  './assets/icons/ui/icon-city.svg','./assets/icons/ui/icon-days.svg','./assets/icons/ui/icon-dialog.svg',
+  './assets/icons/ui/icon-review.svg','./assets/icons/ui/icon-feedback.svg',
 ];
 
 self.addEventListener('install', function (e) {

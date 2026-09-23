@@ -472,30 +472,17 @@
     };
   })();
 
-  /* ---------- 10. 修「陪伴入口被 Feedback 按钮压住」的既有布局缺陷 ----------
-     实测（Playwright 量矩形）：#nono-dock(right:12px;bottom:78px) 与
-     #fb-open(CSS right:12px;bottom:calc(72px+…)) 在**同一个右下角重叠**，
-     且 #fb-open 在 DOM 里靠后、同为 z-index:60 ⇒ 压在浮标之上，浮标下半部点不准。
-     根因不是本轮引入的：#nono-dock 是 v0.5.0 预留的位、#fb-open 是 v0.3.10
-     上移到「导航栏上方」的位，两者从那时起就撞在右下角。
-     #fb-open 自己的 JS 里 DEFAULT 写的是 left:12px（左下），注释也写
-     「左下导航栏上方」，但 applyDefault() 只在【长按 700ms 复位】时被调用 ——
-     首次访问（无 sinoky-fb-pos）时 CSS 的 right:12px 直接生效 ⇒ 从没落过左下。
+  /* ---------- 10. 【v0.24.0 已移除】修「陪伴入口被 Feedback 按钮压住」的运行时补丁 ----------
+     原缺陷（v0.5.0 起存在）：#nono-dock(right:12px;bottom:78px) 与
+     #fb-open(CSS right:12px;bottom:calc(72px+…)) 在**同一个右下角重叠**；
+     #fb-open 的注释与 JS 的 DEFAULT 写的都是「左下、left:12px」，只有 CSS 写成了 right。
 
-     本层只做一次性纠正：不动原代码，不动它的拖拽/长按复位逻辑。
-       有 sinoky-fb-pos（用户自己摆过位）⇒ 一律尊重，完全不干预；
-       没有 ⇒ 按它自己注释里的设计意图落到左下，把右下让给陪伴角色。 */
-  (function () {
-    var btn = document.getElementById('fb-open');
-    if (!btn) return;
-    var saved = null;
-    try { saved = JSON.parse(localStorage.getItem('sinoky-fb-pos') || 'null'); } catch (e) {}
-    if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') return;
-    btn.style.right = 'auto';
-    btn.style.left = '12px';
-    btn.style.top = 'auto';
-    btn.style.bottom = 'calc(72px + env(safe-area-inset-bottom))';
-  })();
+     当时这里加了一段 IIFE 把 left 硬改回去，属"用运行时补丁掩盖源码错误"：
+     注入层必须永远排在主 CSS 之后，否则失效；且源码与 patch.js 两棵树要同步维护。
+
+     v0.24.0 已把修复收回源码（sinoky-app/index.html 主 CSS 直接声明 left:12px，
+     z-index 走 --z-fab 栈序 token），故本段整体删除，不再保留任何首访纠正逻辑。
+     ⚠️ index.html 内联副本（<script id="nono-ip-v1-js">）必须与本文件保持一致。 */
 
   /* ==========================================================================
      v0.23.3 诺诺形象位（纯追加）

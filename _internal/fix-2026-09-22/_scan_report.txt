@@ -1,5 +1,5 @@
 ======================================================================
-S1 裸中文（未 T() 包裹，全部语言都会看到中文）：1486 条
+S1 裸中文（未 T() 包裹，全部语言都会看到中文）：1483 条
 ======================================================================
 L788    RAW   ''s answer people.</p>\n      <div class="ob-ready">\n        <div class="scene">SCENE · FIRST WORDS</div>\n        <h2>Someo'
 L794    RAW   ''m called … (say your name!)</span></span></div>\n        <div class="ob-li"><span class="num">4</span><span><span>很高兴认识你<'
@@ -1474,9 +1474,6 @@ L7798   RAW   ''记下来，明天复习'
 L7877   RAW   ''<b>先听，再跟我念 3 遍。</b><br>Tap the mic and say it out loud.'
 L7878   RAW   ''<b>读一句，说一句。</b><br>Reading it is not the same as saying it.'
 L7879   RAW   ''<b>选一句，说 3 遍。</b><br>Slow the first time, real the third.'
-L7880   RAW   ''<b>挑一个你明天就会用到的场景。</b>'
-L7881   RAW   ''<b>今天这一步，只要一句。</b><br>说给我听。'
-L7882   RAW   ''<b>一人一句 —— 你来演那个「你」。</b>'
 L7883   RAW   ''<b>挑一句，说给我听。</b><br>You saved these — now say them out loud.'
 L7884   RAW   ''<b>看懂了，也要说出来。</b><br>Understanding it is not the same as saying it.'
 L7885   RAW   ''<b>每一枚勋章，都是你开口换来的。</b><br>Say one more line — the next one is close.'
