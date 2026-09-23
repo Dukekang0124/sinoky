@@ -46,6 +46,7 @@ const REGISTRY = [
   { key: 'vConsole', src: ['vendor/vconsole.min.js'] },
   { key: 'qrcode-generator', src: ['inline:index.html'] },
   { key: 'Microsoft Edge', src: ['runtime:/api/tts'] },
+  { key: 'Lucide', src: ['assets/icons/ui/'] },
 ];
 
 const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');

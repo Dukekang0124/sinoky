@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#161a20">
+<meta name="theme-color" content="#141a24">
 <title>Sinoky — Speak Chinese where it matters</title>
 <link rel="icon" href="icons/favicon-32.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -42,26 +42,61 @@
 </script>
 <style>
 :root{
-  --bg:#161a20; --bg2:#1d232c; --card:#212a35; --line:#33404c;
-  --red:#e63946; --teal:#8ab8b2; --txt:#eef2f7; --sub:#9aa7b8;
-  --t1:#e63946; --t2:#2a9d8f; --t3:#457b9d; --t4:#8d99ae;
-  --gold:#c9a86c;
-  /* v0.23.23 视觉设计系统补充 token（P0 止血）—— 见 00-总览与结论/界面视觉与智能化升级方案
-     --txt-3 / --line-strong：收编 --text-sec / --border 两枚孤儿变量的多种 fallback 灰；
-     --red-text：品牌红 #e63946 在深底上对比度仅 4.19:1（< WCAG AA 4.5），小号红字改用此值（6.33:1）；
-     --ok / --warn：把语义色从 --t2 的双重职责（既是二声又是成功）中解耦出来。 */
-  --txt-3:#6b7686; --line-strong:#3a4553;
-  --red-text:#ff6b75; --ok:#3fb950; --warn:#d29922;
+  /* ═══ v0.24.0「静默仪表 / Quiet Instrument」设计令牌 ═══
+     深石墨底 + 单一朱砂信号红 + 只服务"语音域"的功能青。弃用金/青瓷作主题色。
+     品牌 LOGO 是 #141a24 底 + #e63946 钥匙标（红线不可动）⇒ --bg 对齐 #141a24，
+     让 LOGO 与页面同色、天然融合。 */
+  --bg:#141a24; --bg2:#1a2029; --card:#1e2530; --card-hi:#252d3a;
+  --line:#2c3542; --line-strong:#3a4553;
+  --txt:#eef2f7; --sub:#9aa7b8; --txt-3:#6b7686;
+  /* 品牌信号红：拆两支 —— 填充/边框/大号字用 --red（#e63946 在深底上仅 4.19:1，
+     不能用于小号正文）；小号红字一律用 --red-text（6.33:1，达 AA）。 */
+  --red:#e63946; --red-text:#ff6b75; --red-press:#c92f3b; --red-soft:rgba(230,57,70,.12);
+  --ring:0 0 0 3px rgba(230,57,70,.22);
+  /* 语义色：从 --t2 的双重职责（既是"成功"又是"二声"）中解耦 */
+  --ok:#3fb950; --warn:#d29922; --danger:var(--red-text);
+  /* 语音域功能色：播放/录音/拼音/波形专用 */
+  --speech:#4cc9f0;
+  /* 声调四色：以 .py-tN（拼音上色，用户看得最多的一套）为单一真相 */
+  --tone1:#e5484d; --tone2:#e8910c; --tone3:#2f9e44; --tone4:#4c8dff; --tone0:#8b95a3;
+  /* 兼容别名：--teal 是裸 <a> 的兜底色 ⇒ 值升级到 --speech，全站 48 处 var(--teal) 零改升级；
+     --gold/--gold-dim/--paper 仅剩分享卡 Canvas 在用（App 主体已去金，P3 再收）。 */
+  --teal:#4cc9f0;
+  --gold:#c9a86c; --gold-dim:#8a7448; --paper:#f5f1e8;
+  /* 字阶（原 24 档硬编码 → 11 档） */
+  --fs-2xs:10px; --fs-xs:11.5px; --fs-sm:12.5px; --fs-md:14px; --fs-base:15px;
+  --fs-lg:17px; --fs-xl:20px; --fs-2xl:24px; --fs-3xl:34px; --fs-4xl:44px; --fs-hz:64px;
+  /* 间距（4pt 基） */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
+  --sp-8:32px; --sp-10:40px; --sp-12:48px;
+  /* 圆角 */
+  --r-xs:6px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-pill:999px;
+  /* 深色层次：不靠大投影，靠发丝边框 + 顶部微高光 + 极浅投影 */
+  --hairline:inset 0 1px 0 rgba(255,255,255,.03);
+  --elev-1:0 1px 2px rgba(0,0,0,.35); --elev-2:0 12px 32px rgba(0,0,0,.5);
+  /* z-index 栈序（v0.24.0：全站单一事实源；改层级先改这里，禁止再写裸数字）
+     nav(9) < 页内小浮层(19/20) < 功能件(58，反馈钮) < 诺诺胶囊(59) < 浮标层(60，诺诺坞)
+     < 抽屉/遮罩/底部面板(70/71) < 云端菜单(80) < 更新条(95) < toast(99) < 引导页(100)
+     < 弹窗(9000) < 启动屏(9999) < 全屏会话层(10000/10001)
+     语义：功能件 < 陪伴角色 < 浮层 —— 层级即优先级，不是随手选数字。 */
+  --z-nav:9; --z-rd-mask:19; --z-rd-pop:20; --z-utility:58; --z-tip:59; --z-fab:60;
+  --z-drawer:70; --z-mask:70; --z-sheet:71; --z-menu:80; --z-update:95;
+  --z-toast:99; --z-onboard:100; --z-modal:9000; --z-splash:9999;
+  --z-full:10000; --z-full-top:10001;
+  /* 动效 */
+  --dur-1:120ms; --dur-2:200ms; --dur-3:320ms;
+  --ease-out:cubic-bezier(.2,.8,.2,1); --ease-io:cubic-bezier(.4,0,.2,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* v0.23.9：裸 <a> 的作者色。不写的话 Privacy / Share 会落到 UA 默认 #0000EE，
-   在 --bg(#161a20) 上只有 1.86:1 —— 深色主题下等于看不见；:visited 的 UA 默认
+   在 --bg(#141a24) 上仅 1.94:1 —— 深色主题下等于看不见；:visited 的 UA 默认
    紫 #551A8B 同理。这条只兜底，任何更具体的规则（如 .foot details.attr a）照常覆盖。 */
 a{color:var(--teal)}a:visited{color:var(--teal)}
-body{background-color:var(--bg);background-image:repeating-linear-gradient(0deg,rgba(201,168,108,.02) 0 1px,transparent 1px 26px),repeating-linear-gradient(90deg,rgba(201,168,108,.02) 0 1px,transparent 1px 26px);background-attachment:fixed;color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh}
+body{background-color:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh}
 h1,h2,.brand,.p-hz,.np-line .hz,.hero h1{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
-.wrap{max-width:520px;margin:0 auto;padding:0 16px 90px}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 128px}   /* v0.24.0：128px 给「反馈」浮标留净空（原 90px 会压住页尾主 CTA） */
 body:has(#v-onboard.views.on) .wrap{padding-bottom:0}
+body:has(#v-onboard.views.on) #fb-open{display:none}  /* v0.24.0：引导页主 CTA 占满底部，浮标一律让位 */
 header{display:flex;align-items:center;gap:10px;padding:18px 0 6px}
 header img{width:34px;height:34px;border-radius:9px}
 .brand{font-size:21px;font-weight:800;letter-spacing:.3px}
@@ -78,8 +113,8 @@ header img{width:34px;height:34px;border-radius:9px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
 .card .top{display:flex;justify-content:space-between;align-items:center}
 .card h2{font-size:16px}
-.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--red);color:#fff;border:1px solid var(--gold);letter-spacing:.4px}
-.badge.teal{background:rgba(138,184,178,.18);color:var(--teal);border:1px solid rgba(201,168,108,.35)}
+.badge{font-size:var(--fs-2xs);font-weight:700;padding:3px 9px;border-radius:var(--r-pill);background:var(--red);color:#fff;border:1px solid transparent;letter-spacing:.4px}
+.badge.teal{background:rgba(76,201,240,.18);color:var(--teal);border:1px solid var(--line)}
 .noscore{color:var(--sub);font-size:11px;margin-top:8px;line-height:1.45;border-left:2px solid var(--teal);padding-left:8px}
 .card p.desc{color:var(--sub);font-size:12.5px;margin-top:6px;line-height:1.5}
 .btn{display:block;width:100%;border:none;border-radius:99px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit}
@@ -89,7 +124,7 @@ header img{width:34px;height:34px;border-radius:9px}
 .pbar{height:7px;background:var(--bg2);border-radius:99px;margin-top:12px;overflow:hidden}
 .pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--paper));border-radius:99px;transition:width .3s}
 .phrase{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-.phrase.done{border-color:rgba(42,157,143,.5)}
+.phrase.done{border-color:rgba(63,185,80,.5)}
 .p-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .p-en{font-size:14.5px;font-weight:600;line-height:1.4}
   .p-hear{margin:2px 0 8px;border-left:3px solid var(--red);background:rgba(230,57,70,.06);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -102,11 +137,11 @@ header img{width:34px;height:34px;border-radius:9px}
 .p-py{font-size:14px;color:var(--teal);margin-top:3px}
 /* [吸收D] 声调色彩：拼音按声调上色，帮老外一眼区分四声（Edify 辅助——看准→说准→多说）。
    仅作用于拼音展示文本，不改发音/数据；轻声(无标调符号)→ .py-t0 灰。!important 覆盖各容器色。 */
-.py-t1{color:#e8455f!important}
-.py-t2{color:#e8910c!important}
-.py-t3{color:#2f9e44!important}
-.py-t4{color:#1c7ed6!important}
-.py-t0{color:#9aa4b2!important}
+.py-t1{color:var(--tone1)!important}
+.py-t2{color:var(--tone2)!important}
+.py-t3{color:var(--tone3)!important}
+.py-t4{color:var(--tone4)!important}
+.py-t0{color:var(--tone0)!important}
 .p-zh.hidden .p-hz,.p-zh.hidden .p-py{filter:blur(7px);user-select:none}
 .p-hint{font-size:10.5px;color:var(--sub);margin-top:5px}
 /* v0.3.55 零基础拼读：句卡音节拆分，点一个音节只听这一个字 */
@@ -121,14 +156,14 @@ header img{width:34px;height:34px;border-radius:9px}
 .spk.playing{background:rgba(127,179,176,.15);border-color:var(--teal)}
 .p-actions{display:flex;gap:8px;margin-top:11px;flex-wrap:nowrap}
 .p-actions .btn{margin-top:0;padding:9px 12px;font-size:12.5px;border-radius:99px;width:auto;flex:0 0 auto;min-width:0}
-.p-actions .done-btn{background:rgba(42,157,143,.15);color:var(--t2);border:1px solid rgba(42,157,143,.4);white-space:nowrap;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.p-actions .done-btn{background:rgba(63,185,80,.15);color:var(--ok);border:1px solid rgba(63,185,80,.4);white-space:nowrap;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .phrase.done .done-btn{opacity:.55}
 .speed{font-size:11px;color:var(--sub);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit}
 .tonebtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
 .tonebtn{border:1px solid var(--line);background:var(--bg2);border-radius:99px;padding:12px 4px;text-align:center;cursor:pointer;color:var(--txt);font-family:inherit}
 .tonebtn .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
 .tonebtn .tl{font-size:10px;color:var(--sub);margin-top:5px}
-.tonebtn.right{border-color:var(--t2);background:rgba(42,157,143,.15)}
+.tonebtn.right{border-color:var(--ok);background:rgba(63,185,80,.15)}
 .tonebtn.wrong{border-color:var(--red);background:rgba(230,57,70,.13)}
 .tonebtn.sel{border-color:var(--teal);background:rgba(127,179,176,.18);box-shadow:0 0 0 2px var(--teal) inset}
 .tone-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -144,12 +179,12 @@ header img{width:34px;height:34px;border-radius:9px}
 .day.hit{background:rgba(230,57,70,.2);border-color:var(--red);color:var(--txt)}
 .views{display:none}
 .views.on{display:block}
-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,36,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:9}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,36,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:var(--z-nav)}
 nav button{flex:1;background:none;border:none;color:var(--sub);font-size:10.5px;padding:9px 0 11px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:3px;align-items:center}
 nav button .ic{font-size:19px}
 nav button .ic-img{width:22px;height:22px;object-fit:contain;margin-bottom:1px}
 nav button.on{color:var(--red)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:var(--red);color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:var(--red);color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:var(--z-toast)}
 .toast.show{opacity:1}
 .tour-steps div{font-size:12.5px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:7px;line-height:1.45}
 .q{font-size:12.5px;color:var(--sub);line-height:1.5;margin-top:8px;font-style:italic}
@@ -175,7 +210,7 @@ nav button.on{color:var(--red)}
 .score-overall span{font-size:12px;color:var(--sub);font-weight:600;margin-left:6px}
 .score-sylls{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .ss{font-size:15px;padding:3px 8px;border-radius:8px;border:1px solid var(--line)}
-.ss.ok{color:var(--t2);border-color:rgba(42,157,143,.4);background:rgba(42,157,143,.12)}
+.ss.ok{color:var(--ok);border-color:rgba(63,185,80,.4);background:rgba(63,185,80,.12)}
 .ss.bad{color:var(--red);border-color:rgba(230,57,70,.4);background:rgba(230,57,70,.12);text-decoration:line-through}
 .score-err{color:var(--red);font-size:12px;margin-top:10px;line-height:1.5}
 .score-load{color:var(--sub);font-size:12px;margin-top:10px}
@@ -236,10 +271,10 @@ nav button.on{color:var(--red)}
 .sent-input:focus{outline:none;border-color:var(--teal)}
 .sent-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .sent-option{background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:11px 8px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
-.sent-option.right{background:rgba(42,157,143,.15);border-color:var(--t2);color:var(--t2)}
+.sent-option.right{background:rgba(63,185,80,.15);border-color:var(--ok);color:var(--ok)}
 .sent-option.wrong{background:rgba(230,57,70,.13);border-color:var(--red);color:var(--red)}
 .sent-result{margin-top:10px;padding:11px 13px;border-radius:11px;font-size:13.5px;line-height:1.55}
-.sent-result.ok{background:rgba(42,157,143,.12);color:var(--t2);border:1px solid rgba(42,157,143,.35)}
+.sent-result.ok{background:rgba(63,185,80,.12);color:var(--ok);border:1px solid rgba(63,185,80,.35)}
 .sent-result.bad{background:rgba(230,57,70,.12);color:var(--red);border:1px solid rgba(230,57,70,.35)}
 .sent-wordbank{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .sent-word{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:14px;cursor:pointer;font-family:inherit;color:var(--txt)}
@@ -261,7 +296,7 @@ nav button.on{color:var(--red)}
 .rd-seg:hover{background:rgba(127,179,176,.18)}
 .rd-py{display:block;font-size:11px;color:var(--teal);line-height:1.1;text-align:center;margin-bottom:2px}
 .rd-text.nopy .rd-py{display:none}
-.rd-pop{position:fixed;left:0;right:0;bottom:0;background:var(--bg2);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 16px 92px;transform:translateY(110%);transition:transform .25s;z-index:20;max-height:72vh;overflow-y:auto}
+.rd-pop{position:fixed;left:0;right:0;bottom:0;background:var(--bg2);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 16px 92px;transform:translateY(110%);transition:transform .25s;z-index:var(--z-rd-pop);max-height:72vh;overflow-y:auto}
 .rd-pop.on{transform:translateY(0)}
 .rd-pop-hz{font-size:44px;font-weight:800;text-align:center;letter-spacing:1px}
 .rd-pop-py{font-size:17px;color:var(--teal);text-align:center;margin-top:4px}
@@ -271,21 +306,35 @@ nav button.on{color:var(--red)}
 .rd-pop-actions .btn{margin-top:0;padding:11px;font-size:13px;border-radius:11px}
 
 /* ---------- v0.3.8 真实用户保障：反馈入口 / 上手引导 / 隐私说明 ---------- */
-/* 反馈按钮固定左下角 —— 右下角留给 vConsole，避免遮挡。
+/* 反馈入口固定**左下角**，右下角留给诺诺浮标（陪伴入口）。
    v0.3.10：默认位置从 bottom:14px 上移到导航栏（约 60px 高）上方，
    之前正好压在底部导航的 Home / Cards 上（康哥发现）。
+   v0.24.0 两处修正：
+     ① 本节注释与 JS 的 DEFAULT 一直写「左下、left:12px」，但 CSS 实际写的是
+        right:12px ⇒ 从 v0.5.0 起就与 #nono-dock 挤在右下角同层重叠，
+        只能靠注入层一段运行时 IIFE 强行改 left 掩盖。现把补丁收回源码。
+     ② 原为 74×37 绿色胶囊（background:rgba(63,185,80,.92)）：绿色是**第三强调色**，
+        违反「朱砂红为唯一品牌信号色」；且横向伸入 86px，会在 430×932 档
+        削到首页引导卡末行的下行笔画。按方案 §2 收敛进 `.icon-btn` 家族
+        （40×40 圆形、触控域 46、中性面），z-index 取 --z-utility(58)
+        —— 语义上「功能件 < 陪伴角色」。
+   文案去哪了：按钮不再自带文字，改由 aria-label 提供可访问名；
+   首页引导卡的「💬 Feedback (bottom-left) any time」正好承担指路职责（不再冗余）。
    可拖拽：touch-action:none 防止移动端拖动时页面跟着滚，
-   位置存 localStorage（sinoky-fb-pos），双击可复位。 */
-#fb-open{position:fixed;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:60;
-  background:rgba(42,157,143,.92);color:#fff;border:none;border-radius:99px;
-  padding:9px 14px;font-size:12.5px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.35);
+   位置存 localStorage（sinoky-fb-pos），长按 700ms 可复位。 */
+#fb-open{position:fixed;left:12px;bottom:calc(72px + env(safe-area-inset-bottom));
+  z-index:var(--z-utility);
   cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
   -webkit-tap-highlight-color:transparent}
+/* 图标以 CSS mask 画，不在 HTML 里留裸 SVG（可换肤、可随 currentColor 变色） */
+#fb-open::before{content:"";display:block;width:20px;height:20px;background-color:currentColor;
+  -webkit-mask:url(assets/icons/ui/icon-feedback.svg) center/contain no-repeat;
+  mask:url(assets/icons/ui/icon-feedback.svg) center/contain no-repeat}
 #fb-open:active{cursor:grabbing}
 #fb-open.dragging{opacity:.88;box-shadow:0 8px 22px rgba(0,0,0,.5)}
-#fb-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:70;display:none}
+#fb-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:var(--z-mask);display:none}
 #fb-mask.on{display:block}
-#fb-panel{position:fixed;left:0;right:0;bottom:0;z-index:71;background:var(--card);
+#fb-panel{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-sheet);background:var(--card);
   border-radius:18px 18px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));
   transform:translateY(100%);transition:transform .22s ease;max-height:82vh;overflow-y:auto}
 #fb-panel.on{transform:translateY(0)}
@@ -298,33 +347,33 @@ nav button.on{color:var(--red)}
 .fb-cats{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0}
 .fb-cat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
   border-radius:14px;padding:6px 11px;font-size:12px;color:var(--sub);cursor:pointer}
-.fb-cat.on{background:rgba(42,157,143,.2);border-color:rgba(42,157,143,.55);color:var(--t2)}
+.fb-cat.on{background:rgba(63,185,80,.2);border-color:rgba(63,185,80,.55);color:var(--ok)}
 .fb-privacy{font-size:11.5px;color:var(--sub);line-height:1.55;margin:10px 0;
-  padding:9px 11px;background:rgba(255,255,255,.03);border-radius:9px;border-left:2px solid rgba(42,157,143,.5)}
+  padding:9px 11px;background:rgba(255,255,255,.03);border-radius:9px;border-left:2px solid rgba(63,185,80,.5)}
 .fb-row{display:flex;gap:8px;margin-top:12px}
 .fb-row .btn{margin-top:0;flex:1}
 
 /* v0.3.31 分享面板（复用 fb 视觉，居中弹窗） */
-#share-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:70;display:none}
-#share-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:71;
+#share-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:var(--z-mask);display:none}
+#share-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:var(--z-sheet);
   width:min(92vw,400px);background:var(--card);color:var(--txt);border-radius:16px;padding:18px 16px;display:none}
 #share-panel h3{margin:0 0 4px;font-size:16px;color:var(--txt)}
 #share-panel .fb-sub{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5}
-#share-stats{font-size:14px;color:var(--t2);margin:6px 0 12px;font-weight:600}
+#share-stats{font-size:14px;color:var(--ok);margin:6px 0 12px;font-weight:600}
 #share-link{font-size:13px;color:var(--sub);background:rgba(255,255,255,.05);
   border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 11px;word-break:break-all;margin-bottom:4px}
 
 /* 麦克风被拒后的恢复步骤 */
 .mic-help{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:7px;
   padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px}
-.mic-help b{color:var(--t2)}
+.mic-help b{color:var(--ok)}
 
 /* ---------- v0.3.9 真实口语变体（I-012：老外要 real life 不要 book Chinese）---------- */
 .p-real{margin-top:9px}
-.real-toggle{font-size:11.5px;color:var(--t2);background:rgba(42,157,143,.1);
-  border:1px solid rgba(42,157,143,.32);border-radius:9px;padding:6px 10px;
+.real-toggle{font-size:11.5px;color:var(--ok);background:rgba(63,185,80,.1);
+  border:1px solid rgba(63,185,80,.32);border-radius:9px;padding:6px 10px;
   cursor:pointer;font-family:inherit}
-.real-toggle.on{background:rgba(42,157,143,.24)}
+.real-toggle.on{background:rgba(63,185,80,.24)}
 .real-list{margin-top:8px;display:flex;flex-direction:column;gap:7px}
 .real-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
   border-radius:9px;padding:9px 10px;cursor:pointer}
@@ -371,7 +420,7 @@ nav button.on{color:var(--red)}
 .rv-acts .btn{flex:1;margin:0}
 .phrase.focus{box-shadow:0 0 0 2px var(--red);border-radius:12px;transition:box-shadow .2s}
 /* ---------- v0.3.49 听辨卡（Ear check）：复用 --teal / --bg2 / .btn / 四个声调色，零新增设计语言 ---------- */
-.earcheck{background:linear-gradient(135deg,rgba(42,157,143,.13),rgba(42,157,143,.04));border-color:rgba(42,157,143,.32)}
+.earcheck{background:linear-gradient(135deg,rgba(63,185,80,.13),rgba(63,185,80,.04));border-color:rgba(63,185,80,.32)}
 .ear-play{display:block;width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;
   padding:14px;margin-top:12px;cursor:pointer;color:var(--txt);font-family:inherit;font-size:14px;font-weight:600}
 .earbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
@@ -379,7 +428,7 @@ nav button.on{color:var(--red)}
   cursor:pointer;color:var(--txt);font-family:inherit}
 .earbtn .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
 .earbtn .tl{font-size:10px;color:var(--sub);margin-top:5px}
-.earbtn.right{border-color:var(--t2);background:rgba(42,157,143,.15)}
+.earbtn.right{border-color:var(--ok);background:rgba(63,185,80,.15)}
 .earbtn.wrong{border-color:var(--red);background:rgba(230,57,70,.13)}
 .earbtn:disabled{cursor:default}
 .ear-res{margin-top:12px;font-size:13px;text-align:center;color:var(--txt);line-height:1.5}
@@ -404,10 +453,10 @@ nav button.on{color:var(--red)}
 /* ---------- v0.3.35：等待发声的呼吸态（S5） / 更新横幅（M6） / 阅读卡遮罩（M10） ---------- */
 .spk.wait,.btn.wait,.record.wait{animation:waitpulse 1.1s ease-in-out infinite}
 @keyframes waitpulse{0%,100%{opacity:1}50%{opacity:.45}}
-#updatebar{display:none;position:fixed;left:0;right:0;top:0;z-index:95;
+#updatebar{display:none;position:fixed;left:0;right:0;top:0;z-index:var(--z-update);
   background:var(--red);color:#fff;font-size:13px;font-weight:600;
   text-align:center;padding:10px 12px;cursor:pointer}
-#rd-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:19;display:none}
+#rd-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:var(--z-rd-mask);display:none}
 #rd-mask.on{display:block}
 button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 /* v0.3.44 城市入口：首页热门 chip（紧凑，视觉权重匹配 2.1 句/城的内容权重）+ 城市页列表 */
@@ -503,7 +552,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .daylink{margin-top:9px;width:100%;background:none;border:none;color:var(--teal);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
 /* v0.10.0：A8 开屏 splash —— 首屏品牌图，app 初始化后淡出
    v0.23.11：改为一整张满版开屏图 assets/splash/a8_9x16.webp（1080x1920 = 9:16）。
-   底色取图内四角实测色 #0E3739(rgb 14,55,57)：手机竖屏 contain 时上下补色与图边缘无缝
+   （v0.23.11–v0.23.23 底色取图内四角实测色 #0E3739，v0.24.0 换图后已改为 var(--bg)）
+   原理仍成立：满版图 contain 时，非本比例的补色条必须与图边缘同色才无缝
    （9:16 屏如 1080x1920 则完全贴合，一像素都不补）。
    🔴 v0.23.12：启动屏规则**只此一处**（原「启动屏」段的第二份已合并到这里）。
    为什么必须合并：开屏 div 在 1138 行，而那份样式块在 6502+ 行 ⇒ **规则晚于元素**，
@@ -511,13 +561,18 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
    实测（CDP 限速 60KB/s）：字标闪现 **5.7s**，其中 **4.9s 是「满版开屏图 + CSS 字标」两套字标并存**，
    与 v0.23.11「CSS 字标退役为降级态」的设计意图正好相反。
    顺带消除同一段里 `#splash` 底色的首帧跳变（v0.23.10 起是 var(--bg) → #17423D）。
-   ⇒ 首屏元素的样式必须写在元素之前；规则只留一处，也再没有「两处必须同步」的隐患。 */
-#splash{position:fixed;inset:0;z-index:9999;background:#0E3739;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;transition:opacity .45s ease}
+   ⇒ 首屏元素的样式必须写在元素之前；规则只留一处，也再没有「两处必须同步」的隐患。
+   🔴 v0.24.0：开屏图已按「静默仪表」重出（v3 刻度版），本底色随之改为 var(--bg)=#141a24。
+   依据：新图四边**精确归零**到 #141a24（生成器 splash_rebuild.py 的 edge_guard() 保证），
+   与 --bg 逐通道相等 ⇒ 手机竖屏 contain 的上下补色、桌面宽屏的左右补色都无缝。
+   验收：probe_splash_seam.js 跑 4 档视口 × 3 版候选，图边 Δ=1（WebP 有损自带的量化偏移）。
+   生成器与候选在 _internal/fix-2026-09-23/splash/（含 说明.md 复现命令）。 */
+#splash{position:fixed;inset:0;z-index:var(--z-splash);background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;transition:opacity .45s ease}
 #splash.hide{opacity:0;pointer-events:none}
 #splash img{width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:0}
 #splash .sp-brand{display:none;font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:800;letter-spacing:.6px;color:#F5F1E8;line-height:1}
 #splash .sp-brand b{color:var(--red);font-weight:800}
-/* 降级：开屏图加载失败（首访慢网 / 离线未预热）时退回 CSS 字标 + 深青底，不留白屏 */
+/* 降级：开屏图加载失败（首访慢网 / 离线未预热）时退回 CSS 字标 + 底色，不留白屏 */
 #splash.sp-fallback .sp-brand{display:block}
 #splash.sp-fallback img{display:none}
 /* ===== v0.23.23：攻略中心（#v-cityguide）样式补齐 =====
@@ -558,7 +613,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- ONBOARDING · v0.3.62：6 步首次引导（品牌→goal→level→麦克风预告→voice→Day1预览） -->
   <section id="v-onboard" class="views">
     <style>
-      #v-onboard{background:var(--bg);color:#f2f4f7;position:fixed;top:0;left:0;width:100%;height:100dvh;min-height:100dvh;z-index:100;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);font-family:-apple-system,"SF Pro","Helvetica Neue",Arial,sans-serif}
+      #v-onboard{background:var(--bg);color:#f2f4f7;position:fixed;top:0;left:0;width:100%;height:100dvh;min-height:100dvh;z-index:var(--z-onboard);padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);font-family:-apple-system,"SF Pro","Helvetica Neue",Arial,sans-serif}
       #v-onboard.views.on{display:flex;flex-direction:column}
       #v-onboard .ob-screen{display:none;flex:1;min-height:0;padding:30px 24px 140px;overflow:auto}
       #v-onboard .ob-screen.on{display:flex;flex-direction:column;min-height:0}
@@ -602,10 +657,10 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .rword .rhz{font-size:16px;font-weight:700}
       .rword .rpy{font-size:11.5px;color:var(--teal);margin-top:2px}
       .rword.py-hide .rpy{display:none}
-      .rword.cur{border-color:var(--t2);box-shadow:0 0 0 2px rgba(42,157,143,.35);transform:translateY(-2px)}
+      .rword.cur{border-color:var(--ok);box-shadow:0 0 0 2px rgba(63,185,80,.35);transform:translateY(-2px)}
       .rword.pop .rpop{display:block}
       .rpop{display:none;position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12px;color:var(--txt);white-space:nowrap;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-      .rpop b{color:var(--t2)}
+      .rpop b{color:var(--ok)}
       .reader-ctrls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
       .reader-ctrls .btn{flex:1 1 auto;font-size:13px}
       .reader-score{margin-top:10px}
@@ -625,13 +680,13 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .seg button{flex:1;background:none;border:none;border-radius:9px;padding:8px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit}
       .seg button.on{background:rgba(230,57,70,.12);color:var(--red)}
       /* ---- Nono companion ---- */
-      #nono-dock{position:fixed;right:12px;bottom:78px;z-index:60;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+      #nono-dock{position:fixed;right:12px;bottom:78px;z-index:var(--z-fab);display:flex;flex-direction:column;align-items:flex-end;gap:8px}
       #nono-fab{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.35);padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
       #nono-fab img{width:40px;height:40px;border-radius:50%}
       #nono-fab.bump{animation:nonoBump 1.1s ease}
       @keyframes nonoBump{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-      #nono-panel{width:min(86vw,340px);background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);border:1px solid rgba(201,168,108,.22);border-radius:20px;box-shadow:0 12px 34px rgba(0,0,0,.55),0 0 0 1px rgba(201,168,108,.05);overflow:hidden;position:relative}
-      #nono-panel::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,108,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,108,.03) 1px,transparent 1px);background-size:22px 22px;pointer-events:none}
+      #nono-panel{width:min(86vw,340px);background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);border:1px solid rgba(255,255,255,.22);border-radius:20px;box-shadow:0 12px 34px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05);overflow:hidden;position:relative}
+      #nono-panel::before{content:none}
       .np-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
       .np-head img{width:34px;height:34px;border-radius:50%}
       .np-head b{font-size:13.5px}
@@ -658,7 +713,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       /* ---- v0.23.22 chat 贴底大抽屉（仅 NONO.mode==='chat'/'guide' 且由聊天入口进入时加 .npanel-drawer）----
          position:fixed 相对视口，不受 #nono-dock 的 right/bottom 影响；
          §F 红线：dock/fab/tip 三处定位一字未改。键盘高度经 --nono-kb（nonoKbWatch 写入）。 */
-      #nono-panel.npanel-drawer{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100vw,560px);height:calc(100dvh - 64px - env(safe-area-inset-bottom) - var(--nono-kb,0px));max-height:none;border-radius:20px 20px 0 0;z-index:70;box-shadow:0 -12px 40px rgba(0,0,0,.6)}
+      #nono-panel.npanel-drawer{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100vw,560px);height:calc(100dvh - 64px - env(safe-area-inset-bottom) - var(--nono-kb,0px));max-height:none;border-radius:20px 20px 0 0;z-index:var(--z-drawer);box-shadow:0 -12px 40px rgba(0,0,0,.6)}
       #nono-panel.npanel-drawer .np-head{position:relative;z-index:2}
       #nono-panel.npanel-drawer .nc-scroll{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
       #nono-panel.npanel-drawer ~ #nono-fab{display:none}
@@ -667,34 +722,34 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #nono-msg{display:block}
       .nc-scroll{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding:12px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
       .nc-scroll::-webkit-scrollbar{width:4px}
-      .nc-scroll::-webkit-scrollbar-thumb{background:rgba(201,168,108,.35);border-radius:4px}
-      .nm-wrap{display:flex;justify-content:center;gap:6px;padding:8px 12px;border-bottom:1px solid rgba(201,168,108,.12)}
-      .nm-chip{background:rgba(24,32,43,.7);border:1px solid rgba(201,168,108,.35);color:#e8dcc8;border-radius:99px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:.18s;font-family:inherit}
-      .nm-chip.on{background:linear-gradient(180deg,rgba(201,168,108,.22),rgba(201,168,108,.08));border-color:#c9a86c;color:#f9f4ee;box-shadow:0 2px 8px rgba(201,168,108,.12)}
+      .nc-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.35);border-radius:4px}
+      .nm-wrap{display:flex;justify-content:center;gap:6px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.12)}
+      .nm-chip{background:rgba(24,32,43,.7);border:1px solid rgba(255,255,255,.35);color:#e8dcc8;border-radius:99px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:.18s;font-family:inherit}
+      .nm-chip.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08));border-color:#c9a86c;color:#f9f4ee;box-shadow:0 2px 8px rgba(255,255,255,.12)}
       .nm-chip:active{transform:scale(.96)}
       .nc-row{display:flex;align-items:flex-end;gap:8px;max-width:92%}
       .nc-row.you{margin-left:auto;flex-direction:row-reverse}
       .nc-row.nono{margin-right:auto}
-      .nc-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--card);border:1px solid rgba(201,168,108,.25);overflow:hidden}
+      .nc-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--card);border:1px solid rgba(255,255,255,.25);overflow:hidden}
       .nc-av img{width:100%;height:100%;object-fit:cover}
       .nc-av-you span{font-size:9px;font-weight:700;color:var(--teal);letter-spacing:.3px}
       .nc-bub{position:relative;padding:10px 13px;font-size:13.5px;line-height:1.55;border-radius:18px;word-break:break-word;box-shadow:0 2px 8px rgba(0,0,0,.12)}
       .nc-bub.nc-nono{background:linear-gradient(180deg,#e8f4f2,#d4e8e4);color:#1b2a2d;border-bottom-left-radius:5px}
       .nc-bub.nc-you{background:linear-gradient(180deg,#f0655f,#e63946);color:#fff;border-bottom-right-radius:5px}
-      .nc-bub.nc-sys{align-self:center;background:rgba(201,168,108,.12);border:1px solid rgba(201,168,108,.22);color:#c9a86c;font-size:12px;padding:6px 12px;border-radius:99px;margin:4px 0}
+      .nc-bub.nc-sys{align-self:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#c9a86c;font-size:12px;padding:6px 12px;border-radius:99px;margin:4px 0}
       .nc-hint{text-align:center;color:#9aa7b8;font-size:12px;padding:8px 18px;line-height:1.5}
-      .nc-hint b{color:#c9a86c;font-weight:600}
-      .nctrl{display:flex;flex-direction:column;gap:8px;padding:10px 12px 14px;border-top:1px solid rgba(201,168,108,.10);background:rgba(20,26,36,.45)}
+      .nc-hint b{color:var(--red-text);font-weight:600}
+      .nctrl{display:flex;flex-direction:column;gap:8px;padding:10px 12px 14px;border-top:1px solid rgba(255,255,255,.10);background:rgba(20,26,36,.45)}
       .nctrl-main{display:flex;align-items:center;gap:10px}
       .nctrl-mic{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:46px;border-radius:99px;border:none;background:linear-gradient(180deg,#e63946,#c22a35);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(230,57,70,.28);transition:.18s;font-family:inherit;-webkit-user-select:none;user-select:none;touch-action:manipulation}
       .nctrl-mic:active{transform:scale(.97)}
       .nctrl-mic.rec{animation:nctrlPulse 1.2s infinite;box-shadow:0 0 0 0 rgba(230,57,70,.45)}
       @keyframes nctrlPulse{0%{box-shadow:0 0 0 0 rgba(230,57,70,.45)}70%{box-shadow:0 0 0 10px rgba(230,57,70,0)}100%{box-shadow:0 0 0 0 rgba(230,57,70,0)}}
-      .nctrl-ico{width:40px;height:40px;border-radius:50%;border:1px solid rgba(201,168,108,.35);background:rgba(24,32,43,.7);color:#e8dcc8;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
+      .nctrl-ico{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(24,32,43,.7);color:#e8dcc8;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
       .nctrl-ico:active{transform:scale(.92)}
       .nctrl-txt{display:none;gap:8px;align-items:center;padding-top:2px}
       .nctrl-txt.on{display:flex}
-      .nctrl-txt input{flex:1;height:40px;border-radius:99px;border:1px solid rgba(201,168,108,.35);background:rgba(24,32,43,.7);color:var(--txt);padding:0 14px;font-size:14px;font-family:inherit}
+      .nctrl-txt input{flex:1;height:40px;border-radius:99px;border:1px solid rgba(255,255,255,.35);background:rgba(24,32,43,.7);color:var(--txt);padding:0 14px;font-size:14px;font-family:inherit}
       .nctrl-txt button{width:72px;height:40px;border-radius:99px;border:none;background:var(--gold);color:var(--bg);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
       /* ---- 跟读练习区 ---- */
       .np-line{background:rgba(127,179,176,.10);border:1px solid rgba(127,179,176,.30);border-radius:12px;padding:10px;margin-bottom:10px}
@@ -942,10 +997,10 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- v0.23.22 城市攻略中心：有 CITY_GUIDES 数据的城市点入后进这里（城市参数化，北京等后续零成本套用） -->
   <section id="v-cityguide" class="views">
     <div class="card">
-      <div class="top"><h2 id="cg-title">🏙️ City guide</h2><span class="badge" id="cg-count"></span></div>
+      <div class="top"><h2 id="cg-title">City guide</h2><span class="badge" id="cg-count"></span></div>
       <p class="desc" id="cg-desc"></p>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn primary" onclick="nonoStartGuide()">🐼 <span id="cg-ask"></span></button>
+        <button class="btn primary" onclick="nonoStartGuide()"><span class="uico" style="-webkit-mask-image:url(assets/icons/ui/icon-ask.svg);mask-image:url(assets/icons/ui/icon-ask.svg)" aria-hidden="true"></span> <span id="cg-ask"></span></button>
         <button class="btn ghost" id="cg-landmark" onclick="openScene(curGuideCity,undefined,'cities')"></button>
       </div>
     </div>
@@ -1019,10 +1074,10 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div class="card"><div class="top"><h2>🧭 Explore</h2><span class="badge">content library</span></div>
       <p class="desc">All the places and situations you can practise.</p>
       <div class="hub-grid">
-        <button class="hub" onclick="go('days')"><span class="ic">📅</span><b>14-day path</b><i>Scenes by day</i></button>
-        <button class="hub" onclick="go('cities')"><span class="ic">📍</span><b>Cities</b><i>Lines by destination</i></button>
-        <button class="hub" onclick="go('dialog')"><span class="ic">🗣️</span><b>Conversations</b><i>Full back-and-forth</i></button>
-        <button class="hub" onclick="go('review')"><span class="ic">🔁</span><b>Smart review</b><i>Spaced repetition</i></button>
+        <button class="hub" onclick="go('days')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-days.svg);mask-image:url(assets/icons/ui/icon-days.svg)" aria-hidden="true"></span></span><b>14-day path</b><i>Scenes by day</i></button>
+        <button class="hub" onclick="go('cities')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-pin.svg);mask-image:url(assets/icons/ui/icon-pin.svg)" aria-hidden="true"></span></span><b>Cities</b><i>Lines by destination</i></button>
+        <button class="hub" onclick="go('dialog')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-dialog.svg);mask-image:url(assets/icons/ui/icon-dialog.svg)" aria-hidden="true"></span></span><b>Conversations</b><i>Full back-and-forth</i></button>
+        <button class="hub" onclick="go('review')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-review.svg);mask-image:url(assets/icons/ui/icon-review.svg)" aria-hidden="true"></span></span><b>Smart review</b><i>Spaced repetition</i></button>
       </div></div>
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
@@ -1131,6 +1186,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
         <p>Pinyin: <b>pinyin-pro</b> (MIT License). On-device debug console: <b>vConsole</b> (MIT License, Tencent).</p>
         <p>Scene and tone audio is recorded by the Sinoky author. Phrases without a recording use Microsoft Edge text-to-speech.</p>
         <p>QR code: qrcode-generator (MIT License, Kazuhiko Arase).</p>
+        <p>UI icons: <b>Lucide</b> (ISC License).</p>
         <p><a href="credits.html" target="_blank" rel="noopener">Full credits and license texts</a></p>
       </details>
     </div>
@@ -1215,8 +1271,10 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 <div class="rd-pop" id="rd-pop" role="dialog" aria-label="Word details"></div>
 <div id="rd-mask"></div>
 
-<!-- v0.3.8 真实用户保障（6 位外国朋友在用了） -->
-<button id="fb-open">💬 Feedback</button>
+<!-- v0.3.8 真实用户保障（6 位外国朋友在用了）
+     v0.24.0：收敛为 .icon-btn（40×40 圆形，图标由 CSS mask 画）⇒ 无内联文案，
+     可访问名由 aria-label 提供（与 #fb-panel / #nono-fab 的既有做法一致）。 -->
+<button id="fb-open" class="icon-btn" aria-label="Send feedback"></button>
 <div id="fb-mask" onclick="onMaskTap()"></div>
 <div id="fb-panel" role="dialog" aria-label="Send feedback">
   <h3>Help us improve Sinoky</h3>
@@ -1266,7 +1324,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.23';
+var APP_VERSION = '0.24.0';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -1335,7 +1393,7 @@ var DIALOGS = [
     flip:{ prompt:'the waiter asks 要辣吗? (spicy?) — you say:',
            hz:'不要太辣，一点点就好。', py:'bú yào tài là, yìdiǎndiǎn jiù hǎo.', en:'Not too spicy, just a little.' } },
 
-  { id:'d-taxi', day:6, icon:'🚕', title:'Taking a Taxi', tag:['travel'],
+  { id:'d-taxi', day:6, icon:'zone-taxi', title:'Taking a Taxi', tag:['travel'],
     hook:'You get in. The driver needs to know where — give him the address in Chinese.',
     lines:[
       {who:'them', hz:'去哪儿？', py:'qù nǎr?', en:'Where to?'},
@@ -1791,7 +1849,7 @@ var SCENES = [
           { hz:'三点半。', py:'Sān diǎn bàn.', note:'3:30 \u2014 half past', style:'casual' }
         ]}
     ]},
-  { id:'transport', icon:'🚕', title:'Getting around · Taxi & metro',
+  { id:'transport', icon:'zone-taxi', title:'Getting around · Taxi & metro',
     desc:'Taxis, metro, buses. Say where you are going, ask how long, and know when to get off.',
     phrases:[
       { en:'Take me to this address.', day:10, py:'Qù zhège dìzhǐ.', hz:'去这个地址。', pya:'去:qù|这:zhè|个:ge|地:dì|址:zhǐ',
@@ -1840,7 +1898,7 @@ var SCENES = [
           { hz:'这儿能打车吗？', py:'Zhèr néng dǎchē ma?', note:'can I get a taxi here?', style:'casual' }
         ]}
     ]},
-  { id:'hotel', icon:'🏨', title:'Hotel · Check in',
+  { id:'hotel', icon:'zone-hotel', title:'Hotel · Check in',
     desc:'Check in, get the Wi-Fi password, survive a broken AC. Everything you need at the front desk.',
     phrases:[
       { en:"I have a reservation.", day:11, py:'Wǒ dìng le fángjiān.', hz:'我订了房间。', pya:'我:wǒ|订:dìng|了:le|房:fáng|间:jiān',
@@ -2552,7 +2610,7 @@ var CITY_GUIDES = {
   shanghai: {
     title:'Shanghai Guide · 上海攻略', city:'上海',
     zones:[
-      { id:'sh-arrival', icon:'✈️', title:'1 · Airport Arrival',
+      { id:'sh-arrival', icon:'zone-airport', title:'1 · Airport Arrival',
         phrases:[
           { en:'Where is baggage claim?', py:'Xínglǐ lǐngqǔ zài nǎr?', hz:'行李领取在哪儿？',
             pya:'行:xíng|李:lǐ|领:lǐng|取:qǔ|在:zài|哪:nǎr',
@@ -2571,7 +2629,7 @@ var CITY_GUIDES = {
             real:[ {hz:'汇率多少？', py:'Huìlǜ duōshao?', note:"what's the rate?", style:'casual'},
                    {hz:'换五百块。', py:'Huàn wǔbǎi kuài.', note:'exchange 500 yuan', style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-arrival', icon:'✈️', title:'Arrival help', tag:['travel'],
+        dialog:{ id:'g-sh-arrival', icon:'zone-airport', title:'Arrival help', tag:['travel'],
           hook:"You land at Pudong Airport. A staff member asks if you need help — answer simply.",
           lines:[
             {who:'them', hz:'需要帮忙吗？', py:'Xūyào bāngmáng ma?', en:'Need any help?'},
@@ -2582,7 +2640,7 @@ var CITY_GUIDES = {
           flip:{ prompt:'now you ask about the taxi stand — say:',
                  hz:'出租车在哪儿？', py:'Chūzūchē zài nǎr?', en:'Where is the taxi stand?' } } },
 
-      { id:'sh-pay', icon:'💳', title:'2 · Mobile Payment',
+      { id:'sh-pay', icon:'zone-payment', title:'2 · Mobile Payment',
         phrases:[
           { en:"I'll pay with Alipay.", py:'Wǒ yòng Zhīfùbǎo.', hz:'我用支付宝。',
             pya:'我:wǒ|用:yòng|支:zhī|付:fù|宝:bǎo',
@@ -2601,7 +2659,7 @@ var CITY_GUIDES = {
             real:[ {hz:'退税单在哪盖章？', py:'Tuìshuì dān zài nǎ gàizhāng?', note:'where to stamp the form', style:'casual'},
                    {hz:'护照和小票给我。', py:'Hùzhào hé xiǎopiào gěi wǒ.', note:'passport and receipt, please', style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-pay', icon:'💳', title:'Paying at a shop', tag:['travel'],
+        dialog:{ id:'g-sh-pay', icon:'zone-payment', title:'Paying at a shop', tag:['travel'],
           hook:"You're at the counter. The clerk points at the QR code — respond.",
           lines:[
             {who:'them', hz:'微信还是支付宝？', py:'Wēixìn háishì Zhīfùbǎo?', en:'WeChat or Alipay?'},
@@ -2612,7 +2670,7 @@ var CITY_GUIDES = {
           flip:{ prompt:"you forgot the receipt — say:",
                  hz:'要小票，谢谢。', py:'Yào xiǎopiào, xièxie.', en:'I need a receipt, thanks.' } } },
 
-      { id:'sh-metro', icon:'🚇', title:'3 · Metro & Transfers',
+      { id:'sh-metro', icon:'zone-metro', title:'3 · Metro & Transfers',
         phrases:[
           { en:"I'd like one ticket to People's Square.", py:'Mǎi yì zhāng dào Rénmín Guǎngchǎng de piào.', hz:'买一张到人民广场的票。',
             pya:'买:mǎi|一:yì|张:zhāng|到:dào|人:rén|民:mín|广:guǎng|场:chǎng|的:de|票:piào',
@@ -2631,7 +2689,7 @@ var CITY_GUIDES = {
             real:[ {hz:'刷卡进站吗？', py:'Shuā kǎ jìn zhàn ma?', note:'tap the card to enter?', style:'casual'},
                    {hz:'在哪买票？', py:'Zài nǎ mǎi piào?', note:'where to buy tickets', style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-metro', icon:'🚇', title:'Buying a metro ticket', tag:['travel'],
+        dialog:{ id:'g-sh-metro', icon:'zone-metro', title:'Buying a metro ticket', tag:['travel'],
           hook:"You're at a metro station. A staff member helps you buy a ticket.",
           lines:[
             {who:'them', hz:'去外滩坐几号线？', py:'Qù Wàitān zuò jǐ hào xiàn?', en:'Which line goes to the Bund?'},
@@ -2642,7 +2700,7 @@ var CITY_GUIDES = {
           flip:{ prompt:"you want to know the fare — ask:",
                  hz:'到南京东路多少钱？', py:'Dào Nánjīng Dōnglù duōshao qián?', en:'How much to East Nanjing Road?' } } },
 
-      { id:'sh-taxi', icon:'🚕', title:'4 · Taxi & Ride-hail',
+      { id:'sh-taxi', icon:'zone-taxi', title:'4 · Taxi & Ride-hail',
         phrases:[
           { en:'Please go to the Bund.', py:'Qǐng qù Wàitān.', hz:'请去外滩。',
             pya:'请:qǐng|去:qù|外:wài|滩:tān',
@@ -2661,7 +2719,7 @@ var CITY_GUIDES = {
             real:[ {hz:'车牌尾号多少？', py:'Chēpái wěihào duōshao?', note:"what's the plate tail number", style:'casual'},
                    {hz:'我在P2停车场等你。', py:'Wǒ zài P2 tíngchēchǎng děng nǐ.', note:"I'm waiting at Parking Lot P2", style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-taxi', icon:'🚕', title:'Taking a taxi', tag:['travel'],
+        dialog:{ id:'g-sh-taxi', icon:'zone-taxi', title:'Taking a taxi', tag:['travel'],
           hook:"You get in a taxi at the airport rank. Tell the driver where to go.",
           lines:[
             {who:'them', hz:'去哪儿？', py:'Qù nǎr?', en:'Where to?'},
@@ -2672,7 +2730,7 @@ var CITY_GUIDES = {
           flip:{ prompt:'you need a receipt — say:',
                  hz:'请给我一张发票。', py:'Qǐng gěi wǒ yì zhāng fāpiào.', en:'Please give me a receipt.' } } },
 
-      { id:'sh-food', icon:'🥟', title:'5 · Food & Dining',
+      { id:'sh-food', icon:'zone-food', title:'5 · Food & Dining',
         phrases:[
           { en:'What do you recommend?', py:'Yǒu shénme tuījiàn de?', hz:'有什么推荐的？',
             pya:'有:yǒu|什:shén|么:me|推:tuī|荐:jiàn|的:de',
@@ -2691,7 +2749,7 @@ var CITY_GUIDES = {
             real:[ {hz:'再要两杯豆浆。', py:'Zài yào liǎng bēi dòujiāng.', note:'also two soy milks', style:'casual'},
                    {hz:'生煎也来一份。', py:'Shēngjiān yě lái yí fèn.', note:'one pan-fried bun too', style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-food', icon:'🥟', title:'At a xiaolongbao shop', tag:['travel'],
+        dialog:{ id:'g-sh-food', icon:'zone-food', title:'At a xiaolongbao shop', tag:['travel'],
           hook:"You're at a famous soup-dumpling shop. The waiter takes your order.",
           lines:[
             {who:'them', hz:'吃点什么？', py:'Chī diǎn shénme?', en:'What will you have?'},
@@ -2702,7 +2760,7 @@ var CITY_GUIDES = {
           flip:{ prompt:"it's too hot — ask for water:",
                  hz:'请给我一杯水。', py:'Qǐng gěi wǒ yì bēi shuǐ.', en:'Please give me a glass of water.' } } },
 
-      { id:'sh-ticket', icon:'🎫', title:'6 · Attractions & Tickets',
+      { id:'sh-ticket', icon:'zone-ticket', title:'6 · Attractions & Tickets',
         phrases:[
           { en:'How much is the ticket?', py:'Ménpiào duōshao qián?', hz:'门票多少钱？',
             pya:'门:mén|票:piào|多:duō|少:shǎo|钱:qián',
@@ -2721,7 +2779,7 @@ var CITY_GUIDES = {
             real:[ {hz:'排队在哪边？', py:'Páiduì zài nǎ biān?', note:'which side is the queue', style:'casual'},
                    {hz:'能刷护照进去吗？', py:'Néng shuā hùzhào jìnqù ma?', note:'scan passport to enter?', style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-ticket', icon:'🎫', title:'Buying attraction tickets', tag:['travel'],
+        dialog:{ id:'g-sh-ticket', icon:'zone-ticket', title:'Buying attraction tickets', tag:['travel'],
           hook:"You're at the Yu Garden ticket window. Buy two tickets.",
           lines:[
             {who:'them', hz:'门票40，要几张？', py:'Ménpiào sìshí, yào jǐ zhāng?', en:'Tickets are 40 yuan — how many?'},
@@ -2732,7 +2790,7 @@ var CITY_GUIDES = {
           flip:{ prompt:'you also want the audio guide — ask:',
                  hz:'有讲解器吗？', py:'Yǒu jiǎngjiě qì ma?', en:'Do you have audio guides?' } } },
 
-      { id:'sh-hotel', icon:'🏨', title:'7 · Hotel Check-in',
+      { id:'sh-hotel', icon:'zone-hotel', title:'7 · Hotel Check-in',
         phrases:[
           { en:'I have a reservation.', py:'Wǒ yǒu yùdìng.', hz:'我有预订。',
             pya:'我:wǒ|有:yǒu|预:yù|订:dìng',
@@ -2751,7 +2809,7 @@ var CITY_GUIDES = {
             real:[ {hz:'押金多少？', py:'Yājīn duōshao?', note:'how much is the deposit', style:'casual'},
                    {hz:'要刷卡押金吗？', py:'Yào shuā kǎ yājīn ma?', note:'a card deposit?', style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-hotel', icon:'🏨', title:'Checking in', tag:['travel'],
+        dialog:{ id:'g-sh-hotel', icon:'zone-hotel', title:'Checking in', tag:['travel'],
           hook:"You arrive at your hotel. The front desk greets you.",
           lines:[
             {who:'them', hz:'您好，有预订吗？', py:'Nín hǎo, yǒu yùdìng ma?', en:'Hello, do you have a reservation?'},
@@ -2762,7 +2820,7 @@ var CITY_GUIDES = {
           flip:{ prompt:'breakfast is included — confirm where:',
                  hz:'早餐在几楼？', py:'Zǎocān zài jǐ lóu?', en:'Which floor is breakfast on?' } } },
 
-      { id:'sh-help', icon:'🆘', title:'8 · Directions & Emergencies',
+      { id:'sh-help', icon:'zone-emergency', title:'8 · Directions & Emergencies',
         phrases:[
           { en:'Excuse me, where is the metro?', py:'Qǐngwèn, dìtiě zài nǎr?', hz:'请问，地铁在哪儿？',
             pya:'请:qǐng|问:wèn|地:dì|铁:tiě|在:zài|哪:nǎr',
@@ -2781,7 +2839,7 @@ var CITY_GUIDES = {
             real:[ {hz:'就站在这儿。', py:'Jiù zhàn zài zhèr.', note:'just stand here', style:'casual'},
                    {hz:'再来一张，谢谢。', py:'Zài lái yì zhāng, xièxie.', note:'one more, thanks', style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-help', icon:'🆘', title:'Asking the way', tag:['travel'],
+        dialog:{ id:'g-sh-help', icon:'zone-emergency', title:'Asking the way', tag:['travel'],
           hook:"You're a little lost near the Bund. Ask a local the way.",
           lines:[
             {who:'you',  hz:'请问，地铁南京东路站怎么走？', py:'Qǐngwèn, dìtiě Nánjīng Dōnglù zhàn zěnme zǒu?', en:'Excuse me, how do I get to East Nanjing Road station?'},
@@ -2792,7 +2850,7 @@ var CITY_GUIDES = {
           flip:{ prompt:'they helped a lot — thank them warmly:',
                  hz:'谢谢你，帮了大忙！', py:'Xièxie nǐ, bāng le dà máng!', en:'Thank you, big help!' } } },
 
-      { id:'sh-depart', icon:'🛫', title:'9 · Tax Refund & Departure',
+      { id:'sh-depart', icon:'zone-departure', title:'9 · Tax Refund & Departure',
         phrases:[
           { en:'Where is the tax refund counter?', py:'Tuìshuì guìtái zài nǎr?', hz:'退税柜台在哪儿？',
             pya:'退:tuì|税:shuì|柜:guì|台:tái|在:zài|哪:nǎr',
@@ -2811,7 +2869,7 @@ var CITY_GUIDES = {
             real:[ {hz:'需要托运吗？', py:'Xūyào tuōyùn ma?', note:'do I need to check it in', style:'casual'},
                    {hz:'超重了怎么办？', py:'Chāozhòng le zěnme bàn?', note:"what if it's overweight", style:'casual'} ] }
         ],
-        dialog:{ id:'g-sh-depart', icon:'🛫', title:'Tax refund at the airport', tag:['travel'],
+        dialog:{ id:'g-sh-depart', icon:'zone-departure', title:'Tax refund at the airport', tag:['travel'],
           hook:"You're leaving Shanghai from Pudong Airport. Ask about the tax refund.",
           lines:[
             {who:'you',  hz:'请问退税在哪里办？', py:'Qǐngwèn tuìshuì zài nǎlǐ bàn?', en:'Excuse me, where do I process the tax refund?'},
@@ -2832,7 +2890,7 @@ var TONES = [
   { hz:'马', py:'mǎ', t:3, mean:'horse', audio:'data:audio/mpeg;base64,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RTMuMTAwqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//OkxAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqTEFNRTMuMTAwqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq' },
   { hz:'骂', py:'mà', t:4, mean:'scold', audio:'data:audio/mpeg;base64,//PkxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//PkxABlXDnMAN6yXDw8k6UxNUijZhwwhKOSsDllwy4yNOTDsqxA8OciMS1NeZMaRMuPBQMzLM5hIzL02JFodOOADONDdLhoyZY0CkhjXJvxpmmhoBRllQ05M6fNUyOZaOUYMKjM6ZNbFN+bbctOzlRYxQhNFM4xDgEo+St5dhYRFCAxAIPADBhuFBQQzQAVae9pKcFgRkomZGh1mGEA8jOHASEa6BQwcGook0WgaO70Zl6q6k2GQ1IHoaAW7VqTEfVY7LGwls1nyyOM4XIigkW15QQCHGsU5jDBGGGDoYGIAOjhx7olm1HlYJXKXfjzyJzs2L+LUjEudx9GIQa/yQjNHTXRRX2AKaOQ1yC4Hhu/AcKTkLkKwSuAFju+78FMQnJRMzzO42pWrG0hdigD5P24DBLbgO5elcba25jD3fi8QjEMPi88jkCt6Q6D7bxNx3QUHfZMRQRiCmCuIDl0SVIyxyH8axDq75G4bjxuX6qQxLHTU0jEgTTQ3d9YdY8jZW97AGIORFHDdJmkZWPabggEaY1iEO3BzRC2j2xycrK2OKoToGBaCKYR4MYGFvHgoDAtCiMIgYUzwTdzNoj6OJ4To4JmejGdQnMYsYgwxhLTDxByMLoBwzEHQbGQsygV//PkxD1vNDoADPbykDH0Uxs2A0IZmbmMgBn0Ia4im9jZuZSaEHGYlZkhMbGnmhQBkyGaiMmZDTkGaoo8XmlDBk1g4MQKFzwoElWuZh4cYXLU2KhZc4BYCIJdqVwGQMMkzQxAkIgyFI3UjGbBRY2ONQA1gI9GjlWNgU82QugAVQ4tdqm1WKGiSX4BQ7OKBtVErsDWGzI/hgizlAEp1YlJlyEuG2BgBUHBxxqEAlUxgzJCBRJRcNEJvsuGhFdqrq6A1gWCekyGi0DUYbdFjSmjM2fqxROncRuywanMYXalVCWwtAfxQR3GfQ6+Sw6akGo+LwZSpJYxexLlmia8cSPTiXg7dh23Ld9ikPOa3J/3iVI0HOGy1ajzeNzgZOh03IjAIAY42KTLnU3zgCs3dgb3vknWzx5Hni6yG4tCYJH3bYgvMuQ5DiSRgjA2txuNOXTZITC1j8u0WcQogJhpZdDNX5ecxQSzYYG8rlteaA77OG00nO4KnSCQCBFnDIAflgCXo0gsZkpc9Pudtt0SQhKAwBgIjAQArHgEiUBwwCgAjBcCVMUUqEw95bjrwJmMXAR8w8hTDA0BKMMIIIwLgPDAqFWMvw+4zzivjGCCgMIkHYxGgwgMAkYKAUxhYDImhSr2//PkxFN0pDo44vc1BGl+QeYjQehg1BXGEGB6YJIIpgKAcAwMYx2iHDGKE2OSMw1QoDOhQMakgeZpiEzGujQZVYZokCmQiYYMB5h8KiANg4RGGAUYowBkgMBDo0QjigIkkJARk0CnJq1YBFGGGGcGGUYHNHmiNIhrkEQJaAOGPuocNC1FyqMCCBgACVi8S38DL/chrC6Kes4C7JCl411g4gBAIY0B17MBAESTEwEMC4kx4NnBe9LtapsnQG0GRMp8m9diJEapYaAQDhBIFMCEHjoqCBxAKGDHAAuXBTNPdXxcRO8uO37K3bf9uigkRZ2zt38qkstfdp/ldNYpLcckGG4bpn8+rXhjkxIInL99ht++3IYnW7vmwOB5tuigkZWHqPu/EEMkglga14hFKlyCVTtyeSGKkTl0q5FHIeN+4lQu24i5HsfuJwUhIYpI00y26a7Om4sWUwfyTLEilxKhTR23AaWnW8rW7LoKaA0OGB00FLIypuoYlwy9gbdl2JcP8hoAQa5mfusporK2egAIjiEBHgLNY4sQusuowDQFhECKYGB1BkdAbGDABQAgjwcBiYC4CwGBWMCkQQwxUgjUQLXMhgX8wgQQjA5BwQfEgFTANBxMkRy09x2VDOtBsMO4//PkxFNuRDpWVPd06EBMFAlMAQrCgJmJQAmOKUAahDFQCQEEoqBaHEwNBsYBoyFZ02ugYZKswzCB+wsIRgqDhhYBRhqDJ2V5IEMMCYTBKag4DMUMCw9pCR4gCJEKxBVMZgeHR2np7sEZQvxM9+wgWXbL+O+3ZVCDSYyh2AyIDIUD17A0CygwAs459qxcFiauUoDAhwQaDBokaQxUtchJ4cFmHCLHHgI0Vbmg8YZ2O2DaAAUXMaccVHQyaEGJgUkMKFHDQY9S0TfAIRGlFMyY1A9rCP0fLVIylnF9oxrZtw3GZt2pNI/p5ytUkVZ8qaXY1oJmJyGLEzhjRbpKlimxuU1Kztp76RuO9mpdArJ56Nv43lNg4DaXZ3mVBFJ+Cofvx+MzcgfOcvyyUTtHSw+0idwon3eCHWfv1daUkan83dsSGCULEHhZcv16HEX2pNg79o906R7c1KoOc6dBodLhmCjivbSnsGCQ80xib8W6KC1J2qNXTHHuSzagJAJGBACUYEqchnGAvGKxlGNYJAUAUIhIGgUOJpy+xwIEpdowQCcqjQYVgcmSYkhYYzLqbWikYWA4YIB2ShSHAoECuYQBaYRFMaXBqYKAOYJBEYiAUYCB0DhYMLhDMZ5ZOPjLMggG//PkxG11XDpIAPd0XDD8YxABJWNJimDoUAMwbU038IUKhY8EHTChF/pumIIoKLjMEPNKbMCTVUAI00mIP1CTpPMhEAoAwMLkze0zZlDEhWlkhpBCoEmCjYZ46g4iowcxBpDsIxhphhsRz7igUMFoRFkEvCioShgudFg4qUMcFRHAqWHx4EKCgEUBsI26wwEMCizqtD6wDD6D6AzdvTgLRQ4CjIOHGQHqqAUSVQhKSSKMUYBglQgLExCAVaTA002Xp8xWC37lcXpnIpIxHafUqs9xlPxz6+qe1b3CtXXwc2Q0sfgeGFyNxkDtuKyx/UTF2rSZktxH6B1Un6fJ35UzZMGXSpusTWHg1/UkHjUbYkv+lstGX896lz+wiJ5qGp4vi/7SWduhE1IggAyZnDhmMNGLAxYHI1WkwZQVJ8QhVMH8IksZR8VnXU3cLg1jgEQXeYoYQsQgV8AoeSBgapMATUxHi8FGECFwEUxAGCoqTMFCoUILwHWBBgSAS3GtK3iMCyESDBQpTuGGTlQQzBxiMTnow8A2Is+MWFg6Z5zVQZMlgQHAEwIHjHYGCotMjok3zPihdix0EQxIRaKAkiLZmZJHAlaGCQxkNTCIEMEhcwMZzPaZOjys/M9TOwKMWnAy//PkxGpzXDpMou80XkE8aOZEhDW0UNVHEzuiADHFmRoBYcKAiZMAwc4IxmfCAEQaEYYYURCQssPQPMWNWGWO1B3BEDL2iEcKAQUTMkAGRapEAAQELkg0cOhDDD0pn+QaMagMqIS+WGMcdUQFCBe8DFAERQsYYZsQECEEBknSoCqUFC5dQBKUGAqFN1RMwrP83Ao42BhNY0oU46k1SkxBYsqFDgGGkQJdiGC9y1IcPUsdeEqXuS6SgC9GaP5HYyupRZMZ3mWMoydez2WS60/0MQw5Esjcuksxeb6mnZJQxh9Xahcff93bOTCF8q4UDcZy4AVKrAoFDK5mVphKNNyVCnRKYfaNQtNdpNKBXwjNNKYLZDLbEek9hma5nxQcZ7HVisjV2gFS7QUEYNKZI8x4cHQggmKCpChqIgqgcPoE0/GlrSLViRkttDiyGsoJHHMOSFUSqzVVKguADBZEDLqoquCnItxdKaKc8aSKFQhZMODqgEgEiIAIvuFgAgAAKYC4JxhGDNGzEHKYeAQ5icLGLAmYSCZhECGLgAZM0xsMtBiPRUMbhgZF6DxkMumjCeZSGZjwQg0PDo5JjoKgww2ZzEwnMqh8w4GTBo0MYB8x+kTJbJNUDkzoMRCAjOILGEaa//PkxG91rDpIoPc0XCX2cHT50pWg0sGWwWZpPIiJmH0DAQCuTboAYGIvAGNmMQAFyemQFm5oE5spa7S4LxL8VyAQgKdCR0ZOmJXiRgQsmNmIDgkimgWpAxYICmSIl66UQESotMAVM8OMANEI0BDyUMZwUYQ2akOZQyIShe0DKjMEghQWaKLIOFGHUmEDGFFirdBADtZ1AKSi7QyUdZ+a4+BjpojYlnEIAyyAcBgwqnsiRKUmV3OigFWiwxCulcFrSjjjuVIpQ/dd2IYr5ctamrdiizlMzJcvlnanK8ifyKXIflkOPXfjLv0SnKQimSHdx1gqN60x1/MucZuzQ2KqUMxqtQlLouYXPLNR8VAqyP1EUT16SBIhkK426NbZC6TLIkkCHCS0wwAbNASm4OAGOMpvFAc2JQLCDAokuAc8fACg3+Ao1TZKIOIqBovgYAgvbZgFx6GSc44mRmT2TWAQqFBCZdw8mS0WU0FvV0u7Aj8psMaYnRIAp6X0FgBAKAqYEgURiCJUGdsIOYG4CypTAZCETqFAEzAdB0MRIIUskZsDhAIYuNGEhIhYTICsFSJWUpqmDgRhAIcPPmrCBrqEZAdrAmpCZm66bvAnjE5hK2a8KmACpvp8Y0LHo8ZvUmaQ//PkxGt1xDpIAPb0lDJghwARAiyjv2001w+9s0gWCDNgxVQHNTSHDOwAiUhC14GFjGFQU2MqABSJAUguYMPLxoOTLS45mwAOCChA3RgldjgYwREzYVVMLiS4xlBoXBmHKGCDGGMgAkBgJllBj1xizBgkwgPAgQaQ0kcTPTKlwg2DF5nA6ox1eh4FgpMKELY3ooHPAAeMGDOasNMoMQOMmSR5ZqkUiSPBzCgDAEVeF81hXBVrFA4hFJNK2Puz547E3FXkpYcz5H+096rluzYq08xhFZF12pXHYAoJTFn5lFWAoCiEdfuBWwJ6wRdhKIkXXcw5X8HteLsLqbq3BvHGYil2xhXKsadKoHpL8OGWaX8sKwF/2vLTUVWIwYKAWKloVumRDLHYYCAQVBgAKr0WEAQSg4ZEWxFkgcrfcOAJfhiQQjkhkJkPFmlNkzVIMsCCaNi1VYBUADAAwSM0EMqVQ5q2hgVUpIHEghgw7TmHJxLkUELwCgQu6uweAGTzSVMAMAgAATmFSKCaaqwoYbSAgNgaAyYAoFRg5gImYzKbUPJiIAgwFDwOBwuMqEYxYUxUMjAFFiSIQuEEUxcAiZLGSQ0YTCxiMAkiQMkCgx4GzAxgMcjkIXpi8SCICmc0SYJg//PkxGd4BDpEAPc0fIalRhnlJCpIMjswMFpohWhlNMekMwaVzEwxNIFgxuVzCgLMIh4wEAzEojMLgMrEnEEmLDBlYRgAAjQPLQGfKIuuo6qHJOkZKlUIDkwyWMWiNqdM+CCwEz7QRsDXJTOoTIijVBwMHMCQIhBqgwUGq2m1EkSJQ1IUlABc0/Y8oHBa23BIoIk9SMABYeJmEAmNIGJiGyImKeBygcAmgLhQkZEqYUIJCRJCABEBA4yquWjCwFDkoGh4pdGV3SNnyhDPalR2Y04j+wdYpq8vi9uZ1UqSulwvy+98ZpLOViie/N+Y00J2n6rVr8seRhrSIJZ8XyfV0EqmmJIKqJowI7r7sAjryoIcGMtiV4wKGZGnwvGVuA8r7IhF4WLsRS3TLpCg6reo4MgWLFthETCBQwBdwFNgKDAgky5FTQlAjIgZDBA5kKpnYEiTHTBggQCQRCwUEhwoOXcBgBMQVKYYIkMYQCrEwIBAgaIpC64hFBQHLllggC5aY6Qo0YQ/STjcVL7FgEUw4ztTRLGqMEEBVRROwLgJmAGD+ckQhwSiEhzRyMRM0nhGWGCDJf0iNFyA4wEi8RjQABxJsMwOjNiNQoyAHDBpchkY4WYMbMjGgkysKMoPjFCM//PkxFpkRDpMAPbyfFBpYMEFoGRjNwUGcJkjYbKDGNihoZQZATGJBJjQ6hKEIKjJAY0sZwhtnHi0LCPGW8KpIOMge8mtmWiVkCohC8qoZCIGiITyqiM3AREBBo0A45Xi5RVZEBVFJssoiDpjBcUFCK5FQSYpGllCAxh4hCXfK1ACaQhjUMd0GAgpYavDgmJI4ImK1jwTM4EaeyN06Var8vs17tprVWjvym9Ht0OFLHsb+t8v0HJ3PO5nncxv2ezMxu9T7jcth3OC7EFxWLTspahMNQnpbHH/sSyXt1pn6jD/QazNry5ocX1Ll9Oq7MOt9BTcl6wlTqJxF4KzB0XG3fl1XoXoIhi3zHEYUZGCo+qOvsPAtiVtUwZWmECinWCoitre31alg3GchNa68WCsa3VfQ7E3SZKglVG7rxpoMREYCMELVEhJEYCBQHSU+D8B1jekOAcQojABrINBIyEFkIFVb0nTAAwoXTHwoOHwUSmAgIWBTEQswwVFAAt2BhsyASNFJTLk8woUMSN0GTDytTUwkEMEBiAzMJFzcBMx0WAzcYUKGbNhoRkcMXnFxhqZ4FBwaPzODs08TJBIxoSEicVEghMfgyimULCWJSgdWRFTEQZLUARbql9RGcwlJJCA//PkxJxhrDpIAO7wfLDpMgylQSAxocsBXNLBxIsozQYs0MFIFlpErEQUHro8NETQQwLr0DcX4RyS2YnaWAUzLlAZSPS0UOQYtsbrokN83RjFtpbYYci01jBeoaiV+3C7NrKY7l/3ZbPyrVzfe49/mrV7LDG/cxppTRW7NNSymlp5XYoNQ9JZuo481L3E3NOdAL2z12LRdmUXf16ndZqvCH24OgoMwZ+mgP+xRa89SLDwov4oA3dVZ1YedRaK504k9WHp8pc0a/ljvEjapFk0OPKvZFJ437eZui6mTLsgRprIW6ue3N7ofaZytF2mw/MWn+iVK+LPWZpMQU0IgA4BILANigDBgGAXmCKNUcRoqJiHhZGAsCKYBgCRgEARmAyDOLAColmBAZWBmHPwYlEw+w4WWgczihUYIJkIeGDJjJwZo6mQlACajJ0QEkAWZQKdgocMYCyIMM8NjYFkxYCMmPjFh4ylNOVEjEVU3EMMREhlLIDE3i1AryISweBTUgUedyQaKgmTCUIQgRfEChx/GuwAhC9xmrGCGPBqRMAdY5oAoHogMpR7QGmcGIRQS0fJjmiixsjgVM2pzMBHjQNWYrAOhDUAQSCmQEuXXBI4QsQvphjIIyChLTmDmmfwy/Cj//PkxOVuRDo0pPbyfGYArJEGkUnbAgYQiqxGBHpfCJ00tFR5IJgzKJ2RLCvT8PynOa5SzcRls3deG/fgaD4/K/dJ8JLKrcieaJOxI3Yiz9P7FbOdJNvzHJdMQzLI9L5Y+77S+9ZjjfNnafBrtNJeNp7nMsUGVQTKTdTadm+0BWFO4tumoiQmI/S/VnK8ZUutEEt83Zu6rEklKC+IwWZAai5ahJxogKGTXcQDCmCCoCDhFltFWkDh2SKpoWjwYcSttUIkUFxLUoZ6tFRVOBrycr6y1DFfU45TDlkNDbqpJv37TEFNRTMuMTBABAJAwCojA9MB4JQwVzrTM5XoMGAMsGggGAKBKQAZmC4DAYL4CQCBoOEJgcJGKxwYgIQCApigZjw7DBUZOCICBhicLjIkMEBABWYFHQmEZYIQYVwoBgqSy3oyBRkGmRQUY4EhgAwBxZMjC8y8NRI7mREGY1HRigDgZtnRhoZHPBnlICIBkIYNEkoQDkwMETCIQMTgAQVRwKEAzLlzNKxmIPVRk+ZoS6wNCBxsaAgEUVQJixRWVMUNJSywYMOmoZkTozFkwQIAHzjFD1rjYrS9xGmMgcOwlMgELyCQMAEDFJy6YBChBYZQoBUjgwUiEk2ztKkxAF4V//PkxPdytDokAvc0fD674acljz8NyfxKpLFjEqsq3NTcRp0soXekUbcB5t2Kempn/pJmV2ezdWrKqrqQPhBryuLPQDJYFbaOwRZssufd5Kd54zEL8qiz80cF0LMZ+UaYFFYfcKSrZc54IZY6yNt3QZclcoAqBhMwUBkRWauSpiVgH6WXLaVQYvM1iJIPLCpCKtLpKoIOgEHG0KAsNL5Bc6mIXmUPlyCIHG1YUdBo0l209fAjBggAqmhNbKIgpfZZ4yRZqqgqqxVA9nUMJ12lOnXTmYZFGBJDuEu2bWqFhBfKTEFNRapCDhIAeGAIhgTxiLFanAA/qYEAB5hBgMCMCkDAFEQPRgtgfCEGgARGAwOY4FRlQvjoHMan0zAGzFA8MQg0xcEjBo9MJiAOLJkwGFzjJxHMjp8wYMAgKUhjwKGCh2YRGxhoTmPCWIiuZyUBgAImMi+ZoSZqx2mMgcYjbRr6LmXQkYgKho4fmRgSYzIAcWzDwYMLBEEBowOChlIOOTKIQEsN3SAxEoNGXJF1wAMcoAAAEdMQASSECIv6DFJjiJjEKoAARLAEAmACxNtEOnCNQrM+WIlxoCYcMKyoAWvuX1M4BSlEIMswTB4NEiL2BQSUAHHY4spk7vsqlUgY//PkxPpzfDoYAvc0fi4wlwkJTfkwF91pMGXEs9sVHADuy6boGpxyDoceh0J6RRSXJJLpRQYu3NrFPD7qU9K2FljcrrPow/7LHbky7ozGW7sUidugtNyhtiMtnYzAESnJXAMomnGYbMvE1qBW2dNnMZYcuZjK7Fn6etNVrTyphx5PpL1exbZuRcKcUqQLh1czWiziijSSYKik0kaFrzC48ABFAUulHhoCkdAAsZfwRgQhGRAWDrXQCJ6rDWTGiC9ya6Jq7GV07Dhoqii9Tv0KqyOTP0dKRb73MWh1eTWiAUpzNaIEDs9aARhUmDqMAZn6VxheiEAoBgQAiGQDoYyBkSJEAFEw4+BIERhxjTiay0HJVJxQmPcZlIGYW/mPl5ipMbcyGzCpwSyAD4y1YBxOb0JGBBYhBTVk4wkQMQPDB0cwmPO5kjR0k18GOmZTksc65ANREG4n1BpxzOYyOGVigqMGQBQ44GTi5AXmaDJKSmAixmoIYUCmGHBhAkHIIJCkbXbKAEdJTFBgeCYBXwYIXiEWFgIODzHiZTIyUwCiCYyjAbaMxMjg18ycQNvWTHQ80EuLahQOCBwyAHIAsODwCIBUNCwIKA5fFYVqjlCIFmF3vKkInEq5WVPhoKtaKIwF//PkxP91LDoMANe2BJCCqmWIWwUAbCWsYBDTSFfvhK2CrjaMrjKdirqSyGn0qS6mceTyCBLb8xd4H4iU1OPDXhdIz+XvK9jcnybG5VBKHXaHTXpTFFGYfpl+P9BEqWY/kevKwMXUUVUb1wXiXgy1yXTYisA4Cu18LHU1TEUyYo1Rj+2UCACWHXOHCM8FgJG0BBZjgIlGwQwEPUMuJdAgOCgIlSlWPAgKOA4CVtEQCSgKFJgYGgqgRBgCpSkS7iZBaULg1I8iT8AJnIP1FRq4Zclk5amBMEJltomUwRchQCpepQpMQU1FMy4xMDCqqqqqqqqqqqpHEKjACqI4rUxTZhAjpmBoHrbiRYz4tGkyakyoN1FzDUQy80cKAamYZoF0omsRiBKM1bUxAELiDJFDMPQukNicL6GkIAAuYwHhQEMbGiYhMgEjFBEx6AM8ITqK0zYEJjMw9tMaFzG1U7lbObNTAhEzsmMvMzIx9I8yUoMRLiIZDiBgVJhiYiKkQ1TVDgIwoFFGVDIuqOBUKYwgChpbFjRkh6AkEBBIsBi0NGWZjKwwSE0wA3IEExDOhDDqjHJSZymMTGWGKro6oiiAELBjLkk51NVXWk9W6Fx0GIdb1zUhG/SzsqrLDIvGrBDy//PkxOtvrDoVTtb1CCCpQuAMglMaZjqLqqjqLOoHmRxZi8q0GdxWHlAi37WgSHMILDEAACrCJrJcqNOAFgc4HAootNCUCQDIawVFjRdFeBmKIGs7VtVVRNYKW5gWQu86T3PqgXAKl6ukqlkJwKIs4UVVhZSvBMIvws1egiBpAR1mDYWx32mSCnl8LVgcuelMZeaSvMyR1FB3IZSmiypKsZAJMo9rxZo7ZZpG5qjbLWSKbNE0ArKV7uopQzNbqqrfr/ZCvNxkh36ZQ3jQGmton1BdK3aLwdTTLW2iKfctRNftTEFNRTMuMTAwQaKeGGsxnoqZq4BUbNXrjgRE3grMpHwiiMWDBIHMpJDIh8xcQMeSzPgsxRzNnUDSRA2JrMrdDMQIGkZlAUYmGgg+NISTNg0BATeGDgDWjCzY0kgMCGTBQRuRlqMaXAHc0xvK4YidmmJZrhuFBw0kDOQ0T7u88ahNkOjwaQw0xMGCAoBGTnxo58LRzaSTOFjhyAdmNJFNCKLVGHDCQIvaxQwIxIICkDCCwcNLYtaBQVS8aMgoEYlgaQqMBAESBwozlE7kkFRWGteZeAiK0izxUDhgkVFHlCjrhrdac2JaaoVzMGTmnXJL6pcFUICSZAwKXlLxJfMn//PkxPZyhDn8At6xaBUifbcmkwDBywSKzV2ZNVijhMJhiJp8wtniA5/oGnU7VdqeYDLmauu6knuv9DSX0LhTQE80KUtXGRSflcz3oou1MqUsSeZ/YcbZTF7IXDEsVtpi5KCJLpYVrsUgEu6kSxh24afmLP874QF7kEqMJtYkMGGCjQxS8EImNNeMakh1ml5SqNERba+EvggTAUZk52LCECDacDVUGlZxGBEEKLBRVmLWUqXshyErBgWKI5XJMXieFrIEaYiE1Uv1mPCyFli+0AqlicKlZbwDqDgjUjwU1mVhTEFNRTMuMTAwVVVVVVVVINhqCEmYFAGVs0ISzG5kMLksmZBoU2GYFuYAVpm4tCUKPI/NLMMG3NoGOWiNpZKtM5hI75w40ky9IwMM0xwSriyFiChquRUIFQIQQGixlh5i1Q4mNKBNgNNCuCzszigfJHajm54AHQa+GcAwVwzdFTSpjDKR1IIUIhLmECCwtUC30+UVk9VsOQ602y1OZP9KwHOMSxR4AELbB5TawCVFHAY5ERLluS70IQCIgOHAN4DNMLTCygCMMYNSBSS3Sdqei6E1kTVUFrqwsOjb2qCluhwpcwaOGFLrL7bRTVAUi+igPGBQS8yh6xGorDKdr8R+//PkxPBw5Dm0KuawfEqVyJdF3UQVDFjrgR+XyzQtcCElQ4QAWUWlQRKVrMYM6MiXKwhX6A0tUh6pgrtoSgKdydaEJd5N1iDFnKgOEMuZCyhTkuyFSEgEIwwJe5Rdei9nZjC6UEyBFBQWMAAovJNpWoJUOSCNAwOMWdSkTzL4l7Unkj0+EklAW4J9FwRgKQiUaGqVTC16JXIJUZVVF3s4YmvREYABC6iUiCdSxjzOXQTOMhwDYdoYRkTAgSE1OQiMakmHRLYBTGsgIwoNIQaMYBhdRIBWN3XMQHGAIFYIqkFlTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV' }
 ];
-var TONE_COLOR = { 1:'var(--t1)', 2:'var(--t2)', 3:'var(--t3)', 4:'var(--t4)' };
+var TONE_COLOR = { 1:'var(--tone1)', 2:'var(--tone2)', 3:'var(--tone3)', 4:'var(--tone4)' };
 var TONE_LABEL = { 1:'1 flat', 2:'2 rising', 3:'3 dip', 4:'4 fall' };
 
 /* v0.3.49 听辨题库（人工策展，不复靠脚本从句子里自动切音节——切不准会造出错题）。
@@ -3541,6 +3599,12 @@ function renderCities(){
    sendScore 全局包装钩子触发 sceneReply，复用会污染徽章 said 汇总与复习排程。
    进度隔离红线：攻略进度只写 S.guideDone['cityId:zoneId']，不写 S.phrases。 */
 var curGuideCity = null, curGuideZone = null;
+/* v0.24.0：Lucide 图标（ISC 许可）以 CSS mask 消费 —— 颜色随文字、可换肤、可精确控尺寸；
+   emoji 是彩色字体位图，既不跟主题色也压不齐基线，故逐批替换。图标清单见 assets/icons/ui/。 */
+function uico(name, cls){
+  var u = 'assets/icons/ui/'+name+'.svg';
+  return '<span class="uico'+(cls?' '+cls:'')+'" style="-webkit-mask-image:url('+u+');mask-image:url('+u+')" aria-hidden="true"></span>';
+}
 function guideDoneArr(){
   if(!curGuideCity || !curGuideZone) return [];
   S.guideDone = S.guideDone || {};
@@ -3553,7 +3617,7 @@ function openCityGuide(cityId){
 function renderCityGuide(){
   var g = (typeof CITY_GUIDES !== 'undefined' && curGuideCity) ? CITY_GUIDES[curGuideCity] : null;
   if(!g){ go('cities'); return; }
-  var t = $('cg-title'); if(t) t.textContent = '🏙️ '+g.city+' Guide · '+g.city+'攻略';
+  var t = $('cg-title'); if(t) t.innerHTML = uico('icon-city','uico-lg')+' '+escHtml(g.city)+' Guide · '+escHtml(g.city)+'攻略';
   var cnt = $('cg-count'); if(cnt) cnt.textContent = g.zones.length+' zones';
   var de = $('cg-desc'); if(de) de.textContent = T('Every situation you will meet in {city}. Tap a zone, reveal, listen, say it 3×.').replace('{city}', g.city);
   var ask = $('cg-ask'); if(ask) ask.textContent = T('Ask Nono (local guide)');
@@ -3561,7 +3625,7 @@ function renderCityGuide(){
   if(lm){
     var sc = SCENES.filter(function(s){ return s.id===curGuideCity; })[0];
     lm.style.display = sc ? 'inline-flex' : 'none';
-    if(sc) lm.textContent = '📍 '+T('Landmark lines')+' ('+sc.phrases.length+')';
+    if(sc) lm.innerHTML = uico('icon-pin')+' '+escHtml(T('Landmark lines'))+' ('+sc.phrases.length+')';
   }
   $('cg-zones').innerHTML = g.zones.map(cgZoneHtml).join('');
   window.scrollTo(0,0);
@@ -3573,7 +3637,7 @@ function cgZoneHtml(zone){
   else { S.guideDone = S.guideDone || {}; done = (S.guideDone[curGuideCity+':'+zone.id]||[]).length; }
   var h = '<div class="cg-zone'+(open?' open':'')+'">'+
     '<button class="cg-zhead" onclick="cgToggleZone(\''+zone.id+'\')">'+
-      '<span class="zi">'+zone.icon+'</span><span class="zt">'+escHtml(zone.title)+'</span>'+
+      '<span class="zi">'+uico(zone.icon)+'</span><span class="zt">'+escHtml(zone.title)+'</span>'+
       '<span class="zc'+(done?' done':'')+'">'+done+'/'+zone.phrases.length+'</span><span class="chev">›</span></button>';
   if(open){
     h += '<div class="cg-zbody">';
@@ -4345,7 +4409,7 @@ function renderLangList(){
   panel.setAttribute('data-noi18n', '');
   panel.setAttribute('role', 'listbox');
   panel.setAttribute('aria-label', 'Interface language');
-  panel.style.cssText = 'display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:80;background:var(--card,#fff);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.18);max-height:42vh;overflow-y:auto;min-width:230px;padding:6px;-webkit-overflow-scrolling:touch;';
+  panel.style.cssText = 'display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:var(--z-menu);background:var(--card,#fff);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.18);max-height:42vh;overflow-y:auto;min-width:230px;padding:6px;-webkit-overflow-scrolling:touch;';
   function buildPanel(){
     panel.innerHTML = '';
     var c = curLang();
@@ -4453,7 +4517,7 @@ function showApkUpdateDialog(apk){
   if(document.getElementById('apk-upd-ov')) return;
   var ov = document.createElement('div');
   ov.id = 'apk-upd-ov';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-full-top);background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
   var _noteRaw = (curLang() === 'zh') ? (apk.note || '') : (apk.noteEn || apk.note || '');
   var _noteTxt = Array.isArray(_noteRaw) ? _noteRaw.join('<br>') : _noteRaw;
   var noteHtml = _noteTxt ? ('<div style="background:var(--card,#f5f5f5);border-radius:10px;padding:12px;margin:12px 0 14px;">'
@@ -4508,7 +4572,7 @@ function updOverlay(){
   if(ov) return ov;
   ov = document.createElement('div');
   ov.id = 'upd-ov';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-full);background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;';
   ov.innerHTML = '<div style="background:var(--bg,#fff);color:var(--text,#222);max-width:360px;width:100%;border-radius:16px;padding:20px;">'
     + '<div style="font-size:1rem;font-weight:600;margin-bottom:12px;">⬇️ Downloading update…</div>'
     + '<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:10px;">'
@@ -7136,36 +7200,31 @@ function replayDialog(id){
 
 </script>
 <style id="cn-modules">
-/* ===== 中式模块层 v1（M1-M10）· v0.15.0 ===== */
+/* ===== v0.24.0「静默仪表 / Quiet Instrument」组件层 =====
+   取代 v0.15.0 的「中式模块层（M1-M10）」。原层给卡片加四角如意云头 + 底边回纹带、
+   给按钮加内嵌金环、给导航加金线 + 回纹 + 选中项祥云托底、给进度条加龙鳞 —— 全部移除。
+   新层只做一件事：把卡片/按钮/列表/导航/进度条的层次与尺寸规整成一套可复用规范。 */
 :root{--gold-dim:#8a7448;--paper:#f5f1e8}
 
-/* M1 卡片：四角如意云头 + 底边回纹带（纹样只在边缘，中央留白） */
-.hub,.card{position:relative;background-color:var(--card);border-color:var(--line);
-  background-repeat:no-repeat;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M1,21 V13 C1,6 6,1 13,1 H21'/%3E%3Cpath d='M4,21 V15 C4,9 9,4 15,4 H21' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M21,21 V13 C21,6 16,1 9,1 H1'/%3E%3Cpath d='M18,21 V15 C18,9 13,4 7,4 H1' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M1,1 V9 C1,16 6,21 13,21 H21'/%3E%3Cpath d='M4,1 V7 C4,13 9,18 15,18 H21' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.3' stroke-linecap='round' opacity='0.5'%3E%3Cpath d='M21,1 V9 C21,16 16,21 9,21 H1'/%3E%3Cpath d='M18,1 V7 C18,13 13,18 7,18 H1' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E");
-  background-position:7px 7px,calc(100% - 7px) 7px,7px calc(100% - 7px),calc(100% - 7px) calc(100% - 7px);
-  background-size:20px 20px}
-.hub::after,.card::after{content:"";position:absolute;left:14px;right:14px;bottom:7px;height:7px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.3;pointer-events:none}
+/* 卡片：表面 + 发丝边框 + 顶部微高光（深色层次不靠大投影） */
+.hub,.card{position:relative;background-color:var(--card);border-color:var(--line);box-shadow:var(--hairline)}
 
-/* M3 按钮：内嵌金环（雕刻感来自双层线，不加纹理） */
-.btn{box-shadow:inset 0 0 0 1px rgba(201,168,108,.42)}
-.btn.ghost{background:none;box-shadow:inset 0 0 0 1px var(--gold-dim)}
-.record{box-shadow:inset 0 0 0 1px rgba(201,168,108,.34)}
+/* 按钮：去掉内嵌金环 —— 主按钮靠实心红，次按钮靠发丝描边 */
+.btn{box-shadow:none}
+.btn.ghost{background:none;box-shadow:inset 0 0 0 1px var(--line)}
+.btn.ghost:active{box-shadow:inset 0 0 0 1px var(--line-strong)}
+.record{box-shadow:none}
 
-/* M10 表单与分段器 */
-input,textarea,.citysearch,.sent-input,.rd-input{border-radius:99px;box-shadow:inset 0 0 0 1px rgba(201,168,108,.24)}
-textarea,.rd-input{min-height:110px;border-radius:18px}
-.seg button{border-radius:99px}
-.seg button.on{box-shadow:inset 0 0 0 1px rgba(201,168,108,.5)}
+/* 表单与分段器 */
+input,textarea,.citysearch,.sent-input,.rd-input{border-radius:var(--r-pill);box-shadow:inset 0 0 0 1px var(--line)}
+textarea,.rd-input{min-height:110px;border-radius:var(--r-lg)}
+.seg button{border-radius:var(--r-pill)}
+.seg button.on{box-shadow:inset 0 0 0 1px var(--line-strong)}
 
-/* M4 底部导航：金线 + 回纹收尾 + 选中项祥云托底 + 图标随选中态变色 */
-body>nav{background:rgba(22,26,32,.94);border-top:1px solid rgba(201,168,108,.42)}
-body>nav::after{content:"";position:absolute;right:12px;top:6px;width:36px;height:7px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.32;pointer-events:none}
+/* 底部导航：毛玻璃 + 发丝顶边；选中项 = 顶部一道红色短杠（原为金色祥云托底 + 回纹） */
+body>nav{background:rgba(20,26,36,.92);border-top:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 body>nav button{position:relative}
-body>nav button.on::before{content:"";position:absolute;bottom:2px;left:50%;width:32px;height:10px;margin-left:-16px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 10'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4,8.5 C4,4.5 8,3.5 10.5,6 C11.5,2.5 16,2 18,5.5 C20.5,3 25,4.5 25,8.5'/%3E%3Cpath d='M3,8.6 H29'/%3E%3C/g%3E%3C/svg%3E");background-repeat:no-repeat;background-size:contain;opacity:.9;pointer-events:none}
+body>nav button.on::before{content:"";position:absolute;top:0;left:50%;width:22px;height:2px;margin-left:-11px;border-radius:2px;background:var(--red)}
 .navico{display:block;width:22px;height:22px;background-color:currentColor;margin-bottom:1px;
   -webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain;
   mask-position:center;mask-repeat:no-repeat;mask-size:contain}
@@ -7175,22 +7234,35 @@ body>nav button.on::before{content:"";position:absolute;bottom:2px;left:50%;widt
 .navico-prog{-webkit-mask-image:url(assets/icons/nav-prog.svg);mask-image:url(assets/icons/nav-prog.svg)}
 .navico-me{-webkit-mask-image:url(assets/icons/nav-me.svg);mask-image:url(assets/icons/nav-me.svg)}
 
-/* M7 徽章印章化：圆形 + 金环 + 外圈淡金晕 */
-.badge-cell img{border-radius:50%;box-shadow:0 0 0 2px var(--gold),0 0 0 7px rgba(201,168,108,.1)}
-.badge-cell:not(.on) img{box-shadow:0 0 0 2px var(--gold-dim),0 0 0 7px rgba(138,116,72,.08)}
+/* 通用 UI 图标（Lucide · ISC）：以 CSS mask 消费 ⇒ 颜色随文字、无位图、可换肤。
+   替换原先散落各处的 emoji（✈️💳🚇🎤🐢…）—— emoji 是彩色字体位图，无法换肤也无法控尺寸。 */
+.uico{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.22em;background-color:currentColor;
+  -webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain;
+  mask-position:center;mask-repeat:no-repeat;mask-size:contain}
+.uico-lg{width:22px;height:22px;vertical-align:middle}
+.zi .uico{width:22px;height:22px}
 
-/* M6 龙鳞进度（进度＝奖励＝鎏金，替换旧红渐变） */
-.pbar{height:9px;background-color:var(--bg2);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cg fill='none' stroke='%23c9a86c' stroke-width='1.1'%3E%3Cpath d='M0,7 A5.5,5.5 0 0 1 11,7'/%3E%3Cpath d='M-5.5,3 A5.5,5.5 0 0 1 5.5,3 M5.5,3 A5.5,5.5 0 0 1 16.5,3'/%3E%3C/g%3E%3C/svg%3E");background-repeat:repeat-x;background-size:11px 7px}
-.pbar i{background:linear-gradient(90deg,var(--gold),var(--paper))}
+/* 图标按钮基类（方案 §2）：40×40 圆形/圆方，触控域 ≥44，按下仅换底衬不换色。
+   收敛对象：`#fb-open`（原 74×37 绿胶囊，第三强调色 + 遮挡内容）、`.spk`(42)、`.ni-x`。
+   触控外扩用 ::after inset:-3px（40→46），不改视觉尺寸、不动拖拽用的 offsetWidth。 */
+.icon-btn{width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:var(--r-pill);
+  background:none;color:var(--sub);display:inline-flex;align-items:center;justify-content:center;
+  position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background var(--dur-1) var(--ease-out),color var(--dur-1) var(--ease-out),
+             border-color var(--dur-1) var(--ease-out)}
+.icon-btn::after{content:"";position:absolute;inset:-3px;border-radius:var(--r-pill)}
+.icon-btn:active{background:var(--card-hi);color:var(--txt);border-color:var(--line-strong)}
+.icon-btn .uico{width:20px;height:20px;vertical-align:middle}
 
-/* M5 页头：回纹收边 */
-header{position:relative;padding-bottom:16px}
-header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='7' viewBox='0 0 8 7'%3E%3Cpath d='M1,6 V1 H7 V6 H3 V3 H5' fill='none' stroke='%23c9a86c' stroke-width='0.9' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:8px 7px;opacity:.28}
+/* 徽章：去金环，改中性发丝环 */
+.badge-cell img{border-radius:50%;box-shadow:0 0 0 1px var(--line-strong)}
+.badge-cell:not(.on) img{box-shadow:0 0 0 1px var(--line)}
 
-/* v0.23.12：启动屏规则**已全部上移到 <head> 内的主样式块**（首屏元素样式必须早于元素）。
-   此处不再重复定义 —— 重复就是「规则晚于元素」的闪烁源，且两处极易失同步。
-   完整说明与实测数据见 <head> 内「v0.10.0：A8 开屏 splash」那一段注释。 */
+/* 进度条：去龙鳞纹样，改单色红（进度＝品牌信号，不靠鎏金） */
+.pbar{height:7px;background-color:var(--bg2);background-image:none;border-radius:var(--r-pill);overflow:hidden}
+.pbar i{background:linear-gradient(90deg,var(--red),var(--red-press))}
+
+/* 页头：去回纹收边 ⇒ 不再需要为纹样预留下边距 */
 </style>
 
 <style id="cn-share">
@@ -7198,27 +7270,27 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
    铁律：不新增设计语言。按钮全部复用 .btn/.btn.primary/.btn.ghost（v0.15.0 已加内嵌金环），
    输入框复用全局 input 胶囊（99px + 内嵌金线），只补版式与卡片预览框。 */
 #share-panel{ width:min(92vw,406px); background:var(--card); color:var(--txt);
-  border-radius:18px; padding:18px 16px 16px; display:none; border:1px solid rgba(201,168,108,.34);
+  border-radius:18px; padding:18px 16px 16px; display:none; border:1px solid rgba(255,255,255,.34);
   max-height:90vh; overflow:auto; }
 #share-panel .sp-head{ display:flex; align-items:center; justify-content:space-between; margin:0 0 4px; }
 #share-panel .sp-h{ font-family:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",serif;
   font-size:17px; font-weight:600; margin:0; }
 #share-panel .sp-x{ background:transparent; border:1px solid transparent; color:var(--sub);
   font-size:15px; line-height:1; padding:6px 10px; cursor:pointer; border-radius:99px; }
-#share-panel .sp-x:hover{ border-color:rgba(201,168,108,.4); }
+#share-panel .sp-x:hover{ border-color:rgba(255,255,255,.4); }
 #share-panel .sp-sub{ font-size:12px; color:var(--sub); line-height:1.55; margin-bottom:12px; }
-#share-panel .sp-prev{ width:100%; border-radius:14px; overflow:hidden; background:#161a20;
-  border:1px solid rgba(201,168,108,.3); display:flex; justify-content:center; }
+#share-panel .sp-prev{ width:100%; border-radius:14px; overflow:hidden; background:var(--bg);
+  border:1px solid rgba(255,255,255,.3); display:flex; justify-content:center; }
 #share-panel .sp-prev img{ width:auto; max-width:276px; max-height:38vh; display:block; }
 #share-panel .sp-fmtrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 12px; }
 #share-panel .sp-flab{ font-size:12px; color:var(--sub); }
-#share-panel .sp-seg{ display:inline-flex; border:1px solid rgba(201,168,108,.35); border-radius:99px; overflow:hidden; }
+#share-panel .sp-seg{ display:inline-flex; border:1px solid rgba(255,255,255,.35); border-radius:99px; overflow:hidden; }
 #share-panel .sp-fbtn{ background:transparent; border:0; color:var(--sub); font-size:12px; padding:6px 15px; cursor:pointer; }
 #share-panel .sp-fbtn.on{ background:rgba(230,57,70,.18); color:var(--paper); }
 #share-panel .sp-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 12px; }
 #share-panel .sp-tname{ font-size:12px; color:var(--gold); letter-spacing:.3px; }
 #share-panel .sp-swap{ font-size:12px; padding:6px 15px; border-radius:99px; cursor:pointer;
-  background:transparent; color:var(--txt); border:1px solid rgba(201,168,108,.45); }
+  background:transparent; color:var(--txt); border:1px solid rgba(255,255,255,.45); }
 #share-panel .sp-nick{ display:block; margin:0 0 12px; }
 #share-panel .sp-nick input{ width:100%; box-sizing:border-box; font-size:13px;
   background:rgba(255,255,255,.06); color:var(--txt); }   /* 不显式给底色会回落成浏览器默认白底，暗色应用里很突兀 */
@@ -7248,7 +7320,7 @@ var SHARE = {
 /* ---------- 常量 ---------- */
 SHARE.SERIF = '"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","SimSun",serif';
 SHARE.SANS  = '-apple-system,"Segoe UI",Roboto,"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif';
-SHARE.C = { bg:'#161a20', red:'#e63946', gold:'#c9a86c', goldDim:'#8a7448', paper:'#f5f1e8', teal:'#8ab8b2' };
+SHARE.C = { bg:'#141a24', red:'#e63946', gold:'#c9a86c', goldDim:'#8a7448', paper:'#f5f1e8', teal:'#4cc9f0' };
 
 /* 徽章 id → 印章内单字 + 展示名（仅展示标签，判定条件仍复用 App 现有逻辑） */
 SHARE.BADGE = {
@@ -7989,7 +8061,7 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
 #quotaCard .qrow{ display:flex; justify-content:space-between; font-size:.82rem; padding:4px 0; border-bottom:1px dashed rgba(127,127,127,.18); }
 #quotaCard .qrow:last-child{ border-bottom:none; }
 .ovl{ position:fixed; inset:0; background:rgba(0,0,0,.62); display:flex; align-items:center; justify-content:center;
-  padding:20px; z-index:9000; }
+  padding:20px; z-index:var(--z-modal); }
 .ovl .panel{ background:var(--card,#17171c); border:1px solid var(--line); border-radius:18px; padding:22px; max-width:380px; width:100%; }
 .ovl h3{ margin:0 0 6px; font-size:1.15rem; }
 .ovl p{ color:var(--txt-3); font-size:.9rem; line-height:1.6; margin:0 0 14px; }
@@ -8191,33 +8263,33 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
    为什么必须新做这个：nonoShow() 会把 340px 的面板整个展开，
    在主练习页(v-scene)会覆盖句子 —— 违反「主路径必须让给句子」的铁律。
    位置：浮标左侧一档（浮标 right:12 + 宽 56 = 68，故 74 起步留 6px 间隙），
-   底边与浮标上沿错开；z-index 59 < 浮标坞 60，面板展开时自动被盖住。 */
+   底边与浮标上沿错开；z-index 取 --z-tip(59) < 浮标坞 --z-fab(60)，面板展开时自动被盖住。 */
 #nono-tip{
-  position:fixed; right:74px; bottom:104px; z-index:59;
+  position:fixed; right:74px; bottom:104px; z-index:var(--z-tip);
   max-width:min(66vw,268px); padding:9px 13px;
   border-radius:16px 16px 5px 16px;
   background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
-  border:1px solid rgba(201,168,108,.30);
+  border:1px solid rgba(255,255,255,.30);
   color:var(--txt); font-size:12.5px; line-height:1.5;
-  box-shadow:0 10px 26px rgba(0,0,0,.55),0 0 0 1px rgba(201,168,108,.05);
+  box-shadow:0 10px 26px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05);
   opacity:0; transform:translateY(8px) scale(.97);
   transition:opacity .28s ease,transform .28s ease;
   pointer-events:none; font-family:inherit;
 }
 #nono-tip.on{opacity:1;transform:translateY(0) scale(1)}
-#nono-tip b{color:var(--gold);font-weight:700}
-#nono-tip i{font-style:normal;color:var(--red)}
+#nono-tip b{color:var(--txt);font-weight:700}
+#nono-tip i{font-style:normal;color:var(--red-text)}
 
 /* ---- 结果动作条：打分后出现在底部居中（导航栏之上）----
    v-scene 的录音按钮是列表内联的、没有固定底栏，所以这里不会与任何
    固定控件抢位；30s 自动收起 + 可手动关闭，绝不常驻挡内容。 */
 #nono-again{
-  position:fixed; left:50%; bottom:88px; z-index:59;
+  position:fixed; left:50%; bottom:88px; z-index:var(--z-tip);
   transform:translateX(-50%);
   display:none; align-items:center; gap:6px;
   padding:6px 7px 6px 7px; border-radius:99px;
   background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
-  border:1px solid rgba(201,168,108,.34);
+  border:1px solid rgba(255,255,255,.34);
   box-shadow:0 10px 26px rgba(0,0,0,.6);
   font-family:inherit; white-space:nowrap;
 }
@@ -8274,7 +8346,7 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
   background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
   border:1px solid rgba(230,57,70,.42);
   color:var(--txt);font-size:12.5px;line-height:1.45;cursor:pointer;
-  box-shadow:0 10px 28px rgba(0,0,0,.58),0 0 0 1px rgba(201,168,108,.06);
+  box-shadow:0 10px 28px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.06);
   opacity:0;transform:translateY(8px) scale(.97);
   transition:opacity .3s ease,transform .3s ease;font-family:inherit;
 }
@@ -8290,7 +8362,7 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
 #v-home .nt-nono{display:flex;align-items:center;gap:11px;padding:0 0 12px;margin-bottom:12px;
   border-bottom:1px solid var(--line)}
 #v-home .nt-nono img{width:54px;height:54px;border-radius:50%;flex:0 0 auto;object-fit:cover;
-  background:rgba(230,57,70,.14);border:1px solid rgba(201,168,108,.28)}
+  background:rgba(230,57,70,.14);border:1px solid rgba(255,255,255,.28)}
 #v-home .nt-nono b{display:block;font-size:13.5px;color:var(--gold);margin-bottom:2px;
   font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif;letter-spacing:.3px}
 #v-home .nt-nono span{font-size:11.5px;color:var(--sub);line-height:1.45}
@@ -8850,30 +8922,20 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
     };
   })();
 
-  /* ---------- 10. 修「陪伴入口被 Feedback 按钮压住」的既有布局缺陷 ----------
-     实测（Playwright 量矩形）：#nono-dock(right:12px;bottom:78px) 与
+  /* ---------- 10. 【v0.24.0 已移除】修「陪伴入口被 Feedback 按钮压住」的运行时补丁 ----------
+     原缺陷（v0.5.0 起存在）：#nono-dock(right:12px;bottom:78px) 与
      #fb-open(CSS right:12px;bottom:calc(72px+…)) 在**同一个右下角重叠**，
      且 #fb-open 在 DOM 里靠后、同为 z-index:60 ⇒ 压在浮标之上，浮标下半部点不准。
-     根因不是本轮引入的：#nono-dock 是 v0.5.0 预留的位、#fb-open 是 v0.3.10
-     上移到「导航栏上方」的位，两者从那时起就撞在右下角。
-     #fb-open 自己的 JS 里 DEFAULT 写的是 left:12px（左下），注释也写
-     「左下导航栏上方」，但 applyDefault() 只在【长按 700ms 复位】时被调用 ——
-     首次访问（无 sinoky-fb-pos）时 CSS 的 right:12px 直接生效 ⇒ 从没落过左下。
+     #fb-open 的注释与 JS 的 DEFAULT 写的都是「左下、left:12px」，只有 CSS 写错成 right。
 
-     本层只做一次性纠正：不动原代码，不动它的拖拽/长按复位逻辑。
-       有 sinoky-fb-pos（用户自己摆过位）⇒ 一律尊重，完全不干预；
-       没有 ⇒ 按它自己注释里的设计意图落到左下，把右下让给陪伴角色。 */
-  (function () {
-    var btn = document.getElementById('fb-open');
-    if (!btn) return;
-    var saved = null;
-    try { saved = JSON.parse(localStorage.getItem('sinoky-fb-pos') || 'null'); } catch (e) {}
-    if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') return;
-    btn.style.right = 'auto';
-    btn.style.left = '12px';
-    btn.style.top = 'auto';
-    btn.style.bottom = 'calc(72px + env(safe-area-inset-bottom))';
-  })();
+     当时的处置是注入层加一段 IIFE 把 left 硬改回去（只对有/无 sinoky-fb-pos 分两种分支）。
+     这属于「用运行时补丁掩盖源码错误」，代价是：注入层必须永远排在主 CSS 之后，
+     否则补丁失效、缺陷复现；且两棵树（源码 + patch.js）必须同步维护。
+
+     v0.24.0 把修复收回源码：主 CSS 的 #fb-open 直接声明 left:12px，
+     z-index 走 --z-fab 栈序变量（与 #nono-dock 同层但不共角）。
+     因此本段 IIFE 已无存在意义，**整体删除**，不再保留任何「首访纠正」逻辑。
+     下面保留一行空 IIFE 之外的说明，仅为可检索性；无副作用。 */
 
   /* ==========================================================================
      v0.23.3 诺诺形象位（纯追加）
@@ -11546,7 +11608,7 @@ var qrcode = function() {
          （scale4，4px）多 6/36 通过 —— 这才是把 size 提到 205 的依据。
          12px 保留为更保守的余量，不是「必须」。 */
       roundRect(ctx, x, y, real, real, 12); ctx.fill();
-      ctx.strokeStyle = 'rgba(201,168,108,.45)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 2; ctx.stroke();
 
       ctx.fillStyle = INK;
       var off = QUIET * scale;
