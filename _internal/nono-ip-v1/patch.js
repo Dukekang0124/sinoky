@@ -388,7 +388,7 @@
             var b = document.createElement('button');
             b.className = 'nm-chip nm-tour' + ((window.NONO || {}).mode === 'tour' ? ' on' : '');
             b.innerHTML = '🧭 ' + T('Tour');
-            b.onclick = function () { window.NONO.mode = 'tour'; window.nonoTour(0); };
+            b.onclick = function () { window.NONO.mode = 'tour'; if (window.nonoDrawerOff) window.nonoDrawerOff(); window.nonoTour(0); };
             w.appendChild(b);
           }
         } catch (e) {}

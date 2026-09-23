@@ -699,5 +699,11 @@
   "Read it out": "读出来",
   "Nono is checking…": "诺诺正在批改…",
   "Coach offline — try again in a moment.": "教练离线——稍后再试一次。",
-  "Write something first": "先写点什么吧"
+  "Write something first": "先写点什么吧",
+  "Collapse": "收成小窗",
+  "Collapse to the small window": "收成小窗继续聊",
+  "Landmark lines": "地标句子",
+  "Conversation": "对话",
+  "Ask Nono (local guide)": "问诺诺（本地通）",
+  "Every situation you will meet in {city}. Tap a zone, reveal, listen, say it 3×.": "你在{city}会用到的所有场景。点开分区、点一下显字、听一听、说 3 遍。"
 }

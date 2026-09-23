@@ -508,6 +508,12 @@ const CORRECT_SYSTEM = '你是给中文初学者（母语非中文）批改写�
    只读 KV（零新增写），复用免费 GLM-4-Flash 链；鉴权与 GET /api/feedback 一致（token）。 */
 const DIGEST_SYSTEM = '你是 Sinoky（教外国人学中文的 PWA）的产品运营分析助手。用户会给你一批近期用户反馈，JSON 数组，字段含义：cat=分类(bug/audio/mic/confusing/idea/wantline/other)、msg=原文、v=版本、country=国家、t=时间。请：\n1) 用 2-3 句中文总结整体状况（数量、主要情绪、最紧迫的问题）。\n2) 把反馈聚成 3-6 个主题簇，每簇给出：topic(主题名，不超过 10 字)、cat(主导分类)、count(条数)、samples(1-2 条代表性原文摘录，保留用户原话)、action(一句可执行的处理建议)。\n3) 若存在"完全不能用"级别的 bug，填入 urgent；否则 urgent 为 null。\n只输出 JSON，不要 markdown 代码块，不要任何解释。严格格式：\n{"summary":"...","clusters":[{"topic":"...","cat":"bug","count":3,"samples":["..."],"action":"..."}],"urgent":{"topic":"...","why":"..."}}';
 
+/* ===== v0.23.22 城市攻略问答（mode:'guide'）=====
+   「城市本地通」人格：用户正在某座中国城市旅行，问的是交通/支付/景点/吃喝/求助等
+   实务问题。输出硬约束——简单中文 + 拼音 + 一句英文，控长度，只答旅行实务。
+   复用 chatGLM 的 mode 分支与 chat: 限流桶，零新增 KV 写。 */
+const GUIDE_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫，也是一位中国城市本地通。用户正在中国旅行（消息开头会标注所在城市），会问你交通、支付、地铁、打车、美食、门票、酒店、求助等实务问题。请用尽量简单的中文回答（每轮最多 3 句、总计不超过 120 字），每个关键中文词后面用括号跟拼音和简短英文，格式如：扫码(sǎo mǎ, scan the code)。只回答旅行实务问题；如果用户问别的，礼貌拉回："先帮你解决眼前的事"。如果用户只是练口语，就用简单的旅行话题陪 ta 练。';
+
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
 // 聊天专属限流（复用全局 RATE_MAP 兜底 + env.RL DO 强一致计数，独立 key 前缀 chat:）
@@ -542,6 +548,7 @@ async function chatGLM(userText, hist, env, mode) {
     : (mode === 'tone') ? TONE_SYSTEM
     : (mode === 'plan') ? PLAN_SYSTEM
     : (mode === 'correct') ? CORRECT_SYSTEM
+    : (mode === 'guide') ? GUIDE_SYSTEM
     : CHAT_SYSTEM;
   const messages = [{ role: 'system', content: sysPrompt }];
   (hist || []).forEach(function (h) {

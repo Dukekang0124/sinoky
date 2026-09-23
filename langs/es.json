@@ -699,5 +699,11 @@
   "Read it out": "Léelo en voz alta",
   "Nono is checking…": "Nono está revisando…",
   "Coach offline — try again in a moment.": "Coach desconectado — inténtalo de nuevo en un momento.",
-  "Write something first": "Escribe algo primero"
+  "Write something first": "Escribe algo primero",
+  "Collapse": "Reducir",
+  "Collapse to the small window": "Volver a la ventana pequeña",
+  "Landmark lines": "Frases del lugar",
+  "Conversation": "Conversación",
+  "Ask Nono (local guide)": "Pregunta a Nono (guía local)",
+  "Every situation you will meet in {city}. Tap a zone, reveal, listen, say it 3×.": "Todo lo que te esperarás en {city}. Toca una zona, revela, escucha y dilo 3 veces."
 }

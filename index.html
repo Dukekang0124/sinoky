@@ -627,6 +627,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       #nono-panel.npanel-flex{display:flex;flex-direction:column;max-height:calc(100dvh - 170px);overflow:hidden}
       #nono-panel.npanel-flex .np-body{flex:0 0 auto}
       #nono-panel.npanel-flex #nono-chat{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:0}
+      /* ---- v0.23.22 chat 贴底大抽屉（仅 NONO.mode==='chat'/'guide' 且由聊天入口进入时加 .npanel-drawer）----
+         position:fixed 相对视口，不受 #nono-dock 的 right/bottom 影响；
+         §F 红线：dock/fab/tip 三处定位一字未改。键盘高度经 --nono-kb（nonoKbWatch 写入）。 */
+      #nono-panel.npanel-drawer{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100vw,560px);height:calc(100dvh - 64px - env(safe-area-inset-bottom) - var(--nono-kb,0px));max-height:none;border-radius:20px 20px 0 0;z-index:70;box-shadow:0 -12px 40px rgba(0,0,0,.6)}
+      #nono-panel.npanel-drawer .np-head{position:relative;z-index:2}
+      #nono-panel.npanel-drawer .nc-scroll{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+      #nono-panel.npanel-drawer ~ #nono-fab{display:none}
+      #np-collapse{display:none}
+      #nono-panel.npanel-drawer #np-collapse{display:inline-block}
       #nono-msg{display:block}
       .nc-scroll{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding:12px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
       .nc-scroll::-webkit-scrollbar{width:4px}
@@ -896,6 +905,20 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
 
+  <!-- v0.23.22 城市攻略中心：有 CITY_GUIDES 数据的城市点入后进这里（城市参数化，北京等后续零成本套用） -->
+  <section id="v-cityguide" class="views">
+    <div class="card">
+      <div class="top"><h2 id="cg-title">🏙️ City guide</h2><span class="badge" id="cg-count"></span></div>
+      <p class="desc" id="cg-desc"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" onclick="nonoStartGuide()">🐼 <span id="cg-ask"></span></button>
+        <button class="btn ghost" id="cg-landmark" onclick="openScene(curGuideCity,undefined,'cities')"></button>
+      </div>
+    </div>
+    <div id="cg-zones"></div>
+    <button class="btn ghost" onclick="go('cities')">← Back</button>
+  </section>
+
   <section id="v-days" class="views">
     <div class="card">
       <div class="top"><h2>📅 14-day path</h2><span class="badge" id="days-count"></span></div>
@@ -1134,6 +1157,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <img id="nono-pose" src="assets/mascot/like.webp" alt="Nono">
       <b>Nono</b>
       <span class="np-acts">
+        <button id="np-collapse" onclick="nonoDrawerCollapse()" title="Collapse" aria-label="Collapse to the small window">▭</button>
         <button onclick="nonoMin()" title="Minimise" aria-label="Minimise the assistant">–</button>
         <button onclick="nonoClose()" title="Hide for today" aria-label="Hide the assistant for today">✕</button>
       </span>
@@ -1208,7 +1232,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.23.21';
+var APP_VERSION = '0.23.22';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -2482,6 +2506,291 @@ var SCENES = [
     ]},
 ];
 
+/* ===== v0.23.22 城市攻略中心 CITY_GUIDES =====
+   背景：外国游客来沪最痛的是支付绑定、地铁购票换乘、机场到达动线、打车定位、语言求助。
+   结构：CITY_GUIDES[cityId] = { title, city, zones:[...] }；每 zone = 3-5 句核心短语
+   （形状同 SCENES.phrases：en/py/hz/pya/real×2）+ 1 段多轮对话卡（复用 DIALOGS 的 lines/flip 形状）。
+   🔴 红线：zone 对象【绝不带 day1 字段】——isCity() 靠 day1===false 识别城市条目，
+   误标会被 cityList()/litCount()/cityBlockHtml() 当城市计入，污染首页地图与徽章。
+   进度隔离：练习进度写 S.guideDone['cityId:zoneId']，不写 S.phrases（防徽章 said 虚增）。
+   其他城市（北京等）后续只需往 CITY_GUIDES 加键，前端零改动。 */
+var CITY_GUIDES = {
+  shanghai: {
+    title:'Shanghai Guide · 上海攻略', city:'上海',
+    zones:[
+      { id:'sh-arrival', icon:'✈️', title:'1 · Airport Arrival',
+        phrases:[
+          { en:'Where is baggage claim?', py:'Xínglǐ lǐngqǔ zài nǎr?', hz:'行李领取在哪儿？',
+            pya:'行:xíng|李:lǐ|领:lǐng|取:qǔ|在:zài|哪:nǎr',
+            real:[ {hz:'我的行李没出来。', py:'Wǒ de xíngli méi chūlái.', note:"my baggage didn't come out", style:'casual'},
+                   {hz:'请问几号转盘？', py:'Qǐngwèn jǐ hào zhuànpán?', note:'which carousel?', style:'casual'} ] },
+          { en:'I need a SIM card.', py:'Wǒ yào bàn yì zhāng diànhuà kǎ.', hz:'我要办一张电话卡。',
+            pya:'我:wǒ|要:yào|办:bàn|一:yì|张:zhāng|电:diàn|话:huà|卡:kǎ',
+            real:[ {hz:'哪里能买流量包？', py:'Nǎlǐ néng mǎi liúliàng bāo?', note:'where to buy a data plan', style:'casual'},
+                   {hz:'护照给我一下。', py:'Hùzhào gěi wǒ yíxià.', note:'passport, please', style:'casual'} ] },
+          { en:'Where is the taxi stand?', py:'Chūzūchē zài nǎr?', hz:'出租车在哪儿？',
+            pya:'出:chū|租:zū|车:chē|在:zài|哪:nǎr',
+            real:[ {hz:'打车去市区多少钱？', py:'Dǎchē qù shìqū duōshao qián?', note:'fare to downtown', style:'casual'},
+                   {hz:'我去外滩。', py:'Wǒ qù Wàitān.', note:"I'm going to the Bund", style:'casual'} ] },
+          { en:'I want to exchange some cash.', py:'Wǒ xiǎng huàn xiànjīn.', hz:'我想换现金。',
+            pya:'我:wǒ|想:xiǎng|换:huàn|现:xiàn|金:jīn',
+            real:[ {hz:'汇率多少？', py:'Huìlǜ duōshao?', note:"what's the rate?", style:'casual'},
+                   {hz:'换五百块。', py:'Huàn wǔbǎi kuài.', note:'exchange 500 yuan', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-arrival', icon:'✈️', title:'Arrival help', tag:['travel'],
+          hook:"You land at Pudong Airport. A staff member asks if you need help — answer simply.",
+          lines:[
+            {who:'them', hz:'需要帮忙吗？', py:'Xūyào bāngmáng ma?', en:'Need any help?'},
+            {who:'you',  hz:'我的行李没出来。', py:'Wǒ de xíngli méi chūlái.', en:"My baggage didn't come out."},
+            {who:'them', hz:'您去哪个转盘？', py:'Nín qù nǎge zhuànpán?', en:'Which carousel?'},
+            {who:'you',  hz:'七号。谢谢。', py:'Qī hào. Xièxie.', en:'Number seven. Thanks.'}
+          ],
+          flip:{ prompt:'now you ask about the taxi stand — say:',
+                 hz:'出租车在哪儿？', py:'Chūzūchē zài nǎr?', en:'Where is the taxi stand?' } } },
+
+      { id:'sh-pay', icon:'💳', title:'2 · Mobile Payment',
+        phrases:[
+          { en:"I'll pay with Alipay.", py:'Wǒ yòng Zhīfùbǎo.', hz:'我用支付宝。',
+            pya:'我:wǒ|用:yòng|支:zhī|付:fù|宝:bǎo',
+            real:[ {hz:'扫我的码。', py:'Sǎo wǒ de mǎ.', note:'scan my code', style:'casual'},
+                   {hz:'支付宝可以吗？', py:'Zhīfùbǎo kěyǐ ma?', note:'is Alipay OK?', style:'casual'} ] },
+          { en:'Can I pay by cash?', py:'Kěyǐ xiànjīn ma?', hz:'可以现金吗？',
+            pya:'可:kě|以:yǐ|现:xiàn|金:jīn|吗:ma',
+            real:[ {hz:'现金收吗？', py:'Xiànjīn shōu ma?', note:'do you take cash?', style:'casual'},
+                   {hz:'找零给我。', py:'Zhǎolíng gěi wǒ.', note:'give me the change', style:'casual'} ] },
+          { en:'Please scan to pay.', py:'Qǐng sǎo mǎ fùkuǎn.', hz:'请扫码付款。',
+            pya:'请:qǐng|扫:sǎo|码:mǎ|付:fù|款:kuǎn',
+            real:[ {hz:'我扫你。', py:'Wǒ sǎo nǐ.', note:"I'll scan you", style:'casual'},
+                   {hz:'付好了。', py:'Fù hǎo le.', note:'paid', style:'casual'} ] },
+          { en:'How do I get a tax refund?', py:'Tuìshuì zěnme bàn?', hz:'退税怎么办？',
+            pya:'退:tuì|税:shuì|怎:zěn|么:me|办:bàn',
+            real:[ {hz:'退税单在哪盖章？', py:'Tuìshuì dān zài nǎ gàizhāng?', note:'where to stamp the form', style:'casual'},
+                   {hz:'护照和小票给我。', py:'Hùzhào hé xiǎopiào gěi wǒ.', note:'passport and receipt, please', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-pay', icon:'💳', title:'Paying at a shop', tag:['travel'],
+          hook:"You're at the counter. The clerk points at the QR code — respond.",
+          lines:[
+            {who:'them', hz:'微信还是支付宝？', py:'Wēixìn háishì Zhīfùbǎo?', en:'WeChat or Alipay?'},
+            {who:'you',  hz:'支付宝，谢谢。', py:'Zhīfùbǎo, xièxie.', en:'Alipay, thanks.'},
+            {who:'them', hz:'扫这个码。', py:'Sǎo zhège mǎ.', en:'Scan this code.'},
+            {who:'you',  hz:'付好了。', py:'Fù hǎo le.', en:'All paid.'}
+          ],
+          flip:{ prompt:"you forgot the receipt — say:",
+                 hz:'要小票，谢谢。', py:'Yào xiǎopiào, xièxie.', en:'I need a receipt, thanks.' } } },
+
+      { id:'sh-metro', icon:'🚇', title:'3 · Metro & Transfers',
+        phrases:[
+          { en:"I'd like one ticket to People's Square.", py:'Mǎi yì zhāng dào Rénmín Guǎngchǎng de piào.', hz:'买一张到人民广场的票。',
+            pya:'买:mǎi|一:yì|张:zhāng|到:dào|人:rén|民:mín|广:guǎng|场:chǎng|的:de|票:piào',
+            real:[ {hz:'到人民广场多少钱？', py:'Dào Rénmín Guǎngchǎng duōshao qián?', note:"fare to People's Square", style:'casual'},
+                   {hz:'这张卡怎么充值？', py:'Zhè zhāng kǎ zěnme chōngzhí?', note:'how to top up this card', style:'casual'} ] },
+          { en:'Where is the metro entrance?', py:'Dìtiě rùkǒu zài nǎr?', hz:'地铁入口在哪儿？',
+            pya:'地:dì|铁:tiě|入:rù|口:kǒu|在:zài|哪:nǎr',
+            real:[ {hz:'2号线往哪个方向？', py:'2 hào xiàn wǎng nǎge fāngxiàng?', note:'which direction is Line 2', style:'casual'},
+                   {hz:'换乘站在哪里？', py:'Huànchéng zhàn zài nǎlǐ?', note:'where is the transfer station', style:'casual'} ] },
+          { en:'How do I transfer to Line 10?', py:'Zěnme huànchéng shí hào xiàn?', hz:'怎么换乘10号线？',
+            pya:'怎:zěn|么:me|换:huàn|乘:chéng|10:shí|号:hào|线:xiàn',
+            real:[ {hz:'在哪站换乘？', py:'Zài nǎ zhàn huànchéng?', note:'at which station to transfer', style:'casual'},
+                   {hz:'还有几站？', py:'Hái yǒu jǐ zhàn?', note:'how many more stops', style:'casual'} ] },
+          { en:'Can I use my bank card here?', py:'Zhèlǐ néng yòng yínháng kǎ ma?', hz:'这里能用银行卡吗？',
+            pya:'这:zhè|里:lǐ|能:néng|用:yòng|银:yín|行:háng|卡:kǎ|吗:ma',
+            real:[ {hz:'刷卡进站吗？', py:'Shuā kǎ jìn zhàn ma?', note:'tap the card to enter?', style:'casual'},
+                   {hz:'在哪买票？', py:'Zài nǎ mǎi piào?', note:'where to buy tickets', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-metro', icon:'🚇', title:'Buying a metro ticket', tag:['travel'],
+          hook:"You're at a metro station. A staff member helps you buy a ticket.",
+          lines:[
+            {who:'them', hz:'去外滩坐几号线？', py:'Qù Wàitān zuò jǐ hào xiàn?', en:'Which line goes to the Bund?'},
+            {who:'you',  hz:'我不知道，请帮我买票。', py:'Wǒ bù zhīdào, qǐng bāng wǒ mǎi piào.', en:"I don't know — please help me buy a ticket."},
+            {who:'them', hz:'坐2号线，南京东路换10号线。', py:'Zuò 2 hào xiàn, Nánjīng Dōnglù huàn 10 hào xiàn.', en:'Line 2, transfer to Line 10 at East Nanjing Road.'},
+            {who:'you',  hz:'好的，谢谢！', py:'Hǎo de, xièxie!', en:'Got it, thanks!'}
+          ],
+          flip:{ prompt:"you want to know the fare — ask:",
+                 hz:'到南京东路多少钱？', py:'Dào Nánjīng Dōnglù duōshao qián?', en:'How much to East Nanjing Road?' } } },
+
+      { id:'sh-taxi', icon:'🚕', title:'4 · Taxi & Ride-hail',
+        phrases:[
+          { en:'Please go to the Bund.', py:'Qǐng qù Wàitān.', hz:'请去外滩。',
+            pya:'请:qǐng|去:qù|外:wài|滩:tān',
+            real:[ {hz:"师傅，走延安高架。", py:"Shīfu, zǒu Yán'ān gāojià.", note:"take the Yan'an elevated road", style:'casual'},
+                   {hz:'大概多久到？', py:'Dàgài duōjiǔ dào?', note:'how long will it take', style:'casual'} ] },
+          { en:'Please stop here.', py:'Qǐng zài zhèlǐ tíng.', hz:'请在这里停。',
+            pya:'请:qǐng|在:zài|这:zhè|里:lǐ|停:tíng',
+            real:[ {hz:'就在前面停下。', py:'Jiù zài qiánmiàn tíng xià.', note:'stop just ahead', style:'casual'},
+                   {hz:'多少钱？', py:'Duōshao qián?', note:'how much', style:'casual'} ] },
+          { en:'Please use the meter.', py:'Qǐng dǎbiǎo.', hz:'请打表。',
+            pya:'请:qǐng|打:dǎ|表:biǎo',
+            real:[ {hz:'能给我发票吗？', py:'Néng gěi wǒ fāpiào ma?', note:'can I have a receipt', style:'casual'},
+                   {hz:'请开慢一点。', py:'Qǐng kāi màn yìdiǎn.', note:'please drive slower', style:'casual'} ] },
+          { en:'Where do I board my ride-hail car?', py:'Wǎngyuēchē zài nǎr shàngchē?', hz:'网约车在哪儿上车？',
+            pya:'网:wǎng|约:yuē|车:chē|在:zài|哪:nǎr|上:shàng|车:chē',
+            real:[ {hz:'车牌尾号多少？', py:'Chēpái wěihào duōshao?', note:"what's the plate tail number", style:'casual'},
+                   {hz:'我在P2停车场等你。', py:'Wǒ zài P2 tíngchēchǎng děng nǐ.', note:"I'm waiting at Parking Lot P2", style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-taxi', icon:'🚕', title:'Taking a taxi', tag:['travel'],
+          hook:"You get in a taxi at the airport rank. Tell the driver where to go.",
+          lines:[
+            {who:'them', hz:'去哪儿？', py:'Qù nǎr?', en:'Where to?'},
+            {who:'you',  hz:'请去南京西路的一家酒店。', py:'Qǐng qù Nánjīng Xīlù de yì jiā jiǔdiàn.', en:'A hotel on West Nanjing Road, please.'},
+            {who:'them', hz:'好的，大概半小时。', py:'Hǎo de, dàgài bàn xiǎoshí.', en:'OK, about half an hour.'},
+            {who:'you',  hz:'师傅，前面路口停一下。', py:'Shīfu, qiánmiàn lùkǒu tíng yíxià.', en:'Driver, stop at the intersection ahead.'}
+          ],
+          flip:{ prompt:'you need a receipt — say:',
+                 hz:'请给我一张发票。', py:'Qǐng gěi wǒ yì zhāng fāpiào.', en:'Please give me a receipt.' } } },
+
+      { id:'sh-food', icon:'🥟', title:'5 · Food & Dining',
+        phrases:[
+          { en:'What do you recommend?', py:'Yǒu shénme tuījiàn de?', hz:'有什么推荐的？',
+            pya:'有:yǒu|什:shén|么:me|推:tuī|荐:jiàn|的:de',
+            real:[ {hz:'本帮菜哪个好吃？', py:'Běnbāng cài nǎge hǎochī?', note:'which Shanghainese dish is good', style:'casual'},
+                   {hz:'招牌菜是什么？', py:'Zhāopái cài shì shénme?', note:"what's the signature dish", style:'casual'} ] },
+          { en:'Not spicy, please.', py:'Qǐng bú yào là.', hz:'请不要辣。',
+            pya:'请:qǐng|不:bú|要:yào|辣:là',
+            real:[ {hz:'我过敏，不要花生。', py:'Wǒ guòmǐn, bú yào huāshēng.', note:"I'm allergic, no peanuts", style:'casual'},
+                   {hz:'少油少盐。', py:'Shǎo yóu shǎo yán.', note:'less oil and salt', style:'casual'} ] },
+          { en:'One more, please.', py:'Zài lái yí fèn.', hz:'再来一份。',
+            pya:'再:zài|来:lái|一:yí|份:fèn',
+            real:[ {hz:'这个打包。', py:'Zhège dǎbāo.', note:'this one to go', style:'casual'},
+                   {hz:'结账，谢谢。', py:'Jiézhàng, xièxie.', note:'the check, please', style:'casual'} ] },
+          { en:'One basket of xiaolongbao.', py:'Lái yì lóng xiǎolóngbāo.', hz:'来一笼小笼包。',
+            pya:'来:lái|一:yì|笼:lóng|小:xiǎo|笼:lóng|包:bāo',
+            real:[ {hz:'再要两杯豆浆。', py:'Zài yào liǎng bēi dòujiāng.', note:'also two soy milks', style:'casual'},
+                   {hz:'生煎也来一份。', py:'Shēngjiān yě lái yí fèn.', note:'one pan-fried bun too', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-food', icon:'🥟', title:'At a xiaolongbao shop', tag:['travel'],
+          hook:"You're at a famous soup-dumpling shop. The waiter takes your order.",
+          lines:[
+            {who:'them', hz:'吃点什么？', py:'Chī diǎn shénme?', en:'What will you have?'},
+            {who:'you',  hz:'一笼小笼包，一碗馄饨。', py:'Yì lóng xiǎolóngbāo, yì wǎn húntun.', en:'One xiaolongbao, one wonton soup.'},
+            {who:'them', hz:'在这儿吃还是带走？', py:'Zài zhèr chī háishì dài zǒu?', en:'Eat in or take away?'},
+            {who:'you',  hz:'在这儿吃。谢谢。', py:'Zài zhèr chī. Xièxie.', en:'Eat in, thanks.'}
+          ],
+          flip:{ prompt:"it's too hot — ask for water:",
+                 hz:'请给我一杯水。', py:'Qǐng gěi wǒ yì bēi shuǐ.', en:'Please give me a glass of water.' } } },
+
+      { id:'sh-ticket', icon:'🎫', title:'6 · Attractions & Tickets',
+        phrases:[
+          { en:'How much is the ticket?', py:'Ménpiào duōshao qián?', hz:'门票多少钱？',
+            pya:'门:mén|票:piào|多:duō|少:shǎo|钱:qián',
+            real:[ {hz:'学生有折扣吗？', py:'Xuéshēng yǒu zhékòu ma?', note:'student discount?', style:'casual'},
+                   {hz:'小孩免费吗？', py:'Xiǎohái miǎnfèi ma?', note:'free for kids?', style:'casual'} ] },
+          { en:'Do I need to book online?', py:'Xūyào wǎngshàng yùyuē ma?', hz:'需要网上预约吗？',
+            pya:'需:xū|要:yào|网:wǎng|上:shàng|预:yù|约:yuē|吗:ma',
+            real:[ {hz:'今天还有票吗？', py:'Jīntiān hái yǒu piào ma?', note:'any tickets left today', style:'casual'},
+                   {hz:'用护照可以买吗？', py:'Yòng hùzhào kěyǐ mǎi ma?', note:'can I buy with a passport', style:'casual'} ] },
+          { en:'What time does it close?', py:'Jǐ diǎn guānmén?', hz:'几点关门？',
+            pya:'几:jǐ|点:diǎn|关:guān|门:mén',
+            real:[ {hz:'最后入场几点？', py:'Zuìhòu rùchǎng jǐ diǎn?', note:'last entry time', style:'casual'},
+                   {hz:'周一开吗？', py:'Zhōuyī kāi ma?', note:'open on Monday?', style:'casual'} ] },
+          { en:'Where is the entrance?', py:'Rùkǒu zài nǎr?', hz:'入口在哪儿？',
+            pya:'入:rù|口:kǒu|在:zài|哪:nǎr',
+            real:[ {hz:'排队在哪边？', py:'Páiduì zài nǎ biān?', note:'which side is the queue', style:'casual'},
+                   {hz:'能刷护照进去吗？', py:'Néng shuā hùzhào jìnqù ma?', note:'scan passport to enter?', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-ticket', icon:'🎫', title:'Buying attraction tickets', tag:['travel'],
+          hook:"You're at the Yu Garden ticket window. Buy two tickets.",
+          lines:[
+            {who:'them', hz:'门票40，要几张？', py:'Ménpiào sìshí, yào jǐ zhāng?', en:'Tickets are 40 yuan — how many?'},
+            {who:'you',  hz:'两张，谢谢。', py:'Liǎng zhāng, xièxie.', en:'Two, thanks.'},
+            {who:'them', hz:'扫码还是现金？', py:'Sǎo mǎ háishì xiànjīn?', en:'Scan a code or cash?'},
+            {who:'you',  hz:'我扫你的码。', py:'Wǒ sǎo nǐ de mǎ.', en:"I'll scan your code."}
+          ],
+          flip:{ prompt:'you also want the audio guide — ask:',
+                 hz:'有讲解器吗？', py:'Yǒu jiǎngjiě qì ma?', en:'Do you have audio guides?' } } },
+
+      { id:'sh-hotel', icon:'🏨', title:'7 · Hotel Check-in',
+        phrases:[
+          { en:'I have a reservation.', py:'Wǒ yǒu yùdìng.', hz:'我有预订。',
+            pya:'我:wǒ|有:yǒu|预:yù|订:dìng',
+            real:[ {hz:'预订的名字是……', py:'Yùdìng de míngzi shì…', note:'the reservation is under…', style:'casual'},
+                   {hz:'护照在这儿。', py:'Hùzhào zài zhèr.', note:"here's my passport", style:'casual'} ] },
+          { en:'What time is check-out?', py:'Jǐ diǎn tuìfáng?', hz:'几点退房？',
+            pya:'几:jǐ|点:diǎn|退:tuì|房:fáng',
+            real:[ {hz:'能延迟退房吗？', py:'Néng yánchí tuìfáng ma?', note:'late check-out?', style:'casual'},
+                   {hz:'行李能寄存吗？', py:'Xíngli néng jìcún ma?', note:'can I store my luggage', style:'casual'} ] },
+          { en:"What's the Wi-Fi password?", py:'Qǐngwèn Wi-Fi mìmǎ.', hz:'请问Wi-Fi密码。',
+            pya:'请:qǐng|问:wèn|密:mì|码:mǎ',
+            real:[ {hz:"房间Wi-Fi连不上。", py:"Fángjiān Wi-Fi lián bú shàng.", note:"can't connect in the room", style:'casual'},
+                   {hz:'空调怎么开？', py:'Kōngtiáo zěnme kāi?', note:'how does the AC work', style:'casual'} ] },
+          { en:'Can I pay with a foreign card?', py:'Néng yòng wàiguó kǎ ma?', hz:'能用外国卡吗？',
+            pya:'能:néng|用:yòng|外:wài|国:guó|卡:kǎ|吗:ma',
+            real:[ {hz:'押金多少？', py:'Yājīn duōshao?', note:'how much is the deposit', style:'casual'},
+                   {hz:'要刷卡押金吗？', py:'Yào shuā kǎ yājīn ma?', note:'a card deposit?', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-hotel', icon:'🏨', title:'Checking in', tag:['travel'],
+          hook:"You arrive at your hotel. The front desk greets you.",
+          lines:[
+            {who:'them', hz:'您好，有预订吗？', py:'Nín hǎo, yǒu yùdìng ma?', en:'Hello, do you have a reservation?'},
+            {who:'you',  hz:'有，我叫Smith，住两晚。', py:'Yǒu, wǒ jiào Smith, zhù liǎng wǎn.', en:'Yes, Smith, two nights.'},
+            {who:'them', hz:'请出示护照。押金500。', py:'Qǐng chūshì hùzhào. Yājīn wǔbǎi.', en:'Passport, please. The deposit is 500.'},
+            {who:'you',  hz:'可以扫支付宝吗？', py:'Kěyǐ sǎo Zhīfùbǎo ma?', en:'Can I pay via Alipay?'}
+          ],
+          flip:{ prompt:'breakfast is included — confirm where:',
+                 hz:'早餐在几楼？', py:'Zǎocān zài jǐ lóu?', en:'Which floor is breakfast on?' } } },
+
+      { id:'sh-help', icon:'🆘', title:'8 · Directions & Emergencies',
+        phrases:[
+          { en:'Excuse me, where is the metro?', py:'Qǐngwèn, dìtiě zài nǎr?', hz:'请问，地铁在哪儿？',
+            pya:'请:qǐng|问:wèn|地:dì|铁:tiě|在:zài|哪:nǎr',
+            real:[ {hz:'离这儿远吗？', py:'Lí zhèr yuǎn ma?', note:'is it far from here', style:'casual'},
+                   {hz:'往哪个方向走？', py:'Wǎng nǎge fāngxiàng zǒu?', note:'which direction to walk', style:'casual'} ] },
+          { en:"I'm lost. Can you help me?", py:'Wǒ mílù le, néng bāngbang wǒ ma?', hz:'我迷路了，能帮帮我吗？',
+            pya:'我:wǒ|迷:mí|路:lù|了:le|能:néng|帮:bāng|帮:bang|我:wǒ|吗:ma',
+            real:[ {hz:'这个地址怎么走？', py:'Zhège dìzhǐ zěnme zǒu?', note:'how to get to this address', style:'casual'},
+                   {hz:'请写下来。', py:'Qǐng xiě xiàlái.', note:'please write it down', style:'casual'} ] },
+          { en:'Please call the police for me.', py:'Qǐng bāng wǒ bàojǐng.', hz:'请帮我报警。',
+            pya:'请:qǐng|帮:bāng|我:wǒ|报:bào|警:jǐng',
+            real:[ {hz:'我的护照丢了。', py:'Wǒ de hùzhào diū le.', note:'my passport is lost', style:'casual'},
+                   {hz:'我要去医院。', py:'Wǒ yào qù yīyuàn.', note:'I need a hospital', style:'casual'} ] },
+          { en:'Could you take a photo for us?', py:'Néng bāng wǒmen pāi zhāng zhào ma?', hz:'能帮我们拍张照吗？',
+            pya:'能:néng|帮:bāng|我:wǒ|们:men|拍:pāi|张:zhāng|照:zhào|吗:ma',
+            real:[ {hz:'就站在这儿。', py:'Jiù zhàn zài zhèr.', note:'just stand here', style:'casual'},
+                   {hz:'再来一张，谢谢。', py:'Zài lái yì zhāng, xièxie.', note:'one more, thanks', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-help', icon:'🆘', title:'Asking the way', tag:['travel'],
+          hook:"You're a little lost near the Bund. Ask a local the way.",
+          lines:[
+            {who:'you',  hz:'请问，地铁南京东路站怎么走？', py:'Qǐngwèn, dìtiě Nánjīng Dōnglù zhàn zěnme zǒu?', en:'Excuse me, how do I get to East Nanjing Road station?'},
+            {who:'them', hz:'一直往前走，第二个路口右转。', py:'Yìzhí wǎng qián zǒu, dì èr ge lùkǒu yòu zhuǎn.', en:'Go straight, turn right at the second intersection.'},
+            {who:'you',  hz:'远吗？走几分钟能到？', py:'Yuǎn ma? Zǒu jǐ fēnzhōng néng dào?', en:'Is it far? Can I walk there in a few minutes?'},
+            {who:'them', hz:'不远，五分钟就到。', py:'Bù yuǎn, wǔ fēnzhōng jiù dào.', en:'Not far — five minutes.'}
+          ],
+          flip:{ prompt:'they helped a lot — thank them warmly:',
+                 hz:'谢谢你，帮了大忙！', py:'Xièxie nǐ, bāng le dà máng!', en:'Thank you, big help!' } } },
+
+      { id:'sh-depart', icon:'🛫', title:'9 · Tax Refund & Departure',
+        phrases:[
+          { en:'Where is the tax refund counter?', py:'Tuìshuì guìtái zài nǎr?', hz:'退税柜台在哪儿？',
+            pya:'退:tuì|税:shuì|柜:guì|台:tái|在:zài|哪:nǎr',
+            real:[ {hz:'退税单在这儿盖章。', py:'Tuìshuì dān zài zhèr gàizhāng.', note:'stamp the refund form here', style:'casual'},
+                   {hz:'退现金还是退卡？', py:'Tuì xiànjīn háishì tuì kǎ?', note:'cash refund or card refund', style:'casual'} ] },
+          { en:'How do I get to the airport?', py:'Zěnme qù jīchǎng?', hz:'怎么去机场？',
+            pya:'怎:zěn|么:me|去:qù|机:jī|场:chǎng',
+            real:[ {hz:'磁浮列车在哪儿坐？', py:'Cífú lièchē zài nǎr zuò?', note:'where do I board the maglev', style:'casual'},
+                   {hz:'几点出发合适？', py:'Jǐ diǎn chūfā héshì?', note:'what time should I leave', style:'casual'} ] },
+          { en:"Where is check-in for China Eastern?", py:'Dōngháng zhíjī zài nǎr?', hz:'东航值机在哪儿？',
+            pya:'东:dōng|航:háng|值:zhí|机:jī|在:zài|哪:nǎr',
+            real:[ {hz:'哪个航站楼？', py:'Nǎge hángzhànlóu?', note:'which terminal', style:'casual'},
+                   {hz:'国际出发怎么走？', py:'Guójì chūfā zěnme zǒu?', note:'way to international departures', style:'casual'} ] },
+          { en:'Can I take this on the plane?', py:'Zhège néng dài shàng fēijī ma?', hz:'这个能带上飞机吗？',
+            pya:'这:zhè|个:ge|能:néng|带:dài|上:shàng|飞:fēi|机:jī|吗:ma',
+            real:[ {hz:'需要托运吗？', py:'Xūyào tuōyùn ma?', note:'do I need to check it in', style:'casual'},
+                   {hz:'超重了怎么办？', py:'Chāozhòng le zěnme bàn?', note:"what if it's overweight", style:'casual'} ] }
+        ],
+        dialog:{ id:'g-sh-depart', icon:'🛫', title:'Tax refund at the airport', tag:['travel'],
+          hook:"You're leaving Shanghai from Pudong Airport. Ask about the tax refund.",
+          lines:[
+            {who:'you',  hz:'请问退税在哪里办？', py:'Qǐngwèn tuìshuì zài nǎlǐ bàn?', en:'Excuse me, where do I process the tax refund?'},
+            {who:'them', hz:'在这边，出示退税单和护照。', py:'Zài zhè biān, chūshì tuìshuì dān hé hùzhào.', en:'Over here — show the refund form and your passport.'},
+            {who:'you',  hz:'退到卡里多久到账？', py:'Tuì dào kǎ lǐ duōjiǔ dào zhàng?', en:'How long does a card refund take?'},
+            {who:'them', hz:'一般七个工作日。', py:'Yìbān qī ge gōngzuòrì.', en:'Usually seven business days.'}
+          ],
+          flip:{ prompt:'ask about security check:',
+                 hz:'安检在几号口？', py:'Ānjiǎn zài jǐ hào kǒu?', en:'Which gate is security check?' } } }
+    ]
+  }
+};
+
 /* tone gym: minimal pair "ma" — 4 tones, 4 meanings */
 var TONES = [
   { hz:'妈', py:'mā', t:1, mean:'mother', audio:'data:audio/mpeg;base64,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' },
@@ -3000,7 +3309,7 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function go(v){
   /* v0.3.35 S1：离开场景视图时停止进行中的录音，避免麦克风在后台常开 */
   if(v !== 'scene' && typeof stopRecording === 'function') stopRecording();
-  ['home','scene','tone','prog','cards','sentences','reading','scenes-read','cities','days','onboard','dialog','review','practice','explore','me','settings'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
+  ['home','scene','tone','prog','cards','sentences','reading','scenes-read','cities','cityguide','days','onboard','dialog','review','practice','explore','me','settings'].forEach(function(x){ $('v-'+x).classList.remove('on'); $('nav-'+x) && $('nav-'+x).classList.remove('on'); });
   $('v-'+v).classList.add('on');
   $('nav-'+v) && $('nav-'+v).classList.add('on');
   /* v0.3.36 功能使用统计（匿名，寄生于已有进度同步）：核心功能打开次数，
@@ -3019,6 +3328,7 @@ function go(v){
   if(v==='me') renderMe();
   if(v==='settings') renderSettings();
   if(v==='cities') renderCities();
+  if(v==='cityguide') renderCityGuide();
   if(v==='dialog') renderDialogList();
   if(v==='days') renderDays();
   if(v==='cards') renderNW();
@@ -3128,9 +3438,15 @@ function bannerHtml(){
   return '<div class="card banner-card" onclick="go(\'home\')"><img src="assets/banner/square.webp" alt="Sinoky" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>';
 }
 
+function cityOpenJs(sc, from){
+  /* v0.23.22：有攻略数据的城市（上海打头）点入进攻略中心；其余城市行为不变 */
+  return (typeof CITY_GUIDES !== 'undefined' && CITY_GUIDES[sc.id])
+    ? 'openCityGuide(\''+sc.id+'\')'
+    : 'openScene(\''+sc.id+'\',undefined,\''+from+'\')';
+}
 function cityRowHtml(sc, from){
   var d = cityDoneN(sc), tot = sc.phrases.length, fin = d >= tot, pct = tot ? d/tot : 0;
-  return '<button class="cityrow'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\',undefined,\''+from+'\')">'+
+  return '<button class="cityrow'+(fin?' done':'')+'" onclick="'+cityOpenJs(sc, from)+'">'+
     cityThumbHtml(sc)+'<span class="cm">'+
     '<span class="cn">'+escHtml(cityEn(sc))+' \u00b7 '+escHtml(sc.city)+'</span>'+
     '<span class="cz">'+escHtml(sc.desc||'')+'</span></span>'+
@@ -3149,7 +3465,7 @@ function cityBlockHtml(){
     '<div class="mapgrid">';
   hot.forEach(function(sc){
     var d = cityDoneN(sc), tot = sc.phrases.length, fin = d >= tot, pct = tot ? d/tot : 0;
-    h += '<button class="mapnode'+(fin?' done':'')+'" onclick="openScene(\''+sc.id+'\')">'+
+    h += '<button class="mapnode'+(fin?' done':'')+'" onclick="'+cityOpenJs(sc,'home')+'">'+
       '<span class="micon">'+mapThumbHtml(sc)+progRingSvg(pct)+
         (fin?'<span class="mcheck">\u2713</span>':'')+'</span>'+
       '<span class="mname">'+escHtml(cityEn(sc))+'</span>'+
@@ -3183,6 +3499,192 @@ function renderCities(){
     });
   }
   $('city-list').innerHTML = h;
+}
+
+/* ===== v0.23.22 城市攻略中心（CITY_GUIDES 渲染层）=====
+   设计决策（相对最初 targetId 方案的有意偏离）：攻略短语练习走【自包含渲染器】，
+   不复用 renderSceneList/markDone——因为 markDone 写 S.phrases + SRS 排程、
+   sendScore 全局包装钩子触发 sceneReply，复用会污染徽章 said 汇总与复习排程。
+   进度隔离红线：攻略进度只写 S.guideDone['cityId:zoneId']，不写 S.phrases。 */
+var curGuideCity = null, curGuideZone = null;
+function guideDoneArr(){
+  if(!curGuideCity || !curGuideZone) return [];
+  S.guideDone = S.guideDone || {};
+  return S.guideDone[curGuideCity+':'+curGuideZone.id] || [];
+}
+function openCityGuide(cityId){
+  curGuideCity = cityId; curGuideZone = null;
+  go('cityguide');
+}
+function renderCityGuide(){
+  var g = (typeof CITY_GUIDES !== 'undefined' && curGuideCity) ? CITY_GUIDES[curGuideCity] : null;
+  if(!g){ go('cities'); return; }
+  var t = $('cg-title'); if(t) t.textContent = '🏙️ '+g.city+' Guide · '+g.city+'攻略';
+  var cnt = $('cg-count'); if(cnt) cnt.textContent = g.zones.length+' zones';
+  var de = $('cg-desc'); if(de) de.textContent = T('Every situation you will meet in {city}. Tap a zone, reveal, listen, say it 3×.').replace('{city}', g.city);
+  var ask = $('cg-ask'); if(ask) ask.textContent = T('Ask Nono (local guide)');
+  var lm = $('cg-landmark');
+  if(lm){
+    var sc = SCENES.filter(function(s){ return s.id===curGuideCity; })[0];
+    lm.style.display = sc ? 'inline-flex' : 'none';
+    if(sc) lm.textContent = '📍 '+T('Landmark lines')+' ('+sc.phrases.length+')';
+  }
+  $('cg-zones').innerHTML = g.zones.map(cgZoneHtml).join('');
+  window.scrollTo(0,0);
+}
+function cgZoneHtml(zone){
+  var open = curGuideZone && curGuideZone.id === zone.id;
+  var done = 0;
+  if(open){ var arr = guideDoneArr(); done = arr.length; }
+  else { S.guideDone = S.guideDone || {}; done = (S.guideDone[curGuideCity+':'+zone.id]||[]).length; }
+  var h = '<div class="cg-zone'+(open?' open':'')+'">'+
+    '<button class="cg-zhead" onclick="cgToggleZone(\''+zone.id+'\')">'+
+      '<span class="zi">'+zone.icon+'</span><span class="zt">'+escHtml(zone.title)+'</span>'+
+      '<span class="zc">'+done+'/'+zone.phrases.length+'</span><span class="chev">›</span></button>';
+  if(open){
+    h += '<div class="cg-zbody">';
+    zone.phrases.forEach(function(p,i){ h += cgPhraseHtml(zone, p, i); });
+    h += cgDialogHtml(zone, zone.dialog);
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+function cgToggleZone(zoneId){
+  var g = CITY_GUIDES[curGuideCity]; if(!g) return;
+  curGuideZone = (curGuideZone && curGuideZone.id === zoneId) ? null : g.zones.filter(function(z){ return z.id===zoneId; })[0];
+  try{ if(typeof stopRecording === 'function') stopRecording(); }catch(e){}
+  renderCityGuideZones();
+}
+/* 只重渲染分区列表，避免头部滚动跳动 */
+function renderCityGuideZones(){
+  var g = CITY_GUIDES[curGuideCity]; if(!g) return;
+  $('cg-zones').innerHTML = g.zones.map(cgZoneHtml).join('');
+}
+function cgPhraseHtml(zone, p, i){
+  var done = guideDoneArr().indexOf(i) > -1;
+  return '<div class="phrase'+(done?' done':'')+'" id="gph-'+i+'">'+
+    '<div class="p-row"><div>'+
+      '<div class="p-en">'+escHtml(p.en)+'</div>'+
+      '<div class="p-zh'+(done?'':' hidden')+'" onclick="cgToggleZh('+i+')" id="gzh-'+i+'" title="Tap to reveal / cover">'+
+        '<div class="p-hz">'+p.hz+'</div><div class="p-py">'+toneColorPy(p.py)+'</div>'+sylHtml(p.pya, p.hz, p.py)+'</div>'+
+      '<div class="p-hint">'+(done?'✓ said out loud':'Tap to reveal · <b>🐢 Slower</b> if too fast · cover &amp; say it 3×')+'</div></div>'+
+      '<button class="spk" onclick="speak(\''+p.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>'+
+    '<div class="p-actions">'+
+      '<button class="btn ghost speed" data-sp="0" onclick="speedSpeak(\''+p.hz.replace(/'/g,'')+'\',this)" title="'+T('Next tap: ')+T(SPEEDS[0].tip)+'">'+SPEEDS[0].label+'</button>'+
+      '<button class="btn record" id="g-btn-'+i+'" onclick="scoreGuidePhrase('+i+')">🎤 Score</button>'+
+      '<button class="btn done-btn" style="flex:1" onclick="markGuideDone('+i+')">'+(done?T('✓ Done'):T('I said it 3×'))+'</button>'+
+    '</div>'+
+    '<div class="score-result" id="g-score-'+i+'"></div></div>';
+}
+function cgToggleZh(i){ var e = $('gzh-'+i); if(e) e.classList.toggle('hidden'); }
+function markGuideDone(i){
+  if(!curGuideZone) return;
+  S.guideDone = S.guideDone || {};
+  var k = curGuideCity+':'+curGuideZone.id;
+  var arr = S.guideDone[k] = S.guideDone[k] || [];
+  var at = arr.indexOf(i);
+  if(at === -1){ arr.push(i); toast('Nice — now say it twice more out loud'); }
+  else { arr.splice(at, 1); toast('Un-marked — say it again to count it'); }
+  saveState();
+  renderCityGuideZones();
+}
+/* 攻略区对话卡：复用 v-dialog 的 d-line/d-flip 结构与样式（不进 DIALOGS，不碰其渲染器） */
+function cgDialogHtml(zone, d){
+  if(!d) return '';
+  var h = '<div class="cg-dialog"><div class="top"><h2>'+d.icon+' '+escHtml(d.title)+'</h2><span class="badge">'+T('Conversation')+'</span></div>'+
+    '<p class="desc">'+escHtml(d.hook)+'</p>';
+  d.lines.forEach(function(l){
+    h += '<div class="d-line '+l.who+'"><span class="who '+l.who+'">'+(l.who==='them'?'THEM':'YOU')+'</span>'+
+      '<div class="body"><div class="py">'+l.py+'</div><div class="en">'+escHtml(l.en)+'</div>'+
+      '<div class="hz hidden">'+l.hz+'</div>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+      '<button class="spk" onclick="speak(\''+l.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button>'+
+      '</div></div></div>';
+  });
+  h += '<div class="d-flip"><b>🔄 Role reversal — now YOU start.</b>'+
+    '<div class="en">'+escHtml(d.flip.prompt)+'</div>'+
+    '<div class="py">'+d.flip.py+'</div>'+
+    '<div class="hz hidden">'+d.flip.hz+'</div>'+
+    '<button class="spk" onclick="speak(\''+d.flip.hz.replace(/'/g,'')+'\',this)"><svg class="play-icon-sm" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-2px;fill:currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><polygon points="9.5,7.5 16.5,12 9.5,16.5"/></svg></button></div>';
+  h += '<div class="actions"><button class="btn ghost" onclick="cgDialogHz(this)">👁 汉字</button></div></div>';
+  return h;
+}
+function cgDialogHz(btn){
+  var box = btn.closest('.cg-dialog'); if(!box) return;
+  box.querySelectorAll('.hz').forEach(function(e){ e.classList.toggle('hidden'); });
+}
+/* ---- 攻略区评分：录音链复用 asrText/blobToWav/renderScore/quota('score')，
+   但不写 S.phrases/S.rv、不触发 sceneReply 钩子（那是场景专属）。---- */
+async function scoreGuidePhrase(i){
+  if(!curGuideZone) return;
+  var p = curGuideZone.phrases[i];
+  var btn = $('g-btn-'+i), box = $('g-score-'+i);
+  if(!btn || !box) return;
+  if(window.SK && SK.quotaBlocked('sentence')){ SK.showLimitWall('sentence'); return; }
+  if(btn.classList.contains('listening')){ stopRecording(); return; }
+  if(scRec && scRec.state !== 'inactive'){ stopRecording(); }
+  var stream = await openMicOrHelp(box);
+  if(!stream) return;
+  var chunks = [];
+  var rec = new MediaRecorder(stream);
+  scRec = rec;
+  rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+  rec.onerror = function(e){
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
+    box.style.display='block';
+    box.innerHTML='<div class="score-err">'+T('Recording error: {n}. Try again in a different browser.').replace('{n}', ((e && e.error && e.error.name) || 'unknown'))+'</div>';
+  };
+  rec.onstop = async function(){
+    if(scRec === rec) scRec = null;
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
+    stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} });
+    box.style.display='block';
+    box.innerHTML='<div class="score-load">Recognising…</div>';
+    var blob = new Blob(chunks);
+    if(blob.size < 500){
+      box.innerHTML='<div class="score-err">No sound captured. Hold the phone closer to your mouth and try again.</div>';
+      return;
+    }
+    var result = null;
+    try{
+      var wav = await blobToWav(blob);
+      result = await asrText(wav, p.hz);
+    }catch(e){
+      result = await asrText(await blob.arrayBuffer(), p.hz);
+    }
+    if(!result || !result.ok || !result.text){
+      var reason = (result && result.err) || 'whisper returned no text';
+      box.innerHTML='<div class="score-err">'+T('Did not catch that. ({r})').replace('{r}',reason)+'<br><small>'+T('Tap Score and hold the phone closer to your mouth, then tap Stop when you finish.')+'</small></div>';
+      return;
+    }
+    await sendGuideScore(p, result.text, i);
+  };
+  btn.classList.add('listening');
+  btn.textContent='⏹ Stop';
+  box.style.display='block';
+  box.innerHTML='<div class="score-load">Listening… tap stop when you finish.</div>';
+  try{ rec.start(); }
+  catch(e){
+    btn.classList.remove('listening'); btn.textContent='🎤 Score';
+    box.innerHTML='<div class="score-err">'+T('Could not start recording: ') + escHtml(e && e.message || e) + '</div>';
+  }
+}
+async function sendGuideScore(p, transcript, i){
+  var box = $('g-score-'+i);
+  box.style.display='block';
+  box.innerHTML='<div class="score-load">Scoring…</div>';
+  try{
+    var res = await fetch(API_BASE+'api/score', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({target:p.hz, user:transcript})
+    });
+    var data = await res.json();
+    if(data.error){ box.innerHTML='<div class="score-err">'+esc(data.error)+'</div>'; return; }
+    box.innerHTML = renderScore(data);
+    if(window.SK){ SK.quotaInc('score'); box.insertAdjacentHTML('beforeend', '<div style="margin-top:10px">'+SK.quotaBadge('score')+'</div>'); }
+  }catch(err){
+    box.innerHTML='<div class="score-err">'+T('Scoring failed — ')+humanizeApiErr(err, 0)+'</div>';
+  }
 }
 
 /* ---------- v0.3.46 Daily 聚合：14 天路径的可浏览目录 ----------
@@ -4126,7 +4628,10 @@ function nonoShow(msg, opt) {
   var fab = document.getElementById('nono-fab');
   if (fab) { fab.classList.add('bump'); setTimeout(function () { fab.classList.remove('bump'); }, 1200); }
 }
-function nonoMin() { var p = document.getElementById('nono-panel'); if (p) p.style.display = 'none'; }
+function nonoMin() {
+  nonoDrawerOff();   /* v0.23.22：关面板前先清抽屉态（还原 Feedback 显隐），避免残留抽屉类 */
+  var p = document.getElementById('nono-panel'); if (p) p.style.display = 'none';
+}
 function nonoClose() {
   nonoMin();
   NONO.closed = true;
@@ -4383,29 +4888,42 @@ function nonoModeMenu(){
   nonoPanelFlex(false);
   var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
 }
-function nonoStartChat(){ NONO.mode = 'chat'; nonoChatOpen(); }
+function nonoStartChat(){ NONO.mode = 'chat'; NONO.drawer = true; nonoChatOpen(); }
+function nonoStartGuide(){
+  /* v0.23.22：城市攻略问答（mode:'guide'）。复用 nonoChat 面板与 chat 配额桶（零新增 KV 写），
+     历史隔离进 S.guideChat，城市上下文以【城市：X】前缀注入。 */
+  if(!curGuideCity) return;
+  NONO.mode = 'guide'; NONO.drawer = true;
+  nonoChatOpen();
+}
+function nonoChatHist(){ return (NONO.mode === 'guide') ? (S.guideChat || []) : (S.nonoChat || []); }
 function nonoChatOpen(){
   nonoModeChips();
+  if(NONO.drawer) nonoDrawerOn();   /* v0.23.22：chat/guide 入口 → 贴底大抽屉；Practise/Tour 保持小窗 */
   var pm = document.getElementById('nono-practice'); if(pm) pm.style.display='block';
   var pc = document.getElementById('nono-chat'); if(pc){ pc.style.display='flex'; pc.innerHTML='<div class="nc-scroll" id="nc-list"></div>'; }
   var msg = document.getElementById('nono-msg');
   if(msg) msg.style.display='none';
   var st = document.getElementById('nono-state'); if(st) st.style.display='none';
-  (S.nonoChat||[]).forEach(function(h){ nonoChatBubble(h.r==='user'?'you':'nono', h.t); });
+  nonoChatHist().forEach(function(h){ nonoChatBubble(h.r==='user'?'you':'nono', h.t); });
   nonoChatControls();
   nonoChatScrollToBottom();
   nonoState('idle');
   var panel = document.getElementById('nono-panel'); if(panel) panel.style.display='block';
   nonoPanelFlex(true);
-  if(!S.nonoChat || !S.nonoChat.length){
-    var opening = '嗨，我是诺诺！我们随便聊点中文吧？你想聊什么？';
+  if(!nonoChatHist() || !nonoChatHist().length){
+    var isGuide = (NONO.mode === 'guide');
+    var gc = (typeof CITY_GUIDES !== 'undefined' && curGuideCity && CITY_GUIDES[curGuideCity]) ? CITY_GUIDES[curGuideCity].city : '';
+    var opening = isGuide
+      ? ('嗨！我是诺诺，' + (gc ? (gc + ' ') : '') + '本地通。地铁、支付、美食、求助——问我就行。')
+      : '嗨，我是诺诺！我们随便聊点中文吧？你想聊什么？';
     nonoChatBubble('nono', opening);
-    S.nonoChat = S.nonoChat || [];
-    S.nonoChat.push({ r:'assistant', t: opening });
+    if(isGuide){ S.guideChat = S.guideChat || []; S.guideChat.push({ r:'assistant', t: opening }); }
+    else { S.nonoChat = S.nonoChat || []; S.nonoChat.push({ r:'assistant', t: opening }); }
     if(typeof saveState==='function') saveState();
     nonoState('speaking');
     if(typeof speak==='function') speak(opening);
-    setTimeout(function(){ if(NONO.mode==='chat') nonoState('idle'); }, 2600);
+    setTimeout(function(){ if(NONO.mode==='chat' || NONO.mode==='guide') nonoState('idle'); }, 2600);
   }
 }
 function nonoChatControls(){
@@ -4496,23 +5014,37 @@ async function nonoChatReply(userText){
   nonoChatBubble('you', userText);
   nonoState('thinking');
   try{
-    var hist = (S.nonoChat||[]).slice(-12);
-    var ctx = learnerCtx();
-    var chatText = ctx ? ('【背景：' + ctx + '】' + userText) : userText;
+    var isGuide = (NONO.mode === 'guide');
+    var hist = nonoChatHist().slice(-12);
+    var chatText;
+    if(isGuide){
+      var gc = (typeof CITY_GUIDES !== 'undefined' && curGuideCity && CITY_GUIDES[curGuideCity]) ? CITY_GUIDES[curGuideCity].city : '上海';
+      chatText = '【城市：' + gc + '】' + userText;
+    } else {
+      var ctx = learnerCtx();
+      chatText = ctx ? ('【背景：' + ctx + '】' + userText) : userText;
+    }
     var resp = await fetch(API_BASE+'api/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ uid: UID, hist: hist, text: chatText })
+      body: JSON.stringify({ uid: UID, hist: hist, text: chatText, mode: NONO.mode || 'chat' })
     });
     var d = await resp.json().catch(function(){ return {}; });
     var reply = (resp.ok && d.reply) ? d.reply : '诺诺有点累了，待会再聊 😴';
-    S.nonoChat = S.nonoChat || [];
-    S.nonoChat.push({ r:'user', t: userText });
-    S.nonoChat.push({ r:'assistant', t: reply });
+    if(isGuide){
+      S.guideChat = S.guideChat || [];
+      S.guideChat.push({ r:'user', t: userText });
+      S.guideChat.push({ r:'assistant', t: reply });
+      if(S.guideChat.length > 40) S.guideChat = S.guideChat.slice(-40);
+    } else {
+      S.nonoChat = S.nonoChat || [];
+      S.nonoChat.push({ r:'user', t: userText });
+      S.nonoChat.push({ r:'assistant', t: reply });
+      if(S.nonoChat.length > 40) S.nonoChat = S.nonoChat.slice(-40);
+    }
     if(window.SK) SK.quotaInc('chat');
-    if(S.nonoChat.length > 40) S.nonoChat = S.nonoChat.slice(-40);
-    /* 诺诺场景钩子：累计聊满 5 轮 -> 「会聊天了」彩蛋（仅一次） */
+    /* 诺诺场景钩子：自由聊天累计满 5 轮 -> 「会聊天了」彩蛋（仅一次；guide 问答不计） */
     try{
-      if(S.nonoChat.length >= 10 && !NONO.chat5){
+      if(!isGuide && S.nonoChat.length >= 10 && !NONO.chat5){
         NONO.chat5 = true;
         nonoShow(T('You just had a real conversation in Chinese — 会聊天了！ Keep it up any time.'),
           { pose:'cheer', priority:'result', actions:[{ t:'Thanks Nono', fn:'nonoMin()' }] });
@@ -4522,7 +5054,7 @@ async function nonoChatReply(userText){
     nonoChatBubble('nono', reply);
     nonoState('speaking');
     if(typeof speak==='function') speak(reply);
-    setTimeout(function(){ if(NONO.mode==='chat') nonoState('idle'); }, 2600);
+    setTimeout(function(){ if(NONO.mode==='chat' || NONO.mode==='guide') nonoState('idle'); }, 2600);
   }catch(e){
     nonoState('sorry');
     nonoChatBubble('nono', '诺诺有点累了，待会再聊 😴');
@@ -4532,10 +5064,66 @@ async function nonoChatReply(userText){
 function nonoPanelFlex(on){
   var p = document.getElementById('nono-panel');
   if(!p) return;
-  /* 行内 display:block 会覆盖类里的 display:flex，必须同步改行内样式 */
-  if(on){ p.classList.add('npanel-flex'); p.style.display='flex'; }
+  /* 行内 display 会覆盖类里的 display，必须同步改行内样式；抽屉态恒 block（.npanel-drawer 是 fixed 定位） */
+  if(on){ p.classList.add('npanel-flex'); p.style.display = p.classList.contains('npanel-drawer') ? 'block' : 'flex'; }
   else { p.classList.remove('npanel-flex'); if(p.style.display==='flex') p.style.display='block'; }
 }
+
+/* ===== v0.23.22 chat 贴底大抽屉：开/收/最小化清理 + 键盘补偿 + Feedback 让位 ===== */
+function nonoDrawerOn(){
+  var p = document.getElementById('nono-panel'); if(!p) return;
+  p.classList.add('npanel-drawer');
+  nonoPanelFlex(true);
+  nonoHideFeedback(true);
+}
+function nonoDrawerOff(){
+  /* 剥抽屉类并复位（供收起/最小化/关闭/切到 Practise-Tour 时调用）；面板是否继续显示由调用方决定 */
+  var p = document.getElementById('nono-panel'); if(!p) return;
+  if(!p.classList.contains('npanel-drawer')) return;
+  p.classList.remove('npanel-drawer');
+  p.style.bottom = ''; p.style.height = '';
+  document.documentElement.style.setProperty('--nono-kb', '0px');
+  nonoHideFeedback(false);
+}
+function nonoDrawerCollapse(){
+  /* 「收起」：退出大抽屉回到小窗聊天，面板仍开、对话历史不丢（与 – 最小化区分） */
+  nonoDrawerOff();
+  nonoPanelFlex(true);
+}
+function nonoHideFeedback(hide){
+  /* 抽屉打开期间临时隐藏 Feedback 按钮（含用户拖拽过、localStorage 存了 sinoky-fb-pos 的场景），
+     退出时原样还原——只动 display，不动 left/top，兼容注入层既有逻辑 */
+  var fb = document.getElementById('fb-open'); if(!fb) return;
+  if(hide){
+    if(!fb.dataset) fb.dataset = {};
+    if(fb.dataset._vis === undefined) fb.dataset._vis = fb.style.display || '';
+    fb.style.display = 'none';
+  } else {
+    var v = (fb.dataset && fb.dataset._vis !== undefined) ? fb.dataset._vis : '';
+    fb.style.display = v;
+    if(fb.dataset && fb.dataset._vis !== undefined) delete fb.dataset._vis;
+  }
+}
+function nonoKbWatch(){
+  /* 键盘弹起补偿：kb = innerHeight - visualViewport.height - offsetTop（iOS 键盘会把页面上推）。
+     抽屉态下：bottom 抬到键盘上沿、高度收缩为可视视口高，保证输入框与最新气泡始终可见。
+     无 visualViewport 的旧内核 → 不补偿，回落原 fixed 定位，不崩。 */
+  var vv = window.visualViewport; if(!vv) return;
+  function apply(){
+    var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty('--nono-kb', kb + 'px');
+    var p = document.getElementById('nono-panel');
+    if(p && p.classList.contains('npanel-drawer')){
+      if(kb > 0){ p.style.bottom = kb + 'px'; p.style.height = (vv.height - 6) + 'px'; }
+      else { p.style.bottom = ''; p.style.height = ''; }
+      nonoChatScrollToBottom();
+    }
+  }
+  vv.addEventListener('resize', apply);
+  vv.addEventListener('scroll', apply);
+  apply();
+}
+try{ nonoKbWatch(); }catch(e){}
 
 /* 评分：asrText → api/score → 三维反馈 + 鼓励点评 */
 async function nonoGrade(wav){
@@ -4626,6 +5214,7 @@ function bar(label, v){
 /* 面板内开始一次跟读练习 */
 function nonoStartPractice(){
   NONO.mode = 'practice';
+  nonoDrawerOff();   /* v0.23.22：Practise 是小窗形态，从 chat 抽屉切过来必须先收抽屉 */
   nonoModeChips();
   nonoPanelFlex(false);
   var _msg = document.getElementById('nono-msg'); if(_msg) _msg.style.display='block';
@@ -5157,31 +5746,17 @@ async function asrText(buf, target){
     return { ok:false, status:0, err:humanizeApiErr(e, 0) };
   }
 }
-async function scorePhrase(i){
-  var p = curScene.phrases[i];
-  var btn = $('sc-btn-'+i), box = $('score-'+i);
-  if(!btn || !box) return;
-  if(window.SK && SK.quotaBlocked('sentence')){ SK.showLimitWall('sentence'); return; }
-  /* 正在录音 → 停止并把音频送去识别 */
-  if(btn.classList.contains('listening')){
-    stopRecording();
-    return;
-  }
-  /* v0.3.35 S1：别的句子还在录 → 先收掉它（它仍会走完自己的识别/评分），
-     再开始新的。避免旧按钮永久卡 Stop + 麦克风泄漏。 */
-  if(scRec && scRec.state !== 'inactive'){ stopRecording(); }
+/* v0.23.22：麦克风权限/兼容性处理抽成公共助手（场景评分与城市攻略评分共用）。
+   返回 stream 或 null（box 内已写好具体分浏览器的修复指引——麦克风被拒是 Score 头号杀手）。 */
+async function openMicOrHelp(box){
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined'){
     box.style.display='block';
     box.innerHTML='<div class="score-err">Recording is not supported in this browser. Use Chrome or Edge to practise with scoring.</div>';
-    return;
+    return null;
   }
-  var stream;
   try{
-    stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    return await navigator.mediaDevices.getUserMedia({ audio:true });
   }catch(e){
-    /* v0.3.8：麦克风被拒是 Score 功能的头号杀手。老外点了"拒绝"之后浏览器
-       再也不弹权限框，且不知道怎么恢复 —— 必须给分浏览器的具体步骤，
-       否则核心功能直接废掉、用户只会默默走掉。 */
     box.style.display='block';
     if(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')){
       var ua = navigator.userAgent || '';
@@ -5201,8 +5776,24 @@ async function scorePhrase(i){
       box.innerHTML = '<div class="score-err">'+T('Could not open the microphone: ') +
         (e && e.message || e) + '</div>';
     }
+    return null;
+  }
+}
+async function scorePhrase(i){
+  var p = curScene.phrases[i];
+  var btn = $('sc-btn-'+i), box = $('score-'+i);
+  if(!btn || !box) return;
+  if(window.SK && SK.quotaBlocked('sentence')){ SK.showLimitWall('sentence'); return; }
+  /* 正在录音 → 停止并把音频送去识别 */
+  if(btn.classList.contains('listening')){
+    stopRecording();
     return;
   }
+  /* v0.3.35 S1：别的句子还在录 → 先收掉它（它仍会走完自己的识别/评分），
+     再开始新的。避免旧按钮永久卡 Stop + 麦克风泄漏。 */
+  if(scRec && scRec.state !== 'inactive'){ stopRecording(); }
+  var stream = await openMicOrHelp(box);
+  if(!stream) return;
   var chunks = [];                 /* v0.3.35 S1：本次录音专属桶，不再共用全局 scChunks */
   var rec = new MediaRecorder(stream);
   scRec = rec; scRecIdx = i;

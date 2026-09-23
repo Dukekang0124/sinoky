@@ -699,5 +699,11 @@
   "Read it out": "อ่านออกเสียง",
   "Nono is checking…": "โนโนกำลังตรวจ…",
   "Coach offline — try again in a moment.": "โค้ชออฟไลน์ — ลองอีกครั้งในอีกสักครู่",
-  "Write something first": "เขียนอะไรสักอย่างก่อน"
+  "Write something first": "เขียนอะไรสักอย่างก่อน",
+  "Collapse": "ย่อเข้า",
+  "Collapse to the small window": "ย่อกลับเป็นหน้าต่างเล็ก",
+  "Landmark lines": "ประโยคสถานที่สำคัญ",
+  "Conversation": "บทสนทนา",
+  "Ask Nono (local guide)": "ถามโนะโนะ (ไกด์ท้องถิ่น)",
+  "Every situation you will meet in {city}. Tap a zone, reveal, listen, say it 3×.": "ทุกสถานการณ์ที่จะเจอใน{city} แตะโซน เปิดดู ฟัง แล้วพูด 3 ครั้ง"
 }
