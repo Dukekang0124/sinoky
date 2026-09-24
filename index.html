@@ -1329,7 +1329,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.3';
+var APP_VERSION = '0.24.4';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3019,13 +3019,25 @@ function saveState(){ S._ts = Date.now(); saveStateLocal(); pushProfileSoon(); }
    旧实现每翻一张卡都 saveState() → POST /api/profile；翻 40 次/分钟即打满
    Worker 的 RATE_MAX=40/60s 限流 → 之后整整一分钟的进度同步全部 429 静默失败。 */
 var pushTimer = null;
+/* v0.24.4 P0-3：云同步写节流 + 失败退避（KV 免费额度 1000 写/天，2026-09-24 实测被打爆、
+   云同步每天必挂）。策略：
+   ① 最短间隔 PUSH_MIN_GAP：本地 saveStateLocal 永远即时落盘，云只是备份 ——
+      两次上云尝试至少隔 5 分钟（原 8s 防抖，猛练用户一小时能烧 ~450 次写）。
+   ② 失败指数退避：配额耗尽(429)/网络失败后 10min→20min→40min→60min 封顶，
+      避免每个 saveState 都去撞墙白烧请求；成功即复位。
+   ③ pagehide 真卸载 flush 强制发（兜底），visibilitychange 切后台 flush 尊重 60s 最小间隔。 */
+var PUSH_MIN_GAP = 5*60*1000;
+var lastPushTry = 0, pushFailStreak = 0;
 function pushProfileSoon(){
   if(pushTimer) clearTimeout(pushTimer);
-  pushTimer = setTimeout(function(){ pushTimer = null; pushProfile(); }, 8000);  // v0.3.39 写入节流：8s 合并窗口（原 3s，猛练用户翻 40 卡/min 会每分钟打 ~40 次 KV 写，1 小时打满全天 1000 配额）
+  var gap = pushFailStreak ? Math.min(60*60*1000, 10*60*1000 * Math.pow(2, pushFailStreak-1)) : PUSH_MIN_GAP;
+  var wait = Math.max(8000, lastPushTry + gap - Date.now());
+  pushTimer = setTimeout(function(){ pushTimer = null; pushProfile(); }, wait);
 }
 /* v0.3.31 M1 收口：进度云端备份。UID 即设备身份，进度按 uid 镜像到 KV PROFILES，
    换机/清缓存可借同 uid 恢复（为 L3 语伴互认铺路）。云端失败静默，绝不阻塞用户。 */
 async function pushProfile(useBeacon){
+  lastPushTry = Date.now();   // v0.24.4 P0-3：无论成败都记尝试时间（beacon 拿不到响应也按尝试计）
   try{
     /* v0.3.40：上云载荷剔除纯游标字段。cards 只是"翻到第几张"，换设备重来一遍无损失，
        却是最高频的状态变化——带上它脏检查永远成立。真实进度（开口/声调/Day）照常 8s 内上云。 */
@@ -3043,10 +3055,10 @@ async function pushProfile(useBeacon){
     try{ const j = await r.json(); ok = !!(j && j.ok); }catch(e){ ok = !!r.ok; }
     /* v0.3.41 同步结果必须可感知。写入失败（最常见是 KV 每日 1000 写配额耗尽）时标脏留痕，
        否则用户以为进度已上云，换设备/清缓存才发现云端停在旧版本 —— 静默丢数据比不同步严重得多。 */
-    if(ok){ lsSet('sinoky_cloud_dirty', ''); }
-    else { lsSet('sinoky_cloud_dirty', String(Date.now())); console.warn('[Sinoky] cloud sync failed; progress kept locally'); }
+    if(ok){ lsSet('sinoky_cloud_dirty', ''); pushFailStreak = 0; }
+    else { lsSet('sinoky_cloud_dirty', String(Date.now())); pushFailStreak++; console.warn('[Sinoky] cloud sync failed; progress kept locally (retry in ' + Math.round(Math.min(60, 10*Math.pow(2, pushFailStreak-1))) + 'min)'); }
     return ok;
-  }catch(e){ lsSet('sinoky_cloud_dirty', String(Date.now())); return false; }
+  }catch(e){ lsSet('sinoky_cloud_dirty', String(Date.now())); pushFailStreak++; return false; }
 }
 /* v0.3.33 M2 埋点：从本地状态推导匿名统计。
    只算"说过多少句 / 练了多少声调题 / Day1 是否通关 / 各场景分布"，不含任何内容或个人身份信息。
@@ -3180,13 +3192,16 @@ saveStateLocal();
 
 /* v0.3.39 写入节流：用户切后台/关页时防抖可能还没触发，强制 flush 一次，
    避免最后几分钟进度/统计丢失（KV 配额够，多这 1 次 flush 无关紧要）。 */
-function flushProfileNow(){
+function flushProfileNow(force){
   if(pushTimer){ clearTimeout(pushTimer); pushTimer = null; }
+  /* v0.24.4 P0-3：切后台（visibilitychange）高频触发，不节流的话每次切 tab 都打一发请求。
+     只有 pagehide（真卸载，force=true）无条件发兜底；切后台尊重 60s 最小间隔。 */
+  if(!force && Date.now() - lastPushTry < 60*1000){ pushProfileSoon(); return; }
   pushProfile(true);   // v0.3.41 卸载路径用 sendBeacon（fetch 会被浏览器丢弃），代价是拿不到响应
 }
-window.addEventListener('pagehide', flushProfileNow);
+window.addEventListener('pagehide', function(){ flushProfileNow(true); });
 document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState === 'hidden') flushProfileNow();
+  if(document.visibilityState === 'hidden') flushProfileNow(false);
 });
 
 /* ---------- tts: multi-source fallback (google zh -> baidu zh -> web speech)
@@ -5160,17 +5175,28 @@ async function nonoChatReply(userText){
       body: JSON.stringify({ uid: UID, hist: hist, text: chatText, mode: NONO.mode || 'chat' })
     });
     var d = await resp.json().catch(function(){ return {}; });
-    var reply = (resp.ok && d.reply) ? d.reply : '诺诺有点累了，待会再聊 😴';
+    /* v0.24.4 P0-2：三重伤害修复 —— 旧实现 ①兜底文案硬编码中文（英文用户看不懂）；
+       ②后端已返回 degraded 标志却不看；③把占位语当诺诺的话写进聊天历史/缓存。
+       现在：degraded 或空回复 → 走 i18n offline 文案上屏，但不写入会话历史
+       （避免下轮把 "Coach offline…" 当上下文喂给模型）。 */
+    var chatOff = (d && d.degraded) ? T('Coach offline — just open any scene and say a line.')
+                                    : T('Coach offline — try again in a moment.');
+    var degraded = !resp.ok || !d.reply || d.degraded;
+    var reply = degraded ? chatOff : d.reply;
     if(isGuide){
-      S.guideChat = S.guideChat || [];
-      S.guideChat.push({ r:'user', t: userText });
-      S.guideChat.push({ r:'assistant', t: reply });
-      if(S.guideChat.length > 40) S.guideChat = S.guideChat.slice(-40);
+      if(!degraded){
+        S.guideChat = S.guideChat || [];
+        S.guideChat.push({ r:'user', t: userText });
+        S.guideChat.push({ r:'assistant', t: reply });
+        if(S.guideChat.length > 40) S.guideChat = S.guideChat.slice(-40);
+      }
     } else {
-      S.nonoChat = S.nonoChat || [];
-      S.nonoChat.push({ r:'user', t: userText });
-      S.nonoChat.push({ r:'assistant', t: reply });
-      if(S.nonoChat.length > 40) S.nonoChat = S.nonoChat.slice(-40);
+      if(!degraded){
+        S.nonoChat = S.nonoChat || [];
+        S.nonoChat.push({ r:'user', t: userText });
+        S.nonoChat.push({ r:'assistant', t: reply });
+        if(S.nonoChat.length > 40) S.nonoChat = S.nonoChat.slice(-40);
+      }
     }
     if(window.SK) SK.quotaInc('chat');
     /* 诺诺场景钩子：自由聊天累计满 5 轮 -> 「会聊天了」彩蛋（仅一次；guide 问答不计） */
@@ -5188,7 +5214,8 @@ async function nonoChatReply(userText){
     setTimeout(function(){ if(NONO.mode==='chat' || NONO.mode==='guide') nonoState('idle'); }, 2600);
   }catch(e){
     nonoState('sorry');
-    nonoChatBubble('nono', '诺诺有点累了，待会再聊 😴');
+    /* v0.24.4 P0-2：网络异常兜底同样走 i18n（旧实现硬编码中文） */
+    nonoChatBubble('nono', T('Coach offline — try again in a moment.'));
   }
   nonoChatControls();
 }
@@ -12292,7 +12319,10 @@ async function fetchDailyPlan(box){
     var resp = await fetch(API_BASE + 'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'plan' }) });
     var d = await resp.json().catch(function(){ return {}; });
-    if(resp.ok && d.reply && d.reply.trim()){
+    /* v0.24.4 P0-2：必须判 d.degraded —— 后端降级时 ok 仍为 true 但 reply 为空/占位，
+       旧实现只判 resp.ok && d.reply，把降级占位语当正式计划写进 S.dailyPlan 缓存一整天
+       （中文占位语还会直接怼给英文用户）。degraded → 走 offline 文案、不落缓存。 */
+    if(resp.ok && d.reply && d.reply.trim() && !d.degraded){
       dp.date = today(); dp.text = d.reply.trim(); if(typeof saveState==='function') saveState();
       box.innerHTML = '<div class="plan-txt">' + escHtml(d.reply.trim()).replace(/\n/g,'<br>') + '</div>';
     } else {
@@ -12392,7 +12422,8 @@ async function writeSubmit(){
     var resp = await fetch(API_BASE + 'api/chat', { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ uid: UID, hist:[], text: text, mode:'correct' }) });
     var d = await resp.json().catch(function(){ return {}; });
-    if(resp.ok && d.reply && d.reply.trim()){
+    /* v0.24.4 P0-2：同 dailyPlan，degraded 响应不消耗写作配额、不落缓存（走 writeOfflineHtml 兜底） */
+    if(resp.ok && d.reply && d.reply.trim() && !d.degraded){
       ensureWriteCap().n++;
       var raw = d.reply.trim();
       var nl = raw.indexOf('\n');

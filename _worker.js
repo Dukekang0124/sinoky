@@ -492,6 +492,11 @@ async function summarizeStats(env) {
    兜底 Workers AI @cf/qwen/qwen2.5-7b-instruct（env.AI 绑定，零密钥），
    再兜底温柔降级文案。状态权归端上（前端 S.nonoChat 存最近 12 轮），模型侧无状态。 */
 const GLM_CHAT_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+/* v0.24.4 P0-1：Workers AI 兜底链换现行有效模型名（共享常量，chatGLM 与 feedbackDigest 共用）。
+   旧链全灭：@cf/mistral/... 命名空间已改 @cf/mistralai/...；qwen1.5/llama-3-8b(旧名) 已下架。
+   新链以 /api/ai-probe（运营侧自检端点）在线试打为准，顺序 = 中文质量与延迟权衡。
+   模型失效时不要瞎猜：先打 /api/ai-probe?token=<STATS_TOKEN>&model=@cf/xxx 单测，再改这里。 */
+const AI_MODELS = ['@cf/mistralai/mistral-small-3.1-24b-instruct', '@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/openai/gpt-oss-120b', '@cf/meta/llama-3.1-8b-instruct-fp8'];
 const CHAT_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的熊猫。请用简单、口语化的简体中文回复，每轮1-3句。不要写英文解释，不要纠正对方语法（除非对方主动问）。每轮结尾抛一个开放式的简单问题，鼓励对方用中文回答。语气像朋友聊天，自然友好。';
 const COACH_SYSTEM = '你是“诺诺”，一只教外国初学者说中文的熊猫口语教练。用户刚跟读了一句中文，你会看到他的评分数据。请用诺诺鼓励、朋友的口吻，给一句不超过 30 字的中文为主简短点评：指出他最该改进的那一个点（声调、声母、流利度或完整度），并给一句具体小建议。可以夹 1-2 个英文关键词（如 tone、rhythm）。不要抛开放式问题，不要写长篇解释。';
 /* ===== v0.23.17 DRILL_SYSTEM (AI 复习出题) ===== */
@@ -589,9 +594,10 @@ async function chatGLM(userText, hist, env, mode) {
   } catch (e) { glmErr = 'glm-exc:' + String((e && e.message) || e); }
 
   // L2：Workers AI（env.AI 绑定，零密钥）——按可用性依次尝试多个模型，兼容多种返回结构
+  // v0.24.4 P0-1：aiErr 改为聚合全部模型的错误（旧实现只留最后一个，排障时看不到前面模型为何失败）
   let aiErr = '';
-  const AI_MODELS = ['@cf/qwen/qwen2.5-7b-instruct', '@cf/qwen/qwen1.5-7b-chat', '@cf/meta/llama-3-8b-instruct', '@cf/mistral/mistral-7b-instruct-v0.2'];
   for (const m of AI_MODELS) {
+    let thisErr = '';
     try {
       const r = await env.AI.run(m, { messages: messages, max_tokens: 200 });
       const t = (
@@ -601,13 +607,17 @@ async function chatGLM(userText, hist, env, mode) {
         (r && r.text) || ''
       ).trim();
       if (t) return { text: t, model: 'workers-ai:' + m, degraded: false };
-      aiErr = 'ai-empty@' + m + ':' + JSON.stringify(r).slice(0, 100);
-    } catch (e) { aiErr = 'ai-exc@' + m + ':' + String((e && e.message) || e); }
+      thisErr = 'ai-empty@' + m + ':' + JSON.stringify(r).slice(0, 100);
+    } catch (e) { thisErr = 'ai-exc@' + m + ':' + String((e && e.message) || e); }
+    aiErr += (aiErr ? ' || ' : '') + thisErr;
   }
 
   // L3：两层都挂 → 温柔降级 + 记录原因（看板 model 字段可观测）
+  // v0.24.4 P0-2：降级**不再返回硬编码中文占位语**——英文用户会看到看不懂的中文，
+  // 且前端可能把占位语当正式内容缓存一整天。reply 留空 + degraded:true，
+  // 前端所有调用方本来就判空回复走各自语言的 offline 文案分支。
   console.log('[CHAT] degraded -> glm:' + glmErr + ' | ai:' + aiErr);
-  return { text: '诺诺有点累了，待会再聊 😴', model: 'degraded:' + glmErr + '|' + aiErr, degraded: true };
+  return { text: '', model: 'degraded:' + glmErr + '|' + aiErr, degraded: true };
 }
 
 /* v0.23.21 B3：把反馈条目交给 LLM 做摘要 + 主题聚类，返回结构化 digest。
@@ -653,9 +663,8 @@ async function feedbackDigest(env, items) {
     } else glmErr = 'glm-http' + r.status;
   } catch (e) { glmErr = 'glm-exc:' + String((e && e.message) || e); }
 
-  // L2：Workers AI（env.AI 绑定，零密钥）
+  // L2：Workers AI（env.AI 绑定，零密钥）——v0.24.4 P0-1：改用共享 AI_MODELS 常量
   if (!raw) {
-    const AI_MODELS = ['@cf/qwen/qwen2.5-7b-instruct', '@cf/meta/llama-3-8b-instruct'];
     for (const m of AI_MODELS) {
       try {
         const r = await env.AI.run(m, { messages: messages, max_tokens: 1200 });
@@ -1015,7 +1024,8 @@ export default {
         const { text, uid, hist, mode } = await req.json();
         if (!text || !String(text).trim()) return json({ ok: false, error: 'empty text' }, 400);
         if (!chatRateOk(clientIp(req), env)) {
-          return json({ ok: false, error: 'rate limited', degraded: true, reply: '诺诺有点忙，稍等一下再聊～' }, 429);
+          // v0.24.4 P0-2：限流响应同样不带中文占位语，reply 留空由前端 i18n 兜底
+          return json({ ok: false, error: 'rate limited', retry_after: Math.ceil(RATE_WINDOW / 1000), degraded: true, reply: '' }, 429);
         }
         const history = Array.isArray(hist) ? hist.slice(-12) : [];
         const reply = await chatGLM(String(text).trim(), history, env, mode);
@@ -1153,7 +1163,14 @@ export default {
           try { await recordStat(env, uid, b.stat); } catch (e) { /* 忽略 */ }
           return json({ ok: true });
         } catch (e) {
-          return json({ ok: false, error: String((e && e.message) || e) }, 500);
+          const em = String((e && e.message) || e);
+          /* v0.24.4 P0-3：KV 每日写配额耗尽时明确返回 429 + 退避提示，
+             前端据此做分钟级退避（旧实现 500 会让客户端按原节奏反复撞墙，一天白烧上千次请求） */
+          if (/KV put\(\) limit exceeded|limit exceeded for the day/i.test(em)) {
+            console.log('[PROFILE] kv quota exhausted, uid=', uid);
+            return json({ ok: false, error: em, retry_after: 3600 }, 429);
+          }
+          return json({ ok: false, error: em }, 500);
         }
       }
       return json({ ok: false, error: 'method not allowed' }, 405);
@@ -1190,6 +1207,51 @@ export default {
       } catch (e) {
         return json({ ok: false, error: String((e && e.message) || e) }, 500);
       }
+    }
+
+    /* v0.24.4 P0-1：AI 健康自检（运营侧，用户不可见，前端不调用）。
+       背景：AI 双路全挂排障时看不到链内每个模型的真实生死（token 无 Workers AI 权限
+       时连 API 试打都做不到），只能靠 degraded 字符串里最后一个错误瞎猜。
+       用法（鉴权与 /api/agg 一致：STATS_TOKEN）：
+         GET /api/ai-probe?token=<STATS_TOKEN>              → GLM + AI_MODELS 全链试打
+         GET /api/ai-probe?token=...&model=@cf/meta/xxx     → 单测任意模型（换链前验证用）
+       返回每个模型的 ok / 错误摘要 / 中文回复样本；不改任何状态，只读自检。 */
+    if (url.pathname === '/api/ai-probe' && req.method === 'GET') {
+      const wantTok = env.STATS_TOKEN || '';
+      if (!wantTok) return json({ ok: false, error: 'probe disabled: set STATS_TOKEN' }, 403);
+      const gotTok = url.searchParams.get('token') || req.headers.get('x-stats-token') || '';
+      if (gotTok !== wantTok) return json({ ok: false, error: 'unauthorized' }, 403);
+      const testMsg = [{ role: 'user', content: '请只回一句简短的中文：你好' }];
+      const one = async (m) => {
+        try {
+          const r = await env.AI.run(m, { messages: testMsg, max_tokens: 80 });
+          const t = (
+            (r && r.response) ||
+            (r && r.result && r.result.response) ||
+            (r && r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) ||
+            (r && r.text) || ''
+          ).trim();
+          return { model: m, ok: !!t, reply: t.slice(0, 80), error: t ? '' : ('empty:' + JSON.stringify(r).slice(0, 140)) };
+        } catch (e) { return { model: m, ok: false, reply: '', error: String((e && e.message) || e).slice(0, 200) }; }
+      };
+      try {
+        const single = url.searchParams.get('model');
+        const models = single ? [String(single).slice(0, 120)] : AI_MODELS;
+        const results = [];
+        for (const m of models) results.push(await one(m));
+        let glm = null;
+        if (!single) {
+          try {
+            const r = await fetch(GLM_CHAT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (env.GLM_KEY || '') },
+              body: JSON.stringify({ model: 'glm-4-flash', messages: testMsg, max_tokens: 30 }),
+            });
+            glm = r.ok ? { ok: true, status: r.status } : { ok: false, status: r.status };
+          } catch (e) { glm = { ok: false, status: 0, error: String((e && e.message) || e).slice(0, 120) }; }
+        }
+        return json({ ok: true, aiBinding: env.AI ? 'ok' : 'missing', glm, models: results, asOf: new Date().toISOString() });
+      } catch (e) { return json({ ok: false, error: String((e && e.message) || e) }, 500); }
     }
 
     // 静态资源透传 + 附加 CORS 头（APK 壳内 https://localhost 跨域拉 version.json 需要）
