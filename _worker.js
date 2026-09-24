@@ -198,12 +198,11 @@ async function guardApi(req, url, json, env) {
    Worker（已部署 kang7108558 账号，仅接受 x-edge-key）。此处仅做普通 HTTPS 转发，
    失败返回 null 由上层回退 google/melo/youdao。默认 XiaoxiaoNeural 女声，?voice= 切男声。 */
 const EDGE_TTS_URL = 'https://sinoky-edge-tts.kang7108558.workers.dev/tts';
-const EDGE_KEY = 'sk_sinoky_edge_x9K2';
-async function edgeTts(text, voiceShort) {
+async function edgeTts(text, voiceShort, env) {
   try {
     const r = await fetch(EDGE_TTS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-edge-key': EDGE_KEY },
+      headers: { 'Content-Type': 'application/json', 'x-edge-key': (env && env.EDGE_TTS_KEY) || '' },
       body: JSON.stringify({ text, voice: voiceShort || 'zh-CN-XiaoxiaoNeural' }),
     });
     if (!r.ok) return null;
@@ -218,11 +217,11 @@ async function edgeTts(text, voiceShort) {
    温柔→v2+龙小淳/龙湾天生音色；标准档走 Edge 不进此路由。缺 key 时 /cosy 返 501 →
    收 null；上层兜底链自动回退 Edge，不让用户静音。instruct 透传情感档(happy/serious/gentle)。 */
 const COSY_TTS_URL = 'https://sinoky-edge-tts.kang7108558.workers.dev/cosy';
-async function cosyTts(text, voiceShort, instruct) {
+async function cosyTts(text, voiceShort, instruct, env) {
   try {
     const r = await fetch(COSY_TTS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-edge-key': EDGE_KEY },
+      headers: { 'Content-Type': 'application/json', 'x-edge-key': (env && env.EDGE_TTS_KEY) || '' },
       body: JSON.stringify({ text, voice: voiceShort || 'zh-CN-XiaoxiaoNeural', instruct: instruct || '' }),
     });
     if (!r.ok) return null;
@@ -837,9 +836,9 @@ export default {
         // 否则默认 Edge 主音源（微软神经网络，零成本），再整段回退 google/melo/youdao
         let out = null;
         if (engineParam === 'cosy') {
-          try { out = await cosyTts(text, voiceParam, instructParam); } catch (e) { out = null; }
+          try { out = await cosyTts(text, voiceParam, instructParam, env); } catch (e) { out = null; }
         }
-        if (!out) { try { out = await edgeTts(text, voiceParam); } catch (e) { out = null; } }
+        if (!out) { try { out = await edgeTts(text, voiceParam, env); } catch (e) { out = null; } }
         if (!out) out = await google();
         if (!out) out = await melo(3);
         if (!out) out = await youdao();
