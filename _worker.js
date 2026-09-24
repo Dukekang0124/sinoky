@@ -1163,14 +1163,17 @@ export default {
           try { await recordStat(env, uid, b.stat); } catch (e) { /* 忽略 */ }
           return json({ ok: true });
         } catch (e) {
-          const em = String((e && e.message) || e);
-          /* v0.24.4 P0-3：KV 每日写配额耗尽时明确返回 429 + 退避提示，
-             前端据此做分钟级退避（旧实现 500 会让客户端按原节奏反复撞墙，一天白烧上千次请求） */
+          /* v0.24.4 P0-3：KV 每日写配额耗尽 → 429 + retry_after（前端据此分钟级退避，
+             旧实现 500 会让客户端按原节奏反复撞墙）。500 时附带异常类型/栈摘要，便于线上排障。 */
+          let em = '', ector = '', estack = '';
+          try { em = String((e && e.message) || e); } catch (e2) { em = 'unstringable'; }
+          try { ector = (e && e.constructor && e.constructor.name) || typeof e; } catch (e2) { ector = '?'; }
+          try { estack = String((e && e.stack) || '').slice(0, 200); } catch (e2) { estack = '?'; }
+          console.log('[PROFILE] POST error:', em, '|', ector);
           if (/KV put\(\) limit exceeded|limit exceeded for the day/i.test(em)) {
-            console.log('[PROFILE] kv quota exhausted, uid=', uid);
             return json({ ok: false, error: em, retry_after: 3600 }, 429);
           }
-          return json({ ok: false, error: em }, 500);
+          return json({ ok: false, error: em, ector: ector, estack: estack }, 500);
         }
       }
       return json({ ok: false, error: 'method not allowed' }, 405);
