@@ -3,11 +3,11 @@
   "updated": "2026-09-24",
   "note": "v0.24.4：产品体验报告 P0 修复（3 项）。（1）P0-1 AI 双路修复：Workers AI 兜底链换现行有效模型名（旧链 @cf/mistral/*、qwen1.5、llama-3 旧名全失效），aiErr 聚合全链错误便于排障；新增运营侧 AI 健康自检端点 GET /api/ai-probe（STATS_TOKEN 鉴权，支持 ?model= 单测任意模型，换链前先试打）。（2）P0-2 降级三重伤害修复：worker 降级不再返回硬编码中文占位语（reply 留空 + degraded 标志），前端 fetchDailyPlan/写作教练判 degraded 不落缓存、诺诺聊天兜底文案改走 i18n 七语言且不写入会话历史。（3）P0-3 KV 写配额止血：前端云同步最短间隔 5 分钟 + 失败指数退避（10→20→40→60 分钟封顶）+ 切后台 flush 60s 节流（pagehide 真卸载仍强制兜底）；worker /api/profile 配额耗尽时明确返回 429+retry_after 供前端退避。仅网页发版，APK 用户经 SW 更新获得。",
   "apk": {
-    "versionCode": 2403,
-    "version": "0.24.3",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.3-release.apk",
-    "md5": "e9438c055571db25d6827883554b335a",
-    "size": 24070720
+    "versionCode": 2404,
+    "version": "0.24.4",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.4-release.apk",
+    "md5": "846d4c6f363d05d14414b4a6e65041f1",
+    "size": 24074816
   },
   "noteEn": [
     "v0.24.4: product-experience report P0 fixes (3 items). (1) P0-1 AI outage fixed: the Workers AI fallback chain now uses current, valid model names (the old chain - @cf/mistral/*, qwen1.5, old llama-3 names - is entirely dead); aiErr now aggregates every model's error for debugging; added an operator-side AI health probe endpoint GET /api/ai-probe (STATS_TOKEN auth, ?model= to test any single model before changing the chain). (2) P0-2 degraded-triple-harm fixed: the worker no longer returns a hard-coded Chinese placeholder on degradation (empty reply + degraded flag); the frontend daily-plan and writing-coach check degraded and skip caching; Nono chat fallback text now goes through i18n (7 languages) and is no longer written into chat history. (3) P0-3 KV write-quota relief: client cloud sync now enforces a 5-minute minimum interval, exponential backoff on failure (10/20/40/60-min cap), and a 60s throttle on background-flush (pagehide still force-flushes); the worker returns 429 + retry_after when the daily KV quota is exhausted so the client can back off. Web-only release; APK users receive it via SW update.",
