@@ -3,10 +3,10 @@
   "updated": "2026-09-24",
   "note": "v0.24.2：代码审计 P1 修复。（1）城市攻略语音失效：nonoStartGuide 设 mode='guide' 但未设 NONO_LINE，导致 nonoRecord 守卫直接 return、攻略界面点麦克风毫无反应；现放行 guide 模式并复用聊天语音路径（ASR → 带【城市：X】前缀的诺诺问答），攻略场景可正常语音提问。（2）边缘 TTS 密钥泄露：_worker.js 中 Edge/Cosy TTS 转发密钥曾以明文硬编码在公开仓库，已改为从环境变量 env.EDGE_TTS_KEY 读取（未配置时自动回退 google/melo/youdao 兜底链，不影响可用性）。运维侧需在 Cloudflare Dashboard 为独立 edge-tts Worker 轮换密钥并配置 EDGE_TTS_KEY 变量。网页与 APK 同版本上线。",
   "apk": {
-    "versionCode": 2401,
-    "version": "0.24.1",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.1-release.apk",
-    "md5": "52eabb24a7aa63e92cf1596ee6a8c0e4",
+    "versionCode": 2402,
+    "version": "0.24.2",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.2-release.apk",
+    "md5": "97f250696a23fba9aedcbb8a165fc4c6",
     "size": 24070720
   },
   "noteEn": [
