@@ -3,10 +3,10 @@
   "updated": "2026-09-24",
   "note": "v0.24.5：更新提示弹窗重设计。（1）版式升级：应用图标 + 版本标题行、NEW 角标内联不再遮挡文字、新增入场动画；（2）更新说明改为红点要点列表：按编号自动拆条、每条导语加粗、支持滚动，不再出现长文被裁切无法阅读；（3）按钮层级优化：下载按钮加宽强调。仅网页发版，APK 用户经 SW 更新获得新弹窗。",
   "apk": {
-    "versionCode": 2404,
-    "version": "0.24.4",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.4-release.apk",
-    "md5": "846d4c6f363d05d14414b4a6e65041f1",
+    "versionCode": 2405,
+    "version": "0.24.5",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.5-release.apk",
+    "md5": "7ce73d7e4b681ec31a1b80d29897dcfb",
     "size": 24074816
   },
   "noteEn": [
