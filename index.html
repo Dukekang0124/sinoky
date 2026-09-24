@@ -1329,7 +1329,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.4';
+var APP_VERSION = '0.24.5';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -4558,28 +4558,57 @@ async function checkApkUpdate(){
   }catch(e){}
   return null;
 }
-/* v0.13.1：检测到新版自动弹出更新对话框（含下载按钮），替代"只出横幅"的弱提示 */
+/* v0.24.5：更新说明解析成要点列表——note 是「标题。（1）xxx：（2）xxx」格式，
+   按编号标记切开；切不出 ≥2 条时退化为按句切分；再不行整段单条展示。
+   同时剥掉开头「v0.24.5：」版本前缀（标题行已展示版本号，不重复） */
+function apkNoteToList(raw){
+  if(!raw) return [];
+  var t = String(raw).replace(/^\s*v?\d+(\.\d+)*\s*[:：]\s*/, '');
+  var cut = function(arr){ return arr.map(function(s){ return s.replace(/^[\s。.·]+|[\s。.\s]+$/g, ''); }).filter(function(s){ return s.length > 1; }); };
+  var items = cut(t.split(/（\d）|\(\d\)\s*/));
+  if(items.length < 2){
+    items = cut(t.split(/[。.]\s*/));
+    if(items.length < 2) items = [t];
+  }
+  return items;
+}
+/* v0.24.5：更新弹窗重设计（旧版三宗罪：🆕 emoji 被渲染成图块压住标题 / 长文
+   塞 180px 滚动区被裁得没法读 / 信息无层级）。新版：图标+版本标题行（inline NEW
+   角标不占独立行）、What's new 红点要点列表（导语加粗、可滚动）、按钮行为不变 */
 function showApkUpdateDialog(apk){
   var st = updStoreGet();
   if(st.apkDismissed === apk.versionCode){ showApkUpdateBar(apk); return; }
   if(document.getElementById('apk-upd-ov')) return;
   var ov = document.createElement('div');
   ov.id = 'apk-upd-ov';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-full-top);background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-full-top);background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
+  var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   var _noteRaw = (curLang() === 'zh') ? (apk.note || '') : (apk.noteEn || apk.note || '');
-  var _noteTxt = Array.isArray(_noteRaw) ? _noteRaw.join('<br>') : _noteRaw;
-  var noteHtml = _noteTxt ? ('<div style="background:var(--card,#f5f5f5);border-radius:10px;padding:12px;margin:12px 0 14px;">'
-    + '<div style="font-size:.75rem;color:var(--accent,var(--red));font-weight:600;margin-bottom:4px">' + T("What's new") + '</div>'
-    + '<div style="font-size:.85rem;line-height:1.55;max-height:180px;overflow-y:auto;-webkit-overflow-scrolling:touch">' + _noteTxt + '</div></div>') : '';
-  ov.innerHTML = '<div style="background:var(--bg,#fff);color:var(--text,#222);max-width:400px;width:100%;border-radius:16px;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 12px 40px rgba(0,0,0,.5);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;">'
-    + '<span id="apk-upd-x" style="position:absolute;top:8px;right:12px;font-size:1.3rem;line-height:1;cursor:pointer;padding:4px 6px;">×</span>'
-    + '<div style="font-size:1.5rem;margin-bottom:6px;">🆕</div>'
-    + '<div style="font-size:1.05rem;font-weight:700;margin-bottom:2px;">' + T('New version') + ' ' + (apk.version || ('v' + apk.versionCode)) + '</div>'
-    + (apk.size ? '<div style="font-size:.75rem;color:var(--txt-3);margin-bottom:4px;">' + T('Install package ≈ ') + (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') + T(' · verified by MD5') + '</div>' : '')
+  var items = apkNoteToList(_noteRaw);
+  var listHtml = items.map(function(it){
+    /* 每条里「导语：」部分加粗（限 36 字内，避免整句都粗；保留原冒号，中英通用） */
+    var h = esc(it).replace(/^([^<：:]{2,36})([：:])\s*/, '<b style="color:var(--txt,#eef2f7)">$1</b>$2 ');
+    return '<li style="display:flex;gap:9px;margin:8px 0;font-size:.85rem;line-height:1.6;">'
+      + '<span aria-hidden="true" style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--red);margin-top:.52em;"></span>'
+      + '<span style="color:var(--sub,#9aa7b8)">' + h + '</span></li>';
+  }).join('');
+  var noteHtml = items.length ? ('<div style="background:var(--card,#f5f5f5);border-radius:12px;padding:13px 14px;margin:14px 0 16px;">'
+    + '<div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--red-text,var(--red));font-weight:700;margin-bottom:4px">' + T("What's new") + '</div>'
+    + '<ul style="list-style:none;margin:0;padding:0;max-height:230px;overflow-y:auto;-webkit-overflow-scrolling:touch">' + listHtml + '</ul></div>') : '';
+  var sizeTxt = apk.size ? (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') : '';
+  ov.innerHTML = '<style>@keyframes apkUpdIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}</style>'
+    + '<div role="dialog" aria-modal="true" aria-label="' + esc(T('New version') + ' ' + (apk.version || '')) + '" style="background:var(--bg,#141a24);color:var(--txt,#eef2f7);max-width:400px;width:100%;border-radius:20px;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 16px 48px rgba(0,0,0,.55);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;animation:apkUpdIn .28s ease;">'
+    + '<span id="apk-upd-x" role="button" aria-label="Close" style="position:absolute;top:10px;right:12px;font-size:1.25rem;line-height:1;cursor:pointer;padding:6px 8px;color:var(--txt-3);">×</span>'
+    + '<div style="display:flex;align-items:center;gap:12px;margin:2px 26px 0 0;">'
+    + '<img src="icons/icon-192.png" alt="" width="46" height="46" style="flex:none;width:46px;height:46px;border-radius:12px;">'
+    + '<div style="min-width:0;">'
+    + '<div style="font-size:1.02rem;font-weight:700;line-height:1.3;">' + T('New version') + ' <span style="color:var(--red-text,var(--red))">' + (apk.version || ('v' + apk.versionCode)) + '</span><span aria-hidden="true" style="display:inline-block;vertical-align:2px;margin-left:8px;background:var(--red);color:#fff;font-size:.58rem;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:999px;">NEW</span></div>'
+    + (apk.size ? '<div style="font-size:.74rem;color:var(--txt-3);margin-top:3px;">' + T('Install package ≈ ') + sizeTxt + T(' · verified by MD5') + '</div>' : '')
+    + '</div></div>'
     + noteHtml
-    + '<div style="display:flex;gap:10px;margin-top:6px;">'
-    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--txt-3);font-size:.95rem;cursor:pointer;">' + T('Not now') + '</button>'
-    + '<button id="apk-upd-now" style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--accent,var(--red));color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">⬇️ ' + T('Download') + '</button>'
+    + '<div style="display:flex;gap:10px;margin-top:2px;">'
+    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--txt-3);font-size:.95rem;cursor:pointer;">' + T('Not now') + '</button>'
+    + '<button id="apk-upd-now" style="flex:1.2;padding:12px;border:none;border-radius:12px;background:var(--red);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">↓ ' + T('Download') + '</button>'
     + '</div></div>';
   document.body.appendChild(ov);
   function dismiss(){
@@ -4621,7 +4650,7 @@ function updOverlay(){
   ov = document.createElement('div');
   ov.id = 'upd-ov';
   ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-full);background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;';
-  ov.innerHTML = '<div style="background:var(--bg,#fff);color:var(--text,#222);max-width:360px;width:100%;border-radius:16px;padding:20px;">'
+  ov.innerHTML = '<div style="background:var(--bg,#141a24);color:var(--txt,#eef2f7);max-width:360px;width:100%;border-radius:16px;padding:20px;">'
     + '<div style="font-size:1rem;font-weight:600;margin-bottom:12px;">⬇️ Downloading update…</div>'
     + '<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:10px;">'
     + '<div id="upd-ov-bar" style="height:100%;width:0;background:var(--accent,var(--red));transition:width .3s;"></div></div>'
