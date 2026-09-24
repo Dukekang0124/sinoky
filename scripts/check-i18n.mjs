@@ -54,7 +54,17 @@ let m;
 while ((m = RE.exec(html)) !== null) {
   let k = m[2];
   // 还原 JS 字符串转义（\' \" \\ \n 等），否则 'don\'t' 会和字典里的 "don't" 对不上
-  k = k.replace(/\\(['"\\])/g, '$1').replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+  // v0.24.1 补：\uXXXX / \u{...} / \xXX 也必须还原。
+  //   缺陷现场：T('\u{1F44B} New here?') 若不还原，闸门提取到的 key 是含反斜杠的
+  //   字面文本，而运行时 key 是实际字符 '👋 New here?' —— 报的是「缺失」，但按它写进
+  //   字典的 key 永远命不中（形状不匹配的第二类：不是标签差异，而是转义未还原）。
+  k = k
+    .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\x([0-9a-fA-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\(['"\\])/g, '$1')
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t');
   if (k) keys.add(k);
 }
 const keyArr = [...keys].sort();

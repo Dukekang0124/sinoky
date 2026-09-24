@@ -1324,7 +1324,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.0';
+var APP_VERSION = '0.24.1';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3876,17 +3876,21 @@ function tourNeeded(){
 }
 function endTour(){ lsSet('sinoky_tour','1'); renderHome(); }
 function tourHtml(){
-  return '<div class="card"><div class="top"><h2>\u{1F44B} New here?</h2><span class="badge teal">60 SECONDS</span></div>'+
-    '<p class="desc">Three steps \u2014 that is the whole app:</p>'+
-    '<div class="tour-steps"><div><b>New to Chinese?</b> Characters do not tell you how to say them \u2014 that is what the small letters above them are for (pinyin: <b>n\u01D0 h\u01CEo</b>). The little marks are tones: \u0101 \u00E1 \u01CE \u00E0 \u2014 four tones, four different words. Tap \u25B6 to hear any line; tap 🐢 to slow it down — tap again for slower (0.5×, best for hearing the tones).</div></div>'+
+  /* v0.24.1：整卡文案走 T()（key = 含标签整串，与 VIEW_HINT 同形状）。
+     本卡只对「零进度新用户」出现一次；T() 在渲染时求值，
+     切语言后回到 home 会重新渲染（renderHome → tourHtml），故无需额外 re-render 钩子。
+     教学演示部分（拼音 nǐ hǎo、声调符号 ā á ǎ à、可点击图标）不译，各语言译文中原样保留。 */
+  return '<div class="card"><div class="top"><h2>'+T('\u{1F44B} New here?')+'</h2><span class="badge teal">'+T('60 SECONDS')+'</span></div>'+
+    '<p class="desc">'+T('Three steps \u2014 that is the whole app:')+'</p>'+
+    '<div class="tour-steps"><div>'+T('<b>New to Chinese?</b> Characters do not tell you how to say them \u2014 that is what the small letters above them are for (pinyin: <b>n\u01D0 h\u01CEo</b>). The little marks are tones: \u0101 \u00E1 \u01CE \u00E0 \u2014 four tones, four different words. Tap \u25B6 to hear any line; tap 🐢 to slow it down — tap again for slower (0.5×, best for hearing the tones).')+'</div></div>'+
     '<div class="tour-steps">'+
-    '<div>1\uFE0F\u20E3 Tap a line below \u2192 listen, cover the Chinese, <b>say it out loud 3\u00D7</b>. Speaking is the whole point.</div>'+
-    '<div>2\uFE0F\u20E3 Do one <b>Day</b> card a day \u2014 the streak keeps you coming back.</div>'+
-    '<div>3\uFE0F\u20E3 Open <b>Tones</b> for 1 minute \u2014 train your ear: four tones, four different words.</div>'+
-    '<div>4\uFE0F\u20E3 Want to <b>write</b> characters too? Open <b>Cards</b> \u2192 tap \u270D\uFE0F <b>Strokes</b> \u2014 watch the stroke order, then trace it yourself.</div>'+
+    '<div>'+T('1\uFE0F\u20E3 Tap a line below \u2192 listen, cover the Chinese, <b>say it out loud 3\u00D7</b>. Speaking is the whole point.')+'</div>'+
+    '<div>'+T('2\uFE0F\u20E3 Do one <b>Day</b> card a day \u2014 the streak keeps you coming back.')+'</div>'+
+    '<div>'+T('3\uFE0F\u20E3 Open <b>Tones</b> for 1 minute \u2014 train your ear: four tones, four different words.')+'</div>'+
+    '<div>'+T('4\uFE0F\u20E3 Want to <b>write</b> characters too? Open <b>Cards</b> \u2192 tap \u270D\uFE0F <b>Strokes</b> \u2014 watch the stroke order, then trace it yourself.')+'</div>'+
     '</div>'+
-    '<p class="desc" style="font-size:11.5px;color:var(--sub);margin:10px 0 0">\u{1F512} Recordings are never saved \u00B7 \u{1F4AC} Feedback (bottom-left) any time</p>'+
-    '<button class="btn primary" onclick="endTour()">Got it \u2014 let\'s speak</button></div>';
+    '<p class="desc" style="font-size:11.5px;color:var(--sub);margin:10px 0 0">'+T('\u{1F512} Recordings are never saved \u00B7 \u{1F4AC} Feedback (bottom-left) any time')+'</p>'+
+    '<button class="btn primary" onclick="endTour()">'+T('Got it \u2014 let\'s speak')+'</button></div>';
 }
 /* ---------- v0.3.48 每日复习卡（Daily Phase 3 复习循环）----------
    Edify Gate：让用户「重说」已学过的句子 —— 实打实的开口增量，不是再看一遍。
@@ -5285,10 +5289,10 @@ async function nonoGrade(wav){
     '</div>'+
     (syll.length ? '<div class="np-syl">'+ syll.map(function(x){
         var tb = (x.toneOk===false);
-        return '<span class="'+((x.score>=0.99)?'ok':'bad')+'">'+ (x.target||'') +(tb?'<i class="tone-err">应为'+toneLabel(x.tExp)+'</i>':'') +'</span>'; }).join('') +'</div>' : '')+
+        return '<span class="'+((x.score>=0.99)?'ok':'bad')+'">'+ (x.target||'') +(tb?'<i class="tone-err">'+T('should be')+toneKey(x.tExp)+'</i>':'') +'</span>'; }).join('') +'</div>' : '')+
     (fixes.length ? '<div class="np-fix">'+ fixes.slice(0,4).map(function(f){
         var ms = (f.errs||[]).join(' · ')||'try again';
-        if(f.toneOk===false) ms += ' · tone should be '+toneLabelEn(f.tExp)+' ('+toneLabel(f.tExp)+')';
+        if(f.toneOk===false) ms += T(' · tone should be')+toneKey(f.tExp);
         return '<b>'+(f.target||'')+'</b> → you said <b>'+(f.user||'?')+'</b> · '+ms;
       }).join('<br>') +'</div>' : '')+
     weakNote +
@@ -5985,7 +5989,7 @@ function renderScore(d){
   (d.perSyll||[]).forEach(function(s){
     var ok = s.score>=0.99;
     var tb = (s.toneOk===false);
-    h += '<span class="ss '+(ok?'ok':'bad')+'">'+esc(s.target)+(tb?'<i class="tone-err">应为'+toneLabel(s.tExp)+'</i>':'')+'</span>';
+    h += '<span class="ss '+(ok?'ok':'bad')+'">'+esc(s.target)+(tb?'<i class="tone-err">'+T('should be')+toneKey(s.tExp)+'</i>':'')+'</span>';
     if(!ok) fixes.push({ t:s.target, u:s.user, errs:(s.errs&&s.errs.length?s.errs:['miss']), tExp:s.tExp, tGot:s.tGot, toneOk:s.toneOk });
   });
   h += '</div>';
@@ -5993,7 +5997,7 @@ function renderScore(d){
     h += '<div class="score-fix">';
     fixes.forEach(function(f){
       var msgs = f.errs.map(errHuman).join(' \u00b7 ');
-      if(f.toneOk===false) msgs += ' \u00b7 tone should be '+toneLabelEn(f.tExp)+' ('+toneLabel(f.tExp)+')';
+      if(f.toneOk===false) msgs += T(' · tone should be')+toneKey(f.tExp);
       h += '<div><b>'+esc(f.t)+'</b> \u2192 you said <b>'+esc(f.u||'?')+'</b> \u00b7 '+esc(msgs)+'</div>';
     });
     h += '</div>';
@@ -6010,8 +6014,13 @@ function errHuman(e){
   return e;
 }
 /* v0.14.6 A 声调纠音闭环：调值数字 → 中西文标签（target 为不懂中文的外国学习者，双标） */
-function toneLabel(n){ return n===1?'一声':n===2?'二声':n===3?'三声':n===4?'四声':'轻声'; }
-function toneLabelEn(n){ return n===1?'1st':n===2?'2nd':n===3?'3rd':n===4?'4th':'neutral'; }
+/* v0.24.1：原 toneLabel()（中文）/ toneLabelEn()（英文）双函数废弃——
+   声调名改为字典 key，随界面语言切换。
+   旧实现让西/俄/越/印/泰用户看到 '1st' 或 '一声'，属 i18n 盲区。
+   注：返回值带前导空格，便于与 'should be' / '· tone should be' 直接拼接。 */
+function toneKey(n){
+  return ' ' + T({ '1':'1st tone', '2':'2nd tone', '3':'3rd tone', '4':'4th tone' }[n] || 'neutral tone');
+}
 function finishScene(){
   var d = today();
   var grace = false;
@@ -8116,11 +8125,14 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
     var d = loadQuota(); d.used[feat]=(d.used[feat]||0)+1; saveQuota(d);
   }
   function quotaBadge(feat){
-    if(isUnlocked()) return '<span class="qt-chip unl">✅ 已解锁 · 不限次数</span>';
+    if(isUnlocked()) return '<span class="qt-chip unl">'+T('✅ Unlocked · unlimited')+'</span>';
     var lim = quotaLimit(feat);
-    if(lim===0) return '<span class="qt-chip unl">📱 App · 不限次数</span>';
+    /* v0.24.1：'Install App · Unlimited' 是既有字典 key（zh=装 App · 不限次数），复用而不新增 */
+    if(lim===0) return '<span class="qt-chip unl">📱 '+T('Install App · Unlimited')+'</span>';
     var left = quotaLeft(feat);
-    return '<span class="qt-chip '+(left<=0?'warn':'')+'">今天还剩 <b>'+left+'</b> 次'+QLABEL[feat]+'</span>';
+    /* v0.24.1：原实现把中文与英文标签直接拼在一起（今天还剩 3 次Nono chat）——
+       中英语序相反，无法用前后缀拼接解决，故用占位符模板（与 L3622 {city} 同模式）。 */
+    return '<span class="qt-chip '+(left<=0?'warn':'')+'">'+T('{n} {feat} left today').replace('{n}','<b>'+left+'</b>').replace('{feat}',T(QLABEL[feat]))+'</span>';
   }
 
   function closeOvl(id){ var el=document.getElementById(id); if(el) el.remove(); }
@@ -8584,7 +8596,9 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
         var blocked = N.closed || (Date.now() < (N.lockUntil || 0));
         if (NEWVIEWS[v] && !blocked) {
           var cfg = VIEW_HINT[v];
-          window.nonoHint(cfg.html, { pose: cfg.pose, once: 'vh_' + v, ms: 7000 });
+          /* v0.24.1：原缺 T()。字典 key 按「带标签整串」设计（zh.json 早已有 3 条），
+             而 nonoHint 内部是 el.innerHTML = msg，故 T() 入参与 innerHTML 输入形状一致。 */
+          window.nonoHint(T(cfg.html), { pose: cfg.pose, once: 'vh_' + v, ms: 7000 });
           return;
         }
       } catch (e) { /* 任何异常都退回原逻辑，绝不影响开口 */ }
@@ -8911,9 +8925,8 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
       try {
         var block = '<div class="nt-nono">' +
           '<img src="' + P('point') + '" alt="Nono">' +
-          '<div><b>诺诺带你认识</b>' +
-          '<span>I\u2019m Nono \uD83D\uDC3C \u2014 here are the three things that matter. ' +
-          'Want the full map? Tap me any time.</span></div></div>';
+          '<div><b>'+T('Nono will show you around')+'</b>' +
+          '<span>'+T('I\u2019m Nono \uD83D\uDC3C \u2014 here are the three things that matter. Want the full map? Tap me any time.')+'</span></div></div>';
         var i = h.indexOf('<div class="tour-steps">');
         if (i < 0) i = h.indexOf('<button');
         if (i > 0) h = h.slice(0, i) + block + h.slice(i);
