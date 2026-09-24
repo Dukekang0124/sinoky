@@ -18,3 +18,28 @@
 # 此处再在边缘拒访一次，防旧部署残留。
 /data/build-flashcards.mjs   /  302
 /data/flashcards.schema.md   /  302
+
+# v0.24.1：assets/ 下 19 个零引用文件已从仓库移出（明细见 _internal/retired-assets-2026-09-24/）。
+# 根因是构建对 assets 整目录 cp、无逐文件排除（见「assets/ 整目录上线」红线）。
+# ⚠️ 仅从仓库移出不足以立即止血：CF Pages 的 immutable deployment 不删旧部署残留，
+#    且静态资源带 s-maxage=604800（7 天）边缘缓存 —— 实测 /assets/read/breakfast_2x.webp
+#    在移出后仍返回 200 + 真实 webp 字节（CF-Cache-Status: HIT, Age≈10.9h），
+#    而同批 /assets/icons/cards.png 已回落到 SPA 兜底（Content-Type: text/html）——
+#    说明 CF 不回源旧部署、但未过期的缓存副本会继续被服务。
+#    故按 /www/*、/_internal/* 同一手法在边缘 302 收口，让「移出」即时生效。
+#
+# 前三条按「命名模式」拦，后续任何同类文件自动被挡，无需再维护。
+#   /assets/*.md        —— assets 下任何 .md 都不是产品资产（此前 scenes/meeting.md 含内部路径与角色名）
+#   /assets/*_2x.webp   —— 2x 备图命名约定已整体弃用（统一用 1x）
+#   /assets/icons/*.png —— 旧 PNG 图标已由同名 .svg 取代（assets 下现零 .png）
+# ⚠️ 下面每行的策略必须是「from to status」三段，注释只能独占行 —— 行内 # 会使整行解析失败并静默失效。
+# 后六条逐文件收口：同目录仍有在用的文件，不能用通配。
+/assets/*.md          /  302
+/assets/*_2x.webp     /  302
+/assets/icons/*.png   /  302
+/assets/banner/horizontal.webp     /  302
+/assets/banner/vertical.webp       /  302
+/assets/share/light-square.webp    /  302
+/assets/share/dark-vertical.webp   /  302
+/assets/share/light-vertical.webp  /  302
+/assets/brand/dragon-nono.svg      /  302
