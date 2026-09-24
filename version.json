@@ -3,10 +3,10 @@
   "updated": "2026-09-24",
   "note": "v0.24.3：代码审计 P2 治理（8 项）。（1）云同步深合并：pullProfile 由浅 Object.assign 改为递归深合并，修复多设备同步时另一台设备的练习进度（phrases/weak/dayDone/guideDone/aiWeak）被整对象覆盖静默丢失。（2）运营统计 feat/scenes 隔离：recordStat 隔离 feat/scenes 引用，修复功能使用分布 featDist 永不上报的缺陷（计数 max 幂等，写放大有界，配额无忧）。（3）统计接口分页上限：summarizeStats 改游标分页并设 5000 硬上限，避免规模化后单次全表 KV 读成本/延迟线性上涨。（4）KV TTL：fb:/chat: 反馈埋点写入加 180 天 expirationTtl，避免存储无限增长。（5）z-index 令牌化：.reader/.rpop/#nono-panel.np-head/#nono-invite 四处裸数字改走 --z-* 变量，补齐既有栈序约束。（6）补 .rd-offline/.rd-skel/.plan-txt 三个此前零 CSS 规则的 class，消除浏览器默认退化。（7）day-finish-date 旧绿 #0a8f6e 改用语义 --ok 成功色。（8）新增 _internal/tools/check_sw_assets.cjs 校验 SW 预缓存清单资源存在，移动资产不校验的离线失效风险有闸。网页与 APK 同版本上线。",
   "apk": {
-    "versionCode": 2402,
-    "version": "0.24.2",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.2-release.apk",
-    "md5": "97f250696a23fba9aedcbb8a165fc4c6",
+    "versionCode": 2403,
+    "version": "0.24.3",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.3-release.apk",
+    "md5": "e9438c055571db25d6827883554b335a",
     "size": 24070720
   },
   "noteEn": [
