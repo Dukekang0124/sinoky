@@ -83,6 +83,7 @@
   --z-drawer:70; --z-mask:70; --z-sheet:71; --z-menu:80; --z-update:95;
   --z-toast:99; --z-onboard:100; --z-modal:9000; --z-splash:9999;
   --z-full:10000; --z-full-top:10001;
+  --z-rpop:5; --z-np-head:2; /* P2-5：补齐 rpop / np-head 两个低层级令牌（原为裸数字 5 / 2） */
   /* 动效 */
   --dur-1:120ms; --dur-2:200ms; --dur-3:320ms;
   --ease-out:cubic-bezier(.2,.8,.2,1); --ease-io:cubic-bezier(.4,0,.2,1);
@@ -648,7 +649,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .sr-en{font-size:11.5px;color:var(--sub);margin-top:2px}
       .sr-card .spk{position:absolute;top:8px;right:8px;width:34px;height:34px;background:rgba(20,26,36,.72);border:1px solid var(--line)}
       /* v0.14.6 B 分级阅读升级：reader 弹层 + 词块 + 释义浮层 + 卡拉OK 高亮 */
-      .reader{position:fixed;inset:0;background:rgba(12,16,24,.72);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+      .reader{position:fixed;inset:0;background:rgba(12,16,24,.72);display:none;align-items:center;justify-content:center;z-index:var(--z-fab);padding:16px}
       .reader.on{display:flex}
       .reader-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
       .reader-box img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;background:var(--card)}
@@ -659,8 +660,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .rword.py-hide .rpy{display:none}
       .rword.cur{border-color:var(--ok);box-shadow:0 0 0 2px rgba(63,185,80,.35);transform:translateY(-2px)}
       .rword.pop .rpop{display:block}
-      .rpop{display:none;position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12px;color:var(--txt);white-space:nowrap;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+      .rpop{display:none;position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12px;color:var(--txt);white-space:nowrap;z-index:var(--z-rpop);box-shadow:0 6px 18px rgba(0,0,0,.25)}
       .rpop b{color:var(--ok)}
+      /* P2-6：补 3 个此前零 CSS 规则的 class（退化为浏览器默认，文字裸排）。统一走设计语言 token。 */
+      .rd-offline{font-size:13px;color:var(--sub);text-align:center;padding:14px 12px;line-height:1.55}
+      .rd-skel{font-size:13px;color:var(--sub);text-align:center;padding:14px 12px;line-height:1.55}
+      .plan-txt{font-size:14px;line-height:1.65;color:var(--txt);padding:4px 0;white-space:normal;word-break:break-word}
       .reader-ctrls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
       .reader-ctrls .btn{flex:1 1 auto;font-size:13px}
       .reader-score{margin-top:10px}
@@ -714,7 +719,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
          position:fixed 相对视口，不受 #nono-dock 的 right/bottom 影响；
          §F 红线：dock/fab/tip 三处定位一字未改。键盘高度经 --nono-kb（nonoKbWatch 写入）。 */
       #nono-panel.npanel-drawer{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100vw,560px);height:calc(100dvh - 64px - env(safe-area-inset-bottom) - var(--nono-kb,0px));max-height:none;border-radius:20px 20px 0 0;z-index:var(--z-drawer);box-shadow:0 -12px 40px rgba(0,0,0,.6)}
-      #nono-panel.npanel-drawer .np-head{position:relative;z-index:2}
+      #nono-panel.npanel-drawer .np-head{position:relative;z-index:var(--z-np-head)}
       #nono-panel.npanel-drawer .nc-scroll{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
       #nono-panel.npanel-drawer ~ #nono-fab{display:none}
       #np-collapse{display:none}
@@ -1324,7 +1329,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.2';
+var APP_VERSION = '0.24.3';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3103,12 +3108,36 @@ function buildStat(){
              funnel: FUNNEL, err: ERRSTAT };
   }catch(e){ return { phrases: 0, scenes: {}, tone: 0, day1Done: false, feat: {}, src: 'real' }; }
 }
+/* P2-1：云同步深合并（替代浅 Object.assign）。
+   云端 j.state 的嵌套对象（phrases={sceneId:[idx]}、nono.weak、dayDone、guideDone、aiWeak…）
+   若直接 Object.assign 会被整对象覆盖 → 另一台设备的练习记录静默丢失。
+   语义：对象递归按 key 合并、数组按值去重并集、null/undefined 不覆盖本地、标量远端优先（远端 _ts 更新）。
+   任何异常回退到原浅合并，保证不引入回归。 */
+function deepMergeState(base, inc){
+  if(!inc || typeof inc!=='object') return base;
+  if(Array.isArray(inc)){
+    if(!Array.isArray(base)) return inc.slice();
+    var seen={}, out=base.slice();
+    base.forEach(function(x){ seen[JSON.stringify(x)]=1; });
+    inc.forEach(function(x){ var k=JSON.stringify(x); if(!seen[k]){ seen[k]=1; out.push(x); } });
+    return out;
+  }
+  if(typeof base!=='object' || base===null || Array.isArray(base)) base={};
+  for(var k in inc){
+    var iv=inc[k];
+    if(iv===null||iv===undefined) continue;
+    if(typeof iv==='object'){ base[k]=deepMergeState(base[k], iv); }
+    else { base[k]=iv; }
+  }
+  return base;
+}
+
 async function pullProfile(){
   try{
     const r = await fetch(API_BASE+'api/profile?uid=' + encodeURIComponent(UID));
     const j = await r.json();
     if(j.ok && j.state && (j.state._ts||0) > (S._ts||0)){
-      S = Object.assign(loadState(), j.state);
+      try { S = deepMergeState(loadState(), j.state); } catch(e){ S = Object.assign(loadState(), j.state); } /* P2-1：深合并，避免另一台设备进度被整对象覆盖 */
       saveStateLocal();
       renderHome();
     }
@@ -5520,7 +5549,7 @@ function renderHome(){
   d1 += '</div><div class="day1-cta" style="display:'+(cdAll?'block':'none')+'">'+
     (cd>=DAYS.length ? T('🎉 All {n} days done — you can survive in China.').replace('{n}',DAYS.length) : T('🎉 Day {a} complete! Day {b} unlocks next time you open Sinoky.').replace('{a}',cd).replace('{b}',(cd+1)))+
     '</div><div class="day-prog">'+T('{a} / {n} days finished').replace('{a}',doneDays).replace('{n}',DAYS.length)+'</div>'+
-    (lastDate ? '<div class="day-finish-date" style="margin-top:6px;font-size:12.5px;font-weight:600;color:#0a8f6e">'+T('✅ Day {d} finished on {date}').replace('{d}',lastDone).replace('{date}',lastDate)+'</div>' : '')+
+    (lastDate ? '<div class="day-finish-date" style="margin-top:6px;font-size:12.5px;font-weight:600;color:var(--ok)">'+T('✅ Day {d} finished on {date}').replace('{d}',lastDone).replace('{date}',lastDate)+'</div>' : '')+
     '<button class="daylink" onclick="go(\'days\')">'+T('See all {n} days →').replace('{n}',DAYS.length)+'</button></div>';
 
   /* v0.5.1：场景默认只展开 4 张，其余折叠（能力完整保留，一键展开） */
@@ -8352,7 +8381,7 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
 /* ---- 浮动邀请（首次，只在 home，可点可关，只出一次）----
    位置与 #nono-tip 相同 —— 出现前 JS 会先 nonoHintHide() 清掉胶囊，不会叠。 */
 #nono-invite{
-  position:fixed;right:74px;bottom:104px;z-index:59;
+  position:fixed;right:74px;bottom:104px;z-index:var(--z-tip);
   max-width:min(70vw,272px);padding:11px 26px 11px 13px;
   border-radius:16px 16px 5px 16px;
   background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);

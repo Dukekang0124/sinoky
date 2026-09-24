@@ -254,11 +254,14 @@ async function recordStat(env, uid, st) {
 
      这里只隔离**本组新增**的 funnel / err：它们的写放大有上界
      （漏斗每位一生 0→1 一次，共 ≤4 次；错误用 3 档粗桶），不威胁每天 1000 写的配额。
-     feat / scenes 的同一缺陷**本轮不动** —— 修它会让「只浏览场景、不说话」的用户
-     每次 scene 计数变化都写一次 KV，那是**配额决策**，应交康哥单独拍板。 */
+     feat / scenes 的同一缺陷 —— P2-2 补齐隔离：feat/scenes 计数均为 max 幂等
+     （每场景/功能一生 0→1 一次），写放大上界 = 场景数+功能数（≤数十），
+     远在 1000/天配额内，原始「配额决策」顾虑不成立，故修复使 featDist 能正确落盘。 */
   if (s_before) {
     s.funnel = Object.assign({}, s_before.funnel || {});
     s.err = Object.assign({}, s_before.err || { n: 0, last: '' });
+    s.feat = Object.assign({}, s_before.feat || {});     // P2-2：隔离 feat，写回才能正确触发
+    s.scenes = Object.assign({}, s_before.scenes || {}); // P2-2：隔离 scenes，同上
   }
   } catch (e) { /* 读失败用默认值 */ }
 
@@ -336,8 +339,17 @@ async function summarizeStats(env) {
   const DAY = 86400000;
   const now = Date.now();
   const today = new Date(now).toISOString().slice(0, 10);
-  const list = await env.PROFILES.list({ prefix: 's:' });
-  const keys = (list && list.keys) || [];
+  /* P2-3：游标分页 + 硬上限，避免规模化后单次统计 = 全表 KV 串行读（成本/延迟线性上涨）。
+     KV list 单次最多 1000 键必须翻页；STAT_CAP 限制最坏读次数。 */
+  const STAT_CAP = 5000;
+  let processed = 0, cursor = undefined;
+  const keys = [];
+  do {
+    const list = await env.PROFILES.list({ prefix: 's:', limit: 1000, cursor });
+    const batch = (list && list.keys) || [];
+    for (const k of batch) { if (processed++ >= STAT_CAP) break; keys.push(k); }
+    cursor = (list && !list.list_complete && list.cursor) ? list.cursor : undefined;
+  } while (cursor && processed < STAT_CAP);
 
   let users = 0, dau = 0, phraseSum = 0, toneUsers = 0, day1Users = 0;
   let e1 = 0, r1 = 0, e3 = 0, r3 = 0, e7 = 0, r7 = 0, firstDayDone = 0;
@@ -696,7 +708,11 @@ async function recordChatStat(env, uid, reply) {
       ts: Date.now(),
     };
     const key = 'chat:' + Date.now() + ':' + Math.random().toString(36).slice(2, 8);
-    await env.FEEDBACK.put(key, JSON.stringify(rec));
+    try {
+      await env.FEEDBACK.put(key, JSON.stringify(rec), { expirationTtl: 15552000 }); /* P2-4：180 天 TTL，避免聊天埋点无限增长 */
+    } catch (e) {
+      try { await env.FEEDBACK.put(key, JSON.stringify(rec)); } catch (e2) { /* 静默 */ }
+    }
   } catch (e) { /* 统计失败不影响回复 */ }
 }
 /* v0.23.18 L4 聚合：遍历 p:<uid> 全量镜像，统计 AI 效果与留存。
@@ -937,7 +953,11 @@ export default {
         };
         const key = 'fb:' + Date.now() + ':' + Math.random().toString(36).slice(2, 8);
         if (env.FEEDBACK) {
-          await env.FEEDBACK.put(key, JSON.stringify(rec));
+          try {
+            await env.FEEDBACK.put(key, JSON.stringify(rec), { expirationTtl: 15552000 }); /* P2-4：180 天 TTL */
+          } catch (e) {
+            try { await env.FEEDBACK.put(key, JSON.stringify(rec)); } catch (e2) { /* 静默 */ }
+          }
           /* 写完立刻读回来验证 —— put 可能静默失败，只有回读能证明真的存住了 */
           const back = await env.FEEDBACK.get(key);
           console.log('[FEEDBACK] saved', key, 'verified=' + !!back);
