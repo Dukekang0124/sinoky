@@ -178,6 +178,18 @@ header img{width:34px;height:34px;border-radius:9px}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
 .day{aspect-ratio:1;border-radius:9px;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:var(--sub)}
 .day.hit{background:rgba(230,57,70,.2);border-color:var(--red);color:var(--txt)}
+.day.hit-act{background:rgba(230,57,70,.1);border-color:rgba(230,57,70,.45);color:var(--txt)} /* v0.24.6 P1-1：活跃日（浅）vs 计划完成（深）双色 */
+/* v0.24.6 N-1：首屏显式语言选择器 */
+#lang-gate{position:fixed;inset:0;z-index:10001;background:rgba(10,14,20,.96);display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
+#lang-gate .lg-card{width:min(92vw,440px);background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);border:1px solid rgba(255,255,255,.16);border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.6);padding:26px 22px}
+#lang-gate .lg-title{font-size:1.25rem;font-weight:800;color:var(--txt);text-align:center}
+#lang-gate .lg-sub{font-size:.72rem;color:var(--sub);text-align:center;margin:6px 0 18px;line-height:1.5}
+#lang-gate .lg-grid{display:flex;flex-direction:column;gap:10px}
+#lang-gate .lg-opt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 15px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--txt);font-family:inherit;font-size:1rem;cursor:pointer;text-align:left;transition:border-color .15s,transform .1s}
+#lang-gate .lg-opt:hover{border-color:var(--red);transform:translateY(-1px)}
+#lang-gate .lg-opt .lg-flag{font-size:1.4rem;line-height:1}
+#lang-gate .lg-opt .lg-name{font-weight:600}
+#lang-gate .lg-foot{margin-top:16px;text-align:center;font-size:.72rem;color:var(--sub);letter-spacing:.04em}
 .views{display:none}
 .views.on{display:block}
 nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,36,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:var(--z-nav)}
@@ -1272,6 +1284,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 <nav><button id="nav-home" class="on" onclick="go('home')"><span class="navico navico-home"></span>Home</button><button id="nav-practice" onclick="go('practice')"><span class="navico navico-practice"></span>Practice</button><button id="nav-explore" onclick="go('explore')"><span class="navico navico-explore"></span>Explore</button><button id="nav-prog" onclick="go('prog')"><span class="navico navico-prog"></span>Progress</button><button id="nav-me" onclick="go('me')"><span class="navico navico-me"></span>Me</button></nav>
 <div class="toast" id="toast"></div>
 <div id="splash"><div class="sp-brand">Sino<b>k</b>y</div><img src="assets/splash/a8_9x16.webp" alt="Sinoky" onerror="this.parentNode.classList.add('sp-fallback')"></div>
+<!-- v0.24.6 N-1：首屏显式语言选择器（任何文字出现前先选母语，兜底浏览器误判/不受支持语言） -->
+<div id="lang-gate" style="display:none">
+  <div class="lg-card">
+    <div class="lg-title">Choose your language</div>
+    <div class="lg-sub">选母语 · Elige tu idioma · Выберите язык · Chọn ngôn ngữ · Pilih bahasa · เลือกภาษา</div>
+    <div class="lg-grid" id="lg-grid"></div>
+    <div class="lg-foot">Sinoky · 思诺启</div>
+  </div>
+</div>
 <div id="updatebar"></div>
 <div class="rd-pop" id="rd-pop" role="dialog" aria-label="Word details"></div>
 <div id="rd-mask"></div>
@@ -1329,7 +1350,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.5';
+var APP_VERSION = '0.24.6';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -3173,7 +3194,7 @@ if(!UID){
   pullProfile();
 })();
 var S = loadState();
-S.streak = S.streak || 0; S.lastDone = S.lastDone || null;
+S.streak = S.streak || 0; S.lastDone = S.lastDone || null; S.activeDays = S.activeDays || {};  /* v0.24.6 P1-1：活跃日集合，与计划完成解耦 */
 S.phrases = S.phrases || {};   /* {sceneId: [idx,...]} */
 S.days = S.days || [];         /* ['2026-08-30',...] */
 S._ts = S._ts || 0;            /* v0.3.31 云端合并时间戳 */
@@ -3858,7 +3879,7 @@ function dayPhraseRow(it, i){
   return '<div class="dayitem'+(daySaid(it.x)?' done':'')+'" onclick="openScene(\''+it.x.scene.id+'\','+it.x.idx+',\'days\')">'+
     '<span class="num">'+(i+1)+'</span><span>'+it.x.p.en+'</span>'+
     '<span class="st">'+(daySaid(it.x)?'\u2713 done':'Start')+'</span>'+
-    '<button class="jab" onclick="event.stopPropagation();nonoPracticeLine(\''+it.x.scene.id+'\','+it.x.idx+')" title="'+T('Practise with Nono')+'" aria-label="'+T('Practise this line with Nono')+'">🐼</button>'+
+    '<button class="jab" onclick="event.stopPropagation();nonoPracticeSmart(\''+it.x.scene.id+'\','+it.x.idx+')" title="'+T('Practise with Nono')+'" aria-label="'+T('Practise this line with Nono')+'">🐼</button>'+
   '</div>';
 }
 function toggleDay(n){
@@ -4365,6 +4386,7 @@ function renderSettings(){
    覆盖三层：①静态 HTML 文本节点（applyI18n TreeWalker）②动态渲染（MutationObserver 自动跟随）③动态提示（toast/nonoShow 入口内 T()）。
    新增 UI 铁律：英文原文写进字典即可被翻译；拼接句请拆「常量段 + 变量」。 */
 var LANGS = { en: 'English', zh: '中文', es: 'Español', ru: 'Русский', vi: 'Tiếng Việt', id: 'Bahasa Indonesia', th: 'ไทย' };
+var LANG_FLAG = { en:'🇬🇧', zh:'🇨🇳', es:'🇪🇸', ru:'🇷🇺', vi:'🇻🇳', id:'🇮🇩', th:'🇹🇭' };  /* v0.24.6 N-1：语言选择器国旗 */
 var LANG_PACK = {};
 var LANG_REV = {};      /* 译文 → 原文（切回/换语言时还原用） */
 var _lastAppliedLang = null;
@@ -4432,10 +4454,33 @@ function ensureI18nObserver(){
 function setLang(l){
   if (!LANGS[l]) return;
   S.lang = l; if (typeof saveState === 'function') saveState();
-  loadLangPack(l, function(){ applyI18n(document.body); });
+  loadLangPack(l, function(){ applyI18n(document.body); nonoClearTip(); });
   renderLangList();
 }
 function applyLang(){ applyI18n(document.body); }  /* 兼容旧调用点 */
+/* v0.24.6 N-1：首屏显式语言选择器（任何文字出现前先选母语，兜底误判/不受支持语言） */
+function buildLangGate(){
+  var grid = document.getElementById('lg-grid'); if(!grid) return;
+  grid.innerHTML = '';
+  Object.keys(LANGS).forEach(function(l){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'lg-opt';
+    b.innerHTML = '<span class="lg-flag">' + (LANG_FLAG[l]||'🌐') + '</span><span class="lg-name">' + LANGS[l] + '</span>';
+    b.onclick = function(){ chooseLang(l); };
+    grid.appendChild(b);
+  });
+}
+function chooseLang(l){
+  try { setLang(l); localStorage.setItem('sinoky_lang_chosen', '1'); } catch(e){}
+  var g = document.getElementById('lang-gate'); if(g) g.style.display = 'none';
+}
+function maybeShowLangGate(){
+  try{
+    if(localStorage.getItem('sinoky_lang_chosen')) return;   // 选过一次永不再弹
+    var g = document.getElementById('lang-gate'); if(!g) return;
+    buildLangGate(); g.style.display = 'flex';
+  }catch(e){}
+}
 function renderLangList(){
   /* v0.14.2：平铺 → 自定义下拉面板。唯一数据源 LANGS：新增语言只改数据，面板自动渲染+滚动 */
   var box = document.getElementById('lang-list');
@@ -4789,6 +4834,10 @@ function nonoShow(msg, opt) {
   var d = nonoDaily();
   if (d.n >= 4) return;                       /* 每日主动气泡上限 */
   if (nonoBusy()) return;                     /* 录音/播放中不打扰 */
+  if (opt.priority !== 'result') {            /* v0.24.6 P2-6：首启期主动气泡每会话最多 3 次，防刷屏 */
+    if ((NONO.proactiveN || 0) >= 3) return;
+    NONO.proactiveN = (NONO.proactiveN || 0) + 1;
+  }
   if (opt.priority === 'result') NONO.lockUntil = Date.now() + 2500;   /* 结果优先，防被功能说明覆盖 */
   d.n++; try { localStorage.setItem('sinoky_nono_day', JSON.stringify(d)); } catch (e) {}
   nonoPose(opt.pose || 'like');
@@ -4797,6 +4846,9 @@ function nonoShow(msg, opt) {
   (opt.actions || []).forEach(function (a) {
     acts += '<button class="' + (a.ghost ? 'ghost' : '') + '" onclick="' + a.fn + '">' + a.t + '</button>';
   });
+  if (opt.priority !== 'result') {           /* v0.24.6 P2-6：主动气泡给「今天不再提示」出口 */
+    acts += '<button class="ghost" onclick="nonoClose()">' + T('Not now') + '</button>';
+  }
   document.getElementById('nono-acts').innerHTML = acts;
   panel.style.display = 'block';
   NONO.lastShow = Date.now();
@@ -4806,6 +4858,13 @@ function nonoShow(msg, opt) {
 function nonoMin() {
   nonoDrawerOff();   /* v0.23.22：关面板前先清抽屉态（还原 Feedback 显隐），避免残留抽屉类 */
   var p = document.getElementById('nono-panel'); if (p) p.style.display = 'none';
+}
+/* v0.24.6 P2-2：切换界面语言时先清掉旧 Nono tip，避免中英双语气泡上下叠层 */
+function nonoClearTip(){
+  try{
+    var m = document.getElementById('nono-msg');
+    if(m && NONO.mode !== 'chat' && NONO.mode !== 'guide'){ m.innerHTML = ''; m.style.display = 'none'; }
+  }catch(e){}
 }
 function nonoClose() {
   nonoMin();
@@ -5456,6 +5515,17 @@ function nonoPracticeLine(sceneId, idx){
   nonoStartPracticeWith(line);
   nonoState('idle');
 }
+/* v0.24.6 P1-2：完成态跟读默认推进新句
+   卡片标 ✓ Done 后，点诺诺按钮不再重练刚完成的旧句，而是自动给下一句（本场景内下一句未说的；
+   若本场景全说完则保持当前句，旧句复习走显式入口）。 */
+function nonoPracticeSmart(sceneId, idx){
+  var sc = null; (window.SCENES||[]).forEach(function(x){ if(x.id===sceneId) sc=x; });
+  var arr = (S.phrases && S.phrases[sceneId]) || [];
+  if(sc && sc.phrases && arr.indexOf(idx) > -1){
+    for(var j=idx+1;j<sc.phrases.length;j++){ if(arr.indexOf(j) === -1){ nonoPracticeLine(sceneId, j); return; } }
+  }
+  nonoPracticeLine(sceneId, idx);
+}
 function nonoPracticeDialog(id, idx){
   var d=null; for(var i=0;i<DIALOGS.length;i++){ if(DIALOGS[i].id===id){ d=DIALOGS[i]; break; } }
   if(!d || !d.lines[idx]) return;
@@ -5839,6 +5909,7 @@ function markDone(i){
   var at = arr.indexOf(i);
   if(at === -1){
     arr.push(i);
+    markActiveDay();   // v0.24.6 P1-1：首次开口即记活跃日（连胜+日历点亮）
     /* v0.3.58 SRS-lite：首次说完 -> 入排程（bucket 0，明天到期） */
     S.rv = S.rv || {};
     S.rv[curScene.id+':'+i] = { b:0, d:today() };
@@ -6106,17 +6177,33 @@ function errHuman(e){
 function toneKey(n){
   return ' ' + T({ '1':'1st tone', '2':'2nd tone', '3':'3rd tone', '4':'4th tone' }[n] || 'neutral tone');
 }
+/* v0.24.6 P1-1：活跃日 / 计划完成 解耦
+   旧逻辑：连胜与日历只在「完成 30 天计划某 Day」时更新，导致练完一个普通场景（如 Arrival 5 句）
+   后连胜仍为 0、日历不点亮，努力在日历上隐身，最伤动机。
+   新逻辑：当天有 ≥1 次开口（markDone 首次标记某句）即记「活跃日」——连胜 +1、日历浅色点亮；
+   完成当日计划（markDaysDone）再用深色/对勾区分。两种颜色、互不强依赖。 */
+function markActiveDay(){
+  var d = today();
+  S.activeDays = S.activeDays || {};
+  var res = { changed:false, grace:false };
+  if(!S.activeDays[d]){
+    S.activeDays[d] = true;
+    if(S.lastDone !== d){
+      var y1 = shiftDate(d, -1), y2 = shiftDate(d, -2);   // yesterday / day before yesterday
+      res.grace = (S.lastDone === y2);                    // 恰好漏 1 天 → 宽恕（不罚）
+      if(S.lastDone === y1) S.streak = (S.streak||0) + 1; // 连续天 → +1
+      else if(!res.grace) S.streak = 1;                   // 间隔≥3天或首次 → 重置
+      S.lastDone = d;
+    }
+    if(S.days.indexOf(d) === -1) S.days.push(d);
+    saveState();
+    res.changed = true;
+  }
+  return res;
+}
 function finishScene(){
   var d = today();
-  var grace = false;
-  if(S.lastDone !== d){
-    var y1 = shiftDate(d, -1), y2 = shiftDate(d, -2);  // yesterday / day before yesterday
-    grace = (S.lastDone === y2);                        // missed exactly 1 day → forgive (no penalty)
-    if(S.lastDone === y1) S.streak = S.streak + 1;      // consecutive day → +1
-    else if(!grace) S.streak = 1;                        // gap >=3 days or first time → reset
-    S.lastDone = d;
-  }
-  if(S.days.indexOf(d)===-1){ S.days.push(d); }
+  var grace = markActiveDay().grace;   // v0.24.6 P1-1：活跃日+连胜口径统一（含 grace 判定）
   /* v0.23.8（UX 评审 L6）：日期数组设 400 天上限。分享卡热力图只看最近 14 天、MAU 看 30 天，
      400 天远超任何用途；不设限则一年 365 条只增不减。 */
   if(S.days.length > 400) S.days = S.days.slice(-400);
@@ -6266,10 +6353,11 @@ function renderProgress(){
   for(var i=13;i>=0;i--){
     var d = new Date(Date.now()-i*864e5).toISOString().slice(0,10);
     var dd = new Date(Date.now()-i*864e5);
-    var hit = S.days.indexOf(d)>-1;
-    var dn = []; for(var q=1;q<=DAYS.length;q++){ if((S.dayDone||{})[q]===d) dn.push(q); }
-    var tip = hit ? (dn.length ? T('{d} · Day {n} done').replace('{d}',d).replace('{n}',dn.join(', ')) : T('{d} · practiced').replace('{d}',d)) : d;
-    html += '<div class="day'+(hit?' hit':'')+'" title="'+tip+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</div>';
+    var plan = 0; for(var q=1;q<=DAYS.length;q++){ if((S.dayDone||{})[q]===d){ plan = q; break; } }  // 计划完成日（深色/对勾）
+    var act = (S.activeDays && S.activeDays[d]) || S.days.indexOf(d)>-1;                            // 活跃日（当天有开口，浅色点亮）
+    var cls = plan ? ' hit' : (act ? ' hit-act' : '');
+    var tip = plan ? T('{d} · Day {n} done').replace('{d}',d).replace('{n}',plan) : (act ? T('{d} · practiced').replace('{d}',d) : d);
+    html += '<div class="day'+cls+'" title="'+tip+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</div>';
   }
   $('cal').innerHTML = html;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -7056,7 +7144,7 @@ function importProgress(){
     toast('This backup has no progress in it'); return;
   }
   S = st;
-  S.streak = S.streak || 0; S.lastDone = S.lastDone || null;
+  S.streak = S.streak || 0; S.lastDone = S.lastDone || null; S.activeDays = S.activeDays || {};
   S.phrases = S.phrases || {}; S.days = S.days || []; S._ts = S._ts || 0;
   S.tone = S.tone || { right:0, total:0 };
   S.feat = S.feat || {};
@@ -7173,6 +7261,7 @@ if(!LS_OK) setTimeout(function(){ toast('Storage is blocked — progress will no
    内部调用 selectLevel→loadCards 加载对应字卡。直接 loadCards() 不会渲染 tab 且 FC_LEVELS 为空。 */
 initLevels();
 loadSentences();
+try { maybeShowLangGate(); } catch(e){}
 
 /* ============ v0.3.62 ONBOARDING + DIALOG CARDS ============ */
 /* obStep/obTotal/obGoal initialized before boot gate */
