@@ -1350,7 +1350,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.6';
+var APP_VERSION = '0.24.7';
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -4598,7 +4598,7 @@ async function checkApkUpdate(){
     if(!j.apk || !j.apk.versionCode || !j.apk.url) return null;
     var local = await getLocalApkVersionCode();
     if(j.apk.versionCode > local){
-      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url, md5: j.apk.md5||'', size: j.apk.size||0, note: (j.apk.note || j.note || ''), noteEn: (j.apk.noteEn || j.noteEn || '') };
+      return { versionCode: j.apk.versionCode, version: j.apk.version||'', url: j.apk.url, md5: j.apk.md5||'', size: j.apk.size||0, force: !!(j.apk.force), note: (j.apk.note || j.note || ''), noteEn: (j.apk.noteEn || j.noteEn || '') };
     }
   }catch(e){}
   return null;
@@ -4622,11 +4622,18 @@ function apkNoteToList(raw){
    角标不占独立行）、What's new 红点要点列表（导语加粗、可滚动）、按钮行为不变 */
 function showApkUpdateDialog(apk){
   var st = updStoreGet();
-  if(st.apkDismissed === apk.versionCode){ showApkUpdateBar(apk); return; }
+  var forced = !!apk.force;
+  /* v0.24.7 强制更新机制：
+     - apk.force===true（关键更新）：弹窗完全不可关闭——无 ×、无「Not now」，仅留整行
+       「立即下载 ↓」按钮，点击即走 downloadAndInstall；不写 apkDismissed，下次启动仍弹，
+       直至用户安装新包。背景遮罩亦不可点击关闭。
+     - 普通 APK 更新（无 force 标记）：维持历史行为（× / Not now 可关闭，写 apkDismissed）。
+     强制分支显式跳过 apkDismissed 短路，避免被旧版 APK（<0.24.7）写过的 dismissal 吞掉。 */
+  if(!forced && st.apkDismissed === apk.versionCode){ showApkUpdateBar(apk); return; }
   if(document.getElementById('apk-upd-ov')) return;
   var ov = document.createElement('div');
   ov.id = 'apk-upd-ov';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-full-top);background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-full-top);background:rgba(0,0,0,.66);display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;';
   var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   var _noteRaw = (curLang() === 'zh') ? (apk.note || '') : (apk.noteEn || apk.note || '');
   var items = apkNoteToList(_noteRaw);
@@ -4641,28 +4648,37 @@ function showApkUpdateDialog(apk){
     + '<div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--red-text,var(--red));font-weight:700;margin-bottom:4px">' + T("What's new") + '</div>'
     + '<ul style="list-style:none;margin:0;padding:0;max-height:230px;overflow-y:auto;-webkit-overflow-scrolling:touch">' + listHtml + '</ul></div>') : '';
   var sizeTxt = apk.size ? (apk.size/1048576 >= 1 ? (apk.size/1048576).toFixed(1) + ' MB' : Math.round(apk.size/1024) + ' KB') : '';
+  /* 强制更新：去掉关闭 × 与「Not now」，仅留整行「立即下载」按钮；标题行右侧留白随关闭钮有无而动 */
+  var closeBtn = forced ? '' : '<span id="apk-upd-x" role="button" aria-label="Close" style="position:absolute;top:10px;right:12px;font-size:1.25rem;line-height:1;cursor:pointer;padding:6px 8px;color:var(--txt-3);">×</span>';
+  var btnHtml;
+  if(forced){
+    btnHtml = '<button id="apk-upd-now" style="width:100%;padding:14px;border:none;border-radius:12px;background:var(--red);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;">↓ ' + T('Download') + '</button>';
+  } else {
+    btnHtml = '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--txt-3);font-size:.95rem;cursor:pointer;">' + T('Not now') + '</button>'
+      + '<button id="apk-upd-now" style="flex:1.2;padding:12px;border:none;border-radius:12px;background:var(--red);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">↓ ' + T('Download') + '</button>';
+  }
   ov.innerHTML = '<style>@keyframes apkUpdIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}</style>'
     + '<div role="dialog" aria-modal="true" aria-label="' + esc(T('New version') + ' ' + (apk.version || '')) + '" style="background:var(--bg,#141a24);color:var(--txt,#eef2f7);max-width:400px;width:100%;border-radius:20px;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 16px 48px rgba(0,0,0,.55);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;animation:apkUpdIn .28s ease;">'
-    + '<span id="apk-upd-x" role="button" aria-label="Close" style="position:absolute;top:10px;right:12px;font-size:1.25rem;line-height:1;cursor:pointer;padding:6px 8px;color:var(--txt-3);">×</span>'
-    + '<div style="display:flex;align-items:center;gap:12px;margin:2px 26px 0 0;">'
+    + closeBtn
+    + '<div style="display:flex;align-items:center;gap:12px;margin:2px ' + (forced ? '0' : '26px') + ' 0 0;">'
     + '<img src="icons/icon-192.png" alt="" width="46" height="46" style="flex:none;width:46px;height:46px;border-radius:12px;">'
     + '<div style="min-width:0;">'
     + '<div style="font-size:1.02rem;font-weight:700;line-height:1.3;">' + T('New version') + ' <span style="color:var(--red-text,var(--red))">' + (apk.version || ('v' + apk.versionCode)) + '</span><span aria-hidden="true" style="display:inline-block;vertical-align:2px;margin-left:8px;background:var(--red);color:#fff;font-size:.58rem;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:999px;">NEW</span></div>'
     + (apk.size ? '<div style="font-size:.74rem;color:var(--txt-3);margin-top:3px;">' + T('Install package ≈ ') + sizeTxt + T(' · verified by MD5') + '</div>' : '')
     + '</div></div>'
     + noteHtml
-    + '<div style="display:flex;gap:10px;margin-top:2px;">'
-    + '<button id="apk-upd-later" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--txt-3);font-size:.95rem;cursor:pointer;">' + T('Not now') + '</button>'
-    + '<button id="apk-upd-now" style="flex:1.2;padding:12px;border:none;border-radius:12px;background:var(--red);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;">↓ ' + T('Download') + '</button>'
-    + '</div></div>';
+    + '<div style="display:flex;gap:10px;margin-top:2px;">' + btnHtml + '</div></div>';
   document.body.appendChild(ov);
+  /* 强制更新不写 apkDismissed（无法永久静默）。「Not now」仅非强制分支存在。 */
   function dismiss(){
     st.apkDismissed = apk.versionCode; updStoreSet(st);
     ov.remove();
     /* Not now = 本版本完全静默（弹窗/横幅都不再自动出现），settings 手动 Check update 始终可用 */
   }
-  document.getElementById('apk-upd-later').onclick = dismiss;
-  document.getElementById('apk-upd-x').onclick = dismiss;
+  if(!forced){
+    document.getElementById('apk-upd-later').onclick = dismiss;
+    document.getElementById('apk-upd-x').onclick = dismiss;
+  }
   document.getElementById('apk-upd-now').onclick = function(){ ov.remove(); startApkUpdate(apk); };
 }
 /* v0.12.0：横幅关闭记忆——用户关过的版本不再打扰（apk/web 双通道共用存储） */
@@ -4717,7 +4733,7 @@ function updOverlay(){
 }
 var UPD = { lastT: 0, bound: false, gotEvt: false, watch: null };
 async function startApkUpdate(apk){
-  var p = Capacitor.Plugins && Capacitor.Plugins.UpdatePlugin;
+  var p = (typeof Capacitor!=='undefined' && Capacitor.Plugins) ? Capacitor.Plugins.UpdatePlugin : null;
   if(!p || !p.downloadAndInstall){ toast('Update not supported in this build'); return; }
   var ov = updOverlay();
   var bar = document.getElementById('upd-ov-bar');
@@ -7217,6 +7233,16 @@ fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.js
 }).catch(function(){});
 
 document.querySelectorAll('.v-txt').forEach(function(el){ el.textContent = APP_VERSION; });
+
+/* v0.24.7：应用回到前台时复检 APK 更新——强制更新（force:true）即使被旧版
+   dismissal 标记过也会重新弹出（showApkUpdateDialog 强制分支跳过 apkDismissed
+   短路），确保用户最终升级；非强制分支沿用既有 apkDismissed 记忆。 */
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState !== 'visible') return;
+  if(typeof Capacitor==='undefined' || !Capacitor.isNativePlatform()) return;
+  if(document.getElementById('apk-upd-ov')) return;
+  setTimeout(function(){ try{ checkApkUpdate().then(function(a){ if(a) showApkUpdateDialog(a); }); }catch(e){} }, 600);
+});
 var obStep = 1, obTotal = 6, obGoal = 'travel';
 if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('home'); }
 /* v0.14.0 i18n 启动：首次按系统语言初始化（zh/es→对应语言，其余 en），已选则跟随用户 */
