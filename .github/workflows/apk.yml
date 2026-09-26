@@ -499,7 +499,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "root version.json already in sync"
           else
-            git commit -q -m "[skip ci] sync apk metadata v${V} (md5+size)" && git push -q origin HEAD:main && echo "pushed apk metadata sync to main" || echo "::warning::could not push version.json sync (main may have moved)"
+            git commit -q -m "[skip ci] sync apk metadata v${V} (md5+size)" && git push -q origin HEAD:main && echo "pushed apk metadata sync to main" || echo "::error::CI could not push version.json sync to main (branch protection? bot lacks bypass) — RECONCILE MANUALLY: local www/version.json is still correct and live; update root version.json apk segment to the deployed md5/size and push main by hand"
           fi
           npx --yes wrangler@3 pages deploy www --project-name=sinoky --branch=main
           echo "published https://sinoky.pages.dev/apk/Sinoky-v${V}-release.apk"
