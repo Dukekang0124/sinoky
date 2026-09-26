@@ -3,11 +3,11 @@
   "updated": "2026-09-26",
   "note": "v0.24.7：APK 强制更新机制 + 原生壳同步网页 v0.24.6。（1）新增应用内强制更新：检测到新 APK 版本即弹不可关闭的更新提示（关键更新 force:true 时完全不可关闭、仅留「立即下载」），引导用户下载安装，杜绝旧版静默跳过；（2）原生壳升至 v0.24.7，正式打包进 v0.24.6 全部网页特性（奖励闭环解耦、首屏语言门、诺诺频次上限等）；（3）应用回到前台自动复检更新。APK 用户请尽快更新以获得最新体验。",
   "apk": {
-    "versionCode": 2405,
-    "version": "0.24.5",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.5-release.apk",
-    "md5": "7ce73d7e4b681ec31a1b80d29897dcfb",
-    "size": 24074816,
+    "versionCode": 2407,
+    "version": "0.24.7",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.7-release.apk",
+    "md5": "690a557071831dbe7f7ca69683063fdd",
+    "size": 24078912,
     "force": true
   },
   "noteEn": [
