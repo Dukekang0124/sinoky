@@ -12,8 +12,14 @@ const APP = path.join(__dirname, '..');
 const LOCAL = JSON.parse(require('fs').readFileSync(path.join(APP, 'version.json'), 'utf8'));
 const V = LOCAL.version;
 const CODE = Number((LOCAL.apk || {}).versionCode || 0);
+/* 🔴 双线版本（v0.28.1 起）：网页线可以**领先** APK 线（纯网页修正不发新 APK）。
+   此时 apk 段仍指向上一个真实出包版本。凡「APK 相关」的断言都必须用 AV 而非 V，
+   否则每发一次网页线就会集体报假失败（v0.23.3 同类坑的重演）。 */
+const AV = String((LOCAL.apk || {}).version || V);
+const SPLIT = AV !== V;
 const BASE = process.env.BASE || 'https://sinoky.pages.dev';
-console.log('目标版本 v' + V + '（versionCode ' + CODE + '），站点 ' + BASE + '\n');
+console.log('网页版本 v' + V + (SPLIT ? '（网页线领先，APK 线仍为 v' + AV + '）' : '') +
+            ' │ versionCode ' + CODE + ' │ 站点 ' + BASE + '\n');
 
 function get(u, opts) {
   return new Promise((res, rej) => {
@@ -48,7 +54,7 @@ function ok(name, pass, detail) { R.push({ name, pass, detail }); }
     ok('①b 线上 apk.versionCode = ' + CODE, Number(a.versionCode) === CODE, 'got ' + a.versionCode);
     ok('①c 线上 apk.md5 非空', !!a.md5 && a.md5.length === 32, 'md5=' + (a.md5 || '(empty)'));
     ok('①d 线上 apk.size > 0', Number(a.size) > 0, 'size=' + a.size);
-    ok('①e apk.url 指向 ' + V, String(a.url || '').includes('Sinoky-v' + V), 'url=' + a.url);
+    ok('①e apk.url 指向 ' + AV + (SPLIT ? '（APK 线版本）' : ''), String(a.url || '').includes('Sinoky-v' + AV), 'url=' + a.url);
   } catch (e) { ok('① 线上 version.json 可读', false, String(e.message)); }
 
   // ② 线上首页 APP_VERSION（注意：/index.html 会 308 重定向，必须走根路径，否则拿不到正文）
@@ -87,7 +93,7 @@ function ok(name, pass, detail) { R.push({ name, pass, detail }); }
 
   // ⑤ APK 实体可下 + 字节与 md5 复算
   try {
-    const url = (live && live.apk && live.apk.url) || (BASE + '/apk/Sinoky-v' + V + '-release.apk');
+    const url = (live && live.apk && live.apk.url) || (BASE + '/apk/Sinoky-v' + AV + '-release.apk');
     const h = await head(url + '?cb=' + cb);
     ok('⑤ APK HEAD 200', h.s === 200, 'status=' + h.s + ' len=' + h.len + ' type=' + h.type);
     ok('⑤b APK content-type 含 android/apk', /android|apk/i.test(String(h.type || '')), 'type=' + h.type);
@@ -112,8 +118,8 @@ function ok(name, pass, detail) { R.push({ name, pass, detail }); }
   try {
     const r = await get('https://api.github.com/repos/Dukekang0124/sinoky/releases?per_page=3');
     if (r.s === 200) {
-      const rel = JSON.parse(r.b).find(x => x.tag_name === 'v' + V) || null;
-      ok('⑥ GitHub Release v' + V + ' 存在', !!rel, rel ? (rel.assets || []).map(a => a.name + ':' + a.size).join(',') : 'HTTP ' + r.s + ' (私有仓库需 token)');
+      const rel = JSON.parse(r.b).find(x => x.tag_name === 'v' + AV) || null;
+      ok('⑥ GitHub Release v' + AV + (SPLIT ? '（APK 线版本）' : '') + ' 存在', !!rel, rel ? (rel.assets || []).map(a => a.name + ':' + a.size).join(',') : 'HTTP ' + r.s + ' (私有仓库需 token)');
     } else {
       ok('⑥ GitHub Release 可查', false, 'HTTP ' + r.s + ' —— 私有仓库未认证（非发版缺陷，需 token 复核）');
     }

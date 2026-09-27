@@ -1,4 +1,4 @@
-/* 线上真跑截图：证明 v0.28.0 主动智能真的在线上可交互
+/* 线上真跑截图：证明主动智能（v0.28+）真的在线上可交互 —— 期望版本动态读仓库根 version.json
  *  ① 首页主动卡（行程临近 → 「今天练这 10 句」）
  *  ② 行程包面板（10 句 / 跨 zone / 进度）
  *  ③ 行程包评分回流（点一句 → 出评分，进度 1/10）
@@ -27,6 +27,8 @@ const round = new Date(Date.now() + 8 * 3600e3 + 86400e3).toISOString().slice(0,
   await p.goto('https://sinoky.pages.dev/?cb=' + Date.now(), { waitUntil: 'domcontentloaded', timeout: 60000 });
   await p.waitForFunction(() => typeof S === 'object' && typeof PRO === 'object', { timeout: 45000 });
   const ver = await p.evaluate(() => APP_VERSION);
+  const want = require('path').join(__dirname, '..', 'version.json');
+  const WANT = JSON.parse(require('fs').readFileSync(want, 'utf8')).version;
 
   /* ① 语言门 —— 真的点掉（按钮靠 addEventListener 绑，只能用文字定位） */
   const gate = await p.evaluate(() => !!document.getElementById('lang-gate'));
@@ -130,7 +132,7 @@ const round = new Date(Date.now() + 8 * 3600e3 + 86400e3).toISOString().slice(0,
   await p.waitForTimeout(600);
   await p.screenshot({ path: path.join(OUT, 'P4-trip-setting-live.png') });
 
-  console.log('线上 APP_VERSION = ' + ver + (ver === '0.28.0' ? ' ✅' : ' ❌ 期望 0.28.0'));
+  console.log('线上 APP_VERSION = ' + ver + (ver === WANT ? ' ✅' : ' ❌ 期望 ' + WANT));
   console.log('语言门 = ' + gate + ' | 摘遮挡后中心点 = ' + JSON.stringify(log[log.length - 1]));
   console.log('seed 决策树 = ' + JSON.stringify(seeded));
   console.log('首页主动卡 = ' + JSON.stringify(card));
