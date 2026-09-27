@@ -28,6 +28,8 @@ const EXCLUDE = new Set([
   'node_modules', 'android', 'www', 'apk', 'apk-icons', 'scripts', 'voice', '_internal',
   'package.json', 'package-lock.json', 'capacitor.config.json',
   '_audit_i18n.txt',
+  'wrangler.toml',     // v0.24.8 新增：Pages 部署配置（KV 绑定/兼容标记）。属构建配置，**不上线**（上线等于把部署配置公开可下载）
+  'nul',               // Windows 保留设备名的 0 字节残留（环境产物）。归类为排除，避免每次构建硬失败
 ]);
 
 /* ── 归类断言（2026-09-12 新增）────────────────────────────────────

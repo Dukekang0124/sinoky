@@ -890,7 +890,27 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       </div>
       <div class="ob-sp"></div>
     </div>
+    <!-- v0.25.0 · M1 目标向导新增两步：计划到访城市+日期（可跳过）→ 母语确认。
+         来源：产品规划/2026-09-27-中文场景教练智能体-升级方案.md §M1 -->
     <div class="ob-screen" data-step="6">
+      <div class="ob-il">🗺️</div>
+      <h1>Where are you <span class="hl">heading?</span></h1>
+      <p class="ob-sub">Pick a city and your arrival date — we'll build a last-minute pack of the lines you'll actually need. Skip if you have no fixed plan.</p>
+      <div class="ob-chips" id="ob-cities" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div style="margin-top:18px">
+        <div style="font-size:13px;color:var(--sub);margin-bottom:8px">Arrival date <span style="opacity:.6">(optional)</span></div>
+        <input type="date" id="ob-arrive" style="width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--card);background:#1c2028;color:#f2f4f7;font-family:inherit;font-size:15px;-webkit-appearance:none">
+      </div>
+      <div class="ob-sp"></div>
+    </div>
+    <div class="ob-screen" data-step="7">
+      <div class="ob-il">🌐</div>
+      <h1>Your mother tongue?</h1>
+      <p class="ob-sub">This shapes how we explain tones and word order — it is not the app language.</p>
+      <div class="ob-levels" id="ob-native"></div>
+      <div class="ob-sp"></div>
+    </div>
+    <div class="ob-screen" data-step="8">
       <img class="ob-mascot" src="assets/mascot/cheer.webp" alt="" onerror="this.remove()">
       <div class="ob-steps">
         <img src="assets/onboard/step1-pinyin.webp" alt="" loading="lazy" onerror="this.remove()">
@@ -1352,7 +1372,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.8';
+var APP_VERSION = '0.25.0';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -3113,8 +3133,16 @@ async function pushProfile(useBeacon){
   try{
     /* v0.3.40：上云载荷剔除纯游标字段。cards 只是"翻到第几张"，换设备重来一遍无损失，
        却是最高频的状态变化——带上它脏检查永远成立。真实进度（开口/声调/Day）照常 8s 内上云。 */
+    if(typeof LM !== 'undefined'){ try{ LM.compact(); }catch(e){} }
     const cloudState = Object.assign({}, S, { _ts: Date.now() });
     delete cloudState.cards;
+    /* v0.25.0 L1：S.lm 是学员模型（定长），搭同一 payload 上云 —— 零新增 KV 写。
+       但 S.lm.buf 是「短期记忆」本地环形缓冲（cap 200），必须剔除，否则 payload 膨胀。 */
+    if(cloudState.lm && typeof cloudState.lm === 'object'){
+      const lmCloud = Object.assign({}, cloudState.lm);
+      delete lmCloud.buf;
+      cloudState.lm = lmCloud;
+    }
     const state = cloudState;
     const body = JSON.stringify({ uid: UID, state, stat: buildStat() });
     /* v0.3.39 写入节流：pagehide/后台时普通 fetch 会被浏览器丢弃，sendBeacon 在 unload 最可靠；
@@ -3261,6 +3289,486 @@ seedDayDone();               /* 首次运行：把已完成的 Day 标成 ''，�
    多设备场景下会判定「本地比云端新」，把本设备旧进度写回云端、冲掉另一台设备的新进度。
    同步交给 pullProfile 合并完成后触发。 */
 saveStateLocal();
+
+/* ===== v0.25.0 · L1 LearnerModel（S.lm）=================================
+   四个缺口（个性化路径 / 角色对话 / 长期记忆 / 主动推荐）同源：产品缺的
+   不是四个功能，是「学员模型」这一层。本模块就是那一层——全产品唯一学员
+   事实源，其余能力都是它的消费者（一份投入、四处收益）。
+   硬约束（详见 产品规划/2026-09-27-中文场景教练智能体-升级方案.md §5.2）：
+     ① 定长     weak≤5 · mastered≤200 · mile≤50 · buf≤200（防 payload 膨胀）
+     ② 无隐私   不存姓名/邮箱/照片/精确地址；城市是唯一位置信息
+     ③ 可迁移   v 字段 + migrate()，老用户升级不丢进度
+     ④ 零新增 KV 写   搭车既有 /api/profile 的 p:{uid}（buf 上云前剔除）
+   命名空间纪律（§3.3）：禁止再新增顶层 S.xxx，一律挂 S.lm.*
+   ======================================================================== */
+var LM_ABIL = ['tone','initial','final','fluency','listening','vocab','grammar','pragmatics'];
+var LM_CAP  = { weak:5, mastered:200, mile:50, buf:200 };
+var LM = (function(){
+  var V = 1;
+  function defaults(){
+    return {
+      v: V,
+      goal:  { native:'', purpose:'travel', cities:[], arrive:'', days:0 },
+      level: { band:'', conf:0, testedAt:'' },
+      abil:  { tone:0.35, initial:0.60, final:0.55, fluency:0.25,
+               listening:0.40, vocab:0.20, grammar:0.35, pragmatics:0.20 },
+      weak:  [],
+      mastered: [],
+      path:  { fam:'travel', node:'', done:[], startedAt:'' },
+      trip:  null,
+      mile:  [],
+      policy:{ hint:'standard', weights:{}, strategy:{} },
+      stats: { days:0, said:0, dueCount:0 },
+      buf:   [],
+      updatedAt: 0
+    };
+  }
+  /* 老用户迁移：逐字段兜底（沿用 loadState 的 `S.x = S.x || {}` 风格），
+     并保证定长 cap —— 防某次异常写入把 payload 撑爆。 */
+  function migrate(){
+    var d = defaults(), m = S.lm;
+    if(!m || typeof m !== 'object') m = {};
+    ['goal','level','abil','path','policy','stats'].forEach(function(k){
+      if(!m[k] || typeof m[k] !== 'object'){ m[k] = d[k]; }
+      else { for(var f in d[k]){ if(m[k][f] === undefined) m[k][f] = d[k][f]; } }
+    });
+    if(!Array.isArray(m.weak))     m.weak = [];
+    if(!Array.isArray(m.mastered)) m.mastered = [];
+    if(!Array.isArray(m.mile))     m.mile = [];
+    if(!Array.isArray(m.buf))      m.buf = [];
+    if(m.trip === undefined)       m.trip = null;
+    /* 老用户已有 S.goal（travel/work/people/fun）→ 无痛映射进 lm.goal.purpose */
+    if(!m.goal.purpose && S.goal)  m.goal.purpose = S.goal;
+    if(!m.goal.native && S.lang)   m.goal.native = (S.lang === 'zh') ? 'zh' : (S.lang || 'en');
+    if(!m.path.fam)                m.path.fam = m.goal.purpose || 'travel';
+    m.v = V;
+    S.lm = m;
+    return m;
+  }
+  function get(){ if(!S.lm) migrate(); return S.lm; }
+  function save(){ get().updatedAt = Date.now(); if(typeof saveState === 'function') saveState(); }
+
+  /* ---- 短期记忆：事件环形缓冲（本地；7 天窗口；上云前剔除）---- */
+  function event(type, p){
+    var m = get(), buf = m.buf;
+    buf.push({ t: Date.now(), k: type, d: p || null });
+    while(buf.length > LM_CAP.buf) buf.shift();
+    return buf.length;
+  }
+  function pruneBuf(days){
+    var m = get(), cut = Date.now() - (days || 7) * 86400000;
+    m.buf = m.buf.filter(function(e){ return e && e.t >= cut; });
+  }
+  /* ---- 长期记忆：8 维能力指数移动平均（α 越小越稳，防单次抖动）---- */
+  function abil(dim, value, alpha){
+    if(LM_ABIL.indexOf(dim) < 0) return;
+    var m = get(), a = (alpha === undefined) ? 0.25 : alpha;
+    var cur = (typeof m.abil[dim] === 'number') ? m.abil[dim] : 0.5;
+    var v = Math.max(0, Math.min(1, value));
+    m.abil[dim] = +(cur * (1 - a) + v * a).toFixed(3);
+  }
+  /* 弱点：维度级（非句子级）——回答「他为什么卡」，而不是「卡在哪句」 */
+  function weakBump(key, n){
+    var m = get(), add = n || 1, hit = null;
+    for(var i=0;i<m.weak.length;i++){ if(m.weak[i].k === key){ hit = m.weak[i]; break; } }
+    if(hit) hit.n += add; else m.weak.push({ k:key, n:add });
+    m.weak.sort(function(a,b){ return b.n - a.n; });
+    if(m.weak.length > LM_CAP.weak) m.weak = m.weak.slice(0, LM_CAP.weak);
+  }
+  function master(key){
+    var m = get();
+    if(m.mastered.indexOf(key) >= 0) return false;
+    m.mastered.push(key);
+    while(m.mastered.length > LM_CAP.mastered) m.mastered.shift();
+    return true;
+  }
+  function isMastered(key){ return get().mastered.indexOf(key) >= 0; }
+  function milestone(id, extra){
+    var m = get();
+    for(var i=0;i<m.mile.length;i++){ if(m.mile[i].id === id) return null; }
+    var rec = Object.assign({ id:id, at:today() }, extra||{});
+    m.mile.push(rec);
+    while(m.mile.length > LM_CAP.mile) m.mile.shift();
+    return rec;
+  }
+  /* ---- 目标（向导输出）---- */
+  function setGoal(g){
+    var m = get();
+    ['native','purpose','arrive','days'].forEach(function(k){ if(g[k] !== undefined) m.goal[k] = g[k]; });
+    if(Array.isArray(g.cities)) m.goal.cities = g.cities.slice(0,5);
+    if(m.goal.purpose){ m.path.fam = m.goal.purpose; }
+    S.goal = m.goal.purpose;                    /* 兼容既有 renderDialogList 等旧读取点 */
+    if(!m.path.startedAt) m.path.startedAt = today();
+    save();
+  }
+  /* ---- 行程（可空 = 无固定行程模式）---- */
+  function setTrip(city, arrive, days){
+    var m = get();
+    if(!city){ m.trip = null; save(); return; }
+    m.trip = { city:city, arrive:arrive||'', dayIdx:0, plan:[] };
+    if(arrive){
+      var t0 = Date.parse(arrive + 'T00:00:00');
+      if(!isNaN(t0)) m.trip.dayIdx = Math.max(0, Math.floor((Date.now() - t0)/86400000));
+      m.goal.arrive = arrive;
+    }
+    m.goal.cities = [city];
+    if(days) m.goal.days = days;
+    save();
+  }
+  function daysToTrip(){
+    var m = get();
+    if(!m.trip || !m.trip.arrive) return null;
+    var t0 = Date.parse(m.trip.arrive + 'T00:00:00');
+    if(isNaN(t0)) return null;
+    return Math.ceil((t0 - Date.now())/86400000);
+  }
+  /* ---- 到期复习数（读既有 SM-2 的 S.rev，不自建调度）---- */
+  function dueCount(){
+    try{
+      var map = S.rev || {}, d = today(), n = 0;
+      for(var k in map){ var e = map[k]; if(e && e.due && String(e.due) <= d) n++; }
+      return n;
+    }catch(e){ return 0; }
+  }
+  /* ---- 记忆压缩：本地顺带做，零新增请求 / 零 KV 写（§5.3）---- */
+  function compact(){
+    pruneBuf(7);
+    var m = get();
+    if(S.days && S.days.length) m.stats.days = S.days.length;
+    m.stats.said = (S.phrases ? Object.keys(S.phrases).reduce(function(a,k){ return a + ((S.phrases[k]||[]).length); }, 0) : 0);
+    m.stats.dueCount = dueCount();
+  }
+  /* ---- 推送画像快照（退化版；供 cron 分段，随订阅一并上云）---- */
+  function snapshot(){
+    var m = get();
+    return {
+      pur: m.goal.purpose || 'travel',
+      city: (m.trip && m.trip.city) || (m.goal.cities[0] || ''),
+      daysToTrip: daysToTrip(),
+      streak: S.streak || 0,
+      due: dueCount(),
+      weakTop: (m.weak[0] && m.weak[0].k) || '',
+      tz: -(new Date().getTimezoneOffset()/60)
+    };
+  }
+  return { V:V, CAP:LM_CAP, ABIL:LM_ABIL, defaults:defaults, migrate:migrate, get:get, save:save,
+           event:event, pruneBuf:pruneBuf, abil:abil, weakBump:weakBump, master:master,
+           isMastered:isMastered, milestone:milestone, setGoal:setGoal, setTrip:setTrip,
+           daysToTrip:daysToTrip, dueCount:dueCount, compact:compact, snapshot:snapshot };
+})();
+LM.migrate();
+
+/* ===== v0.25.0 · M2 Path Engine（PATH.）==================================
+   把「日计划」从**一次性文本**改成**可追踪的对象**（有 nodeId / 进度 / 终点）。
+   关键设计决策：**结构由规则引擎定，LLM 只做润色**。
+     理由：① 遵守「内容不编造」红线（LLM 不得生成数字/语义字段直上）
+          ② 可测、可复现、可离线降级   ③ 成本为零
+   节点内容全部指向**既有 SCENES**，零新增教学内容。
+   ======================================================================== */
+/* 城市中文名 → SCENES id（既有城市场景以拼音作 id；此处只做映射，不新增内容） */
+var CITY_SCENE = { '北京':'beijing','上海':'shanghai','杭州':'hangzhou','重庆':'chongqing',
+  '成都':'chengdu','南昌':'nanchang','长沙':'changsha','新疆':'xinjiang','深圳':'shenzhen',
+  '广州':'guangzhou','厦门':'xiamen','海口':'haikou','青岛':'qingdao','西安':'xian',
+  '桂林':'guilin','张家界':'zhangjiajie','大理':'dali','中国香港':'hongkong' };
+var CITY_LIST = ['上海','北京','成都','西安','杭州','重庆','广州','深圳','厦门','青岛',
+  '长沙','昆明','桂林','大理','张家界','海口','南昌','中国香港'];
+var PATH_FAMS = {
+  travel: [
+    { id:'t1', name:'Day 1 · Landing',      scenes:['arrival','self-intro'], mustSay:3, unlock:[] },
+    { id:'t2', name:'Food & ordering',      scenes:['food','numbers'],       mustSay:3, unlock:['t1'] },
+    { id:'t3', name:'Getting around',       scenes:['transport'],            mustSay:3, unlock:['t1'] },
+    { id:'t4', name:'Markets & bargaining', scenes:['shopping'],             mustSay:3, unlock:['t2'] },
+    { id:'t5', name:'Hotel check-in',       scenes:['hotel'],                mustSay:3, unlock:['t2'] },
+    { id:'t6', name:'City in the wild',     scenes:['__CITY__'],             mustSay:5, unlock:['t4','t5'] },
+    { id:'t7', name:'Trip retro',           scenes:null, retro:true,         mustSay:0, unlock:['t6'] }
+  ],
+  work: [
+    { id:'w1', name:'Introduce yourself',   scenes:['self-intro','smalltalk'], mustSay:3, unlock:[] },
+    { id:'w2', name:'Numbers & prices',     scenes:['numbers'],              mustSay:3, unlock:['w1'] },
+    { id:'w3', name:'In the meeting',       scenes:['meeting'],              mustSay:3, unlock:['w1'] },
+    { id:'w4', name:'React & reply',        scenes:['express','replies'],    mustSay:3, unlock:['w3'] },
+    { id:'w5', name:'After-hours social',   scenes:['social'],               mustSay:3, unlock:['w4'] },
+    { id:'w6', name:'City in the wild',     scenes:['__CITY__'],             mustSay:5, unlock:['w5'] },
+    { id:'w7', name:'Trip retro',           scenes:null, retro:true,         mustSay:0, unlock:['w6'] }
+  ],
+  family: [
+    { id:'f1', name:'Meeting & greeting',   scenes:['self-intro'],           mustSay:3, unlock:[] },
+    { id:'f2', name:'Everyday small talk',  scenes:['smalltalk','replies'],  mustSay:3, unlock:['f1'] },
+    { id:'f3', name:'Eat together',         scenes:['food'],                 mustSay:3, unlock:['f1'] },
+    { id:'f4', name:'Getting around',       scenes:['transport'],            mustSay:3, unlock:['f2'] },
+    { id:'f5', name:'Say how you feel',     scenes:['express'],              mustSay:3, unlock:['f2'] },
+    { id:'f6', name:'City in the wild',     scenes:['__CITY__'],             mustSay:5, unlock:['f4'] },
+    { id:'f7', name:'Trip retro',           scenes:null, retro:true,         mustSay:0, unlock:['f6'] }
+  ],
+  live: [
+    { id:'l1', name:'Landing & settling',   scenes:['arrival','hotel'],      mustSay:3, unlock:[] },
+    { id:'l2', name:'Life admin',           scenes:['scene_day19_bank_account','scene_day20_phone_repair'], mustSay:3, unlock:['l1'] },
+    { id:'l3', name:'Doctor & pharmacy',    scenes:['scene_day10_pharmacy','scene_day15_see_doctor'],      mustSay:3, unlock:['l1'] },
+    { id:'l4', name:'Eat & shop',           scenes:['food','shopping'],      mustSay:3, unlock:['l2'] },
+    { id:'l5', name:'Make friends',         scenes:['smalltalk','scene_day11_making_friends'], mustSay:3, unlock:['l2'] },
+    { id:'l6', name:'City in the wild',     scenes:['__CITY__'],             mustSay:5, unlock:['l4'] },
+    { id:'l7', name:'Journey retro',        scenes:null, retro:true,         mustSay:0, unlock:['l6'] }
+  ]
+};
+var PATH = (function(){
+  /* 声调符号 → 调值，用于把「弱点维度」映射到具体句子（纯查表，无依赖） */
+  var TONE_MARK = { 'ā':1,'á':2,'ǎ':3,'à':4,'ē':1,'é':2,'ě':3,'è':4,'ī':1,'í':2,'ǐ':3,'ì':4,
+                    'ō':1,'ó':2,'ǒ':3,'ò':4,'ū':1,'ú':2,'ǔ':3,'ù':4,'ǖ':1,'ǘ':2,'ǚ':3,'ǜ':4 };
+  function fam(){ return LM.get().path.fam || 'travel'; }
+  function nodes(){ return PATH_FAMS[fam()] || PATH_FAMS.travel; }
+  function nodeById(id){ var a=nodes(); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; }
+  function isDone(id){ return LM.get().path.done.indexOf(id) >= 0; }
+  function isUnlocked(n){
+    if(!n || !n.unlock || !n.unlock.length) return true;
+    for(var i=0;i<n.unlock.length;i++){ if(!isDone(n.unlock[i])) return false; }
+    return true;
+  }
+  function currentNode(){
+    var m = LM.get(), a = nodes(), i;
+    if(m.path.node){ var c = nodeById(m.path.node); if(c && !isDone(c.id)) return c; }
+    for(i=0;i<a.length;i++){ if(!isDone(a[i].id) && isUnlocked(a[i])) return a[i]; }
+    return null;
+  }
+  function _findScene(id){
+    if(!id) return null;
+    if(id === '__CITY__'){
+      var m = LM.get(), cn = (m.trip && m.trip.city) || m.goal.cities[0] || '';
+      id = CITY_SCENE[cn] || '';
+      if(!id) return null;
+    }
+    for(var i=0;i<SCENES.length;i++){ if(SCENES[i].id === id) return SCENES[i]; }
+    return null;
+  }
+  function collect(n){
+    if(!n || n.retro) return [];
+    var out = [];
+    (n.scenes||[]).forEach(function(sid){
+      var s = _findScene(sid); if(!s || !s.phrases) return;
+      s.phrases.forEach(function(p,i){
+        out.push({ scene:s.id, idx:i, hz:p.hz, py:p.py, en:p.en, day:p.day, real:p.real, city:s.city||'' });
+      });
+    });
+    return out;
+  }
+  function key(it){ return it.scene + '#' + it.idx; }
+  function tones(it){
+    var s = it.py || '', t = {}, i, k;
+    for(i=0;i<s.length;i++){ k = TONE_MARK[s.charAt(i)]; if(k) t[k] = (t[k]||0)+1; }
+    return t;
+  }
+  /* 加权选句 —— 确定性、可解释（方案 §M2 公式；「节点相关度」实现为「未掌握优先」） */
+  function score(it, n){
+    var m = LM.get(), s = 0, i;
+    /* 0.35 弱点命中：弱点维度 → 句子特征 */
+    var tt = tones(it);
+    for(i=0;i<m.weak.length;i++){
+      var wk = m.weak[i].k || '';
+      if(wk.indexOf('tone') === 0){
+        var lv = parseInt(wk.replace(/[^0-9]/g,''), 10);
+        if(!lv || tt[lv]) { s += 0.35; break; }
+      } else if(wk.indexOf('initial') === 0 || wk.indexOf('final') === 0){ s += 0.35; break; }
+    }
+    /* 0.25 SRS 到期 */
+    var rv = (S.rev||{})[key(it)];
+    if(rv && (!rv.due || String(rv.due) <= today())) s += 0.25;
+    /* 0.20 未掌握（替代「节点相关度」——节点内排序才有意义） */
+    if(!LM.isMastered(key(it))) s += 0.20;
+    /* 0.20 城市命中 */
+    var tc = (m.trip && m.trip.city) || m.goal.cities[0] || '';
+    if(tc && (it.city === tc || (CITY_SCENE[tc] && CITY_SCENE[tc] === it.scene))) s += 0.20;
+    /* 0.15 未说过 */
+    if(!((S.phrases||{})[it.scene]||[]).length || ((S.phrases||{})[it.scene]||[]).indexOf(it.idx) < 0) s += 0.15;
+    return +s.toFixed(3);
+  }
+  /* 今日任务卡：1 必说 + 2 顺带（mustSay:3）+ 至多 1 复习 */
+  function todayCard(){
+    var n = currentNode();
+    if(!n) return null;
+    if(n.retro) return { node:n, must:[], extra:[], review:[], retro:true };
+    var it = collect(n);
+    it.forEach(function(x){ x._s = score(x, n); });
+    it.sort(function(a,b){ return b._s - a._s; });
+    var review = [];
+    var revMap = S.rev || {}, d = today();
+    for(var k in revMap){
+      var e = revMap[k]; if(!e || !e.due || String(e.due) > d) continue;
+      var sp = k.split('#'), sc = _findScene(sp[0]);
+      if(!sc || !sc.phrases || !sc.phrases[+sp[1]]) continue;
+      var p = sc.phrases[+sp[1]];
+      review.push({ scene:sc.id, idx:+sp[1], hz:p.hz, py:p.py, en:p.en, day:p.day, real:p.real, city:sc.city||'' });
+      if(review.length >= 1) break;
+    }
+    var extra = it.slice(1, 3).filter(function(x){ return review.length ? key(x) !== key(review[0]) : true; });
+    return { node:n, must:it.slice(0,1), extra:extra, review:review };
+  }
+  function progress(){
+    var a = nodes(), d = 0, i;
+    for(i=0;i<a.length;i++){ if(isDone(a[i].id)) d++; }
+    var c = currentNode(), inner = 0;
+    if(c && !c.retro){
+      var it = collect(c), said = 0;
+      for(i=0;i<it.length;i++){ if(LM.isMastered(key(it[i]))) said++; }
+      inner = it.length ? said/it.length : 0;
+    }
+    var pct = Math.min(100, Math.round(((d + (c ? inner : 0)) / Math.max(1, a.length)) * 100));
+    return { done:d, total:a.length, pct:pct, cur:c?c.id:'' };
+  }
+  /* 一句说对 → 记入学员模型（被评分链路调用） */
+  function markSaid(it){
+    if(!it) return;
+    LM.master(key(it));
+    LM.event('say', { s:key(it) });
+  }
+  function complete(id){
+    var m = LM.get();
+    if(m.path.done.indexOf(id) < 0) m.path.done.push(id);
+    var nx = currentNode();
+    m.path.node = nx ? nx.id : '';
+    LM.milestone('node:' + id, { node:id });
+    LM.save();
+    return nx;
+  }
+  return { FAMS:PATH_FAMS, fam:fam, nodes:nodes, nodeById:nodeById, isDone:isDone,
+           isUnlocked:isUnlocked, currentNode:currentNode, collect:collect, key:key,
+           score:score, todayCard:todayCard, progress:progress, markSaid:markSaid,
+           complete:complete, findScene:_findScene };
+})();
+
+/* ===== v0.25.0 · M1 Placement Engine（PLACE.）===========================
+   自适应 6 题（听辨 4 + 认字 2）——**不是考试，是定位**。
+   设计原则（遵守「内容不编造」红线）：
+     · 题目**全部来自既有 SCENES**，零新增人工内容
+     · 难度阶梯固定三档（day≤3 初学 / 4–9 生存 / 10+ 过渡，对应既有 data-lv）
+     · 自适应：连对 2 题升档 / 连错 2 题降档，最多 6 题
+     · **零网络**（speechSynthesis 本地播报，不占 /api/tts 额度）、**零 KV 写**
+   这是全套里唯一允许「不直接 edify」的模块 —— 没有它，后面所有个性化都是猜。
+   ======================================================================== */
+var PLACE = (function(){
+  var BANDS = ['beginner','survival','intermediate'];
+  var QN = 6, qi = 0, band = 0, streakR = 0, streakW = 0, correct = 0, cur = null, locked = false, fin = false;
+  function pool(b){
+    var out = [];
+    for(var i=0;i<SCENES.length;i++){
+      var s = SCENES[i]; if(!s.phrases) continue;
+      for(var j=0;j<s.phrases.length;j++){
+        var p = s.phrases[j], d = p.day || 1;
+        var lv = (d <= 3) ? 0 : (d <= 9 ? 1 : 2);
+        if(lv === b && p.hz && p.py && p.en) out.push({ scene:s.id, idx:j, hz:p.hz, py:p.py, en:p.en, day:d, city:s.city||'' });
+      }
+    }
+    return out;
+  }
+  function shuffle(a){
+    a = a.slice();
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+  function makeQ(){
+    var all = band === 0 ? pool(0) : (band === 1 ? pool(0).concat(pool(1)) : pool(1).concat(pool(2)));
+    if(!all.length) all = pool(0).concat(pool(1)).concat(pool(2));
+    if(!all.length) return null;
+    var sh = shuffle(all), ans = sh[0], opts = [ans], i;
+    for(i=1;i<sh.length && opts.length<4;i++){ if(sh[i].hz !== ans.hz && sh[i].en !== ans.en) opts.push(sh[i]); }
+    opts = shuffle(opts);
+    return { kind: (qi % 3 === 2) ? 'char' : 'listen', ans:ans, opts:opts };
+  }
+  function speak(text){
+    try{
+      if(!window.speechSynthesis) return;
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(String(text));
+      u.lang = 'zh-CN'; u.rate = 0.85;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function ov(){
+    var o = document.getElementById('place-ov');
+    if(!o){
+      o = document.createElement('div');
+      o.id = 'place-ov';
+      o.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(10,14,20,.97);display:flex;align-items:flex-start;justify-content:center;padding:22px 18px;overflow:auto;backdrop-filter:blur(6px)';
+      document.body.appendChild(o);
+    }
+    return o;
+  }
+  function close(){ var o = document.getElementById('place-ov'); if(o && o.parentNode) o.parentNode.removeChild(o); }
+  function bar(){
+    var w = Math.round(qi / QN * 100);
+    return '<div style="height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden;margin:12px 0 4px"><i style="display:block;height:100%;width:' + w + '%;background:var(--red);transition:width .3s"></i></div>';
+  }
+  function render(){
+    if(fin) return;
+    cur = makeQ(); locked = false;
+    if(!cur){ finish(); return; }
+    var h = '<div style="width:min(94vw,460px);background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:22px 20px;color:var(--txt)">';
+    h += '<div style="font-size:.72rem;color:var(--sub);letter-spacing:.06em">' + T('Quick placement') + ' · ' + (qi+1) + '/' + QN + '</div>' + bar();
+    if(cur.kind === 'listen'){
+      h += '<div style="font-size:1.02rem;font-weight:700;margin:14px 0 6px">' + T('Listen — what did you hear?') + '</div>';
+      h += '<button class="btn ghost" style="width:100%;margin:6px 0 14px" onclick="PLACE.replay()">🔊 ' + T('Play again') + '</button>';
+    } else {
+      h += '<div style="font-size:1.02rem;font-weight:700;margin:14px 0 6px">' + T('How is this said?') + '</div>';
+      h += '<div style="font-size:2rem;font-weight:800;text-align:center;margin:10px 0 16px;color:var(--red-text)">' + esc(cur.ans.hz) + '</div>';
+    }
+    h += '<div id="place-opts">';
+    cur.opts.forEach(function(o,i){
+      var label = (cur.kind === 'listen') ? o.en : o.py;
+      h += '<button class="btn ghost" style="width:100%;margin:6px 0;text-align:left;padding:13px 15px" onclick="PLACE.answer(' + i + ')">' + esc(label) + '</button>';
+    });
+    h += '</div>';
+    h += '<div id="place-fb" style="min-height:22px;margin-top:10px;font-size:.82rem;color:var(--sub)"></div>';
+    h += '<div style="margin-top:8px;text-align:center"><span style="font-size:.74rem;color:var(--sub);cursor:pointer" onclick="PLACE.skip()">' + T('Skip this') + '</span></div>';
+    h += '</div>';
+    ov().innerHTML = h;
+    if(cur.kind === 'listen') speak(cur.ans.hz);
+  }
+  function answer(i){
+    if(locked || !cur) return;
+    locked = true;
+    var ok = (cur.opts[i] && cur.opts[i].hz === cur.ans.hz);
+    if(ok){ correct++; streakR++; streakW = 0; if(streakR >= 2 && band < 2){ band++; streakR = 0; } }
+    else  { streakW++; streakR = 0; if(streakW >= 2 && band > 0){ band--; streakW = 0; } }
+    var fb = document.getElementById('place-fb');
+    if(fb){
+      fb.innerHTML = (ok ? '✅ ' + T('Correct') : '❌ ' + T('Not quite') + ' · ' + esc(cur.ans.hz) + ' — ' + esc(cur.ans.en));
+      fb.style.color = ok ? 'var(--ok)' : 'var(--red-text)';
+    }
+    qi++;
+    if(qi >= QN){ setTimeout(function(){ finish(); }, 700); }
+    else { setTimeout(function(){ render(); }, 700); }
+  }
+  function skip(){ if(locked) return; locked = true; qi++; if(qi >= QN) finish(); else render(); }
+  function replay(){ if(cur && cur.kind === 'listen') speak(cur.ans.hz); }
+  function finish(){
+    fin = true;
+    var rate = Math.max(0, Math.min(1, correct / Math.max(1, qi)));
+    var base = band === 0 ? 0.30 : (band === 1 ? 0.50 : 0.68);
+    LM.abil('listening',  rate, 1);
+    LM.abil('vocab',      rate, 1);
+    LM.abil('tone',       base * 0.85, 1);
+    LM.abil('initial',    Math.min(1, base + 0.15), 1);
+    LM.abil('final',      Math.min(1, base + 0.10), 1);
+    LM.abil('fluency',    base * 0.70, 1);
+    LM.abil('grammar',    base * 0.80, 1);
+    LM.abil('pragmatics', base * 0.60, 1);
+    var m = LM.get();
+    m.level = { band: BANDS[band], conf: +rate.toFixed(2), testedAt: today() };
+    m.policy.hint = (band === 0) ? 'gentle' : (band === 1 ? 'standard' : 'hard');
+    LM.milestone('placed', { band:BANDS[band] });
+    LM.save();
+    var h = '<div style="width:min(94vw,460px);background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:24px 20px;color:var(--txt);text-align:center">';
+    h += '<div style="font-size:2.4rem;margin-bottom:6px">🎯</div>';
+    h += '<div style="font-size:1.15rem;font-weight:800;margin-bottom:8px">' + T("We've placed you") + '</div>';
+    /* 档位文案**复用既有 key**（带 emoji，onboard step3 已在用）——零新增冗余文案 */
+    var bandKey = (BANDS[band] === 'beginner') ? '🌱 Absolute beginner'
+                : (BANDS[band] === 'survival') ? '🌿 Some basics' : '🌳 I can get by';
+    h += '<div style="font-size:.86rem;color:var(--sub);line-height:1.6">' + T('Level') + ': <b style="color:var(--teal)">' + T(bandKey) + '</b><br>' + T('Accuracy') + ': ' + Math.round(rate*100) + '%</div>';
+    h += '<button class="btn primary" style="width:100%;margin-top:18px" onclick="PLACE.close()">' + T("Start today's path") + '</button>';
+    h += '</div>';
+    ov().innerHTML = h;
+  }
+  function start(){ qi = 0; band = 0; streakR = 0; streakW = 0; correct = 0; fin = false; render(); }
+  return { start:start, answer:answer, skip:skip, replay:replay, close:close, isFin:function(){ return fin; } };
+})();
 
 /* v0.3.39 写入节流：用户切后台/关页时防抖可能还没触发，强制 flush 一次，
    避免最后几分钟进度/统计丢失（KV 配额够，多这 1 次 flush 无关紧要）。 */
@@ -5717,6 +6225,38 @@ function weakLinesHtml(){
     '<p class="desc">Lines you missed while practising with Nono. Tap 🐼 to drill one.</p>'+items.join('')+'</div>';
 }
 
+/* v0.25.0 · M2：今日路径卡 —— 把「日计划」从**一次性文本**变成**可追踪对象**。
+   闭环第 3 步"制定计划"与第 4 步"每日执行"的可见落点。
+   Edify Gate 回答：卡上直接点名今天必须说的那句中文（★）。 */
+function pathCardHtml(){
+  var c;
+  try{ c = PATH.todayCard(); }catch(e){ return ''; }
+  if(!c || !c.node) return '';
+  var p = PATH.progress(), n = c.node;
+  var h = '<div class="card" style="border-color:rgba(230,57,70,.35)">'+
+    '<div class="top"><h2>🧭 '+T("Today's path")+'</h2><span class="badge">'+p.done+'/'+p.total+'</span></div>'+
+    '<p class="desc">'+esc(n.name)+' · '+T('say 3 lines today')+'</p>'+
+    '<div class="pbar"><i style="width:'+p.pct+'%"></i></div>';
+  if(n.retro){
+    h += '<button class="btn primary" style="margin-top:12px" onclick="PATH.complete(\''+n.id+'\');renderHome();">'+T('Finish the journey')+'</button></div>';
+    return h;
+  }
+  var rows = [];
+  if(c.must && c.must.length) rows.push({ it:c.must[0], tag:T('Must say'), star:true });
+  (c.extra||[]).forEach(function(it){ rows.push({ it:it, tag:T('Bonus'), star:false }); });
+  (c.review||[]).forEach(function(it){ rows.push({ it:it, tag:T('Review'), star:false }); });
+  rows.forEach(function(r){
+    var k = PATH.key(r.it), done = LM.isMastered(k);
+    h += '<div style="display:flex;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="openScene(\''+r.it.scene+'\','+r.it.idx+')">'+
+      '<span style="flex:0 0 22px;text-align:center;font-weight:800;color:'+(done?'var(--ok)':(r.star?'var(--red-text)':'var(--sub)'))+'">'+(done?'✓':(r.star?'★':'·'))+'</span>'+
+      '<span style="flex:1;min-width:0"><span style="display:block;font-size:.88rem">'+esc(r.it.en)+'</span>'+
+      '<span style="display:block;font-size:.76rem;color:var(--sub);margin-top:2px">'+esc(r.it.hz)+' · '+esc(r.it.py)+' · '+esc(r.tag)+'</span></span></div>';
+  });
+  h += '<div style="display:flex;gap:10px;margin-top:14px">'+
+    '<button class="btn ghost" style="flex:1" onclick="PATH.complete(\''+n.id+'\');renderHome();">'+T('Mark node done')+'</button>'+
+    '<button class="btn ghost" style="flex:1" onclick="PLACE.start()">'+T('Re-test my level')+'</button></div></div>';
+  return h;
+}
 function renderHome(){
   $('st-streak').textContent = S.streak;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
@@ -5773,7 +6313,8 @@ function renderHome(){
   var listenBlock = listenTabs +
     '<div id="listen-pane-1">'+listenCardHtml()+'</div>'+
     '<div id="listen-pane-2" style="display:none">'+listenCardSHtml()+'</div>';
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
+  /* v0.25.0：今日路径卡置于首屏——它是闭环的入口，不能埋在折叠区里 */
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + pathCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -6194,6 +6735,42 @@ async function sendScore(p, transcript, i){
       var _k = revKey(curScene, i);
       if(data.overall < 70) rvMarkError(_k); else rvMarkGood(_k);
     }
+    /* ===== v0.25.0 L1 回流：评分 → 学员模型 =====
+       这是闭环最容易断的一环（第 6→7 步）：反馈不能只给用户看，
+       必须回流成「下一次练什么」的输入。此处的 abil/weak 更新随后由
+       MAX()（8 维能力向量）+ Adaptation Policy（提示密度/权重）消费。
+       判分参数与动画一律不动（既有红线），这里只读结果。 */
+    try{
+      if(typeof LM !== 'undefined' && data.overall != null){
+        var _sid = (curScene && curScene.id) ? curScene.id : curScene;
+        var sylls = data.perSyll || [], nS = sylls.length, j;
+        if(nS){
+          var tOk = 0, iBad = 0, fBad = 0;
+          for(j=0;j<nS;j++){
+            var sy = sylls[j]; if(!sy) continue;
+            if(sy.toneOk !== false) tOk++;
+            var es = sy.errs || [];
+            if(es.indexOf && es.indexOf('initial') >= 0) iBad++;
+            if(es.indexOf && es.indexOf('final')   >= 0) fBad++;
+          }
+          LM.abil('tone',    tOk/nS, 0.22);
+          LM.abil('initial', 1 - iBad/nS, 0.18);
+          LM.abil('final',   1 - fBad/nS, 0.18);
+        }
+        LM.abil('fluency', Math.max(0, Math.min(1, data.overall/100)), 0.12);
+        /* 错因 → 维度级弱点（回答「他为什么卡」，而不是「卡在哪句」）*/
+        for(j=0;j<nS;j++){
+          var s2 = sylls[j]; if(!s2) continue;
+          if(s2.toneOk === false && s2.tExp) LM.weakBump('tone' + s2.tExp, 1);
+          var e2 = s2.errs || [];
+          if(e2.indexOf && e2.indexOf('initial') >= 0) LM.weakBump('initial', 1);
+          if(e2.indexOf && e2.indexOf('final')   >= 0) LM.weakBump('final', 1);
+        }
+        LM.event('score', { s:_sid + '#' + i, v:Math.round(data.overall) });
+        if(data.overall >= 80 && _sid) PATH.markSaid({ scene:_sid, idx:i });
+        LM.save();
+      }
+    }catch(e){}
     var badge = document.querySelector('#v-scene .badge.teal');
     if(badge) badge.textContent = T('SCORED · {s}').replace('{s}',data.overall);
     var ns = document.querySelector('#v-scene .noscore');
@@ -7297,7 +7874,7 @@ document.addEventListener('visibilitychange', function(){
   if(document.getElementById('apk-upd-ov')) return;
   setTimeout(function(){ try{ checkApkUpdate().then(function(a){ if(a) showApkUpdateDialog(a); }); }catch(e){} }, 600);
 });
-var obStep = 1, obTotal = 6, obGoal = 'travel';
+var obStep = 1, obTotal = 8, obGoal = 'travel', obCity = '', obNative = '';
 if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('home'); }
 /* v0.14.0 i18n 启动：首次按系统语言初始化（zh/es→对应语言，其余 en），已选则跟随用户 */
 if (!S.lang) {
@@ -7345,9 +7922,47 @@ try { maybeShowLangGate(); } catch(e){}
 
 /* ============ v0.3.62 ONBOARDING + DIALOG CARDS ============ */
 /* obStep/obTotal/obGoal initialized before boot gate */
+/* v0.25.0：向导新增两步的**懒渲染**（只在首次进入该步时构建 DOM，避免白屏成本）。
+   城市 chip 走独立 class `ob-city`，与 step2 的 goal chip 区分开，防事件串绑。 */
+function renderObExtras(){
+  var cw = document.getElementById('ob-cities');
+  if(cw && !cw.getAttribute('data-built')){
+    cw.setAttribute('data-built','1');
+    CITY_LIST.forEach(function(cn){
+      var d = document.createElement('div');
+      d.className = 'ob-chip ob-city'; d.setAttribute('data-city', cn);
+      d.innerHTML = '<span class="t">' + cn + '</span>';
+      d.addEventListener('click', function(){
+        var sib = cw.querySelectorAll('.ob-chip');
+        for(var i=0;i<sib.length;i++) sib[i].classList.remove('on');
+        if(d.classList.contains('on')){ d.classList.remove('on'); obCity = ''; }
+        else { d.classList.add('on'); obCity = cn; }
+      });
+      cw.appendChild(d);
+    });
+  }
+  var nw = document.getElementById('ob-native');
+  if(nw && !nw.getAttribute('data-built')){
+    nw.setAttribute('data-built','1');
+    var def = S.lang || 'en';
+    Object.keys(LANGS).forEach(function(l){
+      var d = document.createElement('div');
+      d.className = 'ob-level' + (l === def ? ' on' : '');
+      d.setAttribute('data-native', l);
+      d.innerHTML = '<div class="row"><span class="t">' + (LANG_FLAG[l] || '🌐') + ' ' + LANGS[l] + '</span></div>';
+      d.addEventListener('click', function(){
+        var sib = nw.querySelectorAll('.ob-level');
+        for(var i=0;i<sib.length;i++) sib[i].classList.remove('on');
+        d.classList.add('on'); obNative = l;
+      });
+      nw.appendChild(d);
+    });
+  }
+}
 function renderOnboard(){
   var scr = document.querySelectorAll('#v-onboard .ob-screen');
   for(var i=0;i<scr.length;i++){ scr[i].classList.toggle('on', (+scr[i].getAttribute('data-step'))===obStep); }
+  renderObExtras();
   var pg = document.getElementById('obPager');
   if(pg){ pg.innerHTML=''; for(var k=1;k<=obTotal;k++){ var sp=document.createElement('span'); if(k===obStep) sp.className='on'; pg.appendChild(sp); } }
   var nb = document.getElementById('obNext'); if(nb) nb.textContent = (obStep<obTotal) ? (obStep===1?'Get started':'Continue') : 'Start Day 1';
@@ -7356,15 +7971,28 @@ function renderOnboard(){
   if(obStep===4){ if(ring) setTimeout(function(){ ring.classList.add('live'); },400); } else if(ring){ ring.classList.remove('live'); }
 }
 function finishOnboard(){
-  S.onboarded = true; S.goal = obGoal; saveState();
+  S.onboarded = true;
+  S.goal = obGoal;                              /* 兼容既有读取点（renderDialogList 等） */
+  var ai = document.getElementById('ob-arrive');
+  var arr = (ai && ai.value) ? ai.value : '';
+  /* v0.25.0：目标写进 LearnerModel —— 闭环第 1 步「用户设定目标」的唯一落点 */
+  LM.setGoal({ native: obNative || S.lang || 'en', purpose: obGoal,
+               cities: obCity ? [obCity] : [], arrive: arr, days: 0 });
+  if(obCity) LM.setTrip(obCity, arr, 0);
+  LM.compact();
+  saveState();
   go('home');
+  /* 首次进入必须做一次水平定位：没有它，路径与难度全是猜（方案 §M1） */
+  var m = LM.get();
+  if(!m.level || !m.level.band){ setTimeout(function(){ try{ PLACE.start(); }catch(e){} }, 320); }
 }
 (function bindOnboard(){
   var nb=document.getElementById('obNext'); if(nb) nb.addEventListener('click', function(){
     if(obStep<obTotal){ obStep++; renderOnboard(); } else { finishOnboard(); }
   });
   var sk=document.getElementById('obSkip'); if(sk) sk.addEventListener('click', function(){ if(obStep<obTotal){ obStep=obTotal; renderOnboard(); } });
-  document.querySelectorAll('#v-onboard .ob-chip').forEach(function(c){
+  /* v0.25.0：限定 step2 —— 否则会串绑 step6 动态生成的城市 chip（data-goal 不存在 → obGoal 被清空） */
+  document.querySelectorAll('#v-onboard .ob-screen[data-step="2"] .ob-chip').forEach(function(c){
     c.addEventListener('click', function(){ c.parentNode.querySelectorAll('.ob-chip').forEach(function(x){x.classList.remove('on');}); c.classList.add('on'); obGoal=c.getAttribute('data-goal'); });
   });
   document.querySelectorAll('#v-onboard .ob-screen[data-step="3"] .ob-level').forEach(function(c){

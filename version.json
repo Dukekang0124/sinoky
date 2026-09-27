@@ -1,16 +1,17 @@
 {
-  "version": "0.24.8",
+  "version": "0.25.0",
   "updated": "2026-09-27",
-  "note": "v0.24.8：新增每日练习提醒（Web Push 推送召回）。（1）设置页新增「🔔 Daily reminders」开关：授权后，系统每天在固定时段（UTC 01:00 / 13:00）通过浏览器推送一条轻量提醒，帮助你留住连胜、回到开口练习；（2）推送完全可选、可随时关闭，不收集任何额外数据，订阅仅存于服务端 KV（180 天自动过期）；（3）本次为网页/PWA 能力，安装为 PWA 后体验最佳；APK 内更新机制同步升级至 v0.24.8。欢迎开启提醒，让中文练习成为每天的小习惯。",
+  "note": "v0.25.0：从「中文学习内容库」升级为「中文场景教练智能体」——先立地基。（1）新增「学员模型」：全产品唯一的学习档案，记录你的学习目标、母语、到访城市与日期，以及 8 维能力（声调 / 声母 / 韵母 / 流利度 / 听辨 / 词汇 / 语法 / 语用），每次开口都会自动更新；（2）新手引导扩展为 8 步：新增「计划到访城市 + 抵达日期」和「母语确认」，App 会据此优先安排你真正用得上的场景；（3）新增「水平定位」：6 道自适应小题（听辨 + 认字），题目全部取自你即将学的内容，几分钟定位起点，此后每天的难度与提示密度跟随你的表现；（4）首页新增「今日路径」：把你的学习目标拆成一条可推进的路线（落地 → 点餐 → 出行 → 砍价 → 酒店 → 城市实战 → 复盘），每天点名 3 句必须说的中文，说完自动打勾、进度条前进；（5）每次跟读评分都会回流到学习档案——你卡在哪一维（比如三声），接下来的任务就往那里加权。进度、连胜、复习计划全部保留，老用户无感升级。",
   "apk": {
-    "versionCode": 2408,
-    "version": "0.24.8",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.8-release.apk",
-    "md5": "2be32b53f5a2ea06e21fc26f1715e020",
-    "size": 24083008,
+    "versionCode": 2500,
+    "version": "0.25.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.25.0-release.apk",
+    "md5": "",
+    "size": 0,
     "force": false
   },
   "noteEn": [
+    "v0.25.0: from a 'Chinese content library + pronunciation tool' to a 'Chinese scenario coach agent' - the foundation layer. (1) New Learner Model: a single learning record for the whole product, holding your goal, mother tongue, destination city and arrival date, plus an 8-dimension ability vector (tone / initial / final / fluency / listening / vocab / grammar / pragmatics) that updates every time you speak. (2) The first-run guide grows to 8 steps, adding 'destination city + arrival date' and 'mother tongue', so the app can prioritise the scenes you will actually need. (3) New level placement: 6 adaptive questions (listening + character recognition) drawn entirely from content you are about to learn - a few minutes to find your starting point, after which each day's difficulty and hint density follow your performance. (4) New 'Today's path' card on Home: your goal becomes a trackable route (landing -> ordering food -> getting around -> bargaining -> hotel -> city in the wild -> retro), naming 3 lines you must say today and ticking them off as you go. (5) Every read-and-score now feeds back into your learning record - the dimension you struggle with (say, third tone) gets weighted into tomorrow's tasks. All existing progress, streaks and review schedules are fully preserved; existing users upgrade seamlessly.",
     "v0.24.8: new daily-practice reminders (Web Push re-engagement). (1) Settings now has a '🔔 Daily reminders' toggle: once granted, the system sends a lightweight push at fixed times (UTC 01:00 / 13:00) each day to help you keep your streak and come back to speak. (2) Reminders are fully optional and can be turned off anytime; no extra data is collected, and the subscription lives only in server-side KV (auto-expiring after 180 days). (3) This is a web/PWA capability - best experienced after installing Sinoky as a PWA; the in-app update mechanism is bumped to v0.24.8 for APK users. Turn it on and make Chinese practice a daily habit.",
     "v0.24.7: in-app forced update + native shell synced to web v0.24.6. (1) New in-app forced update: when a newer APK is detected, a non-dismissable update prompt appears (critical releases with force:true are fully blocking - only an 'Download' button), guiding the user to download and install, eliminating the old silent-skip. (2) Native shell bumped to v0.24.7, formally packaging all v0.24.6 web features (reward-loop decoupling, first-screen language gate, Nono popup cap, etc.). (3) App re-checks for updates when returning to the foreground. APK users should update soon for the latest experience.",
     "v0.24.5: update dialog redesign. (1) Layout upgrade: app icon + version title row, inline NEW badge that no longer overlaps text, entrance animation; (2) What's new is now a red-dot bullet list: notes auto-split into items, each lead-in bolded, scrollable - no more clipped unreadable text; (3) Button hierarchy improved: the Download button is widened and emphasized. Web-only release; APK users receive it via SW update.",
