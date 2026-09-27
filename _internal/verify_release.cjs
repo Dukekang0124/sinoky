@@ -1,14 +1,19 @@
-/* 发版不变量验证 v0.27.0 —— 只读，不写任何文件
- * 判据：线上 version.json / 线上 index.html / 线上 sw.js / origin/main 根 version.json / APK 实体 五方一致
- * 用法：NODE_TLS_REJECT_UNAUTHORIZED=0 node _internal/verify_release_027.cjs
+/* 发版不变量验证（版本无关，自动读本地 version.json）—— 只读，不写任何文件
+ * 判据：线上 version.json / 线上首页 APP_VERSION / 线上 sw.js CACHE / origin/main 根 version.json / APK 实体 六方一致
+ * 用法：NODE_TLS_REJECT_UNAUTHORIZED=0 node _internal/verify_release.cjs
+ * 可选：环境变量 BASE 覆盖站点根（默认 https://sinoky.pages.dev）
  */
 const https = require('https');
 const crypto = require('crypto');
 const { execSync } = require('child_process');
+const path = require('path');
 
-const V = '0.27.0';
-const CODE = 2700;
-const BASE = 'https://sinoky.pages.dev';
+const APP = path.join(__dirname, '..');
+const LOCAL = JSON.parse(require('fs').readFileSync(path.join(APP, 'version.json'), 'utf8'));
+const V = LOCAL.version;
+const CODE = Number((LOCAL.apk || {}).versionCode || 0);
+const BASE = process.env.BASE || 'https://sinoky.pages.dev';
+console.log('目标版本 v' + V + '（versionCode ' + CODE + '），站点 ' + BASE + '\n');
 
 function get(u, opts) {
   return new Promise((res, rej) => {
