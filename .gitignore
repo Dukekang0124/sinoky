@@ -49,3 +49,8 @@ _internal/fix-2026-09-22/_ai_block.js
 _internal/.feedback_token
 _internal/fix-2026-09-23/shots/
 _internal/fix-2026-09-23/_ai_block.js
+
+# v0.27.0 视觉真跑的截图产物（本地验收证据，可由 _internal/shot_rp.cjs 重建）
+_internal/_shots/
+# Windows 设备名残留（无法删除，恒为未跟踪）
+nul

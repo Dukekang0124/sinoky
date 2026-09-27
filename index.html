@@ -667,8 +667,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .sess{position:fixed;inset:0;background:rgba(12,16,24,.72);display:none;align-items:center;justify-content:center;z-index:var(--z-sheet);padding:16px}
       .sess.on{display:flex}
       .sess-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
-      .sess-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-      .sess-head b{font-size:15px}
+      .sess-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+      /* v0.27.0 修（视觉真跑抓到）：.btn 全局是 width:100%，一旦放进 flex 头部，
+         会把标题挤成两行、并把关闭键拉成一根通栏胶囊。头部按钮一律回到内容宽。 */
+      .sess-head b{font-size:15px;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .sess-head .btn{width:auto;flex:0 0 auto;margin-top:0}
+      .sess-head .sess-prog{margin-left:0;flex:0 0 auto}
       .sess-prog{margin-left:auto;font-size:.78rem;color:var(--sub);font-variant-numeric:tabular-nums}
       .sess-tag{display:inline-block;font-size:.68rem;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--sub)}
       .sess-hz{font-size:1.65rem;font-weight:800;line-height:1.35;margin:12px 0 6px}
@@ -678,6 +682,21 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .sess-ctrls{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
       .sess-sum{text-align:center;padding:6px 0 2px}
       .sess-big{font-size:2.1rem;font-weight:800;color:var(--ok);line-height:1.2}
+      /* v0.27.0 场景教练：面板壳刻意复用 .sess（同一视觉语言，不复制 CSS 规模）；
+         只新增「对话气泡 + 本轮目标」两块，全部走既有 token。 */
+      .rp-feed{max-height:34vh;overflow:auto;margin:4px 0 12px;display:flex;flex-direction:column;gap:8px}
+      .rp-b{max-width:88%;padding:9px 12px;border-radius:13px;font-size:.92rem;line-height:1.45;word-break:break-word}
+      .rp-b.them{align-self:flex-start;background:var(--bg2);border:1px solid var(--line)}
+      .rp-b.me{align-self:flex-end;background:rgba(76,201,240,.14);border:1px solid rgba(76,201,240,.35)}
+      .rp-b.me.bad{background:rgba(230,57,70,.12);border-color:rgba(230,57,70,.35)}
+      .rp-b .py{font-size:.78rem;color:var(--teal);margin-top:3px}
+      .rp-b .en{font-size:.74rem;color:var(--sub);margin-top:2px}
+      .rp-b .sc{font-size:.72rem;color:var(--sub);margin-top:3px;font-variant-numeric:tabular-nums}
+      .rp-goal{border:1px dashed rgba(230,57,70,.45);border-radius:13px;padding:11px 13px}
+      .rp-goal .k{font-size:.7rem;color:var(--sub);letter-spacing:.06em}
+      .rp-goal .v{font-size:.9rem;margin-top:4px}
+      .rp-goal .hz{font-size:1.35rem;font-weight:800;margin-top:7px;color:var(--red-text)}
+      .rp-goal .pyt{font-size:.8rem;color:var(--teal);margin-top:2px}
       .reader-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
       .reader-box img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;background:var(--card)}
       .reader-words{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
@@ -1174,6 +1193,19 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     </div>
   </div>
 
+  <!-- v0.27.0 M3 场景教练：任务型多轮角色扮演（点餐/问路/砍价/打车/酒店/求助） -->
+  <div class="sess" id="rp" onclick="if(event.target===this)closeRp()">
+    <div class="sess-box">
+      <div class="sess-head">
+        <b>🗣 <span id="rp-t"></span></b>
+        <span class="sess-prog" id="rp-prog"></span>
+        <button class="btn ghost" style="padding:6px 10px" onclick="closeRp()" aria-label="Close roleplay">✕</button>
+      </div>
+      <div class="pbar" id="rp-bar"><i style="width:0%"></i></div>
+      <div id="rp-body"></div>
+    </div>
+  </div>
+
   <section id="v-me" class="views">
     <div class="card">
       <div class="top"><h2>👤 Me</h2><span class="badge" id="me-ver">v</span></div>
@@ -1400,7 +1432,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.26.0';
+var APP_VERSION = '0.27.0';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -3981,6 +4013,273 @@ var PLACE = (function(){
   }
   function start(){ qi = 0; band = 0; streakR = 0; streakW = 0; correct = 0; fin = false; render(); }
   return { start:start, answer:answer, skip:skip, replay:replay, close:close, isFin:function(){ return fin; } };
+})();
+
+/* ===== v0.27.0 · M3 Roleplay Engine（RP.）===============================
+   任务型多轮角色扮演 —— 全产品唯一产出「非复述开口」的模块。
+   此前 `mode:'scene'` 只能「接一句话」：无目标、无多轮、无判定。
+   本模块把既有内容库里 `who:'you' + kw:[...]` 的对话脚本从**「读」升级为「演」**：
+   用户真的扮演 `you` 那一侧说出来，用 `kw` 做达成判定 + 调既有判分链路纠音。
+   设计纪律（逐条对应红线）：
+     · **零新增教学内容**：每个 turn 的目标句都**运行时引用**既有 DIALOGS / SCENES
+       （改内容不用改这里；不新增一句人工教学材料）
+     · **确定性优先、LLM 兜底**：kw 命中即达成（成本 0 / 离线可用 / 可测）；
+       未命中才让 LLM 判「是否同一意图」，且 LLM **只回 JSON，不产内容**
+     · **判分回流不分叉**：评分走 `LM.ingestScore()`（与 reader / 会话同一条链）
+     · **判分链路参数与动画零改动**：只调既有 `/api/score`，不碰 playbackRate
+     · 会话状态本地瞬态 ⇒ **新增 KV 写 = 0**；结算只写 `LM.buf` / `LM.abil`
+   防挫败（方案 M4「策略切换」）：同一轮连续未命中 2 次 → **强制给提示**，
+   不重复打击（对应 09-13 S7「受挫」场景）。
+   ======================================================================== */
+var RP = (function(){
+  /* ---- 6 个任务：点餐 / 问路 / 砍价 / 打车 / 酒店 / 求助 ----
+     `them` = 对方台词（编排脚手架，用户不说）；`you` = 用户要说的那句：
+       src:'sc'  → 从 SCENES[id].phrases 里**按 hz 查**
+       src:'dlg' → 从 DIALOGS[id].lines 里**按 hz 查**
+     ⚠️ 刻意用 hz 而不是数组下标：内容库插一句/调顺序不会让引用错位
+        （v0.27 真跑抓到过 —— 用离线估的下标，bargain 第 3 轮解析成了「可以试穿吗？」）。
+     下标只作为兜底（`idx`），hz 命中就以下标就地取真实位置，回填给判分链路。
+     `kw` = 达成关键词（**判定元数据**，不是教学内容）。 */
+  var TASKS = [
+    { id:'order-food', icon:'🍜', name:'Ordering food', who:'a waiter',
+      setup:'You walk into a small noodle shop. The waiter comes over.',
+      turns:[
+        { them:{src:'dlg', id:'d-food', hz:'几位？'},
+          you: {src:'dlg', id:'d-food', hz:'两个人，谢谢。',       kw:['两个','两位','两人']} },
+        { them:{src:'dlg', id:'d-food', hz:'想吃点什么？'},
+          you: {src:'dlg', id:'d-food', hz:'一份牛肉面，一个蔬菜。', kw:['牛肉面','牛肉','一份面']} },
+        { them:{hz:'要辣吗？', py:'Yào là ma?', en:'Spicy?'},
+          you: {src:'sc', id:'food', hz:'不要辣。',              kw:['不要辣','不辣','少辣','一点点']} },
+        { them:{hz:'好的，还要别的吗？', py:'Hǎo de, hái yào biéde ma?', en:'OK, anything else?'},
+          you: {src:'sc', id:'food', hz:'买单，谢谢。',            kw:['买单','结账','算账']} }
+      ] },
+    { id:'ask-directions', icon:'🧭', name:'Asking for directions', who:'a passer-by',
+      setup:'You are lost near the metro station. You stop a passer-by to ask the way.',
+      turns:[
+        { them:{hz:'你好，你要去哪儿？', py:'Nǐ hǎo, nǐ yào qù nǎr?', en:'Hi, where are you going?'},
+          you: {src:'sc', id:'transport', hz:'去这个地址。',      kw:['地址','去这','去这个']} },
+        { them:{hz:'坐三号线，两站就到。', py:'Zuò sān hào xiàn, liǎng zhàn jiù dào.', en:'Line 3, two stops.'},
+          you: {src:'sc', id:'transport', hz:'离这儿远吗？',      kw:['远','多远']} },
+        { them:{hz:'不远。你想坐公交也行。', py:'Bù yuǎn. Nǐ xiǎng zuò gōngjiāo yě xíng.', en:'Not far. You could take a bus too.'},
+          you: {src:'sc', id:'transport', hz:'公交车站在哪儿？',  kw:['公交车','车站','站在哪']} },
+        { them:{hz:'就在前面路口。', py:'Jiù zài qiánmiàn lùkǒu.', en:'Right at the crossing ahead.'},
+          you: {src:'sc', id:'arrival', hz:'谢谢！',              kw:['谢谢','多谢']} }
+      ] },
+    { id:'bargain', icon:'🏪', name:'Bargaining', who:'a market vendor',
+      setup:'You are at a street market. The vendor names a price first — talk it down.',
+      turns:[
+        { them:{src:'sc', id:'scene_day12_bargaining', hz:'这个五十块，很便宜的！'},
+          you: {src:'sc', id:'scene_day12_bargaining', hz:'太贵了，三十块行吗？', kw:['太贵','三十','行吗']} },
+        { them:{src:'sc', id:'scene_day12_bargaining', hz:'不行不行，最少四十五。'},
+          you: {src:'sc', id:'scene_day12_bargaining', hz:'好吧，四十块，成交！', kw:['四十','成交','好吧']} },
+        { them:{hz:'成交！要袋子吗？', py:'Chéngjiāo! Yào dàizi ma?', en:'Deal! Want a bag?'},
+          you: {src:'sc', id:'shopping', hz:'能给我一个袋子吗？', kw:['袋子','给我一个']} }
+      ] },
+    { id:'taxi', icon:'🚕', name:'Taking a taxi', who:'a taxi driver',
+      setup:'You get in a taxi. The driver needs to know where to go — tell him in Chinese.',
+      turns:[
+        { them:{src:'dlg', id:'d-taxi', hz:'去哪儿？'},
+          you: {src:'dlg', id:'d-taxi', hz:'请去火车站，谢谢。',    kw:['火车站','车站']} },
+        { them:{src:'dlg', id:'d-taxi', hz:'好的。走高速吗？'},
+          you: {src:'dlg', id:'d-taxi', hz:'不用，最近的路就行。',  kw:['不用','最近']} },
+        { them:{hz:'到了，前面就是。', py:'Dào le, qiánmiàn jiù shì.', en:'Here we are, up ahead.'},
+          you: {src:'sc', id:'transport', hz:'就停这里。',        kw:['停这儿','停这里','就停']} },
+        { them:{hz:'一共三十五块。', py:'Yígòng sānshíwǔ kuài.', en:'Thirty-five kuai in total.'},
+          you: {src:'sc', id:'arrival', hz:'谢谢！',              kw:['谢谢','多谢']} }
+      ] },
+    { id:'hotel-checkin', icon:'🏨', name:'Hotel check-in', who:'a receptionist',
+      setup:'You arrive at a small hotel with no booking. The receptionist greets you.',
+      turns:[
+        { them:{hz:'你好，要住店吗？', py:'Nǐ hǎo, yào zhù diàn ma?', en:'Hi, do you want a room?'},
+          you: {src:'sc', id:'hotel', hz:'一个晚上多少钱？',      kw:['多少钱','一晚','一间']} },
+        { them:{hz:'三百一晚，含早餐。', py:'Sānbǎi yì wǎn, hán zǎocān.', en:'300 a night, breakfast included.'},
+          you: {src:'sc', id:'hotel', hz:'电梯在哪儿？',          kw:['电梯']} },
+        { them:{hz:'走廊尽头，右手边。', py:'Zǒuláng jìntóu, yòushǒu biān.', en:'End of the corridor, on your right.'},
+          you: {src:'sc', id:'hotel', hz:'几点退房？',            kw:['退房','几点']} },
+        { them:{hz:'中午十二点。祝您住得愉快！', py:'Zhōngwǔ shí\'èr diǎn. Zhù nín zhù de yúkuài!', en:'Noon. Enjoy your stay!'},
+          you: {src:'sc', id:'arrival', hz:'谢谢！',              kw:['谢谢','多谢']} }
+      ] },
+    { id:'ask-help', icon:'🆘', name:'Asking for help', who:'a neighbour',
+      setup:'Something has gone wrong and you need a local to help you. Explain it in Chinese.',
+      turns:[
+        { them:{hz:'你怎么了？', py:'Nǐ zěnme le?', en:'What is the matter?'},
+          you: {src:'sc', id:'emergency', hz:'我需要帮助。',      kw:['帮助','帮忙','需要帮']} },
+        { them:{hz:'出什么事了？慢慢说。', py:'Chū shénme shì le? Mànmàn shuō.', en:'What happened? Take your time.'},
+          you: {src:'sc', id:'emergency', hz:'我的手机丢了。',    kw:['手机','丢了']} },
+        { them:{hz:'别急。要不要去医院？', py:'Bié jí. Yào bú yào qù yīyuàn?', en:'Don\'t worry. Do you need a hospital?'},
+          you: {src:'sc', id:'emergency', hz:'医院在哪里？',      kw:['医院','在哪']} },
+        { them:{hz:'前面路口就有一家。', py:'Qiánmiàn lùkǒu jiù yǒu yī jiā.', en:'There is one at the crossing ahead.'},
+          you: {src:'sc', id:'arrival', hz:'谢谢！',              kw:['谢谢','多谢']} }
+      ] }
+  ];
+  var cur = null;
+
+  /* ---- 引用既有内容库（单一事实源；改内容这里自动跟随）---- */
+  function pick(arr, r){
+    arr = arr || [];
+    var i;
+    if(r.hz){
+      for(i=0;i<arr.length;i++){
+        if(arr[i] && arr[i].hz === r.hz){
+          return { hz:arr[i].hz, py:arr[i].py||'', en:arr[i].en||'', idx:i };
+        }
+      }
+    }
+    if(typeof r.idx === 'number' && arr[r.idx]){
+      return { hz:arr[r.idx].hz, py:arr[r.idx].py||'', en:arr[r.idx].en||'', idx:r.idx };
+    }
+    return null;
+  }
+  function findScene(id){
+    if(typeof PATH !== 'undefined' && PATH.findScene){ var s = PATH.findScene(id); if(s) return s; }
+    for(var i=0;i<SCENES.length;i++){ if(SCENES[i].id === id) return SCENES[i]; }
+    return null;
+  }
+  function ref(r){
+    if(!r) return null;
+    if(r.src === 'dlg'){
+      for(var i=0;i<DIALOGS.length;i++){
+        if(DIALOGS[i].id !== r.id) continue;
+        return pick(DIALOGS[i].lines, r);
+      }
+      return null;
+    }
+    if(r.src === 'sc'){
+      var sc = findScene(r.id);
+      return sc ? pick(sc.phrases, r) : null;
+    }
+    return r.hz ? { hz:r.hz, py:r.py||'', en:r.en||'', idx:-1 } : null;   /* 内联的编排台词 */
+  }
+  /* 一轮可用的完整数据（resolve 失败 → 该轮弃用，防御内容被改动/删除） */
+  function turnOf(task, i){
+    var tn = task.turns[i]; if(!tn) return null;
+    var you = ref(tn.you), them = ref(tn.them);
+    if(!you || !them) return null;
+    return { them:them, you:you, kw:(tn.you.kw||[]),
+             scene:(tn.you.src === 'sc') ? tn.you.id : null, idx:you.idx };
+  }
+  function turnsOf(task){
+    var out = [];
+    for(var i=0;i<task.turns.length;i++){ var t = turnOf(task, i); if(t) out.push(t); }
+    return out;
+  }
+  function tasks(){
+    return TASKS.map(function(t){
+      var ts = turnsOf(t);
+      return { id:t.id, icon:t.icon, name:t.name, who:t.who, setup:t.setup, n:ts.length };
+    }).filter(function(t){ return t.n > 0; });
+  }
+  function taskById(id){
+    for(var i=0;i<TASKS.length;i++){ if(TASKS[i].id === id) return TASKS[i]; }
+    return null;
+  }
+  /* ---- 达成判定：确定性优先（kw 关键词），零网络、可离线、可测 ---- */
+  function norm(s){
+    return String(s||'').toLowerCase().replace(/[\s，。！？、,.!?；;：:"'“”‘’（）()\[\]]/g,'');
+  }
+  function matchKw(kw, text){
+    var t = norm(text); if(!t) return false;
+    for(var i=0;i<(kw||[]).length;i++){ var k = norm(kw[i]); if(k && t.indexOf(k) >= 0) return true; }
+    return false;
+  }
+  /* ---- LLM 兜底：只判「是否算表达了同一意图」，**只回 JSON、不产内容** ----
+     失败 / 降级 → 返回 null，调用方按「未命中」处理（脚本分支继续可练）。 */
+  async function llmJudge(target, said){
+    if(cur && cur.llm >= 6) return null;      /* 单场 LLM 调用上限，防打爆聊天限流桶 */
+    try{
+      if(cur) cur.llm++;
+      var resp = await fetch(API_BASE+'api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ uid:UID, mode:'roleplay', hist:[], text:
+          '【意图】' + target + '\n【学习者说】' + said +
+          '\n只输出 JSON：{"hit":true 或 false,"reply":"一句自然简短的中文接话"}' })
+      });
+      if(!resp.ok) return null;
+      var d = await resp.json().catch(function(){ return {}; });
+      if(!d || d.degraded || !d.reply) return null;
+      var m = String(d.reply).match(/\{[\s\S]*\}/);
+      if(!m) return null;
+      var j = JSON.parse(m[0]);
+      return { hit:!!j.hit, reply:String(j.reply||'').slice(0,60) };
+    }catch(e){ return null; }
+  }
+  /* ---- 提示密度：由 Adaptation Policy 决定；连续未命中 2 次强制给（防挫败）---- */
+  function hintOn(){
+    if(!cur) return false;
+    if(cur.show) return true;
+    if(cur.miss >= 2) return true;
+    var h = (LM.get().policy && LM.get().policy.hint) || 'standard';
+    if(h === 'gentle')   return true;
+    if(h === 'hard')     return false;
+    return (cur.i % 2 === 0);
+  }
+  function showHint(){ if(cur){ cur.show = true; } }
+  /* 每次提交转写都记一次「开口」；未命中同时累加（本轮 miss 用于强制提示，misall 用于结算） */
+  function tick(hit){
+    if(!cur) return;
+    cur.said++;
+    if(!hit){ cur.miss++; cur.misall++; }
+  }
+  function curTurn(){ return cur ? (cur.ts[cur.i] || null) : null; }
+  function isOver(){ return !cur || cur.i >= cur.ts.length; }
+  function push(who, o, ok){
+    cur.feed.push({ who:who, hz:o.hz, py:o.py||'', en:o.en||'', s:o.s||0, ok:(ok===undefined?null:ok) });
+    if(cur.feed.length > 24) cur.feed.shift();
+  }
+  function start(id){
+    var t = taskById(id); if(!t) return false;
+    var ts = turnsOf(t); if(!ts.length) return false;
+    cur = { task:t, ts:ts, i:0, res:[], said:0, miss:0, misall:0, llm:0, show:false, feed:[], t0:Date.now(), done:false };
+    push('them', ts[0].them);
+    return true;
+  }
+  /* 记录一轮结果（按轮序号去重：重试 / 连点 / 网络重放只保留最终结果） */
+  function record(hit, score, via){
+    if(!cur) return;
+    for(var i=0;i<cur.res.length;i++){
+      if(cur.res[i].i === cur.i){ cur.res[i] = { i:cur.i, hit:!!hit, s:score||0, via:via||'' }; return; }
+    }
+    cur.res.push({ i:cur.i, hit:!!hit, s:score||0, via:via||'' });
+  }
+  /* 一轮结束：推流 + 前进；返回是否还有下一轮 */
+  function advance(){
+    if(!cur) return false;
+    cur.i++;
+    cur.miss = 0; cur.show = false;
+    if(!isOver()) push('them', cur.ts[cur.i].them);
+    return !isOver();
+  }
+  /* ---- 结算：闭环第 5→7 步（收集数据 → 评估 → 调整）的出口 ---- */
+  function settle(){
+    if(!cur) return null;
+    if(cur.sum) return cur.sum;        /* 幂等：重绘结算页不会重复写事件/勋迹 */
+    cur.done = true;
+    var total = cur.ts.length, done = 0, i;
+    /* 空场防御：一句都没说（只开了面板 / 中途退出）不得结算，
+       否则 rate=0 会被当成「语用全错」把能力向量往下拽（真跑 A/B 抓到的）。 */
+    if(!cur.said){
+      cur.sum = { done:0, total:total, rate:0, first:false, said:0, misall:cur.misall, empty:true };
+      return cur.sum;
+    }
+    for(i=0;i<cur.res.length;i++){ if(cur.res[i].hit) done++; }
+    var rate = done / Math.max(1, total);
+    /* 语用：达成率（方案 M4 唯一指定 pragmatics 的信号源） */
+    LM.abil('pragmatics', rate, 0.30);
+    /* 流利度：达成率 + 轮次效率（说话次数越少越顺） */
+    var eff = cur.said ? Math.min(1, total / cur.said) : rate;
+    LM.abil('fluency', Math.max(rate * 0.6, eff * 0.4), 0.12);
+    LM.event('rp', { t:cur.task.id, d:done, T:total, m:cur.misall, n:cur.said });
+    var first = false;
+    if(done >= total){ first = !!LM.milestone('rp:' + cur.task.id, { v:done }); }
+    try{ LM.compact(); LM.save(); }catch(e){}
+    cur.sum = { done:done, total:total, rate:rate, first:first, said:cur.said, misall:cur.misall };
+    return cur.sum;
+  }
+  function close(){ cur = null; }
+  return { TASKS:TASKS, tasks:tasks, taskById:taskById, start:start, turn:curTurn,
+           turns:turnsOf, hintOn:hintOn, showHint:showHint, llmJudge:llmJudge, match:matchKw,
+           record:record, tick:tick, advance:advance, settle:settle, push:push,
+           isOver:isOver, close:close, get:function(){ return cur; } };
 })();
 
 /* v0.3.39 写入节流：用户切后台/关页时防抖可能还没触发，强制 flush 一次，
@@ -6571,6 +6870,191 @@ async function sessScore(transcript){
 }
 
 
+/* ===== v0.27.0 · M3 场景教练（UI 层）=====================================
+   一次走完一场真实对话：对方开口 → 你说你那句 → 判定达成 → 对方接话 → 下一轮。
+   判定优先关键词（零网络、离线可算、可测），未命中才问一次 LLM；
+   评分复用 /api/score + LM.ingestScore()（与 reader / 会话同一条回流链）。 */
+var rpRec = null, rpChunks = [], rpMsg = '';
+function openRp(){
+  var e = $('rp'); if(e) e.classList.add('on');
+  var t = $('rp-t'); if(t) t.textContent = T('Scenario coach');
+}
+function closeRp(){
+  var e = $('rp'); if(e) e.classList.remove('on');
+  try{ if(rpRec && rpRec.state !== 'inactive') rpRec.stop(); }catch(_){}
+  rpRec = null; rpChunks = []; rpMsg = '';
+  RP.close();
+}
+function rpStart(id){
+  rpMsg = '';
+  if(!RP.start(id)){ toast(T('That scene is missing a line — try another one.')); return; }
+  openRp(); renderRp();
+}
+function rpSpeak(){ var t = RP.turn(); if(t) speak(String(t.you.hz).replace(/'/g,'')); }
+function rpBubble(b){
+  var h = '<div class="rp-b ' + b.who + (b.ok === false ? ' bad' : '') + '">' + esc(b.hz);
+  if(b.py) h += '<div class="py">' + toneColorPy(b.py) + '</div>';
+  if(b.en) h += '<div class="en">' + esc(b.en) + '</div>';
+  if(b.who === 'me') h += '<div class="sc">' + (b.ok ? '✅' : '↻') + (b.s ? ' ' + b.s : '') + '</div>';
+  return h + '</div>';
+}
+function renderRp(){
+  var box = $('rp-body'); if(!box) return;
+  var c = RP.get();
+  if(!c){ box.innerHTML = ''; return; }
+  var total = c.ts.length, pb = $('rp-bar'), pr = $('rp-prog');
+  var feed = '<div class="rp-feed" id="rp-feed">' + c.feed.map(rpBubble).join('') + '</div>';
+  if(RP.isOver()){
+    var s = RP.settle();
+    if(pb) pb.querySelector('i').style.width = '100%';
+    if(pr) pr.textContent = total + ' / ' + total;
+    box.innerHTML = feed +
+      '<div class="sess-sum">' +
+        '<div style="font-size:2.4rem;line-height:1.2">' + (s.rate >= 1 ? '🎉' : (s.rate >= 0.6 ? '👍' : '💪')) + '</div>' +
+        '<div class="sess-big">' + s.done + ' / ' + s.total + '</div>' +
+        '<div style="color:var(--sub);font-size:.84rem;margin-top:4px">' +
+          T('You got your point across {a} of {b} times.').replace('{a}', s.done).replace('{b}', s.total) + '</div>' +
+        (s.first ? '<div class="sess-why">🏅 ' + T('Scene cleared!') + '</div>' : '') +
+      '</div>' +
+      '<div class="sess-ctrls">' +
+        '<button class="btn primary" style="flex:1" onclick="closeRp()">' + T('Done') + '</button>' +
+        '<button class="btn ghost" style="flex:1" onclick="rpStart(\'' + c.task.id + '\')">' + T('Play it again') + '</button>' +
+      '</div>';
+    return;
+  }
+  var i = c.i, t = RP.turn();
+  if(!t){ box.innerHTML = feed; return; }
+  if(pb) pb.querySelector('i').style.width = Math.round(i / Math.max(1, total) * 100) + '%';
+  if(pr) pr.textContent = (i + 1) + ' / ' + total;
+  var hint = RP.hintOn();
+  box.innerHTML = feed +
+    (i === 0 ? '<div class="sess-why" style="margin-bottom:9px">' + esc(T(c.task.setup)) + '</div>' : '') +
+    '<div class="rp-goal">' +
+      '<div class="k">' + T('Your turn') + ' · ' + esc(T(c.task.who)) + '</div>' +
+      '<div class="v">' + esc(t.you.en) + '</div>' +
+      (hint ? '<div class="hz">' + esc(t.you.hz) + '</div><div class="pyt">' + toneColorPy(t.you.py) + '</div>' : '') +
+    '</div>' +
+    '<div class="sess-ctrls">' +
+      (hint ? '<button class="btn" onclick="rpSpeak()">🔊 ' + T('Hear') + '</button>'
+            : '<button class="btn" onclick="RP.showHint();renderRp()">💡 ' + T('Show me') + '</button>') +
+      '<button class="btn record" id="rp-mic" onclick="rpToggleRec()">🎤 ' + T('Say it') + '</button>' +
+    '</div>' +
+    '<div class="score-result" id="rp-score" style="margin-top:12px">' + rpMsg + '</div>';
+  var f = $('rp-feed'); if(f) f.scrollTop = f.scrollHeight;
+}
+async function rpToggleRec(){
+  var btn = $('rp-mic'), box = $('rp-score');
+  if(!btn || !box) return;
+  if(btn.classList.contains('listening')){ try{ if(rpRec) rpRec.stop(); }catch(e){} return; }
+  var t = RP.turn(); if(!t) return;
+  rpMsg = '';                    /* 新一轮开口 → 收起上一轮的评分反馈 */
+  var stream = await openMicOrHelp(box);
+  if(!stream) return;
+  rpChunks = [];
+  var rec = new MediaRecorder(stream);
+  rpRec = rec;
+  rec.ondataavailable = function(e){ if(e.data && e.data.size) rpChunks.push(e.data); };
+  rec.onstop = async function(){
+    rpRec = null;
+    btn.classList.remove('listening'); btn.textContent = '🎤 ' + T('Say it');
+    try{ stream.getTracks().forEach(function(x){ x.stop(); }); }catch(e){}
+    var blob = new Blob(rpChunks);
+    if(blob.size < 500){
+      box.innerHTML = '<div class="score-err">' + T('No sound captured. Hold the phone closer to your mouth and try again.') + '</div>';
+      return;
+    }
+    box.innerHTML = '<div class="score-load">' + T('Recognising…') + '</div>';
+    var result = null;
+    try{ result = await asrText(await blobToWav(blob), t.you.hz); }
+    catch(e){ result = await asrText(await blob.arrayBuffer(), t.you.hz); }
+    if(!result || !result.ok || !result.text){
+      box.innerHTML = '<div class="score-err">' + T('Did not catch that. ({r})').replace('{r}', (result && result.err) || 'no speech') + '</div>';
+      return;
+    }
+    await rpScore(result.text);
+  };
+  btn.classList.add('listening'); btn.textContent = '⏹ ' + T('Stop');
+  box.innerHTML = '<div class="score-load">' + T('Listening… tap stop when you finish.') + '</div>';
+  try{ rec.start(); }
+  catch(e){
+    btn.classList.remove('listening'); btn.textContent = '🎤 ' + T('Say it');
+    box.innerHTML = '<div class="score-err">' + T('Could not start recording: ') + e.message + '</div>';
+  }
+}
+async function rpScore(transcript){
+  var c = RP.get(), t = RP.turn();
+  if(!c || !t) return;
+  /* 自愈：结算页渲染后 #rp-score 不再存在，若调用方漏了重绘，这里补一次，
+     否则整个评分会**静默失效**（曾把一场对话变成 8 次空转 —— 真跑测试揪出来的）。 */
+  var box = $('rp-score');
+  if(!box){ renderRp(); box = $('rp-score'); }
+  if(!box) return;
+  box.innerHTML = '<div class="score-load">' + T('Scoring…') + '</div>';
+  /* 1) 确定性判定：关键词命中即达成（零网络、离线可用、可测） */
+  var hit = RP.match(t.kw, transcript), via = hit ? 'kw' : '', llmReply = '';
+  var wasLast = (c.i === c.ts.length - 1);
+  /* 2) 未命中 → LLM 兜底：只判「是否算表达了同一意图」，失败/降级即视为未命中
+        （脚本分支继续可练 —— 离线仍是一场完整对话） */
+  if(!hit){
+    var r = await RP.llmJudge(t.you.hz, transcript);
+    if(r){ via = 'llm'; if(r.hit){ hit = true; llmReply = r.reply || ''; } }
+  }
+  RP.tick(hit);
+  /* 3) 评分：复用既有判分链路（判分参数与动画零改动） */
+  var data = null;
+  try{
+    var res = await fetch(API_BASE + 'api/score', {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ target:t.you.hz, user:transcript })
+    });
+    data = await res.json();
+  }catch(e){ data = null; }
+  var sHtml = '';
+  if(data && !data.error){
+    sHtml = renderScore(data);
+    if(window.SK){ SK.quotaInc('score'); sHtml += '<div style="margin-top:10px">' + SK.quotaBadge('score') + '</div>'; }
+    /* 与 reader / 会话同一条回流链（不分叉） */
+    try{ LM.ingestScore(data, t.scene, t.idx); }catch(e){}
+  }
+  var ov = (data && data.overall != null) ? data.overall : 0;
+  RP.record(hit, ov, via);
+  RP.push('me', { hz:transcript, s:ov }, hit);
+  /* 反馈跨重绘保留到「用户开始说下一轮」为止（rpToggleRec 里清空）——
+     命中时也留着评分卡，让他看得见自己刚才那句哪里还不稳。 */
+  rpMsg = sHtml + (hit
+    ? '<div class="rd-hint" style="margin-top:8px">✅ ' + T('That works!') + '</div>'
+    : '<div class="score-err" style="margin-top:8px">' + T('Not quite — say it another way.') + '</div>');
+  if(hit){
+    RP.advance();
+    /* 最后一轮达成：用 LLM 生成的收尾接话（有 grounding，只是把话说自然，不产新内容） */
+    if(wasLast && llmReply) RP.push('them', { hz:llmReply });
+  }
+  renderRp();
+}
+
+/* v0.27.0 · M3：场景教练入口卡 —— 把「读对话」变成「演对话」（唯一非复述开口）。 */
+function rpCardHtml(){
+  var ts; try{ ts = RP.tasks(); }catch(e){ return ''; }
+  if(!ts.length) return '';
+  var m = LM.get(), cleared = {}, nClear = 0;
+  (m.mile || []).forEach(function(x){
+    var id = String((x && x.id) || '');
+    if(id.indexOf('rp:') === 0){ cleared[id.slice(3)] = 1; nClear++; }
+  });
+  var h = '<div class="card" style="border-color:rgba(76,201,240,.35)">' +
+    '<div class="top"><h2>🗣 ' + T('Scenario coach') + '</h2>' +
+    (nClear ? '<span class="badge teal">' + nClear + '/' + ts.length + '</span>' : '') + '</div>' +
+    '<p class="desc">' + T('Act it out — you speak your part, Sinoky plays the local.') + '</p>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">';
+  ts.forEach(function(t){
+    var done = !!cleared[t.id];
+    h += '<button class="btn ' + (done ? 'ghost' : '') + '" style="padding:9px 12px" onclick="rpStart(\'' + t.id + '\')">' +
+      t.icon + ' ' + esc(T(t.name)) + (done ? ' ✓' : '') + '</button>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
  /* v0.25.0 · M2：今日路径卡 —— 把「日计划」从**一次性文本**变成**可追踪对象**。
    闭环第 3 步"制定计划"与第 4 步"每日执行"的可见落点。
    Edify Gate 回答：卡上直接点名今天必须说的那句中文（★）。 */
@@ -6669,7 +7153,7 @@ function renderHome(){
     '<div id="listen-pane-1">'+listenCardHtml()+'</div>'+
     '<div id="listen-pane-2" style="display:none">'+listenCardSHtml()+'</div>';
   /* v0.25.0：今日路径卡置于首屏——它是闭环的入口，不能埋在折叠区里 */
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + pathCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + pathCardHtml() + rpCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */

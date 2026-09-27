@@ -560,6 +560,14 @@ const DIGEST_SYSTEM = '你是 Sinoky（教外国人学中文的 PWA）的产品�
    复用 chatGLM 的 mode 分支与 chat: 限流桶，零新增 KV 写。 */
 const GUIDE_SYSTEM = '你是"诺诺"，一只教外国初学者说中文的熊猫，也是一位中国城市本地通。用户正在中国旅行（消息开头会标注所在城市），会问你交通、支付、地铁、打车、美食、门票、酒店、求助等实务问题。请用尽量简单的中文回答（每轮最多 3 句、总计不超过 120 字），每个关键中文词后面用括号跟拼音和简短英文，格式如：扫码(sǎo mǎ, scan the code)。只回答旅行实务问题；如果用户问别的，礼貌拉回："先帮你解决眼前的事"。如果用户只是练口语，就用简单的旅行话题陪 ta 练。';
 
+/* ===== v0.27.0 M3 场景教练：角色扮演的「同义判定」唯一用途 =====
+   只做一件事：判断学习者说的这句，是否算已经把目标意图表达出去了。
+   硬约束（对应「内容不编造」红线）：**不产出教学内容、不重写目标句**，
+   只回一个 JSON；reply 仅是一句自然的接话，用于推进对话。
+   端上判定顺序是「关键词优先，本接口兜底」——所以这里允许偏宽松（鼓励开口），
+   但「答非所问 / 只蹦零碎词」必须判 false，否则 checkpoint 形同虚设。 */
+const ROLEPLAY_SYSTEM = '你是中文口语陪练场景里的"本地人"。用户（中文初学者）会用中文说一句话，你在【意图】里能看到他想表达的意思。请只判断：他这句话是否已经**把意思表达出去了**——不要求与【意图】用词相同，同义词、更短的口语说法、语序不同都算成功；但答非所问、说了别的事、或只有零碎词不成句，算失败。然后给一句自然、简短（不超过 12 字）的日常中文接话，像真人一样把对话往下带。严格只输出 JSON，不要 markdown、不要解释：{"hit":true,"reply":"好的，两位里面请"}';
+
 const CHAT_MAX = 20; // 聊天专属限流：每 IP 60s 窗口最多 20 次（叠加在全局 40 之上）
 
 // 聊天专属限流（复用全局 RATE_MAP 兜底 + env.RL DO 强一致计数，独立 key 前缀 chat:）
@@ -595,7 +603,10 @@ async function chatGLM(userText, hist, env, mode) {
     : (mode === 'plan') ? PLAN_SYSTEM
     : (mode === 'correct') ? CORRECT_SYSTEM
     : (mode === 'guide') ? GUIDE_SYSTEM
+    : (mode === 'roleplay') ? ROLEPLAY_SYSTEM
     : CHAT_SYSTEM;
+  /* roleplay 要的是可解析的 JSON —— 温度压低，减少模型自由发挥把 JSON 写坏 */
+  const chatTemp = (mode === 'roleplay') ? 0.25 : 0.8;
   const messages = [{ role: 'system', content: sysPrompt }];
   (hist || []).forEach(function (h) {
     if (h && h.t) messages.push({ role: h.r === 'assistant' ? 'assistant' : 'user', content: h.t });
@@ -611,7 +622,7 @@ async function chatGLM(userText, hist, env, mode) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + (env.GLM_KEY || ''),
       },
-      body: JSON.stringify({ model: 'glm-4-flash', messages: messages, temperature: 0.8, top_p: 0.9, max_tokens: 200 }),
+      body: JSON.stringify({ model: 'glm-4-flash', messages: messages, temperature: chatTemp, top_p: 0.9, max_tokens: 200 }),
     });
     if (r.ok) {
       const d = await r.json().catch(function () { return null; });
