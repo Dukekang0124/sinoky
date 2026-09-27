@@ -1,0 +1,4 @@
+{
+  "note": "v0.28.1：修复行程包里每句话右侧的朗读、录音按钮被容器裁掉一半的问题（窄屏手机上尤其明显，按钮会跑到屏幕边缘外）。只更新网页端：App 用户下次打开会自动拿到修复，不需要重新安装；功能本身没有变化。",
+  "noteEn": "v0.28.1: fixes the Listen and Record buttons on the right of each trip-pack line being clipped by their container (most visible on narrow phones, where the buttons ran past the right edge). Web-side only: app users pick up the fix automatically the next time they open Sinoky, with no reinstall needed. No behaviour changed."
+}

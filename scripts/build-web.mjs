@@ -87,8 +87,33 @@ const html = readFileSync(path.join(src, 'index.html'), 'utf8');
 const m = html.match(/var APP_VERSION = '([\d.]+)'/);
 if (!m) throw new Error('APP_VERSION not found in index.html');
 const version = m[1];
-writeFileSync(path.join(out, 'APK_VERSION.txt'), version + '\n');
-console.log('[build:web] version =', version);
+
+/* 🔴 v0.28.1 修复：APK_VERSION.txt 的语义是 **APK 的版本号**，历史上却一直写「网页版本」。
+   自 v0.28.1 起两者可以不同（纯网页修正不发新 APK），继续写网页版本等于让这个文件撒谎：
+   线上宣告 APK=0.28.1，而 apk/ 目录里只有 0.28.0 的包 —— 任何按它判断更新的逻辑
+   都会「提示更新 → 下到同一个包 → 装完还是旧版 → 再提示」，形成死循环。
+   改为读 version.json 的 apk.version（旧结构无 apk 段时退回网页版本）。 */
+let apkVersion = version;
+try {
+  const vj = JSON.parse(readFileSync(path.join(src, 'version.json'), 'utf8'));
+  if (vj && vj.apk && vj.apk.version) apkVersion = String(vj.apk.version);
+} catch (e) {
+  console.warn('[build:web] ⚠️ 读 version.json 失败，APK_VERSION.txt 退回网页版本：' + e.message);
+}
+writeFileSync(path.join(out, 'APK_VERSION.txt'), apkVersion + '\n');
+/* 不变量①：APK_VERSION.txt 必须等于 version.json 的 apk.version（防语义再次漂移） */
+/* 不变量②：apk.version 必须与 apk.url 里的版本号一致（防「宣告的版本」与「实际给的包」不符） */
+{
+  const vj = JSON.parse(readFileSync(path.join(src, 'version.json'), 'utf8'));
+  if (vj && vj.apk) {
+    const urlVer = (String(vj.apk.url || '').match(/Sinoky-v([\d.]+)-release\.apk/) || [])[1];
+    if (urlVer && urlVer !== String(vj.apk.version)) {
+      throw new Error(`[build:web] apk.version(${vj.apk.version}) 与 apk.url 版本(${urlVer}) 不一致 —— 停止构建`);
+    }
+  }
+}
+console.log('[build:web] version =', version, '| APK_VERSION.txt =', apkVersion,
+            apkVersion === version ? '(与网页同版)' : '(APK 落后于网页 — 预期)');
 
 // 体积基线输出（后续对比用）
 const size = async (p) => {

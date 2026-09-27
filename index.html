@@ -706,6 +706,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .tr-hz{font-size:1.16rem;font-weight:800;margin-top:3px;line-height:1.4}
       .tr-py{font-size:.8rem;color:var(--teal);margin-top:2px}
       .tr-act{display:flex;gap:6px;flex:0 0 auto}
+      /* 🔴 v0.28.0：与 `.sess-head .btn`（见上）**同一个坑** —— 全局 `.btn{display:block;width:100%}`
+         撞上「宽度由内容决定」的收缩包裹 flex 容器：按钮的 100% 相对容器内容盒解析，容器宽度又
+         取决于内容 ⇒ 自指。实测（probe_trip_ui.cjs，390 视口）录音键被撑到 127px、右边缘溢出
+         会话盒 32px，第三个键溢出 71px，全被 overflow 裁掉半个（320 视口同样）。
+         在 flex 里必须把宽度交还内容。 */
+      .tr-act .btn{width:auto;flex:0 0 auto;margin-top:0}
       .reader-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
       .reader-box img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;background:var(--card)}
       .reader-words{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
@@ -1459,7 +1465,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.28.0';
+var APP_VERSION = '0.28.1';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；

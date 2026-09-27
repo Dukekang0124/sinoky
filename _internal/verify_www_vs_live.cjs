@@ -34,6 +34,18 @@ const BASE = process.env.BASE || 'https://sinoky.pages.dev';
 const OUT = path.join(__dirname, '..', 'www');
 const TOKEN_FILE = 'C:/Users/Admin/.sinoky-secrets/CLOUDFLARE_API_TOKEN.txt';
 const FULL = process.argv.includes('--full');
+/* 🔴 两种模式（v0.28.1 起）：
+   ── 无参数 = **幂等模式**：要求本地 www 与线上逐字节一致（结论「部署是零变化」）。
+   ── --expect=a,b,c = **发版模式**：声明「本版有意改动的文件白名单」。
+      ① 键集合仍必须完全一致（多/少文件永远是异常，尤其 APK 实体）；
+      ② 白名单内文件的 md5 差异 → 记为「本版有意变更」通过；白名单外仍是异常（fail）。
+      这才拦得住真问题：v0.28.1 实测就靠它抓到 APK_VERSION.txt 的**意外**差异
+      （build-web 把 APK 版本号写成了网页版本号）。 */
+const EXPECT = new Set(
+  (process.argv.find((a) => a.startsWith('--expect=')) || '')
+    .replace('--expect=', '').split(',').map((s) => s.trim()).filter(Boolean)
+);
+const strict = EXPECT.size === 0;
 
 // 不走「静态清单」的三类特殊文件（均已实测确认，不是差异）：
 //   _worker.js                     → Pages Functions 通道
@@ -127,7 +139,11 @@ function api(p) {
   }
 
   /* ── ② 关键文本文件内容比对 ──────────────────────────────────── */
+  const changed = new Set();
   console.log('\n=== ② 关键文件内容比对（逐字节 md5）===');
+  console.log(strict
+    ? '   模式：幂等（要求逐字节一致）'
+    : '   模式：发版（本版有意变更白名单 = ' + [...EXPECT].join(', ') + '）');
   for (const f of CRITICAL) {
     const lp = path.join(OUT, f);
     if (!fs.existsSync(lp)) { console.log('❌ ' + f + '：本地不存在'); fails++; continue; }
@@ -137,9 +153,26 @@ function api(p) {
       const r = await req(url, { guardShort: true });
       if (r.s !== 200) { console.log('❌ ' + f + '：线上 HTTP ' + r.s + ' ' + clip(r.buf.toString('utf8'), 80)); fails++; continue; }
       const same = md5(r.buf) === md5(lb);
-      if (!same) { console.log('❌ ' + f + '：md5 ' + md5(lb).slice(0, 10) + ' vs 线上 ' + md5(r.buf).slice(0, 10) + '（' + lb.length + ' vs ' + r.buf.length + ' bytes）'); fails++; }
+      if (!same) {
+        changed.add(f);
+        if (EXPECT.has(f)) {
+          console.log('🔄 ' + f + '：本版有意变更（线上 ' + md5(r.buf).slice(0, 10) + ' → 本地 ' + md5(lb).slice(0, 10) +
+                      '，' + r.buf.length + ' → ' + lb.length + ' bytes）');
+        } else {
+          console.log('❌ ' + f + '：md5 ' + md5(lb).slice(0, 10) + ' vs 线上 ' + md5(r.buf).slice(0, 10) + '（' + lb.length + ' vs ' + r.buf.length + ' bytes）');
+          console.log('   ↳ 若这是本版**有意**的改动，请用 --expect=' + f + '（或追加到既有白名单）重跑；否则先查明是谁改的');
+          fails++;
+        }
+      }
       else console.log('✅ ' + f);
     } catch (e) { console.log('⚠️ ' + f + '：取回失败 ' + e.message); fails++; }
+  }
+  /* 白名单必须「声明了且真的变了」—— 多声明/过期声明也要提示（说明白名单该更新了） */
+  if (!strict) {
+    const claimedButSame = [...EXPECT].filter((f) => !changed.has(f));
+    if (claimedButSame.length) {
+      console.log('⚠️ 白名单里声明了变更、但线上与本地一致（多声明或已部署过）：' + claimedButSame.join(', '));
+    }
   }
 
   /* ── ③ 边缘收口断言（内部文件不得公网直下）────────────────────── */
@@ -164,7 +197,9 @@ function api(p) {
         const lb = fs.readFileSync(path.join(OUT, f));
         try {
           const r = await req(BASE + '/' + f, { guardShort: true });
-          if (r.s !== 200 || (md5(r.buf) !== md5(lb) && !/^apk\//.test(f))) { console.log('❌ ' + f + '（' + r.s + '，' + lb.length + ' vs ' + r.buf.length + '）'); fails++; }
+          const diff = r.s !== 200 || (md5(r.buf) !== md5(lb) && !/^apk\//.test(f));
+          if (diff && !EXPECT.has(f)) { console.log('❌ ' + f + '（' + r.s + '，' + lb.length + ' vs ' + r.buf.length + '）'); fails++; }
+          else if (diff) changed.add(f);
         } catch (e) { console.log('⚠️ ' + f + '：' + e.message); fails++; }
         if (++done % 100 === 0) console.log('  …' + done + '/' + rest.length);
       }
@@ -175,7 +210,10 @@ function api(p) {
   }
 
   console.log('\n' + (fails === 0
-    ? '✅ 结论：本地 www 与线上一致 ⇒ 此时 `pages deploy www` 是幂等的（零变化）'
+    ? (strict
+        ? '✅ 结论：本地 www 与线上一致 ⇒ 此时 `pages deploy www` 是幂等的（零变化）'
+        : '✅ 结论：键集合不多不少 + 全部差异都在白名单内（' + [...changed].join(', ') +
+          '）⇒ 可安全部署；部署后请再用**无参数**跑一次，应回到「零变化」')
     : '❌ 结论：发现 ' + fails + ' 处不一致 ⇒ 禁止部署，先查明（尤其看 version.json / 键集合差集）'));
   process.exit(fails === 0 ? 0 : 1);
 })().catch((e) => { console.error('无法判定：' + e.message); process.exit(2); });

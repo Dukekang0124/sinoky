@@ -253,6 +253,37 @@ const seen = { pushSub: [], score: 0 };
   chk('面板 · 标题含「行程包」+ 城市', /Trip pack/.test(panel.title) && /上海/.test(panel.title), panel.title);
   chk('面板 · 进度 0 / 10', panel.prog === '0 / 10', panel.prog);
 
+  /* 🔴 v0.28.1 回归锁：行内按钮必须全部落在会话盒内。
+     曾因全局 `.btn{display:block;width:100%}` 撞上「宽度由内容决定」的收缩包裹 flex 容器
+     （同一个坑 v0.27 在 `.sess-head` 已踩过一次），录音键被撑到 127px、右边缘溢出 32px，
+     被 overflow 裁掉半个 —— 截图肉眼像「按钮设计成半圆」，只有量矩形才抓得住。 */
+  const fit = await page.evaluate(function(){
+    var box = document.querySelector('#trip .sess-box') || document.querySelector('#trip > div');
+    var br = box.getBoundingClientRect();
+    var over = 0, worst = 0, who = '';
+    document.querySelectorAll('#trip *').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      if(!r.width && !r.height) return;
+      if(r.right > br.right + 1){
+        over++; if(r.right - br.right > worst){ worst = Math.round(r.right - br.right); who = String(el.className || el.tagName).slice(0, 24); }
+      }
+    });
+    /* 🔴 别用 `.trip-row:first-child` —— #trip-body 的第一个子节点是说明文字 <p class="desc">，
+       该选择器恒不命中 ⇒ 拿到空数组 ⇒ `.every()` 恒真 = **假绿**（v0.28.1 自己踩到一次）。
+       这里改成按索引取，并把命中数一并返回供断言。 */
+    var row0 = document.querySelectorAll('#trip-body .trip-row')[0];
+    var kids = row0 ? row0.querySelectorAll('.tr-act .btn') : [];
+    return { over: over, worst: worst, who: who, boxRight: Math.round(br.right),
+             kidsN: kids.length,
+             actKids: Array.prototype.map.call(kids, function(k){ return Math.round(k.getBoundingClientRect().width); }) };
+  });
+  chk('面板 · 行内按钮不越界（无被裁掉的按钮）', fit.over === 0,
+      'over=' + fit.over + (fit.worst ? ' worst=' + fit.worst + 'px @' + fit.who : ''));
+  chk('面板 · 行内动作区确实渲染出 3 个按钮（防选择器假绿）', fit.kidsN === 3, 'kidsN=' + fit.kidsN);
+  chk('面板 · 三个动作按钮都是内容宽（未被 width:100% 撑开）',
+      fit.kidsN === 3 && fit.actKids.every(function(w){ return w > 24 && w < 72; }),
+      'widths=' + JSON.stringify(fit.actKids));
+
   const flow = await page.evaluate(async function(){
     /* 干预式 A/B：前后比对 tone 维度，证明行程包评分**真的回流**（不是只画了个分数） */
     var before = LM.get().abil.tone;
