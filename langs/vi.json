@@ -833,5 +833,21 @@
   "Trip cleared.": "Đã xoá chuyến đi.",
   "none": "không",
   "today": "hôm nay",
-  "tomorrow": "ngày mai"
+  "tomorrow": "ngày mai",
+  "Trip retro": "Tổng kết chuyến đi",
+  "Make my trip card": "Tạo thẻ chuyến đi của tôi",
+  "archived": "đã lưu trữ",
+  "avg": "trung bình",
+  "{n} lines said": "Đã nói {n} câu",
+  "nothing recorded": "chưa có dữ liệu",
+  "tones": "thanh điệu",
+  "{n}-tone words": "từ thanh {n}",
+  "tricky first sounds": "âm đầu khó",
+  "ending sounds": "âm cuối",
+  "you missed this 3× — trying a different way": "Sai câu này 3 lần — đổi cách khác",
+  "You missed this 3× — so today we change the approach": "Sai câu này 3 lần — hôm nay đổi cách",
+  "break it into single sounds": "tách thành từng âm",
+  "try it another way": "nói cách khác",
+  "Practise sound by sound": "Luyện từng âm",
+  "Say it another way": "Nói cách khác"
 }

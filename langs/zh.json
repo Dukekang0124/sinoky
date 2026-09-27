@@ -833,5 +833,21 @@
   "Trip cleared.": "行程已清除。",
   "none": "不设置",
   "today": "今天",
-  "tomorrow": "明天"
+  "tomorrow": "明天",
+  "Trip retro": "行程复盘",
+  "Make my trip card": "生成我的行程卡",
+  "archived": "已归档",
+  "avg": "平均",
+  "{n} lines said": "已开口 {n} 句",
+  "nothing recorded": "还没有记录",
+  "tones": "声调",
+  "{n}-tone words": "{n} 声字",
+  "tricky first sounds": "容易混的声母",
+  "ending sounds": "韵母收尾",
+  "you missed this 3× — trying a different way": "这句连错 3 次 —— 已换一种练法",
+  "You missed this 3× — so today we change the approach": "这句你连错 3 次 —— 今天换个做法",
+  "break it into single sounds": "拆成单字练",
+  "try it another way": "换个说法",
+  "Practise sound by sound": "一个字一个字练",
+  "Say it another way": "换个说法说"
 }

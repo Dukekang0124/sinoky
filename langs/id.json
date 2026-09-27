@@ -833,5 +833,21 @@
   "Trip cleared.": "Perjalanan dihapus.",
   "none": "tidak ada",
   "today": "hari ini",
-  "tomorrow": "besok"
+  "tomorrow": "besok",
+  "Trip retro": "Rekap perjalanan",
+  "Make my trip card": "Buat kartu perjalanan saya",
+  "archived": "terarsip",
+  "avg": "rata-rata",
+  "{n} lines said": "{n} kalimat diucapkan",
+  "nothing recorded": "belum ada catatan",
+  "tones": "nada",
+  "{n}-tone words": "kata nada {n}",
+  "tricky first sounds": "bunyi awal yang sulit",
+  "ending sounds": "bunyi akhir",
+  "you missed this 3× — trying a different way": "Salah 3× — coba cara lain",
+  "You missed this 3× — so today we change the approach": "Salah 3× — hari ini kita ganti cara",
+  "break it into single sounds": "pecah jadi per suku bunyi",
+  "try it another way": "bilang dengan cara lain",
+  "Practise sound by sound": "Latih per suara",
+  "Say it another way": "Bilang dengan cara lain"
 }

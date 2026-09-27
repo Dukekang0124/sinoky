@@ -833,5 +833,21 @@
   "Trip cleared.": "Viaje borrado.",
   "none": "ninguno",
   "today": "hoy",
-  "tomorrow": "mañana"
+  "tomorrow": "mañana",
+  "Trip retro": "Repaso del viaje",
+  "Make my trip card": "Crear mi tarjeta de viaje",
+  "archived": "archivado",
+  "avg": "media",
+  "{n} lines said": "{n} frases dichas",
+  "nothing recorded": "sin registros",
+  "tones": "tonos",
+  "{n}-tone words": "palabras de tono {n}",
+  "tricky first sounds": "sonidos iniciales difíciles",
+  "ending sounds": "sonidos finales",
+  "you missed this 3× — trying a different way": "Fallaste esta 3 veces: probamos otra forma",
+  "You missed this 3× — so today we change the approach": "Fallaste esta 3 veces: hoy cambiamos el enfoque",
+  "break it into single sounds": "separarla en sonidos sueltos",
+  "try it another way": "decirla de otra forma",
+  "Practise sound by sound": "Practicar sonido a sonido",
+  "Say it another way": "Decirlo de otra forma"
 }

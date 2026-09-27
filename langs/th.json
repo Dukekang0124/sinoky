@@ -833,5 +833,21 @@
   "Trip cleared.": "ลบแผนเดินทางแล้ว",
   "none": "ไม่ระบุ",
   "today": "วันนี้",
-  "tomorrow": "พรุ่งนี้"
+  "tomorrow": "พรุ่งนี้",
+  "Trip retro": "สรุปทริป",
+  "Make my trip card": "สร้างการ์ดทริปของฉัน",
+  "archived": "เก็บถาวรแล้ว",
+  "avg": "เฉลี่ย",
+  "{n} lines said": "พูดไป {n} ประโยค",
+  "nothing recorded": "ยังไม่มีข้อมูล",
+  "tones": "เสียงวรรณยุกต์",
+  "{n}-tone words": "คำเสียงที่ {n}",
+  "tricky first sounds": "เสียงต้นที่ยาก",
+  "ending sounds": "เสียงท้าย",
+  "you missed this 3× — trying a different way": "พลาด 3 ครั้ง — ลองวิธีอื่น",
+  "You missed this 3× — so today we change the approach": "พลาด 3 ครั้ง — วันนี้เปลี่ยนวิธี",
+  "break it into single sounds": "แยกเป็นเสียงเดี่ยว",
+  "try it another way": "พูดอีกแบบ",
+  "Practise sound by sound": "ซ้อมทีละเสียง",
+  "Say it another way": "พูดอีกแบบดู"
 }

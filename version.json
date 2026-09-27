@@ -1,16 +1,17 @@
 {
-  "version": "0.28.1",
+  "version": "0.29.0",
   "updated": "2026-09-27",
-  "note": "v0.28.1：修复行程包里每句话右侧的朗读、录音按钮被容器裁掉一半的问题（窄屏手机上尤其明显，按钮会跑到屏幕边缘外）。只更新网页端：App 用户下次打开会自动拿到修复，不需要重新安装；功能本身没有变化。",
+  "note": "v0.29.0 闭环收口：旅程复盘卡 + 记忆压缩 + 策略切换\n\n· 旅程复盘：行程结束后自动生成一张可分享的复盘卡 —— 这趟说了几句、平均分多少、最常卡的是什么，并附「下一趟要说的第一句」（看完就能开口）。\n· 记忆压缩：跨天事件自动压成日摘要（最多 30 天），原始事件用完即弃。零新增请求、零新增 KV 写。\n· 策略切换：同一句连错 3 次，就不再重复它 —— 改为「拆音节练」或「换个说法」；一旦连对立刻解除，不贴永久标签。",
   "apk": {
-    "versionCode": 2800,
-    "version": "0.28.0",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.28.0-release.apk",
-    "md5": "fbe65640e562a62df9741005af29411f",
-    "size": 24144448,
+    "versionCode": 2900,
+    "version": "0.29.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.29.0-release.apk",
+    "md5": "",
+    "size": 0,
     "force": false
   },
   "noteEn": [
+    "v0.29.0 Closing the loop: trip retro, memory compaction, strategy switching\n\n· Trip retro: an end-of-trip card you can share — how many lines you said, your average score, what tripped you up most, plus the first line to say on your next trip.\n· Memory compaction: past-day events roll up into daily digests (30-day cap); raw events are consumed. No extra requests, no extra KV writes.\n· Strategy switching: miss the same line 3 times and Sinoky stops repeating it — switching to sound-by-sound practice or another way to say it. Cleared the moment you break through.",
     "v0.28.1: fixes the Listen and Record buttons on the right of each trip-pack line being clipped by their container (most visible on narrow phones, where the buttons ran past the right edge). Web-side only: app users pick up the fix automatically the next time they open Sinoky, with no reinstall needed. No behaviour changed.",
     "v0.28.0: from 'content that waits for you to open it' to 'a nudge at the right moment to practise the right line' (proactive intelligence). (1) Automatic trip pack: set 'which city and which day you arrive' in Settings, and as the trip approaches Home hands you a 10-line trip pack drawn across arrival, metro, ordering food and asking for directions - every line comes from the city guide you are already studying, so there is nothing new to memorise; Beijing and Chengdu guides are new, bringing the total to three cities. (2) Nudges are graded, and staying silent is the usual outcome: the app decides in four tiers whether it is worth interrupting you - (a) the trip is imminent (the day before and the day of arrival), (b) your streak is about to break (three or more days, and nothing spoken for over 20 hours), (c) you have lines due for review, (d) anything else is left alone. That fourth tier, staying silent, is deliberate: we would rather under-notify than turn reminders into noise. (3) Tap through to the exact thing: the notification opens the trip pack, a scenario roleplay or the due review - no hunting for the entrance. (4) Privacy and traffic: a reminder subscription stores only the push endpoint and a minimal profile (goal, city, arrival date, streak), never any chat or recording; users who have not subscribed trigger no related request at all. (5) Offline caching was tightened along the way: page URLs carrying parameters no longer take up extra cache space, and API data is no longer written to disk.",
     "v0.27.0: new Scenario Coach - practice moves from repeating lines to playing out a real conversation. (1) Six high-frequency real-life scenes: ordering food, asking for directions, bargaining, taking a taxi, hotel check-in and asking for help. In each one you play your own side while the app plays the waiter, the vendor, the taxi driver, the receptionist or the neighbour, turn by turn until the job is done. (2) Every line you have to say comes from the scene library you are already learning - no new material to memorise, just putting those lines to work in a real exchange. (3) Meaning first, pronunciation second: if you get your point across it counts as a pass (synonyms and shorter colloquial versions are fine), and you still get syllable-by-syllable scoring afterwards pointing out which tone drifted. (4) Difficulty follows you: the app decides whether to show the Chinese hint based on your level, and if you miss the same line twice in a row it hands you the hint automatically, so you are not stuck failing in the same spot. (5) Progress record: clearing every round of a scene for the first time earns you a badge. Scoring logic, parameters and animations are untouched; progress, streaks, review schedules and today's path are all preserved.",

@@ -1465,7 +1465,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.28.1';
+var APP_VERSION = '0.29.0';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -3649,7 +3649,7 @@ saveStateLocal();
    命名空间纪律（§3.3）：禁止再新增顶层 S.xxx，一律挂 S.lm.*
    ======================================================================== */
 var LM_ABIL = ['tone','initial','final','fluency','listening','vocab','grammar','pragmatics'];
-var LM_CAP  = { weak:5, mastered:200, mile:50, buf:200 };
+var LM_CAP  = { weak:5, mastered:200, mile:50, buf:200, strategy:12, digest:30 };
 var LM = (function(){
   var V = 1;
   function defaults(){
@@ -3664,9 +3664,10 @@ var LM = (function(){
       path:  { fam:'travel', node:'', done:[], startedAt:'' },
       trip:  null,
       mile:  [],
-      policy:{ hint:'standard', weights:{}, strategy:{}, cardLog:[] },
+      policy:{ hint:'standard', weights:{}, strategy:[], cardLog:[] },
       stats: { days:0, said:0, dueCount:0 },
       buf:   [],
+      digest:[],
       updatedAt: 0
     };
   }
@@ -3683,6 +3684,10 @@ var LM = (function(){
     if(!Array.isArray(m.mastered)) m.mastered = [];
     if(!Array.isArray(m.mile))     m.mile = [];
     if(!Array.isArray(m.buf))      m.buf = [];
+    /* v0.29 迁移：policy.strategy 由 {} 升级为**定长数组**（对象键会无限增长，违反 §5.2），
+       并新增 digest 日摘要段。老用户已有 {} 不会被字段兜底覆盖，必须显式转。 */
+    if(!Array.isArray(m.policy.strategy)) m.policy.strategy = [];
+    if(!Array.isArray(m.digest))          m.digest = [];
     if(m.trip === undefined)       m.trip = null;
     /* 老用户已有 S.goal（travel/work/people/fun）→ 无痛映射进 lm.goal.purpose */
     if(!m.goal.purpose && S.goal)  m.goal.purpose = S.goal;
@@ -3721,6 +3726,58 @@ var LM = (function(){
     if(hit) hit.n += add; else m.weak.push({ k:key, n:add });
     m.weak.sort(function(a,b){ return b.n - a.n; });
     if(m.weak.length > LM_CAP.weak) m.weak = m.weak.slice(0, LM_CAP.weak);
+  }
+  /* ---- v0.29 策略切换（闭环第 7 步「调整」的执行器）----
+     方案 §M5「防挫败」：同一句**连续 3 次低分**不重复同一句，改「拆音节练」或「换近义句」。
+     低分归因决定换哪一种（确定性规则，不问 LLM）：
+       · 有音素级错误（声调/声母/韵母）→ 'syllable' 拆音节练（发音问题，重复整句没用）
+       · 只是整体低分（流利度/含糊）    → 'synonym'  换近义句（表达问题，换句更有效）
+     突破（≥60）即解除策略 —— 策略是**临时脚手架**，不是永久标签。
+     定长：最多 LM_CAP.strategy 条，超出淘汰最早（§5.2 禁无限增长）。 */
+  function _stratMode(data){
+    var s = (data && data.perSyll) || [], i;
+    for(i=0;i<s.length;i++){
+      var sy = s[i]; if(!sy) continue;
+      var e = sy.errs || [];
+      if(sy.toneOk === false) return 'syllable';
+      if(e.indexOf && (e.indexOf('initial') >= 0 || e.indexOf('final') >= 0)) return 'syllable';
+    }
+    return 'synonym';
+  }
+  var STRAT_AT = 3;                       /* 触发阈值：连续低分次数 */
+  function strategyBump(key, overall, mode){
+    if(!key) return null;
+    var m = get(), arr = m.policy.strategy;
+    if(!Array.isArray(arr)) arr = m.policy.strategy = [];
+    var hit = null, i;
+    for(i=0;i<arr.length;i++){ if(arr[i] && arr[i].k === key){ hit = arr[i]; break; } }
+    if(overall >= 60){
+      if(hit){ arr.splice(i, 1); save(); return { cleared:true, k:key }; }
+      return null;
+    }
+    if(!hit){
+      hit = { k:key, n:1, m:'', at:today() };
+      arr.push(hit);
+    } else {
+      hit.n = (hit.n || 0) + 1;
+      hit.at = today();
+    }
+    if(hit.n >= STRAT_AT && !hit.m) hit.m = (mode === 'syllable') ? 'syllable' : 'synonym';
+    while(arr.length > LM_CAP.strategy) arr.shift();
+    save();
+    return hit;
+  }
+  function strategyOf(key){
+    var arr = get().policy.strategy;
+    if(!Array.isArray(arr) || !key) return null;
+    for(var i=0;i<arr.length;i++){
+      if(arr[i] && arr[i].k === key && arr[i].m) return arr[i];
+    }
+    return null;
+  }
+  function strategyAll(){
+    var arr = get().policy.strategy;
+    return (Array.isArray(arr) ? arr : []).filter(function(x){ return x && x.m; });
   }
   function master(key){
     var m = get();
@@ -3777,8 +3834,53 @@ var LM = (function(){
       return n;
     }catch(e){ return 0; }
   }
-  /* ---- 记忆压缩：本地顺带做，零新增请求 / 零 KV 写（§5.3）---- */
+  /* ---- 记忆压缩：本地顺带做，零新增请求 / 零 KV 写（§5.3）----
+     `compact()` 的唯一调用点就在 `pushProfile()` 里（上云前），
+     所以「同步时顺带压缩」是**结构上保证**的，不靠自觉。
+     数据流：原始事件(buf, cap200) → 日摘要(digest, cap30) → 能力向量(abil, ingestScore 时已更新)。
+     压缩后删除原始事件：buf 是「聚合为日摘要的原料」，料用完即弃（§5.1）。 */
+  function digestSweep(){
+    var m = get(), buf = m.buf, dg = m.digest, i;
+    if(!Array.isArray(dg)) dg = m.digest = [];
+    if(!Array.isArray(buf) || !buf.length) return 0;
+    var td = today(), byDay = {}, seen = {}, eaten = 0;
+    for(i=0;i<dg.length;i++){ if(dg[i] && dg[i].d) seen[dg[i].d] = 1; }
+    for(i=0;i<buf.length;i++){
+      var e = buf[i]; if(!e || !e.t) continue;
+      var d = new Date(e.t).toISOString().slice(0,10);
+      if(d >= td) continue;              /* 今天还在进行中，不封账（否则当天数据会被切碎） */
+      if(seen[d]){ eaten++; continue; }  /* 已封过账 → 该条是冗余原料，直接吃掉（幂等） */
+      if(!byDay[d]) byDay[d] = { n:0, sc:0, sum:0 };
+      var g = byDay[d];
+      g.n++;
+      if(e.k === 'score' && e.d && typeof e.d.v === 'number'){ g.sc++; g.sum += e.d.v; }
+    }
+    var keys = Object.keys(byDay).sort(), added = 0;
+    for(i=0;i<keys.length;i++){
+      var k = keys[i], g2 = byDay[k];
+      dg.push({ d:k, n:g2.n, sc:g2.sc, avg: g2.sc ? Math.round(g2.sum / g2.sc) : 0 });
+      added++;
+    }
+    while(dg.length > LM_CAP.digest) dg.shift();
+    if(added || eaten){
+      /* 只保留「今天 + 尚未封账」的原始事件 */
+      m.buf = buf.filter(function(x){
+        if(!x || !x.t) return false;
+        var d = new Date(x.t).toISOString().slice(0,10);
+        return d >= td;
+      });
+    }
+    return added;
+  }
+  function digestOf(days){
+    var dg = get().digest || [];
+    if(!days) return dg.slice();
+    var cut = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0,10);
+    return dg.filter(function(x){ return x && x.d >= cut; });
+  }
+  /* ---- 记忆压缩主入口（上云前调用；幂等，可重复跑）---- */
   function compact(){
+    digestSweep();
     pruneBuf(7);
     var m = get();
     if(S.days && S.days.length) m.stats.days = S.days.length;
@@ -3816,6 +3918,12 @@ var LM = (function(){
       if(e2.indexOf && e2.indexOf('final')   >= 0){ weakBump('final', 1);   out.weak.push('final'); }
     }
     if(sceneId != null) event('score', { s: sceneId + '#' + idx, v: out.overall });
+    /* v0.29 策略切换：把「这次说得怎么样」变成「下次还练不练同一句」（闭环 6→7 的连接点）。
+       注意顺序：必须在 PATH.markSaid 之前算，否则 ≥80 分的那次会先把自己解锁掉。 */
+    if(sceneId != null){
+      var _sk = sceneId + '#' + idx;
+      try{ strategyBump(_sk, out.overall, _stratMode(data)); out.strategy = strategyOf(_sk); }catch(e){}
+    }
     /* ≥80 分 → 记为「这句说对了」（驱动路径进度 + 次日选句权重变化）*/
     if(data.overall >= 80 && sceneId != null && typeof PATH !== 'undefined'){
       try{ PATH.markSaid({ scene:sceneId, idx:idx }); out.mastered = true; }catch(e){}
@@ -3872,7 +3980,9 @@ var LM = (function(){
            event:event, pruneBuf:pruneBuf, abil:abil, weakBump:weakBump, master:master,
            isMastered:isMastered, milestone:milestone, setGoal:setGoal, setTrip:setTrip,
            daysToTrip:daysToTrip, dueCount:dueCount, compact:compact, snapshot:snapshot,
-           ingestScore:ingestScore, cardLog:cardLog, cardDiff:cardDiff };
+           ingestScore:ingestScore, cardLog:cardLog, cardDiff:cardDiff,
+           strategyBump:strategyBump, strategyOf:strategyOf, strategyAll:strategyAll,
+           digestSweep:digestSweep, digestOf:digestOf };
 })();
 LM.migrate();
 
@@ -3996,6 +4106,10 @@ var PATH = (function(){
     if(tc && (it.city === tc || (CITY_SCENE[tc] && CITY_SCENE[tc] === it.scene))) s += 0.20;
     /* 0.15 未说过 */
     if(!((S.phrases||{})[it.scene]||[]).length || ((S.phrases||{})[it.scene]||[]).indexOf(it.idx) < 0) s += 0.15;
+    /* v0.29 策略切换：命中「连错 3 次」→ 显著降权 ⇒ 今天不再重复同一句（防挫败的机制本身）。
+       用 -0.60 而不是「直接剔除」：句库不够时仍可兜底出现，但排在同场景其它句之后。 */
+    var st = null; try{ st = LM.strategyOf(key(it)); }catch(e){}
+    if(st) s -= 0.60;
     return +s.toFixed(3);
   }
   /* v0.26：把加权公式的**每个命中项翻译成人话** —— 「为什么今天练这句」。
@@ -4015,6 +4129,8 @@ var PATH = (function(){
     if(rv && (!rv.due || String(rv.due) <= today())) out.push('due');
     if(!LM.isMastered(key(it))) out.push('new');
     if(tc && (it.city === tc || (CITY_SCENE[tc] && CITY_SCENE[tc] === it.scene))) out.push('city');
+    /* v0.29：命中策略切换 —— 明确告诉用户「不是随便换的，因为这句你连错 3 次」 */
+    try{ if(LM.strategyOf(key(it))) out.push('swap'); }catch(e){}
     return out;   /* 无特殊理由则返回空 —— UI 侧不展示理由，不给假的解释 */
   }
   /* 今日任务卡：1 必说 + 2 顺带（mustSay:3）+ 至多 1 复习 */
@@ -4037,6 +4153,18 @@ var PATH = (function(){
     }
     var extra = it.slice(1, 3).filter(function(x){ return review.length ? key(x) !== key(review[0]) : true; });
     var card = { node:n, must:it.slice(0,1), extra:extra, review:review };
+    /* v0.29：把「命中的策略切换」列出来 —— 首页据此给「换的做法」入口（闭环第 7 步的可见证据）。
+       只取 1 条：策略是脚手架，一天给一个「换法」提示就够，多了变成噪音。 */
+    card.strategy = [];
+    try{
+      LM.strategyAll().forEach(function(s){
+        if(card.strategy.length >= 1) return;
+        var sp = String(s.k).split('#'), sc = _findScene(sp[0]);
+        if(!sc || !sc.phrases || !sc.phrases[+sp[1]]) return;
+        var p = sc.phrases[+sp[1]];
+        card.strategy.push({ scene:sc.id, idx:+sp[1], hz:p.hz, py:p.py, en:p.en, mode:s.m, n:s.n });
+      });
+    }catch(e){}
     /* v0.26 可解释性 + 可观测性：每句附「为什么是它」；卡本身写入 7 天日志 */
     ['must','extra','review'].forEach(function(band){
       (card[band]||[]).forEach(function(x){ x.why = whyOf(x); });
@@ -4738,6 +4866,120 @@ var PRO = (function(){
            hoursSince:hoursSince, boot:boot, flush:flush, exec:exec,
            syncSnapshot:syncSnapshot, snapshotPlus:snapshotPlus, onGoalChanged:onGoalChanged,
            pending:function(){ return _pending; } };
+})();
+
+/* ===== v0.29.0 · M6 Retro & Archive（RETRO.）============================
+   闭环第 9 步「直至达成目标」的收口：把一整趟行程压成**一张能发出去的复盘卡**。
+   三件事：
+     ① 复盘数据（说几句 / 平均分 / 最常卡的维度）—— 全部来自本地 digest，零新增请求
+     ② 复盘卡 —— 复用 SHARE.draw() 分享链（新增 1 个卡片类型 retro）
+     ③ 归档 —— 结果写 S.lm.mile（定长），原始事件已在 compact() 里压掉
+   Edify Gate：卡上必须放「下一趟要说的第一句」，让「看完」直接变成「说一句」。
+   判据：旅程结束 = 到达日已过 goal.days 天（**本地日口径**，与 daysToTrip 同源），且未归档。
+   ==================================================================== */
+var RETRO = (function(){
+  function trip(){ return LM.get().trip || null; }
+  function cityId(){
+    var t = trip(), c = (t && t.city) || LM.get().goal.cities[0] || '';
+    try{ return PRO.cityIdOf(c) || ''; }catch(e){ return ''; }
+  }
+  function days(){ var n = LM.get().goal.days || 0; return n > 0 ? n : 1; }
+  function ended(){
+    var t = trip(); if(!t || !t.arrive) return false;
+    var dt = LM.daysToTrip();
+    if(dt === null) return false;
+    return dt <= -days();          /* 到达日已过整整 days 天 → 这趟结束了 */
+  }
+  /* 是否可复盘：**两条触发路径** ——
+     ① 行程已结束（日期判定，用户没主动点也会出现）
+     ② 用户推进到复盘节点（t7/w7/f7/l7，显式意图）
+     两条都给入口，避免「旅程结束了但用户没走到 t7」和「走到了但日期没到」两种漏触发。 */
+  function available(){
+    if(ended()) return true;
+    var cur = null; try{ cur = PATH.currentNode(); }catch(e){}
+    return !!(cur && cur.retro);
+  }
+  function archived(){
+    var id = 'retro:' + (cityId() || 'trip'), m = LM.get();
+    for(var i=0;i<m.mile.length;i++){ if(m.mile[i] && m.mile[i].id === id) return m.mile[i]; }
+    return null;
+  }
+  /* 弱点维度 → 人话。确定性映射（不生成、不编造），与 whyLabel 同风格。 */
+  function weakPhrase(k){
+    if(!k) return '';
+    if(k.indexOf('tone') === 0){
+      var n = parseInt(k.replace(/[^0-9]/g, ''), 10);
+      return n ? T('{n}-tone words').replace('{n}', n) : T('tones');
+    }
+    if(k.indexOf('initial') === 0) return T('tricky first sounds');
+    if(k.indexOf('final') === 0)   return T('ending sounds');
+    return '';
+  }
+  /* 下一趟要说的第一句（Edify Gate）—— 只从既有 CITY_GUIDES 取，零新增教学内容。
+     ⚠️ 字段是 `zones[].phrases[]`（与 PRO.tripPack 同一读取口径，别写成 lines）。 */
+  function nextLine(){
+    var cid = cityId();
+    var g = (typeof CITY_GUIDES !== 'undefined' && cid) ? CITY_GUIDES[cid] : null;
+    if(g && g.zones && g.zones.length){
+      var z = g.zones[0];
+      if(z && z.phrases && z.phrases.length){
+        var l = z.phrases[0];
+        if(l && l.hz) return { hz:l.hz, py:l.py || '', en:l.en || '', city:g.city || '' };
+      }
+    }
+    return null;
+  }
+  function build(){
+    var m = LM.get(), dg = [];
+    try{ dg = LM.digestOf(30); }catch(e){}
+    var said = 0, sc = 0, sum = 0;
+    dg.forEach(function(x){
+      if(!x) return;
+      said += (x.n || 0); sc += (x.sc || 0); sum += (x.avg || 0) * (x.sc || 0);
+    });
+    return {
+      city:   (trip() && trip().city) || m.goal.cities[0] || '',
+      cityId: cityId(),
+      days:   days(),
+      active: dg.length,                 /* 这趟实际开口的天数 */
+      said:   said,
+      avg:    sc ? Math.round(sum / sc) : 0,
+      weak:   weakPhrase((m.weak[0] && m.weak[0].k) || ''),
+      next:   nextLine(),
+      streak: S.streak || 0
+    };
+  }
+  /* 归档：写 S.lm.mile（定长）。幂等 —— milestone 对同 id 只记一次。 */
+  function archive(){
+    var d = build();
+    var rec = LM.milestone('retro:' + (d.cityId || 'trip'), { n:d.said, avg:d.avg, v:d.days });
+    if(rec){ try{ LM.save(); }catch(e){} }
+    return { fresh: !!rec, data: d };
+  }
+  /* 打开复盘卡：先归档（保证「看过就有记录」），再进分享面板 */
+  function open(){
+    archive();
+    try{ renderHome(); }catch(e){}
+    try{ if(typeof SHARE !== 'undefined') SHARE.open('retro'); }catch(e){}
+  }
+  /* 首页入口卡：只在「可复盘」时出现（未结束不打扰，与 PRO 的 D 分支同一纪律） */
+  function cardHtml(){
+    if(!available()) return '';
+    var done = archived(), d = build();
+    if(!d.said && !done) return '';    /* 这趟一句没说 → 不生成（不放无数据源的分数/数字） */
+    var line = d.said ? T('{n} lines said').replace('{n}', d.said) : T('nothing recorded');
+    var h = '<div class="card" style="border-color:rgba(201,168,108,.45)">' +
+      '<div class="top"><h2>🧳 ' + T('Trip retro') + '</h2>' +
+      (done ? '<span class="badge gold">' + T('archived') + '</span>' : '') + '</div>' +
+      '<p class="desc">' + esc(d.city ? d.city + ' · ' : '') + esc(line) +
+        (d.avg ? ' · ' + T('avg') + ' ' + d.avg : '') + '</p>' +
+      '<div style="display:flex;gap:10px;margin-top:10px">' +
+      '<button class="btn primary" style="flex:1" onclick="RETRO.open()">📮 ' + T('Make my trip card') + '</button>' +
+      '</div></div>';
+    return h;
+  }
+  return { ended:ended, available:available, archived:archived, build:build, archive:archive,
+           open:open, cardHtml:cardHtml, weakPhrase:weakPhrase };
 })();
 
 /* v0.3.39 写入节流：用户切后台/关页时防抖可能还没触发，强制 flush 一次，
@@ -7213,6 +7455,7 @@ function whyLabel(w){
   if(w === 'weak') return T('your weak spot');
   if(w === 'due')  return T('due for review');
   if(w === 'city') return T('for your city');
+  if(w === 'swap') return T('you missed this 3× — trying a different way');
   return T('a fresh line');
 }
 function tagLabel(t){
@@ -7719,6 +7962,8 @@ function saveTrip(){
  /* v0.25.0 · M2：今日路径卡 —— 把「日计划」从**一次性文本**变成**可追踪对象**。
    闭环第 3 步"制定计划"与第 4 步"每日执行"的可见落点。
    Edify Gate 回答：卡上直接点名今天必须说的那句中文（★）。 */
+/* v0.29.0 · M6：旅程复盘入口卡（只在行程结束后出现；包装一层防单点异常拖垮首屏） */
+function retroCardHtml(){ try{ return RETRO.cardHtml(); }catch(e){ return ''; } }
 function pathCardHtml(){
   var c;
   try{ c = PATH.todayCard(); }catch(e){ return ''; }
@@ -7729,7 +7974,7 @@ function pathCardHtml(){
     '<p class="desc">'+esc(n.name)+' · '+T('say 3 lines today')+'</p>'+
     '<div class="pbar"><i style="width:'+p.pct+'%"></i></div>';
   if(n.retro){
-    h += '<button class="btn primary" style="margin-top:12px" onclick="PATH.complete(\''+n.id+'\');renderHome();">'+T('Finish the journey')+'</button></div>';
+    h += '<button class="btn primary" style="margin-top:12px" onclick="PATH.complete(\''+n.id+'\');RETRO.open();">'+T('Finish the journey')+'</button></div>';
     return h;
   }
   var rows = [];
@@ -7749,6 +7994,23 @@ function pathCardHtml(){
   if(df && df.changed > 0){
     h += '<div class="rd-hint" style="margin-top:11px">🔄 '+
       T('{n} of today’s lines are new since your last session').replace('{n}', df.changed)+'</div>';
+  }
+  /* v0.29：策略切换的可见出口 —— 「这句连错 3 次 ⇒ 换了做法」，并一键进入该句。
+     两种做法各有既有承载：拆音节练 = 句卡里可点单音节的拼读脚手架（v0.3.55 D）；
+     换近义句 = 选句降权后同场景另一句（上面卡片内容已经不同）。 */
+  var stra = (c.strategy && c.strategy[0]) || null;
+  if(stra){
+    var syl = (stra.mode === 'syllable');
+    /* 🔴 必须写成「条件 ? T(单串) : T(单串)」而**不是**把三元式塞进 T(...) 里面：
+       后者的字面量 i18n 闸门扫不到（正则只认紧跟在 T( 之后的字符串），
+       线上会静默 fallback 成英文 —— 违反「零英文 fallback」验收线。
+       （闸门是全文扫描，连注释里的示例也算，所以这里不写字面示例。） */
+    h += '<div class="rd-hint" style="margin-top:11px">🎚 '+
+      T('You missed this 3× — so today we change the approach') + ': '+
+      esc(syl ? T('break it into single sounds') : T('try it another way')) + '</div>'+
+      '<div style="display:flex;gap:10px;margin-top:9px">'+
+      '<button class="btn ghost" style="flex:1" onclick="openScene(\''+stra.scene+'\','+stra.idx+',\'home\')">'+
+      (syl ? '🔤 ' : '🔄 ') + esc(syl ? T('Practise sound by sound') : T('Say it another way'))+'</button></div>';
   }
   h += '<div style="display:flex;gap:10px;margin-top:14px">'+
     '<button class="btn primary" style="flex:1" onclick="SESSION.start()">▶ '+T('Start today’s session')+'</button></div>'+
@@ -7814,7 +8076,7 @@ function renderHome(){
     '<div id="listen-pane-1">'+listenCardHtml()+'</div>'+
     '<div id="listen-pane-2" style="display:none">'+listenCardSHtml()+'</div>';
   /* v0.25.0：今日路径卡置于首屏——它是闭环的入口，不能埋在折叠区里 */
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + proCardHtml() + pathCardHtml() + rpCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + proCardHtml() + retroCardHtml() + pathCardHtml() + rpCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -9700,7 +9962,7 @@ SHARE.BADGE = {
   'first_city':['城','First landmark'], 'explorer':['游','5 landmarks'], 'map_master':['图','All landmarks'],
   'reversal-king':['转','Reversal king'], 'real-world':['野','In the wild'], 'polyglot-path':['通','All paths']
 };
-SHARE.TNAME = { start:'Just started', line:'This line I said', streak:'My streak', city:'City unlocked', badge:'New badge', report:'My progress' };
+SHARE.TNAME = { start:'Just started', line:'This line I said', streak:'My streak', city:'City unlocked', badge:'New badge', report:'My progress', retro:'Trip retro' };
 
 /* ---------- 基础读取（全部只用真实数据，绝不编造） ---------- */
 SHARE.said = function(){
@@ -9761,6 +10023,8 @@ SHARE.pool = function(){
   if (SHARE.topBadge()) pool.push({ id:'badge', w:1 });
   /* 报告卡：有足够积累才出现（避免刚学两句就发"报告"，数字太空） */
   if (SHARE.said() >= 8 || (S.days||[]).length >= 3) pool.push({ id:'report', w:2 });
+  /* v0.29 复盘卡：仅当「可复盘」时出现 —— 这是整趟行程的收口，不是日常卡 */
+  try{ if (typeof RETRO !== 'undefined' && RETRO.available()) pool.push({ id:'retro', w:3 }); }catch(e){}
   if (!pool.length) pool.push({ id:'start', w:1 });                    /* 零数据用户 → 起点卡，绝不出空卡 */
   return pool;
 };
@@ -9803,6 +10067,15 @@ SHARE.text = function(){
   if (SHARE.theme === 'line' && line && line.p && line.p.hz){
     return '"' + line.p.hz + '" (' + (line.p.py||'') + ')\n' +
            'I said this in Chinese today. Learning to actually speak it with Sinoky (free) \u2192 ' + SHARE.link();
+  }
+  /* v0.29 复盘卡文案：数字全部来自本地 digest（有数据源），不生成、不凑数 */
+  if (SHARE.theme === 'retro' && typeof RETRO !== 'undefined'){
+    var r = RETRO.build(), s = (r.city ? r.city + ' \u2014 ' : '');
+    s += 'my trip: ' + (r.said || 0) + ' Chinese lines said';
+    if (r.avg) s += ', avg ' + r.avg + '/100';
+    s += '.';
+    if (r.next && r.next.hz) s += '\nNext time I\u2019ll start with: \u201c' + r.next.hz + '\u201d';
+    return s + '\nLearning to actually speak Chinese with Sinoky (free beta) \u2192 ' + SHARE.link();
   }
   return 'I\u2019m learning to actually speak Chinese with Sinoky (free beta) \u2192 ' + SHARE.link();
 };
@@ -9990,7 +10263,8 @@ SHARE.draw = function(fmt){
 
   var d = {
     said:SHARE.said(), streak:(S.streak||0), nick:SHARE.nick(),
-    line:SHARE.lastLine(), city:SHARE.litCity(), badge:SHARE.topBadge()
+    line:SHARE.lastLine(), city:SHARE.litCity(), badge:SHARE.topBadge(),
+    retro:(typeof RETRO !== 'undefined' ? RETRO.build() : null)
   };
   var maxW = W - PAD*2 - 40;
   var items = [];
@@ -10069,6 +10343,29 @@ SHARE.draw = function(fmt){
     } });
     push({ t:d.badge.name, size:_fit(ctx, d.badge.name, maxW, 52, 30, SHARE.SERIF), font:SHARE.SERIF, weight:'600', color:S_.paper, gap:36 });
     push({ t:'Badges: ' + d.badge.total, size:28, font:SHARE.SANS, color:'rgba(245,241,232,.46)', gap:0 });
+    _stack(ctx, cx, items, TOP, BOT);
+
+  } else if (SHARE.theme === 'retro' && d.retro){
+    /* v0.29 旅程复盘卡：这趟的账 + **下一趟要说的第一句**（Edify Gate：
+       卡片不能只让人「看完」，得让人立刻「说一句」）。数据全部来自本地 digest。 */
+    push({ t:'TRIP RETRO', size:26, font:SHARE.SANS, color:S_.goldDim, gap:30 });
+    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:18 });
+    if (d.retro.city) push({ t:d.retro.city, size:52, font:SHARE.SERIF, color:S_.paper, gap:24 });
+    push({ h: (fmt === 'story' ? 380 : 300), hook:function(c, cc, y, hh){
+      _tiles(c, cc, y, hh, [
+        [{ n:(d.retro.said || 0), l:'lines said' }, { n:(d.retro.avg || 0), l:'avg score' }],
+        [{ n:(d.retro.active || 0), l:'days speaking' }, { n:(d.retro.days || 0), l:'day trip' }]
+      ]);
+    } });
+    if (d.retro.weak){
+      push({ t:'Most often tricky: ' + d.retro.weak, size:32, font:SHARE.SANS, color:'rgba(245,241,232,.62)', gap:24 });
+    }
+    if (d.retro.next && d.retro.next.hz){
+      push({ t:'NEXT TRIP \u00b7 SAY THIS FIRST', size:24, font:SHARE.SANS, color:S_.goldDim, gap:28 });
+      push({ t:d.retro.next.hz, size:_fit(ctx, d.retro.next.hz, maxW, 76, 40, SHARE.SERIF), font:SHARE.SERIF, weight:'600', color:S_.paper, gap:20 });
+      if (d.retro.next.py) push({ t:d.retro.next.py, size:34, font:SHARE.SANS, color:S_.gold, gap:18 });
+      if (d.retro.next.en) push({ t:d.retro.next.en, size:31, font:SHARE.SANS, color:'rgba(245,241,232,.6)', gap:0 });
+    }
     _stack(ctx, cx, items, TOP, BOT);
 
   } else {

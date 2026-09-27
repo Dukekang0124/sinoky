@@ -833,5 +833,21 @@
   "Trip cleared.": "Поездка удалена.",
   "none": "нет",
   "today": "сегодня",
-  "tomorrow": "завтра"
+  "tomorrow": "завтра",
+  "Trip retro": "Итоги поездки",
+  "Make my trip card": "Создать карточку поездки",
+  "archived": "в архиве",
+  "avg": "сред.",
+  "{n} lines said": "Сказано фраз: {n}",
+  "nothing recorded": "пока нет записей",
+  "tones": "тоны",
+  "{n}-tone words": "слова с {n}-м тоном",
+  "tricky first sounds": "сложные начальные звуки",
+  "ending sounds": "конечные звуки",
+  "you missed this 3× — trying a different way": "Три промаха подряд — пробуем иначе",
+  "You missed this 3× — so today we change the approach": "Три промаха подряд — сегодня меняем подход",
+  "break it into single sounds": "разбить на отдельные звуки",
+  "try it another way": "сказать иначе",
+  "Practise sound by sound": "Тренировать по звукам",
+  "Say it another way": "Сказать иначе"
 }
