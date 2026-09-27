@@ -97,6 +97,36 @@ function scoreSyllables(targetHz, userHz, py) {
   return { overall, verdict, perSyll, n };
 }
 
+/* ===== v0.24.8 Web Push 每日召回（直接攻击 D1 留存 4.2%）=====
+   VAPID 公钥(嵌入, 非密) + 私钥(来自 env.VAPID_PRIVATE, JWK JSON 字符串)。
+   /api/push-sub 把订阅存进 KV PUSH；/api/push-send 用 VAPID 签名逐个推送。 */
+const VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
+const VAPID_SUBJECT = 'mailto:push@sinoky.app';
+function vapidB64url(buf){
+  const b = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function djb2(s){ let h = 5381; for (let i=0;i<s.length;i++) h = (((h<<5)+h) + s.charCodeAt(i)) >>> 0; return h.toString(36); }
+async function vapidToken(privJwk, audience){
+  const header = { typ:'JWT', alg:'ES256' };
+  const payload = { aud: audience, exp: Math.floor(Date.now()/1000) + 12*3600, sub: VAPID_SUBJECT };
+  const jwk = typeof privJwk === 'string' ? JSON.parse(privJwk) : privJwk;
+  const key = await crypto.subtle.importKey('jwk', { kty:'EC', crv:'P-256', d:jwk.d, x:jwk.x, y:jwk.y }, { name:'ECDSA', namedCurve:'P-256' }, false, ['sign']);
+  const enc = new TextEncoder();
+  const hB = vapidB64url(enc.encode(JSON.stringify(header)));
+  const pB = vapidB64url(enc.encode(JSON.stringify(payload)));
+  const signInput = hB + '.' + pB;
+  const sig = await crypto.subtle.sign({ name:'ECDSA', hash:'SHA-256' }, key, enc.encode(signInput));
+  return signInput + '.' + vapidB64url(sig);
+}
+async function vapidAuth(endpoint){
+  const aud = new URL(endpoint).origin;
+  const tok = await vapidToken(env && env.VAPID_PRIVATE, aud);
+  return 'vapid t=' + tok + ',k=' + VAPID_PUBLIC;
+}
+
 /* ===== v0.3.23 安全加固：公开 API 滥用防护 =====
    背景：/api/tts、/api/asr 走 CF Workers AI（按调用计费），/api/feedback POST 写 KV，
    三者此前完全公开、无鉴权、无限流。上线后被脚本/爬虫直接打会刷爆额度产生费用、污染 KV。
@@ -990,6 +1020,67 @@ export default {
       let ai = 'missing';
       try { ai = env.AI ? 'ok' : 'missing'; } catch (e) { /* */ }
       return json({ ok: true, service: 'sinoky-pages-worker', ai });
+    }
+
+    /* v0.24.8 Web Push：订阅存储 + 发送。
+       /api/push-sub POST 存订阅(KEY push:<uid>:<hash>，180天 TTL)；DELETE 退订。
+       /api/push-send（STATS_TOKEN 鉴权）VAPID 签名逐个推送；404/410 清理过期订阅。
+       依赖 KV binding=PUSH（康哥在 Pages 项目绑一个 KV namespace 命名为 PUSH）。 */
+    if (url.pathname === '/api/push-sub') {
+      if (!env.PUSH) return json({ error: 'no PUSH KV binding' }, 500);
+      if (req.method === 'POST') {
+        try {
+          const { uid, sub } = await req.json();
+          if (!sub || !sub.endpoint) return json({ error: 'need sub' }, 400);
+          const key = 'push:' + (uid || 'anon') + ':' + djb2(sub.endpoint);
+          await env.PUSH.put(key, JSON.stringify({ uid: uid || 'anon', sub, at: Date.now() }), { expirationTtl: 180 * 86400 });
+          return json({ ok: true });
+        } catch (e) { return json({ error: String((e && e.message) || e) }, 500); }
+      }
+      if (req.method === 'DELETE') {
+        try {
+          const { uid, endpoint } = await req.json();
+          await env.PUSH.delete('push:' + (uid || 'anon') + ':' + djb2(endpoint || ''));
+          return json({ ok: true });
+        } catch (e) { return json({ error: String((e && e.message) || e) }, 500); }
+      }
+      return json({ error: 'method' }, 405);
+    }
+    if (url.pathname === '/api/push-send' && (req.method === 'GET' || req.method === 'POST')) {
+      const wantTok = env.STATS_TOKEN || '';
+      const got = url.searchParams.get('token') || req.headers.get('x-stats-token') || '';
+      if (!wantTok || got !== wantTok) return json({ ok: false, error: 'unauthorized' }, 401);
+      if (!env.PUSH) return json({ error: 'no PUSH KV binding' }, 500);
+      if (!env.VAPID_PRIVATE) return json({ error: 'no VAPID_PRIVATE' }, 500);
+      try {
+        const list = await env.PUSH.list({ prefix: 'push:', limit: 1000 });
+        let sent = 0, failed = 0;
+        const reminders = [
+          'Time for a quick Chinese practice? 2 minutes keeps your streak alive.',
+          "Your Mandarin is waiting — say one sentence today.",
+          "Don't break the chain! Open Sinoky and speak a line."
+        ];
+        for (const k of list.keys) {
+          try {
+            const raw = await env.PUSH.get(k.name);
+            if (!raw) continue;
+            const rec = JSON.parse(raw);
+            const sub = rec.sub;
+            if (!sub || !sub.endpoint) { await env.PUSH.delete(k.name); continue; }
+            const body = JSON.stringify({ title: 'Sinoky', body: reminders[Math.floor(Math.random()*reminders.length)], url: './index.html' });
+            const auth = await vapidAuth(sub.endpoint);
+            const r = await fetch(sub.endpoint, {
+              method: 'POST',
+              headers: { Authorization: auth, 'TTL': '86400', 'Urgency': 'normal', 'Content-Type': 'application/octet-stream' },
+              body: body
+            });
+            if (r.status === 201 || r.status === 200) sent++;
+            else if (r.status === 404 || r.status === 410) { await env.PUSH.delete(k.name); failed++; }
+            else failed++;
+          } catch (e) { failed++; }
+        }
+        return json({ ok: true, sent, failed, total: list.keys.length });
+      } catch (e) { return json({ ok: false, error: String((e && e.message) || e) }, 500); }
     }
 
     /* /api/score：音节级发音评分（v0.3.7 恢复，与独立 score-worker 算法一致）。

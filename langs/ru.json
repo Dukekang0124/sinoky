@@ -731,5 +731,13 @@
   "4️⃣ Want to <b>write</b> characters too? Open <b>Cards</b> → tap ✍️ <b>Strokes</b> — watch the stroke order, then trace it yourself.": "4️⃣ Хотите ещё и <b>писать</b> иероглифы? Откройте <b>Карточки</b> → нажмите ✍️ <b>Черты</b> — смотрите порядок черт и повторяйте сами.",
   "🔒 Recordings are never saved · 💬 Feedback (bottom-left) any time": "🔒 Записи не сохраняются · 💬 Отзыв (слева внизу) в любой момент",
   "Got it — let's speak": "Понятно — давайте говорить!",
-  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "Я Ноно 🐼 — вот три главные вещи. Нужна полная карта? Нажмите на меня в любой момент."
+  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "Я Ноно 🐼 — вот три главные вещи. Нужна полная карта? Нажмите на меня в любой момент.",
+  "Push notifications are not supported on this device.": "Push-уведомления не поддерживаются на этом устройстве.",
+  "Notifications are blocked. Enable them in your browser settings.": "Уведомления заблокированы. Разрешите их в настройках браузера.",
+  "Daily reminders on. We will nudge you to practice!": "Ежедневные напоминания включены. Мы будем напоминать вам практиковаться!",
+  "Could not enable reminders: ": "Не удалось включить напоминания: ",
+  "Daily reminders off.": "Ежедневные напоминания выключены.",
+  "Unsupported": "Не поддерживается",
+  "Disable": "Отключить",
+  "Enable": "Включить"
 }

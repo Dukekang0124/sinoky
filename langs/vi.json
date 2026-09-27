@@ -731,5 +731,13 @@
   "4️⃣ Want to <b>write</b> characters too? Open <b>Cards</b> → tap ✍️ <b>Strokes</b> — watch the stroke order, then trace it yourself.": "4️⃣ Muốn <b>viết</b> chữ Hán nữa? Mở <b>Thẻ</b> → chạm ✍️ <b>Nét</b> — xem thứ tự nét rồi tự viết theo.",
   "🔒 Recordings are never saved · 💬 Feedback (bottom-left) any time": "🔒 Bản ghi không bao giờ được lưu · 💬 Góp ý (góc dưới bên trái) bất cứ lúc nào",
   "Got it — let's speak": "Hiểu rồi — nói thôi!",
-  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "Mình là Nono 🐼 — đây là ba điều quan trọng nhất. Muốn xem toàn bộ bản đồ? Chạm vào mình bất cứ lúc nào."
+  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "Mình là Nono 🐼 — đây là ba điều quan trọng nhất. Muốn xem toàn bộ bản đồ? Chạm vào mình bất cứ lúc nào.",
+  "Push notifications are not supported on this device.": "Thiết bị này không hỗ trợ thông báo đẩy.",
+  "Notifications are blocked. Enable them in your browser settings.": "Thông báo đã bị chặn. Hãy bật trong cài đặt trình duyệt.",
+  "Daily reminders on. We will nudge you to practice!": "Đã bật nhắc nhở hàng ngày. Chúng tôi sẽ nhắc bạn luyện tập!",
+  "Could not enable reminders: ": "Không thể bật nhắc nhở: ",
+  "Daily reminders off.": "Đã tắt nhắc nhở hàng ngày.",
+  "Unsupported": "Không hỗ trợ",
+  "Disable": "Tắt",
+  "Enable": "Bật"
 }

@@ -731,5 +731,13 @@
   "4️⃣ Want to <b>write</b> characters too? Open <b>Cards</b> → tap ✍️ <b>Strokes</b> — watch the stroke order, then trace it yourself.": "4️⃣ 还想<b>写</b>汉字？打开<b>汉字卡片</b> → 点 ✍️ <b>笔顺</b> —— 看笔顺，然后自己描一遍。",
   "🔒 Recordings are never saved · 💬 Feedback (bottom-left) any time": "🔒 录音不会保存 · 💬 随时反馈（左下角）",
   "Got it — let's speak": "明白，开口说！",
-  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "我是诺诺 🐼 —— 这三件事最重要。想要完整地图？随时点我。"
+  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "我是诺诺 🐼 —— 这三件事最重要。想要完整地图？随时点我。",
+  "Push notifications are not supported on this device.": "当前设备不支持推送通知。",
+  "Notifications are blocked. Enable them in your browser settings.": "通知已被阻止，请在浏览器设置中开启。",
+  "Daily reminders on. We will nudge you to practice!": "每日提醒已开启，我们会提醒你练习！",
+  "Could not enable reminders: ": "无法开启提醒：",
+  "Daily reminders off.": "每日提醒已关闭。",
+  "Unsupported": "不支持",
+  "Disable": "关闭",
+  "Enable": "开启"
 }

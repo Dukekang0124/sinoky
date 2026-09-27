@@ -1,0 +1,17 @@
+name: sinoky-push-cron
+# v0.24.8：每日推送召回（攻击 D1 留存 4.2%）
+# 由本工作流定时触发后端 /api/push-send（VAPID 签名逐个推送订阅）。
+# 需要仓库 secret STATS_TOKEN（与 /api/agg、/api/ai-probe 共用，应已存在）。
+on:
+  schedule:
+    - cron: '0 1,13 * * *'   # UTC 01:00 与 13:00，覆盖东亚/欧洲/美洲主要时区的晚间
+  workflow_dispatch: {}
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger daily push send
+        env:
+          TOKEN: ${{ secrets.STATS_TOKEN }}
+        run: |
+          curl -fsS "https://sinoky.pages.dev/api/push-send?token=$TOKEN"

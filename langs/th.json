@@ -731,5 +731,13 @@
   "4️⃣ Want to <b>write</b> characters too? Open <b>Cards</b> → tap ✍️ <b>Strokes</b> — watch the stroke order, then trace it yourself.": "4️⃣ อยาก<b>เขียน</b>ตัวจีนด้วยไหม? เปิด<b>การ์ด</b> → แตะ ✍️ <b>ลำดับขีด</b> — ดูลำดับขีดแล้วลากตามเอง",
   "🔒 Recordings are never saved · 💬 Feedback (bottom-left) any time": "🔒 ไม่บันทึกเสียง · 💬 ส่งความคิดเห็น (มุมซ้ายล่าง) ได้ทุกเมื่อ",
   "Got it — let's speak": "เข้าใจแล้ว — มาพูดกันเลย!",
-  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "ฉันคือโนโน 🐼 — นี่คือสามสิ่งสำคัญ อยากได้แผนที่เต็ม ๆ ไหม? แตะฉันได้ทุกเมื่อ"
+  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "ฉันคือโนโน 🐼 — นี่คือสามสิ่งสำคัญ อยากได้แผนที่เต็ม ๆ ไหม? แตะฉันได้ทุกเมื่อ",
+  "Push notifications are not supported on this device.": "อุปกรณ์นี้ไม่รองรับการแจ้งเตือนแบบพุช",
+  "Notifications are blocked. Enable them in your browser settings.": "การแจ้งเตือนถูกบล็อก เปิดในตั้งค่าเบราว์เซอร์",
+  "Daily reminders on. We will nudge you to practice!": "เปิดการแจ้งเตือนรายวันแล้ว เราจะเตือนให้คุณฝึก!",
+  "Could not enable reminders: ": "ไม่สามารถเปิดการแจ้งเตือน: ",
+  "Daily reminders off.": "ปิดการแจ้งเตือนรายวันแล้ว",
+  "Unsupported": "ไม่รองรับ",
+  "Disable": "ปิด",
+  "Enable": "เปิด"
 }

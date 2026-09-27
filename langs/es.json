@@ -731,5 +731,13 @@
   "4️⃣ Want to <b>write</b> characters too? Open <b>Cards</b> → tap ✍️ <b>Strokes</b> — watch the stroke order, then trace it yourself.": "4️⃣ ¿También quieres <b>escribir</b> caracteres? Abre <b>Tarjetas</b> → toca ✍️ <b>Trazos</b> — mira el orden de trazos y repítelo tú.",
   "🔒 Recordings are never saved · 💬 Feedback (bottom-left) any time": "🔒 Las grabaciones nunca se guardan · 💬 Comentarios (abajo a la izquierda) cuando quieras",
   "Got it — let's speak": "Entendido — ¡a hablar!",
-  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "Soy Nono 🐼 — estas son las tres cosas que importan. ¿Quieres el mapa completo? Tócame cuando quieras."
+  "I’m Nono 🐼 — here are the three things that matter. Want the full map? Tap me any time.": "Soy Nono 🐼 — estas son las tres cosas que importan. ¿Quieres el mapa completo? Tócame cuando quieras.",
+  "Push notifications are not supported on this device.": "Las notificaciones push no son compatibles con este dispositivo.",
+  "Notifications are blocked. Enable them in your browser settings.": "Las notificaciones están bloqueadas. Habilítalas en la configuración del navegador.",
+  "Daily reminders on. We will nudge you to practice!": "Recordatorios diarios activados. ¡Te avisaremos para practicar!",
+  "Could not enable reminders: ": "No se pudieron activar los recordatorios: ",
+  "Daily reminders off.": "Recordatorios diarios desactivados.",
+  "Unsupported": "No compatible",
+  "Disable": "Desactivar",
+  "Enable": "Activar"
 }

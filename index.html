@@ -1169,6 +1169,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
         <button class="btn ghost" onclick="checkUpdate()">Check update</button></span></div>
       <div class="rd-hint" id="set-updhint">Current version is shown above. Tap check to compare with the server.</div>
       <button class="btn primary" id="set-apkupdate" style="display:none;margin-top:8px">Download &amp; install app update</button>
+      <div class="setrow"><span>🔔 Daily reminders</span><span class="setctl" style="text-align:right"><button class="btn ghost" id="push-toggle" onclick="togglePush()">Enable</button></span></div>
+      <div class="rd-hint" id="set-pushhint">Get a daily nudge to keep your streak alive.</div>
     </div>
     <button class="btn ghost" onclick="go('me')">← Back</button>
   </section>
@@ -1350,7 +1352,56 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.24.7';
+var APP_VERSION = '0.24.8';
+var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
+/* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
+   用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
+   后端 /api/push-send（VAPID 签名）每日推送"该练了"提醒。 */
+function urlBase64ToUint8Array(b64){
+  var s = atob(b64.replace(/-/g,'+').replace(/_/g,'/'));
+  var v = new Uint8Array(s.length);
+  for(var i=0;i<s.length;i++) v[i]=s.charCodeAt(i);
+  return v;
+}
+async function ensurePushSub(reg){
+  try{
+    if(!reg || !reg.pushManager) return;
+    var sub = await reg.pushManager.getSubscription();
+    if(!sub && S && S.pushEnabled){ await enablePush(); }
+  }catch(e){ console.warn('[push] ensure failed', e && e.message); }
+}
+async function enablePush(){
+  try{
+    if(!('PushManager' in window)){ toast(T('Push notifications are not supported on this device.')); return; }
+    if(typeof Notification !== 'undefined' && Notification.permission === 'denied'){ toast(T('Notifications are blocked. Enable them in your browser settings.')); return; }
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) });
+    await fetch(API_BASE+'api/push-sub', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ uid: UID, sub: sub.toJSON() }) });
+    S.pushEnabled = true; saveState();
+    var btn = document.getElementById('push-toggle'); if(btn) btn.textContent = T('Disable');
+    toast(T('Daily reminders on. We will nudge you to practice!'));
+  }catch(e){ console.warn('[push] enable failed', e && e.message); toast(T('Could not enable reminders: ')+(e && e.message)); }
+}
+async function disablePush(){
+  try{
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if(sub){
+      try{ await fetch(API_BASE+'api/push-sub', { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ uid: UID, endpoint: sub.endpoint }) }); }catch(_){}
+      await sub.unsubscribe();
+    }
+    S.pushEnabled = false; saveState();
+    var btn = document.getElementById('push-toggle'); if(btn) btn.textContent = T('Enable');
+    toast(T('Daily reminders off.'));
+  }catch(e){ console.warn('[push] disable failed', e && e.message); }
+}
+function togglePush(){ if(S.pushEnabled) disablePush(); else enablePush(); }
+function refreshPushBtn(){
+  var btn = document.getElementById('push-toggle');
+  if(!btn) return;
+  if(!('PushManager' in window)){ btn.disabled = true; btn.textContent = T('Unsupported'); return; }
+  btn.textContent = S.pushEnabled ? T('Disable') : T('Enable');
+}
 /* v0.3.68 根因修复：APK 原生壳(Capacitor)页面源是 https://localhost，api/* 相对路径
    会打到本地 WebView 服务器(返回 404/HTML)，而非 sinoky.pages.dev Workers ——
    三截图异常(TTS 发音暂不可用/ASR 服务返回异常/进度不同步)全部由此起。
@@ -7202,9 +7253,12 @@ if('serviceWorker' in navigator){
   /* v0.23.8 FIX：原来是空 catch —— sw.js 语法错导致注册失败时
      用户侧、控制台都看不到任何痕迹，这个 bug 因此潜伏了 8 个版本。
      改成留一行 warn（仍然不影响主流程，绝不 throw）。 */
-  navigator.serviceWorker.register('sw.js').catch(function(e){
-    try { console.warn('[sw] register failed', e && e.message); } catch(_) {}
-  });
+  navigator.serviceWorker.register('sw.js')
+    .then(function(){ return navigator.serviceWorker.ready; })
+    .then(function(reg){ if(S && S.pushEnabled) ensurePushSub(reg); try{ refreshPushBtn(); }catch(_){} })
+    .catch(function(e){
+      try { console.warn('[sw] register failed', e && e.message); } catch(_) {}
+    });
 }
 /* v0.11.1：去掉 API_BASE==='' 门——原生壳 API_BASE 非空，此前整个自动检测（网页刷新横幅+APK 更新横幅）在 App 内从不执行 */
 fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.json(); }).then(async function(j){

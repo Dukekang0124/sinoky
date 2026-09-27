@@ -1,16 +1,17 @@
 {
-  "version": "0.24.7",
-  "updated": "2026-09-26",
-  "note": "v0.24.7：APK 强制更新机制 + 原生壳同步网页 v0.24.6。（1）新增应用内强制更新：检测到新 APK 版本即弹不可关闭的更新提示（关键更新 force:true 时完全不可关闭、仅留「立即下载」），引导用户下载安装，杜绝旧版静默跳过；（2）原生壳升至 v0.24.7，正式打包进 v0.24.6 全部网页特性（奖励闭环解耦、首屏语言门、诺诺频次上限等）；（3）应用回到前台自动复检更新。APK 用户请尽快更新以获得最新体验。",
+  "version": "0.24.8",
+  "updated": "2026-09-27",
+  "note": "v0.24.8：新增每日练习提醒（Web Push 推送召回）。（1）设置页新增「🔔 Daily reminders」开关：授权后，系统每天在固定时段（UTC 01:00 / 13:00）通过浏览器推送一条轻量提醒，帮助你留住连胜、回到开口练习；（2）推送完全可选、可随时关闭，不收集任何额外数据，订阅仅存于服务端 KV（180 天自动过期）；（3）本次为网页/PWA 能力，安装为 PWA 后体验最佳；APK 内更新机制同步升级至 v0.24.8。欢迎开启提醒，让中文练习成为每天的小习惯。",
   "apk": {
-    "versionCode": 2407,
-    "version": "0.24.7",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.7-release.apk",
-    "md5": "690a557071831dbe7f7ca69683063fdd",
-    "size": 24078912,
-    "force": true
+    "versionCode": 2408,
+    "version": "0.24.8",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.24.8-release.apk",
+    "md5": "",
+    "size": 0,
+    "force": false
   },
   "noteEn": [
+    "v0.24.8: new daily-practice reminders (Web Push re-engagement). (1) Settings now has a '🔔 Daily reminders' toggle: once granted, the system sends a lightweight push at fixed times (UTC 01:00 / 13:00) each day to help you keep your streak and come back to speak. (2) Reminders are fully optional and can be turned off anytime; no extra data is collected, and the subscription lives only in server-side KV (auto-expiring after 180 days). (3) This is a web/PWA capability - best experienced after installing Sinoky as a PWA; the in-app update mechanism is bumped to v0.24.8 for APK users. Turn it on and make Chinese practice a daily habit.",
     "v0.24.7: in-app forced update + native shell synced to web v0.24.6. (1) New in-app forced update: when a newer APK is detected, a non-dismissable update prompt appears (critical releases with force:true are fully blocking - only an 'Download' button), guiding the user to download and install, eliminating the old silent-skip. (2) Native shell bumped to v0.24.7, formally packaging all v0.24.6 web features (reward-loop decoupling, first-screen language gate, Nono popup cap, etc.). (3) App re-checks for updates when returning to the foreground. APK users should update soon for the latest experience.",
     "v0.24.5: update dialog redesign. (1) Layout upgrade: app icon + version title row, inline NEW badge that no longer overlaps text, entrance animation; (2) What's new is now a red-dot bullet list: notes auto-split into items, each lead-in bolded, scrollable - no more clipped unreadable text; (3) Button hierarchy improved: the Download button is widened and emphasized. Web-only release; APK users receive it via SW update.",
     "v0.24.4: product-experience report P0 fixes (3 items). (1) P0-1 AI outage fixed: the Workers AI fallback chain now uses current, valid model names (the old chain - @cf/mistral/*, qwen1.5, old llama-3 names - is entirely dead); aiErr now aggregates every model's error for debugging; added an operator-side AI health probe endpoint GET /api/ai-probe (STATS_TOKEN auth, ?model= to test any single model before changing the chain). (2) P0-2 degraded-triple-harm fixed: the worker no longer returns a hard-coded Chinese placeholder on degradation (empty reply + degraded flag); the frontend daily-plan and writing-coach check degraded and skip caching; Nono chat fallback text now goes through i18n (7 languages) and is no longer written into chat history. (3) P0-3 KV write-quota relief: client cloud sync now enforces a 5-minute minimum interval, exponential backoff on failure (10/20/40/60-min cap), and a 60s throttle on background-flush (pagehide still force-flushes); the worker returns 429 + retry_after when the daily KV quota is exhausted so the client can back off. Web-only release; APK users receive it via SW update.",

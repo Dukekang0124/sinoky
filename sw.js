@@ -1,5 +1,5 @@
 /* Sinoky service worker — network-first shell cache (kaikou pattern) */
-var CACHE = 'sinoky-v0.24.7';
+var CACHE = 'sinoky-v0.24.8';
 var ASSETS = [
   './',
   './index.html',
@@ -95,4 +95,28 @@ self.addEventListener('fetch', function (e) {
       });
     })
   );
+});
+
+/* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）
+   push：后端 /api/push-send 经 VAPID 签名推到浏览器，这里弹通知。
+   notificationclick：点通知回应用。 */
+self.addEventListener('push', function (e) {
+  var data = { title: 'Sinoky', body: 'Time for a quick Chinese practice?', url: './index.html' };
+  try { if (e.data) data = Object.assign(data, e.data.json()); } catch (_) {}
+  e.waitUntil(self.registration.showNotification(data.title, {
+    body: data.body,
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    data: { url: data.url || './index.html' }
+  }));
+});
+self.addEventListener('notificationclick', function (e) {
+  e.notification.close();
+  var target = (e.notification && e.notification.data && e.notification.data.url) || './index.html';
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cls) {
+    for (var i = 0; i < cls.length; i++) {
+      if ('focus' in cls[i]) { cls[i].navigate(target); return cls[i].focus(); }
+    }
+    return clients.openWindow(target);
+  }));
 });
