@@ -663,6 +663,21 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       /* v0.14.6 B 分级阅读升级：reader 弹层 + 词块 + 释义浮层 + 卡拉OK 高亮 */
       .reader{position:fixed;inset:0;background:rgba(12,16,24,.72);display:none;align-items:center;justify-content:center;z-index:var(--z-fab);padding:16px}
       .reader.on{display:flex}
+      /* v0.26.0 Daily Session 2.0：连贯会话面板（复用 sheet 层级 token，不新增 z-index） */
+      .sess{position:fixed;inset:0;background:rgba(12,16,24,.72);display:none;align-items:center;justify-content:center;z-index:var(--z-sheet);padding:16px}
+      .sess.on{display:flex}
+      .sess-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
+      .sess-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+      .sess-head b{font-size:15px}
+      .sess-prog{margin-left:auto;font-size:.78rem;color:var(--sub);font-variant-numeric:tabular-nums}
+      .sess-tag{display:inline-block;font-size:.68rem;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--sub)}
+      .sess-hz{font-size:1.65rem;font-weight:800;line-height:1.35;margin:12px 0 6px}
+      .sess-py{font-size:.92rem;color:var(--teal);margin-bottom:5px}
+      .sess-en{font-size:.86rem;color:var(--sub)}
+      .sess-why{font-size:.72rem;color:var(--txt-3);margin-top:10px}
+      .sess-ctrls{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+      .sess-sum{text-align:center;padding:6px 0 2px}
+      .sess-big{font-size:2.1rem;font-weight:800;color:var(--ok);line-height:1.2}
       .reader-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
       .reader-box img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;background:var(--card)}
       .reader-words{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
@@ -1146,6 +1161,19 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     </div>
   </div>
 
+  <!-- v0.26.0 Daily Session 2.0：把今日卡串成一次走完的连贯会话 -->
+  <div class="sess" id="sess" onclick="if(event.target===this)SESSION.close()">
+    <div class="sess-box">
+      <div class="sess-head">
+        <b>🧭 <span id="sess-t"></span></b>
+        <span class="sess-prog" id="sess-prog"></span>
+        <button class="btn ghost" style="padding:6px 10px" onclick="SESSION.close()" aria-label="Close session">✕</button>
+      </div>
+      <div class="pbar" id="sess-bar"><i style="width:0%"></i></div>
+      <div id="sess-body"></div>
+    </div>
+  </div>
+
   <section id="v-me" class="views">
     <div class="card">
       <div class="top"><h2>👤 Me</h2><span class="badge" id="me-ver">v</span></div>
@@ -1372,7 +1400,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.25.0';
+var APP_VERSION = '0.26.0';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -3317,7 +3345,7 @@ var LM = (function(){
       path:  { fam:'travel', node:'', done:[], startedAt:'' },
       trip:  null,
       mile:  [],
-      policy:{ hint:'standard', weights:{}, strategy:{} },
+      policy:{ hint:'standard', weights:{}, strategy:{}, cardLog:[] },
       stats: { days:0, said:0, dueCount:0 },
       buf:   [],
       updatedAt: 0
@@ -3438,6 +3466,76 @@ var LM = (function(){
     m.stats.said = (S.phrases ? Object.keys(S.phrases).reduce(function(a,k){ return a + ((S.phrases[k]||[]).length); }, 0) : 0);
     m.stats.dueCount = dueCount();
   }
+  /* ---- 评分回流（v0.26 抽出：reader / 会话 / 诺诺跟读 **共用同一条链**）----
+     唯一目的：把「这一次说得怎么样」变成「下一次练什么」的输入（闭环第 6→7 步）。
+     红线：不参与判分，只读结果；判分参数与动画一律不动。 */
+  function ingestScore(data, sceneId, idx){
+    if(!data || data.overall == null) return null;
+    var out = { overall: Math.round(data.overall), dims: [], weak: [], mastered: false };
+    var sylls = data.perSyll || [], nS = sylls.length, j;
+    if(nS){
+      var tOk = 0, iBad = 0, fBad = 0;
+      for(j=0;j<nS;j++){
+        var sy = sylls[j]; if(!sy) continue;
+        if(sy.toneOk !== false) tOk++;
+        var es = sy.errs || [];
+        if(es.indexOf && es.indexOf('initial') >= 0) iBad++;
+        if(es.indexOf && es.indexOf('final')   >= 0) fBad++;
+      }
+      abil('tone',    tOk/nS, 0.22);   out.dims.push('tone');
+      abil('initial', 1 - iBad/nS, 0.18); out.dims.push('initial');
+      abil('final',   1 - fBad/nS, 0.18); out.dims.push('final');
+    }
+    abil('fluency', Math.max(0, Math.min(1, data.overall/100)), 0.12);
+    out.dims.push('fluency');
+    /* 错因 → 维度级弱点（回答「他为什么卡」，而非「卡在哪句」）*/
+    for(j=0;j<nS;j++){
+      var s2 = sylls[j]; if(!s2) continue;
+      if(s2.toneOk === false && s2.tExp){ weakBump('tone' + s2.tExp, 1); out.weak.push('tone'+s2.tExp); }
+      var e2 = s2.errs || [];
+      if(e2.indexOf && e2.indexOf('initial') >= 0){ weakBump('initial', 1); out.weak.push('initial'); }
+      if(e2.indexOf && e2.indexOf('final')   >= 0){ weakBump('final', 1);   out.weak.push('final'); }
+    }
+    if(sceneId != null) event('score', { s: sceneId + '#' + idx, v: out.overall });
+    /* ≥80 分 → 记为「这句说对了」（驱动路径进度 + 次日选句权重变化）*/
+    if(data.overall >= 80 && sceneId != null && typeof PATH !== 'undefined'){
+      try{ PATH.markSaid({ scene:sceneId, idx:idx }); out.mastered = true; }catch(e){}
+    }
+    out.abil = get().abil;
+    save();
+    return out;
+  }
+  /* ---- 任务卡日志（v0.26：让「策略调整 → 次日卡变化」可观测、可验证）----
+     记录最近 7 天的卡（key 清单）。同日覆盖写、跨天追加 —— 幂等；
+     搭车 p:{uid} 上云，**不新增 KV 写**。 */
+  function cardLog(keys){
+    var m = get(), d = today();
+    var log = m.policy.cardLog;
+    if(!Array.isArray(log)) log = m.policy.cardLog = [];
+    var k = (keys||[]).join(',');
+    var last = log.length ? log[log.length-1] : null;
+    var fresh = !(last && last.d === d);
+    if(!fresh){ if(last.k !== k){ last.k = k; last.n = (keys||[]).length; } }
+    else { log.push({ d:d, k:k, n:(keys||[]).length }); }
+    while(log.length > 7) log.shift();
+    if(fresh) save();          /* 每天最多一次落盘；搭车 p:{uid}，不新增 KV 写 */
+    return log.length;
+  }
+  /* 与「上一次不同日期」的卡做差集 —— 即「策略变更后次日任务卡可见地不同」的证据。
+     curKeys 由调用方现场传入（不依赖持久化时序，结果永远准确）。 */
+  function cardDiff(curKeys){
+    var m = get(), log = m.policy.cardLog || [], d = today(), i;
+    var prev = null;
+    for(i=log.length-1;i>=0;i--){ if(log[i] && log[i].d && log[i].d !== d && log[i].k){ prev = log[i]; break; } }
+    if(!prev) return null;
+    var ck = (curKeys||[]).filter(Boolean);
+    if(!ck.length) return null;
+    var set = {}, pk = prev.k.split(',').filter(Boolean);
+    pk.forEach(function(x){ set[x] = 1; });
+    var changed = 0;
+    ck.forEach(function(x){ if(!set[x]) changed++; });
+    return { prev:prev.d, prevN:pk.length, curN:ck.length, changed:changed, same:ck.length - changed };
+  }
   /* ---- 推送画像快照（退化版；供 cron 分段，随订阅一并上云）---- */
   function snapshot(){
     var m = get();
@@ -3454,7 +3552,8 @@ var LM = (function(){
   return { V:V, CAP:LM_CAP, ABIL:LM_ABIL, defaults:defaults, migrate:migrate, get:get, save:save,
            event:event, pruneBuf:pruneBuf, abil:abil, weakBump:weakBump, master:master,
            isMastered:isMastered, milestone:milestone, setGoal:setGoal, setTrip:setTrip,
-           daysToTrip:daysToTrip, dueCount:dueCount, compact:compact, snapshot:snapshot };
+           daysToTrip:daysToTrip, dueCount:dueCount, compact:compact, snapshot:snapshot,
+           ingestScore:ingestScore, cardLog:cardLog, cardDiff:cardDiff };
 })();
 LM.migrate();
 
@@ -3580,6 +3679,25 @@ var PATH = (function(){
     if(!((S.phrases||{})[it.scene]||[]).length || ((S.phrases||{})[it.scene]||[]).indexOf(it.idx) < 0) s += 0.15;
     return +s.toFixed(3);
   }
+  /* v0.26：把加权公式的**每个命中项翻译成人话** —— 「为什么今天练这句」。
+     可解释性是自适应产品最容易被质疑的点（黑箱）；这里全部来自确定性规则。 */
+  function whyOf(it){
+    var m = LM.get(), out = [], i;
+    var tc = (m.trip && m.trip.city) || m.goal.cities[0] || '';
+    var tt = tones(it);
+    for(i=0;i<m.weak.length;i++){
+      var wk = m.weak[i].k || '';
+      if(wk.indexOf('tone') === 0){
+        var lv = parseInt(wk.replace(/[^0-9]/g,''), 10);
+        if(!lv || tt[lv]){ out.push('weak'); break; }
+      } else if(wk.indexOf('initial') === 0 || wk.indexOf('final') === 0){ out.push('weak'); break; }
+    }
+    var rv = (S.rev||{})[key(it)];
+    if(rv && (!rv.due || String(rv.due) <= today())) out.push('due');
+    if(!LM.isMastered(key(it))) out.push('new');
+    if(tc && (it.city === tc || (CITY_SCENE[tc] && CITY_SCENE[tc] === it.scene))) out.push('city');
+    return out;   /* 无特殊理由则返回空 —— UI 侧不展示理由，不给假的解释 */
+  }
   /* 今日任务卡：1 必说 + 2 顺带（mustSay:3）+ 至多 1 复习 */
   function todayCard(){
     var n = currentNode();
@@ -3599,7 +3717,26 @@ var PATH = (function(){
       if(review.length >= 1) break;
     }
     var extra = it.slice(1, 3).filter(function(x){ return review.length ? key(x) !== key(review[0]) : true; });
-    return { node:n, must:it.slice(0,1), extra:extra, review:review };
+    var card = { node:n, must:it.slice(0,1), extra:extra, review:review };
+    /* v0.26 可解释性 + 可观测性：每句附「为什么是它」；卡本身写入 7 天日志 */
+    ['must','extra','review'].forEach(function(band){
+      (card[band]||[]).forEach(function(x){ x.why = whyOf(x); });
+    });
+    try{ LM.cardLog(keysOf(card)); }catch(e){}
+    return card;
+  }
+  function keysOf(card){
+    var out = [];
+    ['must','extra','review'].forEach(function(band){
+      (card[band]||[]).forEach(function(x){ out.push(key(x)); });
+    });
+    return out;
+  }
+  /* 今日卡 vs 上一次会话（不同日期）的差集 —— 闭环第 7 步「调整」的可见证据 */
+  function cardDiff(){
+    var c; try{ c = todayCard(); }catch(e){ return null; }
+    if(!c || c.retro) return null;
+    try{ return LM.cardDiff(keysOf(c)); }catch(e){ return null; }
   }
   function progress(){
     var a = nodes(), d = 0, i;
@@ -3630,8 +3767,84 @@ var PATH = (function(){
   }
   return { FAMS:PATH_FAMS, fam:fam, nodes:nodes, nodeById:nodeById, isDone:isDone,
            isUnlocked:isUnlocked, currentNode:currentNode, collect:collect, key:key,
-           score:score, todayCard:todayCard, progress:progress, markSaid:markSaid,
+           score:score, whyOf:whyOf, keysOf:keysOf, cardDiff:cardDiff, tonesOf:tones,
+           todayCard:todayCard, progress:progress, markSaid:markSaid,
            complete:complete, findScene:_findScene };
+})();
+
+/* ===== v0.26.0 · Daily Session 2.0（SESSION.）===========================
+   把「今日路径卡」的三个散点（1 必说 + 2 顺带 + ≤1 复习）串成**一次走完**的
+   连贯会话 —— 闭环第 4 步「每日执行」从「清单」升级为「流水线」。
+   此前的问题：点一句 → 跳进场景 → 练完 → 自己回首页 → 再点下一句（三次打断）。
+   设计纪律：
+     · 队列来源仍是 `PATH.todayCard()`，**零新增教学内容**
+     · 判分走 `LM.ingestScore()`，与 reader **同一条回流链**（不分叉）
+     · 会话状态是**本地瞬态**，不上云 ⇒ 新增 KV 写 = 0
+   ======================================================================== */
+var SESSION = (function(){
+  var cur = null;   /* {q:[], i:0, res:[], t0:number, node:string} */
+  function norm(it, tag){
+    return { scene:it.scene, idx:it.idx, hz:it.hz, py:it.py, en:it.en,
+             tag:tag, why:it.why||[], key:it.scene + '#' + it.idx };
+  }
+  function queue(){
+    var c; try{ c = PATH.todayCard(); }catch(e){ return []; }
+    if(!c || !c.node || c.retro) return [];
+    var seen = {}, out = [];
+    function push(arr, tag){
+      (arr||[]).forEach(function(it){
+        var k = it.scene + '#' + it.idx;
+        if(seen[k]) return;
+        seen[k] = 1; out.push(norm(it, tag));
+      });
+    }
+    push(c.must, 'must'); push(c.extra, 'extra'); push(c.review, 'review');
+    return out;
+  }
+  function start(){
+    var q = queue();
+    if(!q.length){ try{ toast(T('Nothing queued yet — open any scene to start practising.')); }catch(e){} return false; }
+    var n = PATH.currentNode();
+    cur = { q:q, i:0, res:[], t0:Date.now(), node:(n && n.id) || '' };
+    renderSession();
+    openSession();
+    return true;
+  }
+  function item(){ return (cur && cur.i < cur.q.length) ? cur.q[cur.i] : null; }
+  function record(score, ok){
+    if(!cur) return;
+    var it = cur.q[cur.i]; if(!it) return;
+    /* 同一句重复评分（网络重试 / 连点）只保留最新一次 —— 不让统计被灌水 */
+    for(var i=0;i<cur.res.length;i++){
+      if(cur.res[i].key === it.key){ cur.res[i].s = score; cur.res[i].ok = !!ok; return; }
+    }
+    cur.res.push({ key:it.key, tag:it.tag, s:score, ok:!!ok });
+  }
+  function advance(){
+    if(!cur) return;
+    cur.i++;
+    renderSession();
+    return cur.i < cur.q.length;
+  }
+  /* 结算：说对几句 / 平均分 —— 闭环第 4→5 步（执行 → 收集数据）的出口 */
+  function summary(){
+    var res = (cur && cur.res) || [], n = res.length, sum = 0, ok = 0;
+    res.forEach(function(r){ sum += (r.s || 0); if(r.ok) ok++; });
+    return { n:n, total:(cur ? cur.q.length : 0), said:res.length,
+             avg: n ? Math.round(sum / n) : 0, ok:ok };
+  }
+  /* 会话结束：推进节点（若今日句已全部拿下）+ 关面板 */
+  function finish(){
+    var s = summary();
+    cur && (cur.done = Date.now());
+    LM.event('session', { n:s.n, avg:s.avg, ok:s.ok });
+    try{ if(s.n && s.ok >= s.n) PATH.complete(cur.node); }catch(e){}
+    try{ LM.compact(); LM.save(); }catch(e){}
+    return s;
+  }
+  function close(){ cur = null; closeSession(); }
+  return { start:start, item:item, record:record, advance:advance, queue:queue,
+           summary:summary, finish:finish, close:close, get:function(){ return cur; } };
 })();
 
 /* ===== v0.25.0 · M1 Placement Engine（PLACE.）===========================
@@ -6225,7 +6438,140 @@ function weakLinesHtml(){
     '<p class="desc">Lines you missed while practising with Nono. Tap 🐼 to drill one.</p>'+items.join('')+'</div>';
 }
 
-/* v0.25.0 · M2：今日路径卡 —— 把「日计划」从**一次性文本**变成**可追踪对象**。
+/* ===== v0.26.0 · Daily Session 2.0（UI 层）===============================
+   一次走完「1 必说 + 2 顺带 + ≤1 复习」：听 → 说 → 评 → 下一句 → 结算。
+   判分走 LM.ingestScore()（与 reader 同链）；会话状态本地瞬态，零 KV 写。 */
+var sessRec = null, sessChunks = [];
+function openSession(){
+  var e = $('sess'); if(e) e.classList.add('on');
+  var t = $('sess-t'); if(t) t.textContent = T('Practice session');
+}
+function closeSession(){
+  var e = $('sess'); if(e) e.classList.remove('on');
+  try{ if(sessRec && sessRec.state !== 'inactive') sessRec.stop(); }catch(_){}
+  sessRec = null; sessChunks = [];
+}
+function whyLabel(w){
+  if(w === 'weak') return T('your weak spot');
+  if(w === 'due')  return T('due for review');
+  if(w === 'city') return T('for your city');
+  return T('a fresh line');
+}
+function tagLabel(t){
+  if(t === 'must')   return T('Must say');
+  if(t === 'review') return T('Review');
+  return T('Bonus');
+}
+function renderSession(){
+  var box = $('sess-body'); if(!box) return;
+  var cur = SESSION.get();
+  if(!cur){ box.innerHTML = ''; return; }
+  var s = SESSION.summary(), pb = $('sess-bar'), pr = $('sess-prog');
+  if(cur.i >= cur.q.length){
+    /* ---- 结算页：闭环第 4→5 步（执行 → 收集数据）的出口 ---- */
+    if(pb) pb.querySelector('i').style.width = '100%';
+    if(pr) pr.textContent = s.total + ' / ' + s.total;
+    var h = '<div class="sess-sum">'+
+      '<div style="font-size:2.4rem;line-height:1.2">'+(s.avg >= 80 ? '🎉' : '💪')+'</div>'+
+      '<div class="sess-big">'+s.said+' / '+s.total+'</div>'+
+      '<div style="color:var(--sub);font-size:.84rem;margin-top:4px">'+T('lines attempted this session')+'</div>'+
+      '<div style="margin-top:14px;font-size:.92rem">'+T('Average score')+': <b>'+s.avg+'</b> · '+T('Nailed it')+': <b>'+s.ok+'</b></div>'+
+      '<div class="sess-why">'+T('Your plan updates based on today’s results.')+'</div>'+
+      '</div>'+
+      '<div class="sess-ctrls"><button class="btn primary" style="flex:1" onclick="SESSION.finish();SESSION.close();renderHome();">'+T('Done')+'</button></div>';
+    box.innerHTML = h;
+    return;
+  }
+  var it = SESSION.item();
+  if(pb) pb.querySelector('i').style.width = Math.round((cur.i / Math.max(1, cur.q.length)) * 100) + '%';
+  if(pr) pr.textContent = (cur.i + 1) + ' / ' + cur.q.length;
+  var why = (it.why || []).slice(0, 2).map(whyLabel).join(' · ');
+  box.innerHTML =
+    '<div><span class="sess-tag">'+(it.tag === 'must' ? '★ ' : '')+tagLabel(it.tag)+'</span></div>'+
+    '<div class="sess-hz">'+esc(it.hz)+'</div>'+
+    '<div class="sess-py">'+toneColorPy(it.py)+'</div>'+
+    '<div class="sess-en">'+esc(it.en)+'</div>'+
+    (why ? '<div class="sess-why">'+T('Why this line')+': '+esc(why)+'</div>' : '')+
+    '<div class="sess-ctrls">'+
+      '<button class="btn" onclick="speak(\''+String(it.hz).replace(/'/g,'')+'\',this)">🔊 '+T('Hear')+'</button>'+
+      '<button class="btn record" id="sess-mic" onclick="sessToggleRec()">🎤 '+T('Say it')+'</button>'+
+      '<button class="btn ghost" onclick="SESSION.close();openScene(\''+it.scene+'\','+it.idx+')">'+T('Open scene')+'</button>'+
+    '</div>'+
+    '<div class="score-result" id="sess-score" style="margin-top:12px"></div>'+
+    '<div class="sess-ctrls">'+
+      '<button class="btn ghost" style="flex:1" onclick="SESSION.advance()">'+T('Skip')+'</button>'+
+      '<button class="btn primary" style="flex:1;display:none" id="sess-next" onclick="SESSION.advance()">'+T('Next')+' →</button>'+
+    '</div>';
+}
+async function sessToggleRec(){
+  var btn = $('sess-mic'), box = $('sess-score');
+  if(!btn || !box) return;
+  if(btn.classList.contains('listening')){ try{ if(sessRec) sessRec.stop(); }catch(e){} return; }
+  var it = SESSION.item(); if(!it) return;
+  var stream = await openMicOrHelp(box);
+  if(!stream) return;
+  sessChunks = [];
+  var rec = new MediaRecorder(stream);
+  sessRec = rec;
+  rec.ondataavailable = function(e){ if(e.data && e.data.size) sessChunks.push(e.data); };
+  rec.onstop = async function(){
+    sessRec = null;
+    btn.classList.remove('listening'); btn.textContent = '🎤 ' + T('Say it');
+    try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+    var blob = new Blob(sessChunks);
+    if(blob.size < 500){
+      box.innerHTML = '<div class="score-err">'+T('No sound captured. Hold the phone closer to your mouth and try again.')+'</div>';
+      return;
+    }
+    box.innerHTML = '<div class="score-load">'+T('Recognising…')+'</div>';
+    var result = null;
+    try{ result = await asrText(await blobToWav(blob), it.hz); }
+    catch(e){ result = await asrText(await blob.arrayBuffer(), it.hz); }
+    if(!result || !result.ok || !result.text){
+      box.innerHTML = '<div class="score-err">'+T('Did not catch that. ({r})').replace('{r}', (result && result.err) || 'no speech')+'</div>';
+      return;
+    }
+    await sessScore(result.text);
+  };
+  btn.classList.add('listening'); btn.textContent = '⏹ ' + T('Stop');
+  box.innerHTML = '<div class="score-load">'+T('Listening… tap stop when you finish.')+'</div>';
+  try{ rec.start(); }
+  catch(e){
+    btn.classList.remove('listening'); btn.textContent = '🎤 ' + T('Say it');
+    box.innerHTML = '<div class="score-err">'+T('Could not start recording: ')+e.message+'</div>';
+  }
+}
+async function sessScore(transcript){
+  var it = SESSION.item(); if(!it) return;
+  var box = $('sess-score'); if(!box) return;
+  box.innerHTML = '<div class="score-load">'+T('Scoring…')+'</div>';
+  try{
+    var res = await fetch(API_BASE + 'api/score', {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ target: it.hz, user: transcript })
+    });
+    var data = await res.json();
+    if(data.error){ box.innerHTML = '<div class="score-err">'+esc(data.error)+'</div>'; return; }
+    box.innerHTML = renderScore(data);
+    if(window.SK){ SK.quotaInc('score'); box.insertAdjacentHTML('beforeend', '<div style="margin-top:10px">'+SK.quotaBadge('score')+'</div>'); }
+    var ov = (data.overall == null) ? 0 : data.overall;
+    try{
+      /* 会话里的句子不属于 curScene —— 直接按句子键调度（错误降桶 / 说对升桶） */
+      if(ov < 70) rvMarkError(it.key); else rvMarkGood(it.key);
+    }catch(e){}
+    try{ LM.ingestScore(data, it.scene, it.idx); }catch(e){}
+    SESSION.record(ov, ov >= 80);
+    var nb = $('sess-next');
+    var mb = $('sess-mic');
+    if(nb){ nb.style.display = 'inline-block'; nb.className = 'btn ' + (ov >= 80 ? 'primary' : 'ghost'); }
+    if(mb){ mb.style.display = 'none'; }
+  }catch(err){
+    box.innerHTML = '<div class="score-err">'+T('Scoring failed — ')+humanizeApiErr(err, 0)+'</div>';
+  }
+}
+
+
+ /* v0.25.0 · M2：今日路径卡 —— 把「日计划」从**一次性文本**变成**可追踪对象**。
    闭环第 3 步"制定计划"与第 4 步"每日执行"的可见落点。
    Edify Gate 回答：卡上直接点名今天必须说的那句中文（★）。 */
 function pathCardHtml(){
@@ -6250,9 +6596,18 @@ function pathCardHtml(){
     h += '<div style="display:flex;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="openScene(\''+r.it.scene+'\','+r.it.idx+')">'+
       '<span style="flex:0 0 22px;text-align:center;font-weight:800;color:'+(done?'var(--ok)':(r.star?'var(--red-text)':'var(--sub)'))+'">'+(done?'✓':(r.star?'★':'·'))+'</span>'+
       '<span style="flex:1;min-width:0"><span style="display:block;font-size:.88rem">'+esc(r.it.en)+'</span>'+
-      '<span style="display:block;font-size:.76rem;color:var(--sub);margin-top:2px">'+esc(r.it.hz)+' · '+esc(r.it.py)+' · '+esc(r.tag)+'</span></span></div>';
+      '<span style="display:block;font-size:.76rem;color:var(--sub);margin-top:2px">'+esc(r.it.hz)+' · '+esc(r.it.py)+' · '+esc(r.tag)+
+      ((r.it.why && r.it.why[0]) ? ' · '+esc(whyLabel(r.it.why[0])) : '')+'</span></span></div>';
   });
+  /* v0.26：闭环第 7 步「调整」的**可见证据** —— 与上一次会话相比，今天换了几句 */
+  var df = null; try{ df = PATH.cardDiff(); }catch(e){}
+  if(df && df.changed > 0){
+    h += '<div class="rd-hint" style="margin-top:11px">🔄 '+
+      T('{n} of today’s lines are new since your last session').replace('{n}', df.changed)+'</div>';
+  }
   h += '<div style="display:flex;gap:10px;margin-top:14px">'+
+    '<button class="btn primary" style="flex:1" onclick="SESSION.start()">▶ '+T('Start today’s session')+'</button></div>'+
+    '<div style="display:flex;gap:10px;margin-top:10px">'+
     '<button class="btn ghost" style="flex:1" onclick="PATH.complete(\''+n.id+'\');renderHome();">'+T('Mark node done')+'</button>'+
     '<button class="btn ghost" style="flex:1" onclick="PLACE.start()">'+T('Re-test my level')+'</button></div></div>';
   return h;
@@ -6735,40 +7090,14 @@ async function sendScore(p, transcript, i){
       var _k = revKey(curScene, i);
       if(data.overall < 70) rvMarkError(_k); else rvMarkGood(_k);
     }
-    /* ===== v0.25.0 L1 回流：评分 → 学员模型 =====
-       这是闭环最容易断的一环（第 6→7 步）：反馈不能只给用户看，
-       必须回流成「下一次练什么」的输入。此处的 abil/weak 更新随后由
-       MAX()（8 维能力向量）+ Adaptation Policy（提示密度/权重）消费。
-       判分参数与动画一律不动（既有红线），这里只读结果。 */
+    /* ===== v0.25.0 / v0.26.0 L1 回流：评分 → 学员模型 =====
+       闭环最容易断的一环（第 6→7 步）：反馈不能只给用户看，必须回流成
+       「下一次练什么」的输入。已抽成 LM.ingestScore() —— **reader / 会话 /
+       诺诺跟读共用同一条链**，避免判分回流分叉。判分参数与动画一律不动。 */
     try{
       if(typeof LM !== 'undefined' && data.overall != null){
         var _sid = (curScene && curScene.id) ? curScene.id : curScene;
-        var sylls = data.perSyll || [], nS = sylls.length, j;
-        if(nS){
-          var tOk = 0, iBad = 0, fBad = 0;
-          for(j=0;j<nS;j++){
-            var sy = sylls[j]; if(!sy) continue;
-            if(sy.toneOk !== false) tOk++;
-            var es = sy.errs || [];
-            if(es.indexOf && es.indexOf('initial') >= 0) iBad++;
-            if(es.indexOf && es.indexOf('final')   >= 0) fBad++;
-          }
-          LM.abil('tone',    tOk/nS, 0.22);
-          LM.abil('initial', 1 - iBad/nS, 0.18);
-          LM.abil('final',   1 - fBad/nS, 0.18);
-        }
-        LM.abil('fluency', Math.max(0, Math.min(1, data.overall/100)), 0.12);
-        /* 错因 → 维度级弱点（回答「他为什么卡」，而不是「卡在哪句」）*/
-        for(j=0;j<nS;j++){
-          var s2 = sylls[j]; if(!s2) continue;
-          if(s2.toneOk === false && s2.tExp) LM.weakBump('tone' + s2.tExp, 1);
-          var e2 = s2.errs || [];
-          if(e2.indexOf && e2.indexOf('initial') >= 0) LM.weakBump('initial', 1);
-          if(e2.indexOf && e2.indexOf('final')   >= 0) LM.weakBump('final', 1);
-        }
-        LM.event('score', { s:_sid + '#' + i, v:Math.round(data.overall) });
-        if(data.overall >= 80 && _sid) PATH.markSaid({ scene:_sid, idx:i });
-        LM.save();
+        LM.ingestScore(data, _sid, i);
       }
     }catch(e){}
     var badge = document.querySelector('#v-scene .badge.teal');

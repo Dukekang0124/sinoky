@@ -765,5 +765,22 @@
   "Must say": "必说",
   "Bonus": "顺带",
   "Mark node done": "标记本节点完成",
-  "Re-test my level": "重新测一次水平"
+  "Re-test my level": "重新测一次水平",
+  "Practice session": "今日练习",
+  "Say it": "说这句",
+  "Hear": "听示范",
+  "Next": "下一句",
+  "Open scene": "打开场景",
+  "Nothing queued yet — open any scene to start practising.": "今天还没有排队任务 —— 打开任意场景就能开始练。",
+  "lines attempted this session": "本次练过的句子",
+  "Average score": "平均分",
+  "Nailed it": "完全说对",
+  "Your plan updates based on today’s results.": "你的计划会根据今天的表现自动调整。",
+  "Why this line": "为什么练这句",
+  "your weak spot": "你的薄弱点",
+  "due for review": "到复习时间了",
+  "for your city": "贴合你要去的城市",
+  "a fresh line": "一句新句子",
+  "Start today’s session": "开始今日练习",
+  "{n} of today’s lines are new since your last session": "今天的句子里有 {n} 句是刚换上的"
 }

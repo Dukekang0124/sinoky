@@ -765,5 +765,22 @@
   "Must say": "Wajib",
   "Bonus": "Bonus",
   "Mark node done": "Tandai selesai",
-  "Re-test my level": "Tes ulang level saya"
+  "Re-test my level": "Tes ulang level saya",
+  "Practice session": "Sesi latihan",
+  "Say it": "Ucapkan",
+  "Hear": "Dengar",
+  "Next": "Berikutnya",
+  "Open scene": "Buka skenario",
+  "Nothing queued yet — open any scene to start practising.": "Belum ada antrean — buka skenario apa pun untuk mulai berlatih.",
+  "lines attempted this session": "kalimat dicoba sesi ini",
+  "Average score": "Skor rata-rata",
+  "Nailed it": "Berhasil",
+  "Your plan updates based on today’s results.": "Rencana kamu menyesuaikan berdasarkan hasil hari ini.",
+  "Why this line": "Kenapa kalimat ini",
+  "your weak spot": "titik lemah kamu",
+  "due for review": "waktunya diulang",
+  "for your city": "untuk kota kamu",
+  "a fresh line": "kalimat baru",
+  "Start today’s session": "Mulai sesi hari ini",
+  "{n} of today’s lines are new since your last session": "{n} kalimat hari ini baru sejak sesi terakhir"
 }

@@ -765,5 +765,22 @@
   "Must say": "Обязательно",
   "Bonus": "Бонус",
   "Mark node done": "Отметить как пройденное",
-  "Re-test my level": "Пройти тест заново"
+  "Re-test my level": "Пройти тест заново",
+  "Practice session": "Сессия практики",
+  "Say it": "Скажите",
+  "Hear": "Послушать",
+  "Next": "Далее",
+  "Open scene": "Открыть сцену",
+  "Nothing queued yet — open any scene to start practising.": "Пока ничего не запланировано — откройте любую сцену, чтобы начать практику.",
+  "lines attempted this session": "фраз за эту сессию",
+  "Average score": "Средний балл",
+  "Nailed it": "Получилось",
+  "Your plan updates based on today’s results.": "План обновляется по результатам сегодняшнего дня.",
+  "Why this line": "Почему эта фраза",
+  "your weak spot": "ваше слабое место",
+  "due for review": "пора повторить",
+  "for your city": "для вашего города",
+  "a fresh line": "новая фраза",
+  "Start today’s session": "Начать сессию на сегодня",
+  "{n} of today’s lines are new since your last session": "{n} фраз на сегодня новые с прошлой сессии"
 }

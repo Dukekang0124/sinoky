@@ -765,5 +765,22 @@
   "Must say": "Obligatorio",
   "Bonus": "Extra",
   "Mark node done": "Marcar como hecho",
-  "Re-test my level": "Volver a evaluar mi nivel"
+  "Re-test my level": "Volver a evaluar mi nivel",
+  "Practice session": "Sesión de práctica",
+  "Say it": "Dilo",
+  "Hear": "Escuchar",
+  "Next": "Siguiente",
+  "Open scene": "Abrir escenario",
+  "Nothing queued yet — open any scene to start practising.": "Aún no hay nada en cola: abre cualquier escenario para empezar a practicar.",
+  "lines attempted this session": "frases intentadas en esta sesión",
+  "Average score": "Puntuación media",
+  "Nailed it": "Clavadas",
+  "Your plan updates based on today’s results.": "Tu plan se ajusta según los resultados de hoy.",
+  "Why this line": "Por qué esta frase",
+  "your weak spot": "tu punto débil",
+  "due for review": "toca repasar",
+  "for your city": "para tu ciudad",
+  "a fresh line": "una frase nueva",
+  "Start today’s session": "Empezar la sesión de hoy",
+  "{n} of today’s lines are new since your last session": "{n} frases de hoy son nuevas desde tu última sesión"
 }

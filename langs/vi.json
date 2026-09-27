@@ -765,5 +765,22 @@
   "Must say": "Bắt buộc",
   "Bonus": "Thêm",
   "Mark node done": "Đánh dấu đã xong",
-  "Re-test my level": "Kiểm tra lại trình độ"
+  "Re-test my level": "Kiểm tra lại trình độ",
+  "Practice session": "Buổi luyện tập",
+  "Say it": "Nói đi",
+  "Hear": "Nghe",
+  "Next": "Tiếp",
+  "Open scene": "Mở tình huống",
+  "Nothing queued yet — open any scene to start practising.": "Chưa có gì trong hàng đợi — mở bất kỳ tình huống nào để bắt đầu luyện.",
+  "lines attempted this session": "câu đã luyện trong buổi này",
+  "Average score": "Điểm trung bình",
+  "Nailed it": "Nói chuẩn",
+  "Your plan updates based on today’s results.": "Kế hoạch của bạn cập nhật dựa trên kết quả hôm nay.",
+  "Why this line": "Vì sao chọn câu này",
+  "your weak spot": "điểm yếu của bạn",
+  "due for review": "đến hạn ôn",
+  "for your city": "cho thành phố của bạn",
+  "a fresh line": "một câu mới",
+  "Start today’s session": "Bắt đầu buổi luyện hôm nay",
+  "{n} of today’s lines are new since your last session": "{n} câu hôm nay là mới so với buổi trước"
 }

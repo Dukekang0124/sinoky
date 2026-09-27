@@ -765,5 +765,22 @@
   "Must say": "ต้องพูด",
   "Bonus": "โบนัส",
   "Mark node done": "ทำเครื่องหมายว่าเสร็จ",
-  "Re-test my level": "วัดระดับใหม่"
+  "Re-test my level": "วัดระดับใหม่",
+  "Practice session": "ช่วงฝึกวันนี้",
+  "Say it": "พูดเลย",
+  "Hear": "ฟัง",
+  "Next": "ถัดไป",
+  "Open scene": "เปิดสถานการณ์",
+  "Nothing queued yet — open any scene to start practising.": "ยังไม่มีคิว — เปิดสถานการณ์ใดก็ได้เพื่อเริ่มฝึก",
+  "lines attempted this session": "ประโยคที่ฝึกในรอบนี้",
+  "Average score": "คะแนนเฉลี่ย",
+  "Nailed it": "พูดถูกเป๊ะ",
+  "Your plan updates based on today’s results.": "แผนของคุณจะปรับตามผลของวันนี้",
+  "Why this line": "ทำไมเลือกประโยคนี้",
+  "your weak spot": "จุดอ่อนของคุณ",
+  "due for review": "ถึงกำหนดทบทวน",
+  "for your city": "สำหรับเมืองของคุณ",
+  "a fresh line": "ประโยคใหม่",
+  "Start today’s session": "เริ่มฝึกของวันนี้",
+  "{n} of today’s lines are new since your last session": "มี {n} ประโยคของวันนี้ที่ใหม่จากการฝึกครั้งก่อน"
 }
