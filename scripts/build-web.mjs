@@ -57,6 +57,31 @@ for (const f of FILES) {
   catch (e) { console.warn('skip missing file:', f); }
 }
 
+/* ── 行尾规范化（2026-09-27 新增）────────────────────────────────────
+   CI 在 Linux 上 checkout + 构建 ⇒ 产物是 LF；本机 Windows 构建 ⇒ CRLF。
+   两者「内容相同、字节不同」，后果有二：
+   ① 本地 www 与线上逐行比对会显示 14100 行「全部不同」（其实只差一个 \r），
+      人工 diff 被噪音淹没，真实差异（如 version.json 落后）反而看不见；
+   ② 用本地 www 应急部署，会把线上每个文本文件都换成 CRLF 版 ——
+      功能虽无害，但「线上 == 仓库产物」这条不变量当场失效，此后每次比对都是噪音。
+   故在构建阶段统一规范化为 LF，与 CI 产物字节对齐。二进制（png/webp/mp3/apk）不动。 */
+const TEXT_EXT = /\.(html?|js|mjs|cjs|json|webmanifest|css|txt|xml|md|svg)$/i;
+const TEXT_BARE = new Set(['_headers', '_redirects', '.assetsignore']);
+let normalized = 0;
+const walkText = async (dir) => {
+  for (const e of await readdir(dir, { withFileTypes: true })) {
+    const fp = path.join(dir, e.name);
+    if (e.isDirectory()) { await walkText(fp); continue; }
+    if (!TEXT_EXT.test(e.name) && !TEXT_BARE.has(e.name)) continue;
+    const buf = readFileSync(fp);
+    if (!buf.includes(13)) continue;                    // 无 \r 直接跳过
+    writeFileSync(fp, Buffer.from(buf.toString('utf8').replace(/\r\n/g, '\n'), 'utf8'));
+    normalized++;
+  }
+};
+await walkText(out);
+console.log('[build:web] 行尾规范化 LF —', normalized, '个文本文件已转换');
+
 // 版本号：从 index.html 的 APP_VERSION 读取，绝不手写（防三处不同步铁律复发）
 const html = readFileSync(path.join(src, 'index.html'), 'utf8');
 const m = html.match(/var APP_VERSION = '([\d.]+)'/);
