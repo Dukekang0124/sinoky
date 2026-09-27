@@ -18,6 +18,14 @@
         （**只发网页线**：apk 段与 download.html 兜底直链**一律不动**，只改 WEB 三处 ——
           纯网页/CSS/文案修复的既有权衡，见 skill `sinoky-release-sop` §1.1。
           ⚠️ 此时 apk.version 会比顶层 version 旧一档，这是**预期落差不是缺陷**，交付文档必须写明。）
+     node _internal/bump_version.cjs 0.28.1 _internal/notes/v0.29.1.json --apk-only
+        （**补出 APK（网页线转正式发版）**：顶层 version 已由 --web-only 就位，本模式**只改 APK 线**
+          —— version.json 的 apk 段 4 字段（versionCode / version / url / md5+size 清空待 CI 回写）
+             + download.html 兜底直链；WEB 三处与顶层 version 保持不变。
+          用途：某版先按「只发网页线」发了（APK 段故意落后一档），之后决定**正式发版**让 App 用户
+          也拿到 —— 直接打 tag 会因 apk 段指向旧版本而语义错乱，本模式把六处补齐后 tag 才干净。
+          note 走**替换**而非插入（同一次发版的 note 已在 --web-only 时写过，插入会重复）。
+          顺序：`--web-only` 先发网页线 → （可延迟）→ `--apk-only` 补齐 → `git tag vX.Y.Z` 正式发版。）
 
    退出码：0 全部命中；非 0 = 某处没找到（说明文件结构变了，别硬发版）。 */
 const fs = require('fs');
@@ -26,18 +34,27 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const ARGS = process.argv.slice(2).filter(function(a){ return a.indexOf('--') !== 0; });
 const WEB_ONLY = process.argv.indexOf('--web-only') > -1;
+const APK_ONLY = process.argv.indexOf('--apk-only') > -1;
 const NEW = ARGS[0];
 const NOTE_FILE = ARGS[1] || '';
 
 if(!NEW || !/^\d+\.\d+\.\d+$/.test(NEW)){
-  console.error('用法: node _internal/bump_version.cjs <x.y.z> [noteFile] [--web-only]');
+  console.error('用法: node _internal/bump_version.cjs <x.y.z> [noteFile] [--web-only|--apk-only]');
+  process.exit(2);
+}
+if(WEB_ONLY && APK_ONLY){
+  console.error('🔴 --web-only 与 --apk-only 互斥：一个只改网页三处、一个只改 APK 三处，不能同时用');
   process.exit(2);
 }
 
 const vjPath = path.join(ROOT, 'version.json');
 const vj = JSON.parse(fs.readFileSync(vjPath, 'utf8'));
 const OLD = vj.version;
-if(OLD === NEW){ console.error('版本号已经是 ' + NEW + '，无需同步'); process.exit(2); }
+/* --apk-only 的前提正是「顶层 version 已就位」，所以这个模式下 OLD === NEW 是**正常且必需**的。 */
+if(OLD === NEW && !APK_ONLY){
+  console.error('版本号已经是 ' + NEW + '，无需同步（若是要把先发的网页线补出 APK，加 --apk-only）');
+  process.exit(2);
+}
 
 const [MA, MI, PA] = NEW.split('.').map(Number);
 const code = MA*10000 + MI*100 + PA;
@@ -56,8 +73,14 @@ if(NOTE_FILE){
   const nf = path.join(ROOT, NOTE_FILE);
   const n = JSON.parse(fs.readFileSync(nf, 'utf8'));
   vj.note = n.note;
-  /* noteEn 是**倒序历史**（最新在最前），不是只留当前版本 —— 别整数组替换。 */
-  vj.noteEn = [n.noteEn].concat(Array.isArray(vj.noteEn) ? vj.noteEn : []);
+  /* noteEn 是**倒序历史**（最新在最前），不是只留当前版本 —— 别整数组替换。
+     --apk-only 例外：同一次发版的 note 已在 --web-only 时写过 ⇒ **替换** noteEn[0]，
+     否则会把同一条英文说明插两遍（历史里出现重复条目）。 */
+  if(APK_ONLY && Array.isArray(vj.noteEn) && vj.noteEn.length){
+    vj.noteEn[0] = n.noteEn;
+  } else {
+    vj.noteEn = [n.noteEn].concat(Array.isArray(vj.noteEn) ? vj.noteEn : []);
+  }
 }
 vj.apk = vj.apk || {};
 
@@ -103,14 +126,18 @@ if(WEB_ONLY){
        '旧值 md5=' + (String(oldApkMd5).slice(0,8) || '(空)') + ' size=' + oldApkSize + ' → "" / 0');
 }
 fs.writeFileSync(vjPath, JSON.stringify(vj, null, 2) + '\n', 'utf8');
-step('version.json · 顶层 version', true, OLD + ' → ' + NEW);
+step('version.json · 顶层 version', true, (OLD === NEW ? OLD + '（--apk-only，已就位）' : OLD + ' → ' + NEW));
 if(NOTE_FILE) step('version.json · note / noteEn[0] 已更新', true, 'noteEn 共 ' + vj.noteEn.length + ' 条');
 
 /* ---- 2/N. index.html APP_VERSION ---- */
 const ixPath = path.join(ROOT, 'index.html');
 let ix = fs.readFileSync(ixPath, 'utf8');
 const ixRe = /var APP_VERSION = '[^']+';/;
-if(ixRe.test(ix)){
+if(APK_ONLY){
+  /* 顶层已就位 ⇒ WEB 三处必然已是 NEW，本模式下只做**校验**，不重写（避免无意义 diff）。 */
+  step('index.html · APP_VERSION 保持不变（--apk-only）', ixRe.test(ix) && ix.indexOf("var APP_VERSION = '" + NEW + "';") > -1,
+       ixRe.test(ix) ? ix.match(ixRe)[0] : '未找到');
+} else if(ixRe.test(ix)){
   ix = ix.replace(ixRe, "var APP_VERSION = '" + NEW + "';");
   fs.writeFileSync(ixPath, ix, 'utf8');
   step('index.html · APP_VERSION', true, NEW);
@@ -122,7 +149,10 @@ if(ixRe.test(ix)){
 const swPath = path.join(ROOT, 'sw.js');
 let sw = fs.readFileSync(swPath, 'utf8');
 const swRe = /var CACHE = 'sinoky-v[^']+';/;
-if(swRe.test(sw)){
+if(APK_ONLY){
+  step('sw.js · CACHE 保持不变（--apk-only）', swRe.test(sw) && sw.indexOf("var CACHE = 'sinoky-v" + NEW + "';") > -1,
+       swRe.test(sw) ? sw.match(swRe)[0] : '未找到');
+} else if(swRe.test(sw)){
   sw = sw.replace(swRe, "var CACHE = 'sinoky-v" + NEW + "';");
   fs.writeFileSync(swPath, sw, 'utf8');
   step('sw.js · CACHE', true, 'sinoky-v' + NEW);
@@ -160,6 +190,11 @@ if(WEB_ONLY){
   console.log('   ⚠️ **只发网页线：不要打 tag**。部署必须走应急三必须：');
   console.log('      build-web.mjs → fetch_apk.cjs → verify_www_vs_live.cjs 全绿 → 才 pages deploy');
   console.log('   交付文档要显式写「本版只发网页线」+ 理由（见 skill sinoky-release-sop §1.1）');
+} else if(APK_ONLY){
+  console.log('✅ APK 线已补齐到 ' + NEW + '（apk.versionCode=' + code + '；顶层 version / WEB 三处保持不变）');
+  console.log('   六处现已一致 → 可以正式发版：');
+  console.log('     git tag v' + NEW + ' && git push origin v' + NEW + '   （CI apk.yml 出包 + 挂 Release + 回写 apk.md5/size）');
+  console.log('   ⚠️ apk.md5/size 已清空待 CI 回写；tag 前请确认本轮 WEB 变更已在 main 上。');
 } else {
   console.log('✅ 六处版本号已全部同步到 ' + NEW + '（apk.versionCode=' + code + '）');
   console.log('   ⚠️ 提交信息里请写明版本号；tag 请用 v' + NEW);

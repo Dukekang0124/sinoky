@@ -1,4 +1,4 @@
 {
-  "note": "v0.29.1 复盘卡视觉修正（仅网页线，不打新 APK）\n\n· 复盘卡排版：修掉「正文压过品牌分隔线、拼音被二维码盖住」—— 收紧块间距并加入「正文优先」的自动收高，正文再也不会顶穿品牌线。\n· 复盘卡文案：弱点行改为纯英文，不再出现「Most often tricky: 4 声字」这种中英夹生。\n· 路径卡：旅程结束后的复盘节点下，也能看到「这句连错 3 次 ⇒ 换个做法」的出口。",
-  "noteEn": "v0.29.1 Trip-card visual fixes (web only, no new APK)\n\n· Trip card layout: fixed text pushing past the brand rule and the pinyin sliding under the QR card — tighter spacing plus \"content-first\" auto-fit, so text can never cross the brand line again.\n· Trip card copy: the tricky-sounds line is now English-only (no more mixed-language line).\n· Path card: the \"missed this 3x — change the approach\" shortcut now also shows on the retro node after a trip ends."
+  "note": "v0.29.1 复盘卡视觉修正\n\n· 复盘卡排版：修掉「正文压过品牌分隔线、拼音被二维码盖住」—— 收紧块间距并加入「正文优先」的自动收高，正文再也不会顶穿品牌线。\n· 复盘卡文案：弱点行改为纯英文，不再出现「Most often tricky: 4 声字」这种中英夹生。\n· 路径卡：旅程结束后的复盘节点下，也能看到「这句连错 3 次 ⇒ 换个做法」的出口。",
+  "noteEn": "v0.29.1 Trip-card visual fixes\n\n· Trip card layout: fixed text pushing past the brand rule and the pinyin sliding under the QR card — tighter spacing plus \"content-first\" auto-fit, so text can never cross the brand line again.\n· Trip card copy: the tricky-sounds line is now English-only (no more mixed-language line).\n· Path card: the \"missed this 3x — change the approach\" shortcut now also shows on the retro node after a trip ends."
 }
