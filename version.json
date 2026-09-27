@@ -1,7 +1,7 @@
 {
-  "version": "0.29.0",
+  "version": "0.29.1",
   "updated": "2026-09-27",
-  "note": "v0.29.0 闭环收口：旅程复盘卡 + 记忆压缩 + 策略切换\n\n· 旅程复盘：行程结束后自动生成一张可分享的复盘卡 —— 这趟说了几句、平均分多少、最常卡的是什么，并附「下一趟要说的第一句」（看完就能开口）。\n· 记忆压缩：跨天事件自动压成日摘要（最多 30 天），原始事件用完即弃。零新增请求、零新增 KV 写。\n· 策略切换：同一句连错 3 次，就不再重复它 —— 改为「拆音节练」或「换个说法」；一旦连对立刻解除，不贴永久标签。",
+  "note": "v0.29.1 复盘卡视觉修正（仅网页线，不打新 APK）\n\n· 复盘卡排版：修掉「正文压过品牌分隔线、拼音被二维码盖住」—— 收紧块间距并加入「正文优先」的自动收高，正文再也不会顶穿品牌线。\n· 复盘卡文案：弱点行改为纯英文，不再出现「Most often tricky: 4 声字」这种中英夹生。\n· 路径卡：旅程结束后的复盘节点下，也能看到「这句连错 3 次 ⇒ 换个做法」的出口。",
   "apk": {
     "versionCode": 2900,
     "version": "0.29.0",
@@ -11,6 +11,7 @@
     "force": false
   },
   "noteEn": [
+    "v0.29.1 Trip-card visual fixes (web only, no new APK)\n\n· Trip card layout: fixed text pushing past the brand rule and the pinyin sliding under the QR card — tighter spacing plus \"content-first\" auto-fit, so text can never cross the brand line again.\n· Trip card copy: the tricky-sounds line is now English-only (no more mixed-language line).\n· Path card: the \"missed this 3x — change the approach\" shortcut now also shows on the retro node after a trip ends.",
     "v0.29.0 Closing the loop: trip retro, memory compaction, strategy switching\n\n· Trip retro: an end-of-trip card you can share — how many lines you said, your average score, what tripped you up most, plus the first line to say on your next trip.\n· Memory compaction: past-day events roll up into daily digests (30-day cap); raw events are consumed. No extra requests, no extra KV writes.\n· Strategy switching: miss the same line 3 times and Sinoky stops repeating it — switching to sound-by-sound practice or another way to say it. Cleared the moment you break through.",
     "v0.28.1: fixes the Listen and Record buttons on the right of each trip-pack line being clipped by their container (most visible on narrow phones, where the buttons ran past the right edge). Web-side only: app users pick up the fix automatically the next time they open Sinoky, with no reinstall needed. No behaviour changed.",
     "v0.28.0: from 'content that waits for you to open it' to 'a nudge at the right moment to practise the right line' (proactive intelligence). (1) Automatic trip pack: set 'which city and which day you arrive' in Settings, and as the trip approaches Home hands you a 10-line trip pack drawn across arrival, metro, ordering food and asking for directions - every line comes from the city guide you are already studying, so there is nothing new to memorise; Beijing and Chengdu guides are new, bringing the total to three cities. (2) Nudges are graded, and staying silent is the usual outcome: the app decides in four tiers whether it is worth interrupting you - (a) the trip is imminent (the day before and the day of arrival), (b) your streak is about to break (three or more days, and nothing spoken for over 20 hours), (c) you have lines due for review, (d) anything else is left alone. That fourth tier, staying silent, is deliberate: we would rather under-notify than turn reminders into noise. (3) Tap through to the exact thing: the notification opens the trip pack, a scenario roleplay or the due review - no hunting for the entrance. (4) Privacy and traffic: a reminder subscription stores only the push endpoint and a minimal profile (goal, city, arrival date, streak), never any chat or recording; users who have not subscribed trigger no related request at all. (5) Offline caching was tightened along the way: page URLs carrying parameters no longer take up extra cache space, and API data is no longer written to disk.",

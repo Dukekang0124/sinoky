@@ -374,6 +374,168 @@ const seen = { profile: 0, score: 0, other: 0 };
   chk('C11 · 首页复盘卡：可复盘时有、清行程后无', C11.on === true && C11.off === false,
       'on=' + C11.on + ' off=' + C11.off);
 
+  /* ---- v0.29.1 · C12/C13/C12b —— 复盘分享卡的**排版几何**可回归断言 ----
+     起因：v0.29.0 上线后线上真跑截图为证（R2-retro-card-live.png），第一版复盘卡正文
+     压过品牌分隔线、拼音被二维码盖住。人眼看图不算验收 ⇒ 把「不越界 / 不被盖住」
+     变成像素级断言：改字号、加文案、换更长的句子一旦越界，这里立刻变红。
+
+     方法（**差异法**，避开边界与品牌层的假阳性 —— 第一版按矩形扫就踩了两个坑：
+       QR 矩形里量到 412 点墨，其实是品牌分隔线穿过它；角色矩形里量到 519 点，
+       其实是瓦片右边框正好贴在 x=996 边界上）：
+       同一张卡画两版 —— cvOn（正常，含注入层 QR/诺诺）与 cvOff（临时关掉这两层）。
+       ① 主代码正文几何一律在 cvOff 上量（与注入层彻底解耦）：
+            · contentMaxY ≤ BOT（正文不得压到品牌分隔线）
+            · BOT→品牌线这条安全带零墨点
+       ② 「正文被盖住」用两版差异判定：cvOn≠cvOff 的像素即覆盖物像素；
+          若该处 cvOff 原本是正文墨 ⇒ 正文被盖住了（缺陷）。
+          ⚠️ 只在 y ≤ DIV-6（品牌层之上）判定：品牌分隔线/字标/印章**本来就该被 QR 盖住**，
+          不排除它们会把设计意图误判成缺陷。
+
+     ⚠️ 必须先设好行程让卡片 8 个块全在场 —— C11 刚把行程清空，那是最短的卡，测不出越界。 */
+  const C12 = await page.evaluate(function(){
+    try{
+      /* 让卡片满配（C11 结尾清了行程） */
+      var t = new Date(Date.now() - 4*86400e3).toISOString().slice(0,10);
+      LM.setTrip('上海', t, 3);
+      SHARE.theme = 'retro'; SHARE.code = 'testcode';
+
+      function measure(fmt){
+        var W = 1080, H = (fmt === 'story') ? 1920 : 1080;
+        var TOP = (fmt === 'story') ? 340 : 176;
+        var BOT = (fmt === 'story') ? (H - 470) : 806;
+        var DIV = H - 228;                       /* 品牌分隔线 */
+        /* ① 正常版（含注入层 QR / 右下诺诺） */
+        var cvOn = null;
+        try{ cvOn = SHARE.draw(fmt); }catch(e){}
+        /* ② 临时关掉注入层两块覆盖物，再画一版 */
+        var savedLink = SHARE.link, im = window.NONO_SHARE_IMG, stubbed = false;
+        try{
+          SHARE.link = function(){ return ''; };                  /* QR：link 空即不画 */
+          if(im){ Object.defineProperty(im,'complete',{value:false,configurable:true});
+                  Object.defineProperty(im,'naturalWidth',{value:0,configurable:true});
+                  stubbed = true; }                               /* 诺诺：图未就绪即不画 */
+        }catch(e){}
+        var cvOff = null;
+        try{ cvOff = SHARE.draw(fmt); }catch(e){}
+        try{ SHARE.link = savedLink; }catch(e){}
+        if(stubbed){ try{ delete im.complete; delete im.naturalWidth; }catch(e){} }
+        if(!cvOn || !cvOff) return { err:'canvas null' };
+
+        var dOn  = cvOn.getContext('2d').getImageData(0, 0, W, H).data;
+        var dOff = cvOff.getContext('2d').getImageData(0, 0, W, H).data;
+        function px(d,x,y){ var i = (y*W + x)*4; return [d[i], d[i+1], d[i+2]]; }
+        /* 背景色 = cvOff 全图采样众数 */
+        var cnt = {}, best = '', bestN = 0, k;
+        for(var y = 0; y < H; y += 4) for(var x = 0; x < W; x += 4){
+          var p = px(dOff,x,y); k = p[0] + ',' + p[1] + ',' + p[2];
+          cnt[k] = (cnt[k]||0) + 1; if(cnt[k] > bestN){ bestN = cnt[k]; best = k; }
+        }
+        var bg = best.split(',').map(Number);
+        function content(x, y){ var p = px(dOff,x,y);
+          return Math.abs(p[0]-bg[0]) + Math.abs(p[1]-bg[1]) + Math.abs(p[2]-bg[2]) > 26; }
+
+        /* ① 正文最底部（上跳 230 避开顶部角花） */
+        var contentMaxY = -1;
+        for(var yy = 230; yy <= DIV-4; yy++){
+          var hit = false;
+          for(var xx = 0; xx < W; xx++){ if(content(xx,yy)){ hit = true; break; } }
+          if(hit) contentMaxY = yy;
+        }
+        /* ② 安全带：BOT → 品牌线 零墨点 */
+        var bandInk = 0, bandMinY = 1e9, bandMaxY = -1;
+        for(var y2 = BOT+6; y2 <= DIV-4; y2++) for(var x2 = 0; x2 < W; x2++){
+          if(content(x2,y2)){ bandInk++; if(y2 < bandMinY) bandMinY = y2; if(y2 > bandMaxY) bandMaxY = y2; }
+        }
+        /* ③ 差异法：正文有没有被覆盖物盖住（只判品牌层之上） */
+        var overlayPx = 0, covered = 0, samples = [];
+        for(var y3 = 230; y3 <= DIV-6; y3++) for(var x3 = 0; x3 < W; x3++){
+          var a = px(dOn,x3,y3), b = px(dOff,x3,y3);
+          if(Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[2]-b[2]) > 40){
+            overlayPx++;
+            if(content(x3,y3)){ covered++; if(samples.length < 6) samples.push(x3+','+y3+'='+b.join('/')); }
+          }
+        }
+        return { fmt:fmt, W:W, H:H, TOP:TOP, BOT:BOT, DIV:DIV, bg:bg, stubbed:stubbed,
+                 contentMaxY:contentMaxY, bandInk:bandInk, bandMinY:bandMinY, bandMaxY:bandMaxY,
+                 overlayPx:overlayPx, covered:covered, samples:samples,
+                 png: cvOff.toDataURL('image/png') };
+      }
+      return { square: measure('square'), story: measure('story') };
+    }catch(e){ return { err:String(e && e.message) }; }
+  });
+  const C12s = C12.square || {}, C12t = C12.story || {};
+  try{
+    const OUTD = path.join(__dirname, '_shots'); fs.mkdirSync(OUTD, { recursive:true });
+    if(C12s.png) fs.writeFileSync(path.join(OUTD, 'retro-geo-square.png'), Buffer.from(String(C12s.png).split(',')[1], 'base64'));
+    if(C12t.png) fs.writeFileSync(path.join(OUTD, 'retro-geo-story.png'), Buffer.from(String(C12t.png).split(',')[1], 'base64'));
+    console.log('  [geo] 已导出「关掉覆盖物」的复盘卡母版到 _shots/retro-geo-{square,story}.png');
+  }catch(e){ console.log('  [geo] 导出失败 ' + String(e && e.message)); }
+  chk('C12 · 方图复盘卡：正文不越界、安全带干净、且不被 QR/诺诺盖住',
+      C12s.contentMaxY > 0 && C12s.contentMaxY <= C12s.BOT
+      && C12s.bandInk === 0 && C12s.covered === 0 && C12s.overlayPx > 1000,
+      'contentMaxY=' + C12s.contentMaxY + '/' + C12s.BOT + ' bandInk=' + C12s.bandInk +
+      ' overlayPx=' + C12s.overlayPx + ' covered=' + C12s.covered +
+      (C12s.samples && C12s.samples.length ? (' samples=' + JSON.stringify(C12s.samples)) : ''));
+  chk('C13 · 竖版复盘卡：正文不越界、安全带干净、且不被 QR/诺诺盖住',
+      C12t.contentMaxY > 0 && C12t.contentMaxY <= C12t.BOT
+      && C12t.bandInk === 0 && C12t.covered === 0 && C12t.overlayPx > 1000,
+      'contentMaxY=' + C12t.contentMaxY + '/' + C12t.BOT + ' bandInk=' + C12t.bandInk +
+      ' overlayPx=' + C12t.overlayPx + ' covered=' + C12t.covered);
+  chk('C12b · 两版差异法真的成立（覆盖物在场且被关过，否则上面两条是假绿）',
+      C12s.stubbed === true && C12t.stubbed === true,
+      'stubbed=' + C12s.stubbed + ' overlayPx=' + C12s.overlayPx);
+
+  /* ---- v0.29.1 · C14 —— 分享卡全英文（弱点维度不许漏中文）----
+     起因：线上真跑截图为证，卡上是「Most often tricky: 4 声字」中英夹生 ——
+     弱点走 App 的 i18n，卡上其余是英文。分享卡是给外国朋友看的，必须单一口径。 */
+  const C14 = await page.evaluate(function(){
+    try{
+      LM.weakBump('tone4', 999);                 /* 确定性：保证 tone4 排第一 */
+      var d = RETRO.build();
+      var cjk = /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/;
+      return { weak:d.weak, weakEn:d.weakEn,
+               appHasCjk: cjk.test(d.weak || ''), cardHasCjk: cjk.test(d.weakEn || ''),
+               bothOrNeither: (!!d.weak) === (!!d.weakEn) };
+    }catch(e){ return { err:String(e && e.message) }; }
+  });
+  chk('C14 · 分享卡弱点字段是纯英文（App 里可以是中文，卡上不许中英夹生）',
+      C14.cardHasCjk === false && C14.bothOrNeither === true && (C14.weakEn || '').length > 0,
+      'weak=' + C14.weak + ' | weakEn=' + C14.weakEn);
+
+  /* ---- v0.29.1 · C15 —— 策略出口在「复盘节点」下也必须在场 ----
+     起因：线上真跑发现当前节点为 t7（retro）时首页路径卡没有「换做法」出口
+     （todayCard 的 if(n.retro) 提前 return 把整块跳过，线上实测 hasSwap=false）。
+     判据：把当前节点**强行推到 retro 节点**，断言 ①todayCard 仍带 strategy
+     ②渲染出的 HTML 里出现策略专属按钮（openScene 带第三参 'home'，常规句行没有）。 */
+  const C15 = await page.evaluate(function(){
+    try{
+      var m = LM.get();
+      m.policy.strategy = [];                    /* 清干净，只注入一条 */
+      var savedNode = m.path.node;               /* 测完还原，别污染后面的纪律段 */
+      LM.strategyBump('arrival#0', 20, 'syllable');
+      LM.strategyBump('arrival#0', 20, 'syllable');
+      LM.strategyBump('arrival#0', 20, 'syllable');
+      var hit = LM.strategyOf('arrival#0');
+      /* 强行把当前节点设为 retro 节点（走与线上同一分支：path.node 优先） */
+      var rn = null, all = PATH.nodes();
+      for(var i = 0; i < all.length; i++){ if(all[i] && all[i].retro){ rn = all[i]; break; } }
+      if(rn){
+        m.path.node = rn.id;
+        var di = m.path.done.indexOf(rn.id); if(di >= 0) m.path.done.splice(di, 1);
+      }
+      var card = PATH.todayCard();
+      var html = pathCardHtml();
+      m.path.node = savedNode || '';             /* 还原 */
+      return { hitM: hit && hit.m, retroId: rn && rn.id, cardRetro: !!(card && card.node && card.node.retro),
+               cardHasStrategy: !!(card && card.strategy && card.strategy.length),
+               htmlHasSwapBtn: html.indexOf("'home')") >= 0, htmlLen: html.length };
+    }catch(e){ return { err:String(e && e.message) }; }
+  });
+  chk('C15 · 策略出口与「是否复盘节点」解耦（复盘节点下仍在场）',
+      C15.cardRetro === true && C15.cardHasStrategy === true && C15.htmlHasSwapBtn === true
+      && C15.hitM === 'syllable',
+      JSON.stringify(C15));
+
   /* ================= D. 纪律 ================= */
   console.log('\n===== D. 纪律 =====');
 

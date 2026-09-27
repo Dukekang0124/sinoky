@@ -1465,7 +1465,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.29.0';
+var APP_VERSION = '0.29.1';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -4134,10 +4134,27 @@ var PATH = (function(){
     return out;   /* 无特殊理由则返回空 —— UI 侧不展示理由，不给假的解释 */
   }
   /* 今日任务卡：1 必说 + 2 顺带（mustSay:3）+ 至多 1 复习 */
+  /* v0.29：命中的策略切换 → 首页「换个做法」入口（闭环第 7 步的可见证据）。
+     只取 1 条：策略是脚手架，一天给一个「换法」提示就够，多了变成噪音。
+     ⚠️ 抽成独立函数是因为 **retro 节点也要带它** —— 否则用户推进到「旅程复盘」时
+     策略出口整个消失（线上真跑发现：注入 arrival#0 连错 3 次后，t7 节点下 hasSwap=false）。 */
+  function strategyCard(){
+    var out = [];
+    try{
+      LM.strategyAll().forEach(function(s){
+        if(out.length >= 1) return;
+        var sp = String(s.k).split('#'), sc = _findScene(sp[0]);
+        if(!sc || !sc.phrases || !sc.phrases[+sp[1]]) return;
+        var p = sc.phrases[+sp[1]];
+        out.push({ scene:sc.id, idx:+sp[1], hz:p.hz, py:p.py, en:p.en, mode:s.m, n:s.n });
+      });
+    }catch(e){}
+    return out;
+  }
   function todayCard(){
     var n = currentNode();
     if(!n) return null;
-    if(n.retro) return { node:n, must:[], extra:[], review:[], retro:true };
+    if(n.retro) return { node:n, must:[], extra:[], review:[], retro:true, strategy:strategyCard() };
     var it = collect(n);
     it.forEach(function(x){ x._s = score(x, n); });
     it.sort(function(a,b){ return b._s - a._s; });
@@ -4152,19 +4169,7 @@ var PATH = (function(){
       if(review.length >= 1) break;
     }
     var extra = it.slice(1, 3).filter(function(x){ return review.length ? key(x) !== key(review[0]) : true; });
-    var card = { node:n, must:it.slice(0,1), extra:extra, review:review };
-    /* v0.29：把「命中的策略切换」列出来 —— 首页据此给「换的做法」入口（闭环第 7 步的可见证据）。
-       只取 1 条：策略是脚手架，一天给一个「换法」提示就够，多了变成噪音。 */
-    card.strategy = [];
-    try{
-      LM.strategyAll().forEach(function(s){
-        if(card.strategy.length >= 1) return;
-        var sp = String(s.k).split('#'), sc = _findScene(sp[0]);
-        if(!sc || !sc.phrases || !sc.phrases[+sp[1]]) return;
-        var p = sc.phrases[+sp[1]];
-        card.strategy.push({ scene:sc.id, idx:+sp[1], hz:p.hz, py:p.py, en:p.en, mode:s.m, n:s.n });
-      });
-    }catch(e){}
+    var card = { node:n, must:it.slice(0,1), extra:extra, review:review, strategy:strategyCard() };
     /* v0.26 可解释性 + 可观测性：每句附「为什么是它」；卡本身写入 7 天日志 */
     ['must','extra','review'].forEach(function(band){
       (card[band]||[]).forEach(function(x){ x.why = whyOf(x); });
@@ -4904,15 +4909,18 @@ var RETRO = (function(){
     for(var i=0;i<m.mile.length;i++){ if(m.mile[i] && m.mile[i].id === id) return m.mile[i]; }
     return null;
   }
-  /* 弱点维度 → 人话。确定性映射（不生成、不编造），与 whyLabel 同风格。 */
-  function weakPhrase(k){
+  /* 弱点维度 → 人话。确定性映射（不生成、不编造），与 whyLabel 同风格。
+     en=true 走**英文原文**：分享卡是刻意全英文的（给外国朋友看），不能与 App UI 的
+     本地化文案混排 —— 线上真跑就出过「Most often tricky: 4 声字」这种中英夹生。 */
+  function weakPhrase(k, en){
     if(!k) return '';
     if(k.indexOf('tone') === 0){
       var n = parseInt(k.replace(/[^0-9]/g, ''), 10);
+      if(en) return n ? (n + '-tone words') : 'tones';
       return n ? T('{n}-tone words').replace('{n}', n) : T('tones');
     }
-    if(k.indexOf('initial') === 0) return T('tricky first sounds');
-    if(k.indexOf('final') === 0)   return T('ending sounds');
+    if(k.indexOf('initial') === 0) return en ? 'tricky first sounds' : T('tricky first sounds');
+    if(k.indexOf('final') === 0)   return en ? 'ending sounds'      : T('ending sounds');
     return '';
   }
   /* 下一趟要说的第一句（Edify Gate）—— 只从既有 CITY_GUIDES 取，零新增教学内容。
@@ -4937,6 +4945,7 @@ var RETRO = (function(){
       if(!x) return;
       said += (x.n || 0); sc += (x.sc || 0); sum += (x.avg || 0) * (x.sc || 0);
     });
+    var wk = (m.weak[0] && m.weak[0].k) || '';
     return {
       city:   (trip() && trip().city) || m.goal.cities[0] || '',
       cityId: cityId(),
@@ -4944,7 +4953,8 @@ var RETRO = (function(){
       active: dg.length,                 /* 这趟实际开口的天数 */
       said:   said,
       avg:    sc ? Math.round(sum / sc) : 0,
-      weak:   weakPhrase((m.weak[0] && m.weak[0].k) || ''),
+      weak:   weakPhrase(wk),
+      weakEn: weakPhrase(wk, true),      /* 分享卡专用（全英文，不混排） */
       next:   nextLine(),
       streak: S.streak || 0
     };
@@ -7973,6 +7983,25 @@ function pathCardHtml(){
     '<div class="top"><h2>🧭 '+T("Today's path")+'</h2><span class="badge">'+p.done+'/'+p.total+'</span></div>'+
     '<p class="desc">'+esc(n.name)+' · '+T('say 3 lines today')+'</p>'+
     '<div class="pbar"><i style="width:'+p.pct+'%"></i></div>';
+  /* v0.29：策略切换的可见出口 —— 「这句连错 3 次 ⇒ 换了做法」，并一键进入该句。
+     两种做法各有既有承载：拆音节练 = 句卡里可点单音节的拼读脚手架（v0.3.55 D）；
+     换近义句 = 选句降权后同场景另一句（卡片内容已经不同）。
+     ⚠️ 必须在 retro 判断**之前**渲染：线上真跑发现 t7 节点下整块消失 ——
+     「有句话你连错 3 次」是跨节点的用户事实，复盘时反而更该看得见。 */
+  var stra = (c.strategy && c.strategy[0]) || null;
+  if(stra){
+    var syl = (stra.mode === 'syllable');
+    /* 🔴 必须写成「条件 ? T(单串) : T(单串)」而**不是**把三元式塞进 T(...) 里面：
+       后者的字面量 i18n 闸门扫不到（正则只认紧跟在 T( 之后的字符串），
+       线上会静默 fallback 成英文 —— 违反「零英文 fallback」验收线。
+       （闸门是全文扫描，连注释里的示例也算，所以这里不写字面示例。） */
+    h += '<div class="rd-hint" style="margin-top:11px">🎚 '+
+      T('You missed this 3× — so today we change the approach') + ': '+
+      esc(syl ? T('break it into single sounds') : T('try it another way')) + '</div>'+
+      '<div style="display:flex;gap:10px;margin-top:9px">'+
+      '<button class="btn ghost" style="flex:1" onclick="openScene(\''+stra.scene+'\','+stra.idx+',\'home\')">'+
+      (syl ? '🔤 ' : '🔄 ') + esc(syl ? T('Practise sound by sound') : T('Say it another way'))+'</button></div>';
+  }
   if(n.retro){
     h += '<button class="btn primary" style="margin-top:12px" onclick="PATH.complete(\''+n.id+'\');RETRO.open();">'+T('Finish the journey')+'</button></div>';
     return h;
@@ -7994,23 +8023,6 @@ function pathCardHtml(){
   if(df && df.changed > 0){
     h += '<div class="rd-hint" style="margin-top:11px">🔄 '+
       T('{n} of today’s lines are new since your last session').replace('{n}', df.changed)+'</div>';
-  }
-  /* v0.29：策略切换的可见出口 —— 「这句连错 3 次 ⇒ 换了做法」，并一键进入该句。
-     两种做法各有既有承载：拆音节练 = 句卡里可点单音节的拼读脚手架（v0.3.55 D）；
-     换近义句 = 选句降权后同场景另一句（上面卡片内容已经不同）。 */
-  var stra = (c.strategy && c.strategy[0]) || null;
-  if(stra){
-    var syl = (stra.mode === 'syllable');
-    /* 🔴 必须写成「条件 ? T(单串) : T(单串)」而**不是**把三元式塞进 T(...) 里面：
-       后者的字面量 i18n 闸门扫不到（正则只认紧跟在 T( 之后的字符串），
-       线上会静默 fallback 成英文 —— 违反「零英文 fallback」验收线。
-       （闸门是全文扫描，连注释里的示例也算，所以这里不写字面示例。） */
-    h += '<div class="rd-hint" style="margin-top:11px">🎚 '+
-      T('You missed this 3× — so today we change the approach') + ': '+
-      esc(syl ? T('break it into single sounds') : T('try it another way')) + '</div>'+
-      '<div style="display:flex;gap:10px;margin-top:9px">'+
-      '<button class="btn ghost" style="flex:1" onclick="openScene(\''+stra.scene+'\','+stra.idx+',\'home\')">'+
-      (syl ? '🔤 ' : '🔄 ') + esc(syl ? T('Practise sound by sound') : T('Say it another way'))+'</button></div>';
   }
   h += '<div style="display:flex;gap:10px;margin-top:14px">'+
     '<button class="btn primary" style="flex:1" onclick="SESSION.start()">▶ '+T('Start today’s session')+'</button></div>'+
@@ -10207,6 +10219,13 @@ function _rr(ctx, x, y, w, h, r){
 function _tiles(ctx, cx, y, h, rows){
   var W = 1080, PAD = 84, gap = 22;
   var cw = (W - PAD*2 - gap) / 2, ch = (h - gap) / 2;
+  /* 字号/基线随槽高自适应：以 h=260（ch=119）为设计基准。
+     h ≥ 260（报告卡 300/380）时系数封顶 1 ⇒ 与旧版**逐像素一致**；
+     只有复盘卡把槽位压下来时才等比缩小，避免数字/标签溢出格框（v0.29.1）。 */
+  var k = Math.min(1, ch / 119);
+  var fsN = Math.max(34, Math.round(78 * k));
+  var fsL = Math.max(18, Math.round(28 * k));
+  var dyN = Math.round(20 * k), dyL = Math.round(46 * k);
   for (var r = 0; r < 2; r++){
     for (var c = 0; c < 2; c++){
       var x = PAD + c*(cw+gap), yy = y + r*(ch+gap), it = rows[r][c];
@@ -10215,10 +10234,10 @@ function _tiles(ctx, cx, y, h, rows){
       _rr(ctx, x, yy, cw, ch, 18); ctx.stroke();
       ctx.restore();
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = SHARE.C.gold; ctx.font = '600 78px ' + SHARE.SERIF;
-      ctx.fillText(String(it.n), x + cw/2, yy + ch/2 - 20);
-      ctx.fillStyle = 'rgba(245,241,232,.5)'; ctx.font = '400 28px ' + SHARE.SANS;
-      ctx.fillText(it.l, x + cw/2, yy + ch/2 + 46);
+      ctx.fillStyle = SHARE.C.gold; ctx.font = '600 ' + fsN + 'px ' + SHARE.SERIF;
+      ctx.fillText(String(it.n), x + cw/2, yy + ch/2 - dyN);
+      ctx.fillStyle = 'rgba(245,241,232,.5)'; ctx.font = '400 ' + fsL + 'px ' + SHARE.SANS;
+      ctx.fillText(it.l, x + cw/2, yy + ch/2 + dyL);
     }
   }
 }
@@ -10347,25 +10366,41 @@ SHARE.draw = function(fmt){
 
   } else if (SHARE.theme === 'retro' && d.retro){
     /* v0.29 旅程复盘卡：这趟的账 + **下一趟要说的第一句**（Edify Gate：
-       卡片不能只让人「看完」，得让人立刻「说一句」）。数据全部来自本地 digest。 */
-    push({ t:'TRIP RETRO', size:26, font:SHARE.SANS, color:S_.goldDim, gap:30 });
-    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:18 });
-    if (d.retro.city) push({ t:d.retro.city, size:52, font:SHARE.SERIF, color:S_.paper, gap:24 });
-    push({ h: (fmt === 'story' ? 380 : 300), hook:function(c, cc, y, hh){
+       卡片不能只让人「看完」，得让人立刻「说一句」）。数据全部来自本地 digest，
+       文案一律英文（分享卡与其它主题同一口径，不混排 App 的本地化文案）。
+       ⚠️ 高度必须**算着排**：方图可用高度只有 BOT−TOP = 806−176 = 630px，
+       第一版排了 ~745px ⇒ 正文压过品牌分隔线、拼音被二维码盖住（线上真跑截图为证）；
+       第二版靠调字号压到 637px —— 仍比 630 多 3px：竖向居中已经失效、零余量。
+       现版本：① 收紧块间距（合计 −35px）② 末尾**自适应收高** —— 文案总高一旦超过
+       可用区就先压 `_tiles` 槽位（下限 200px，`_tiles` 内部等比缩放），做到
+       「正文优先、永不越界」。以后再加一行文案也不会顶穿品牌线。 */
+    var _avail = BOT - TOP;
+    push({ t:'TRIP RETRO', size:26, font:SHARE.SANS, color:S_.goldDim, gap:14 });
+    if (d.nick) push({ t:d.nick, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.55)', gap:12 });
+    if (d.retro.city) push({ t:d.retro.city, size:42, font:SHARE.SERIF, color:S_.paper, gap:12 });
+    var _tileIt = { h: (fmt === 'story' ? 340 : 260), hook:function(c, cc, y, hh){
       _tiles(c, cc, y, hh, [
         [{ n:(d.retro.said || 0), l:'lines said' }, { n:(d.retro.avg || 0), l:'avg score' }],
         [{ n:(d.retro.active || 0), l:'days speaking' }, { n:(d.retro.days || 0), l:'day trip' }]
       ]);
-    } });
-    if (d.retro.weak){
-      push({ t:'Most often tricky: ' + d.retro.weak, size:32, font:SHARE.SANS, color:'rgba(245,241,232,.62)', gap:24 });
+    } };
+    push(_tileIt);
+    if (d.retro.weakEn){
+      push({ t:'Most often tricky: ' + d.retro.weakEn, size:26, font:SHARE.SANS, color:'rgba(245,241,232,.62)', gap:12 });
     }
     if (d.retro.next && d.retro.next.hz){
-      push({ t:'NEXT TRIP \u00b7 SAY THIS FIRST', size:24, font:SHARE.SANS, color:S_.goldDim, gap:28 });
-      push({ t:d.retro.next.hz, size:_fit(ctx, d.retro.next.hz, maxW, 76, 40, SHARE.SERIF), font:SHARE.SERIF, weight:'600', color:S_.paper, gap:20 });
-      if (d.retro.next.py) push({ t:d.retro.next.py, size:34, font:SHARE.SANS, color:S_.gold, gap:18 });
-      if (d.retro.next.en) push({ t:d.retro.next.en, size:31, font:SHARE.SANS, color:'rgba(245,241,232,.6)', gap:0 });
+      push({ t:'NEXT TRIP \u00b7 SAY THIS FIRST', size:20, font:SHARE.SANS, color:S_.goldDim, gap:10 });
+      push({ t:d.retro.next.hz, size:_fit(ctx, d.retro.next.hz, maxW, 56, 34, SHARE.SERIF), font:SHARE.SERIF, weight:'600', color:S_.paper, gap:8 });
+      if (d.retro.next.py) push({ t:d.retro.next.py, size:26, font:SHARE.SANS, color:S_.gold, gap:8 });
+      if (d.retro.next.en) push({ t:d.retro.next.en, size:24, font:SHARE.SANS, color:'rgba(245,241,232,.6)', gap:0 });
     }
+    /* 自适应收高：按 `_stack` 的同一公式先估总高，超了就压槽位（正文永远优先） */
+    var _est = 0;
+    items.forEach(function(it){
+      if (it.hook){ _est += (it.h || 120); return; }
+      _est += Math.round(it.size * 1.24) * ((it.lines || [it.t]).length) + (it.gap || 0);
+    });
+    if (_est > _avail - 24){ _tileIt.h = Math.max(200, _tileIt.h - (_est - (_avail - 24))); }
     _stack(ctx, cx, items, TOP, BOT);
 
   } else {
