@@ -1,0 +1,20 @@
+name = "sinoky"
+pages_build_output_dir = "www"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Pages Functions KV namespace bindings.
+# Declared here (not via Dashboard/API alone) so that `wrangler pages deploy`
+# carries them on every deployment — including CI runs. KV namespace IDs are
+# non-secret and safe to commit. (v0.24.8: added PUSH for Web Push subscriptions)
+[[kv_namespaces]]
+binding = "FEEDBACK"
+id = "3e8bfa1dd43c49e1a9b77c336ded54df"
+
+[[kv_namespaces]]
+binding = "PROFILES"
+id = "f68d5aa1d20c4d2abe7fae62685f2fa4"
+
+[[kv_namespaces]]
+binding = "PUSH"
+id = "9a54616846814bd6be285971ae604b48"
