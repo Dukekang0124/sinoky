@@ -502,7 +502,20 @@ jobs:
           if git diff --cached --quiet; then
             echo "root version.json already in sync"
           else
-            git commit -q -m "[skip ci] sync apk metadata v${V} (md5+size)" && git push -q origin HEAD:main && echo "pushed apk metadata sync to main" || echo "::error::CI could not push version.json sync to main (branch protection? bot lacks bypass) — RECONCILE MANUALLY: local www/version.json is still correct and live; update root version.json apk segment to the deployed md5/size and push main by hand"
+            git commit -q -m "[skip ci] sync apk metadata v${V} (md5+size)"
+            # v0.27.0 经验：单次 push 会因瞬时故障（网络/次级限流）失败，而 `|| echo ::error::`
+            # 会把失败吞成绿色运行 → main 静默落后，线上/仓库不变量破裂。故改为重试 3 次（退避 5s/15s）。
+            PUSHED=0
+            for i in 1 2 3; do
+              if git push -q origin HEAD:main; then PUSHED=1; break; fi
+              echo "::warning::push attempt $i failed, retrying..."
+              sleep $(( i == 1 ? 5 : 15 ))
+            done
+            if [ "$PUSHED" = "1" ]; then
+              echo "pushed apk metadata sync to main"
+            else
+              echo "::error::CI could not push version.json sync to main after 3 attempts (branch protection? GH_PAT expired/revoked?) — RECONCILE MANUALLY: local version.json is still correct and live; set root version.json apk segment to the deployed md5/size and push main by hand"
+            fi
           fi
           npx --yes wrangler@3 pages deploy www --project-name=sinoky --branch=main
           echo "published https://sinoky.pages.dev/apk/Sinoky-v${V}-release.apk"
@@ -528,3 +541,24 @@ jobs:
         with:
           files: dist/*.apk
           generate_release_notes: true
+
+      # v0.27.0 经验：回写 main 的 push 失败时整轮仍会报 success（见上一步的 ::error::），
+      # 结果是「线上已更新、仓库没更新」，二者不变量静默破裂（用户能收到更新，但下次
+      # push main 触发的部署会拿旧 apk 段把线上覆盖回去）。此处做终局断言，让失败变红。
+      - name: Assert apk metadata landed on main (release only)
+        if: startsWith(github.ref, 'refs/tags/v') && env.BUILD_TYPE == 'release'
+        run: |
+          V=${{ steps.ver.outputs.version }}
+          git fetch -q --depth=1 origin main
+          MAIN_RAW=$(git show origin/main:version.json)
+          MAIN_MD5=$(printf '%s' "$MAIN_RAW" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log((JSON.parse(d).apk||{}).md5||'')}catch(e){console.log('')}})")
+          MAIN_SIZE=$(printf '%s' "$MAIN_RAW" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log((JSON.parse(d).apk||{}).size||0)}catch(e){console.log(0)}})")
+          LOCAL_MD5=$(node -e "console.log((require('./version.json').apk||{}).md5||'')")
+          LOCAL_SIZE=$(node -e "console.log((require('./version.json').apk||{}).size||0)")
+          echo "main : md5=$MAIN_MD5 size=$MAIN_SIZE"
+          echo "local: md5=$LOCAL_MD5 size=$LOCAL_SIZE"
+          if [ -z "$MAIN_MD5" ] || [ "$MAIN_MD5" != "$LOCAL_MD5" ] || [ "$MAIN_SIZE" != "$LOCAL_SIZE" ]; then
+            echo "::error::INVARIANT BROKEN — v${V} apk metadata did NOT land on main. Web/APK are already live and correct, but origin/main still holds stale metadata; the next 'push main' deploy would overwrite the live version.json with it. Fix: set root version.json apk segment to md5=$LOCAL_MD5 size=$LOCAL_SIZE and push main manually (GH_PAT likely expired/revoked)."
+            exit 1
+          fi
+          echo "✅ invariant OK — origin/main apk metadata == deployed v${V} (md5=$LOCAL_MD5 size=$LOCAL_SIZE)"
