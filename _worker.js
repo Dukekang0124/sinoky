@@ -127,6 +127,90 @@ async function vapidAuth(endpoint){
   return 'vapid t=' + tok + ',k=' + VAPID_PUBLIC;
 }
 
+/* ===== v0.28.0 M5 主动引擎（服务端）=====================================
+   把 v0.24.8 的「广播式推送」改造为「分段决策树 + 行程驱动 + 深链」。
+   方案 §6.2 的核心一句：**D 其余 → SKIP**。没有分段能力时广播是「有总比没有好」；
+   有分段能力后它必须变成「不该推的人不推」——否则卸载率会抵消 D1 留存收益。
+
+   🔴 与前端 PRO.decide() **同判据、同顺序**（A→B→C→D）。两边漂移会导致
+     「本地说要推、服务端不推」这种最难查的 bug。
+
+   配额纪律（硬红线 KV 写 1000/天）：
+     · 只读 PUSH KV（读不计配额）；写只有两处：lastPush 幂等（1/订阅/天）与 404/410 清理
+     · **绝不读 PROFILES 的 p:{uid}**（cron 为 N 个用户读 N 次大 payload）
+     · 订阅数 > 800 时自动降级为「不写 lastPush」（方案 §5.4 的降级阈值）
+
+   与方案原稿的一处改进：快照存 `arrive` **原始日期**而不是 `daysToTrip` 差值
+   —— 快照是事件驱动刷新的，存差值会随天数自然过期导致 T-1 推送漏发。 */
+const PUSH_TXT = {
+  en: {
+    trip0: (c) => ['You land in ' + c + ' today', 'Practise these 10 lines before you get off the plane.'],
+    trip1: (c) => ['Tomorrow: ' + c, 'Practise these 10 lines today and land ready.'],
+    streak: (n) => ['Your ' + n + '-day streak has not moved', '2 minutes today keeps it alive.'],
+    due:    (n) => [n + ' lines are due for review', 'Clear them in 2 minutes while they are fresh.']
+  },
+  zh: {
+    trip0: (c) => ['今天到' + c, '落地前先练这 10 句。'],
+    trip1: (c) => ['明天去' + c, '今天练这 10 句，落地就能开口。'],
+    streak: (n) => ['你的 ' + n + ' 天连胜还没动', '今天 2 分钟就能保住。'],
+    due:    (n) => ['有 ' + n + ' 句该复习了', '趁还记得，2 分钟清掉。']
+  }
+};
+/* 日期口径（两处刻意不同，别合并成一个）：
+   · pushDay()        —— UTC 日串，与前端 today() **同口径**（S.lastDone 存的就是 UTC 日），
+                         用于 lastPush 幂等与「今天已开口」判定；cron 的 01:00/13:00 两档
+                         落在同一个 UTC 日内，所以「一天一条」成立。
+   · dayIdx(ms, tz)   —— 用户**本地**日序号，只用于「还有几天到」「几天没开」这类相对天数；
+                         「明天去上海」的「明天」必须是用户本地的明天，不能按 UTC 算。
+   · dateIdx('Y-M-D') —— 把用户填的本地日期串转成日序号（跨时区正确，见 test_push_tree）。 */
+function pushDay(ms){ return new Date(ms === undefined ? Date.now() : ms).toISOString().slice(0, 10); }
+function dateIdx(s){ const t = Date.parse(s + 'T00:00:00Z'); return isNaN(t) ? null : Math.floor(t / 86400e3); }
+function dayIdx(ms, tz){ return Math.floor(((ms === undefined ? Date.now() : ms) + (Number(tz) || 0) * 3600e3) / 86400e3); }
+/* 决策树：输入 KV 记录，输出直接可发的 { kind, title, body, url } 或 { kind:'skip' } */
+function decidePush(rec){
+  const p = (rec && rec.p) || {};
+  const tz = Number(p.tz) || 0;
+  const now = Date.now();
+  const today = pushDay(now);
+  const todayIdx = dayIdx(now, tz);
+  const lang = (p.lang === 'zh') ? 'zh' : 'en';        /* 其余 UI 语言回退英文（与 v0.24.8 现状一致）*/
+  const TXT = PUSH_TXT[lang] || PUSH_TXT.en;
+  const openedToday = p.lastDone && p.lastDone === today;
+
+  /* ① 已流失（快照后超过 7 天没动过）→ 不打扰。防卸载，也防把陈旧画像当现状用 */
+  const snapAt = Number(p.at) || Number(rec.at) || 0;
+  if (snapAt && (todayIdx - dayIdx(snapAt, tz)) > 7) return { kind: 'skip', why: 'dormant' };
+
+  /* A. 行程临近（T-1 或当天）—— 有明确 deadline 的场景任务，本方案最高价值项 */
+  if (p.arrive && p.cityId && p.city) {
+    const ai = dateIdx(p.arrive);
+    if (ai !== null) {
+      const daysToTrip = ai - todayIdx;
+      if (daysToTrip === 0 || daysToTrip === 1) {
+        /* 英文文案里绝不能出现中文城市名（'Tomorrow: 上海' 是缺陷）→ 优先用罗马化名 */
+        const cityLabel = (lang === 'zh') ? p.city : (p.cityEn || p.city);
+        const t = TXT['trip' + daysToTrip](cityLabel);
+        return { kind: 'trip', title: t[0], body: t[1],
+                 url: './index.html?go=trip&city=' + encodeURIComponent(p.cityId) + '&set=10' };
+      }
+    }
+  }
+  /* B. 连胜将断：streak ≥ 3 且今天还没开口
+     （方案原稿写「hoursSincePractice > 20」，但快照是事件驱动的、服务端拿不到精确小时数
+       —— 用「今天未开口」代替，判据更保守：宁可少推一次，也不催一个今天已练过的人）*/
+  if ((Number(p.streak) || 0) >= 3 && !openedToday) {
+    const [title, body] = TXT.streak(Number(p.streak) || 0);
+    return { kind: 'streak', title, body, url: './index.html' };
+  }
+  /* C. 到期复习：有到期句 且 今天还没开口 */
+  if ((Number(p.due) || 0) > 0 && !openedToday) {
+    const [title, body] = TXT.due(Number(p.due) || 0);
+    return { kind: 'due', title, body, url: './index.html?go=review&due=1' };
+  }
+  /* D. 其余 → SKIP（关键：宁可不推）*/
+  return { kind: 'skip', why: 'no-trigger' };
+}
+
 /* ===== v0.3.23 安全加固：公开 API 滥用防护 =====
    背景：/api/tts、/api/asr 走 CF Workers AI（按调用计费），/api/feedback POST 写 KV，
    三者此前完全公开、无鉴权、无限流。上线后被脚本/爬虫直接打会刷爆额度产生费用、污染 KV。
@@ -1041,11 +1125,38 @@ export default {
       if (!env.PUSH) return json({ error: 'no PUSH KV binding' }, 500);
       if (req.method === 'POST') {
         try {
-          const { uid, sub } = await req.json();
+          const { uid, sub, p } = await req.json();
           if (!sub || !sub.endpoint) return json({ error: 'need sub' }, 400);
           const key = 'push:' + (uid || 'anon') + ':' + djb2(sub.endpoint);
-          await env.PUSH.put(key, JSON.stringify({ uid: uid || 'anon', sub, at: Date.now() }), { expirationTtl: 180 * 86400 });
-          return json({ ok: true });
+          const rec = { uid: uid || 'anon', sub, at: Date.now() };
+          if (p && typeof p === 'object') {
+            /* v0.28.0：画像退化快照（供 cron 分段，见 decidePush）。
+               只收**白名单字段**并逐项截断 —— 绝不让客户端往 KV 里塞任意 payload。 */
+            rec.p = {
+              pur: String(p.pur || '').slice(0, 24),
+              city: String(p.city || '').slice(0, 24),
+              cityId: String(p.cityId || '').slice(0, 24),
+              cityEn: String(p.cityEn || '').slice(0, 24),
+              arrive: String(p.arrive || '').slice(0, 12),
+              days: Number(p.days) || 0,
+              streak: Number(p.streak) || 0,
+              due: Number(p.due) || 0,
+              weakTop: String(p.weakTop || '').slice(0, 32),
+              tz: Number(p.tz) || 0,
+              lang: String(p.lang || 'en').slice(0, 8),
+              lastDone: String(p.lastDone || '').slice(0, 12),
+              at: Number(p.at) || Date.now()
+            };
+          } else {
+            /* 老客户端（v0.27 及以前）只发 uid+sub：**保留**既有记录里的快照与 lastPush，
+               不把已升级的数据覆盖成空（否则新老客户端混用时会丢掉分段能力）。 */
+            try {
+              const old = await env.PUSH.get(key);
+              if (old) { const o = JSON.parse(old); if (o && o.p) rec.p = o.p; if (o && o.lastPush) rec.lastPush = o.lastPush; }
+            } catch (e) { /* 读旧值失败不阻塞订阅 */ }
+          }
+          await env.PUSH.put(key, JSON.stringify(rec), { expirationTtl: 180 * 86400 });
+          return json({ ok: true, snapshot: !!rec.p });
         } catch (e) { return json({ error: String((e && e.message) || e) }, 500); }
       }
       if (req.method === 'DELETE') {
@@ -1063,34 +1174,64 @@ export default {
       if (!wantTok || got !== wantTok) return json({ ok: false, error: 'unauthorized' }, 401);
       if (!env.PUSH) return json({ error: 'no PUSH KV binding' }, 500);
       if (!env.VAPID_PRIVATE) return json({ error: 'no VAPID_PRIVATE' }, 500);
+      /* v0.28.0 调试/验收开关：
+         ?dry=1   —— 干跑。跑完整决策树、返回每条的判定，但**不写任何 KV、不发任何日志**（验收用）
+         ?force=1 —— 忽略 lastPush 幂等（调试用）
+         ?to=<djb2> —— 只处理 key 以 `:<djb2>` 结尾的那一个订阅（真跑单发验收用）*/
+      const dry = url.searchParams.get('dry') === '1';
+      const force = url.searchParams.get('force') === '1';
+      const only = url.searchParams.get('to') || '';
       try {
-        const list = await env.PUSH.list({ prefix: 'push:', limit: 1000 });
-        let sent = 0, failed = 0;
-        const reminders = [
-          'Time for a quick Chinese practice? 2 minutes keeps your streak alive.',
-          "Your Mandarin is waiting — say one sentence today.",
-          "Don't break the chain! Open Sinoky and speak a line."
-        ];
-        for (const k of list.keys) {
+        /* 分页列举（KV list 单次上限 1000；订阅数可能超过） */
+        let cursor, keys = [];
+        do {
+          const page = await env.PUSH.list({ prefix: 'push:', limit: 1000, cursor });
+          keys = keys.concat(page.keys);
+          cursor = page.list_complete ? undefined : page.cursor;
+        } while (cursor);
+        /* 🔴 阈值保护（方案 §5.4）：订阅数 > 800 时 lastPush 不再落 KV，
+           改用「cron 单次 + 客户端侧 24h 去重」——否则 1 写/订阅/天会打爆 1000/天红线。 */
+        const writeLast = !dry && keys.length <= 800;
+        let sent = 0, failed = 0, skipped = 0, picked = 0;
+        const detail = [];
+        for (const k of keys) {
+          if (only && k.name.slice(-(only.length + 1)) !== ':' + only) continue;
+          picked++;
           try {
             const raw = await env.PUSH.get(k.name);
             if (!raw) continue;
             const rec = JSON.parse(raw);
             const sub = rec.sub;
-            if (!sub || !sub.endpoint) { await env.PUSH.delete(k.name); continue; }
-            const body = JSON.stringify({ title: 'Sinoky', body: reminders[Math.floor(Math.random()*reminders.length)], url: './index.html' });
+            if (!sub || !sub.endpoint) { if (!dry) await env.PUSH.delete(k.name); failed++; continue; }
+            const today = pushDay();
+            /* 幂等：同一天（与前端 today() 同口径的 UTC 日）已经推过 → 跳过 */
+            if (!force && rec.lastPush === today) { skipped++; detail.push({ k: k.name.slice(-6), kind: 'dup' }); continue; }
+            const d = decidePush(rec);
+            if (d.kind === 'skip') { skipped++; detail.push({ k: k.name.slice(-6), kind: 'skip', why: d.why || '' }); continue; }
+            const body = JSON.stringify({ title: d.title, body: d.body, url: d.url });
+            if (dry) { sent++; detail.push({ k: k.name.slice(-6), kind: d.kind, dry: true, title: d.title, url: d.url }); continue; }
             const auth = await vapidAuth(sub.endpoint);
             const r = await fetch(sub.endpoint, {
               method: 'POST',
               headers: { Authorization: auth, 'TTL': '86400', 'Urgency': 'normal', 'Content-Type': 'application/octet-stream' },
               body: body
             });
-            if (r.status === 201 || r.status === 200) sent++;
-            else if (r.status === 404 || r.status === 410) { await env.PUSH.delete(k.name); failed++; }
-            else failed++;
+            if (r.status === 201 || r.status === 200) {
+              sent++;
+              detail.push({ k: k.name.slice(-6), kind: d.kind, status: r.status });
+              if (writeLast) {
+                rec.lastPush = today; rec.lastKind = d.kind;
+                await env.PUSH.put(k.name, JSON.stringify(rec), { expirationTtl: 180 * 86400 });
+              }
+            } else if (r.status === 404 || r.status === 410) {
+              await env.PUSH.delete(k.name); failed++;
+              detail.push({ k: k.name.slice(-6), kind: d.kind, status: r.status, purged: true });
+            } else {
+              failed++; detail.push({ k: k.name.slice(-6), kind: d.kind, status: r.status });
+            }
           } catch (e) { failed++; }
         }
-        return json({ ok: true, sent, failed, total: list.keys.length });
+        return json({ ok: true, dry, force, picked, sent, failed, skipped, total: keys.length, writeLast, detail: detail.slice(0, 30) });
       } catch (e) { return json({ ok: false, error: String((e && e.message) || e) }, 500); }
     }
 

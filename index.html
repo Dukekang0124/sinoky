@@ -697,6 +697,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       .rp-goal .v{font-size:.9rem;margin-top:4px}
       .rp-goal .hz{font-size:1.35rem;font-weight:800;margin-top:7px;color:var(--red-text)}
       .rp-goal .pyt{font-size:.8rem;color:var(--teal);margin-top:2px}
+      /* v0.28.0 行程包（在 .sess 壳内，零新增 z-index token） */
+      .trip-row{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+      .trip-row.done{opacity:.72}
+      .trip-row .score-result{grid-column:1/-1}
+      .tr-main{min-width:0}
+      .tr-en{font-size:.86rem;color:var(--sub)}
+      .tr-hz{font-size:1.16rem;font-weight:800;margin-top:3px;line-height:1.4}
+      .tr-py{font-size:.8rem;color:var(--teal);margin-top:2px}
+      .tr-act{display:flex;gap:6px;flex:0 0 auto}
       .reader-box{background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:16px}
       .reader-box img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;background:var(--card)}
       .reader-words{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
@@ -1206,6 +1215,19 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     </div>
   </div>
 
+  <!-- v0.28.0 行程包面板（深链 ?go=trip 的落地页）。复用 .sess 壳 ⇒ 零新增 z-index token -->
+  <div class="sess" id="trip" onclick="if(event.target===this)closeTrip()">
+    <div class="sess-box">
+      <div class="sess-head">
+        <b>🧳 <span id="trip-t"></span></b>
+        <span class="sess-prog" id="trip-prog"></span>
+        <button class="btn ghost" style="padding:6px 10px" onclick="closeTrip()" aria-label="Close trip pack">✕</button>
+      </div>
+      <div class="pbar" id="trip-bar"><i style="width:0%"></i></div>
+      <div id="trip-body"></div>
+    </div>
+  </div>
+
   <section id="v-me" class="views">
     <div class="card">
       <div class="top"><h2>👤 Me</h2><span class="badge" id="me-ver">v</span></div>
@@ -1251,6 +1273,11 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <button class="btn primary" id="set-apkupdate" style="display:none;margin-top:8px">Download &amp; install app update</button>
       <div class="setrow"><span>🔔 Daily reminders</span><span class="setctl" style="text-align:right"><button class="btn ghost" id="push-toggle" onclick="togglePush()">Enable</button></span></div>
       <div class="rd-hint" id="set-pushhint">Get a daily nudge to keep your streak alive.</div>
+      <div class="setrow"><span>🧳 My trip</span><span class="setctl" style="text-align:right;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        <select id="trip-city" class="rd-input" style="padding:6px 8px;min-width:104px"></select>
+        <input type="date" id="trip-arrive" class="rd-input" style="padding:6px 8px">
+        <button class="btn ghost" onclick="saveTrip()">Save</button></span></div>
+      <div class="rd-hint" id="set-triphint">Tell Sinoky where you are going — it will pack the lines to practise before you land.</div>
     </div>
     <button class="btn ghost" onclick="go('me')">← Back</button>
   </section>
@@ -1432,7 +1459,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.27.0';
+var APP_VERSION = '0.28.0';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -3037,6 +3064,260 @@ var CITY_GUIDES = {
           flip:{ prompt:'ask about security check:',
                  hz:'安检在几号口？', py:'Ānjiǎn zài jǐ hào kǒu?', en:'Which gate is security check?' } } }
     ]
+  },
+
+  /* ---- v0.28.0：北京 / 成都（D3「行程推送没有城市内容就是空壳」）----
+     与 shanghai 完全同构：zones[] 每 zone = 3-4 句 + 1 dialog；
+     短语均为真实常用中文，拼音逐字标注（pya 用 `字:音` 对，与既有格式一致）。
+     🔴 同一条红线：zone 对象绝不带 day1 字段（isCity() 靠 day1===false 识别城市条目）。 */
+  beijing: {
+    title:'Beijing Guide · 北京攻略', city:'北京',
+    zones:[
+      { id:'bj-arrival', icon:'zone-airport', title:'1 · Airport Arrival',
+        phrases:[
+          { en:'Where do I pick up my luggage?', py:'Qǐngwèn xíngli zài nǎr qǔ?', hz:'请问行李在哪儿取？',
+            pya:'请:qǐng|问:wèn|行:xíng|李:lǐ|在:zài|哪:nǎr|取:qǔ',
+            real:[ {hz:'行李没出来。', py:'Xíngli méi chūlái.', note:"my baggage didn't come out", style:'casual'},
+                   {hz:'我在几号转盘？', py:'Wǒ zài jǐ hào zhuànpán?', note:'which carousel am I at?', style:'casual'} ] },
+          { en:'I want to go downtown.', py:'Wǒ yào qù shìqū.', hz:'我要去市区。',
+            pya:'我:wǒ|要:yào|去:qù|市:shì|区:qū',
+            real:[ {hz:'去王府井怎么走？', py:'Qù Wángfǔjǐng zěnme zǒu?', note:'how to get to Wangfujing', style:'casual'},
+                   {hz:'走高速快吗？', py:'Zǒu gāosù kuài ma?', note:'is the highway faster?', style:'casual'} ] },
+          { en:'How do I get to the Airport Express?', py:'Jīchǎng kuàiguǐ zěnme zǒu?', hz:'机场快轨怎么走？',
+            pya:'机:jī|场:chǎng|快:kuài|轨:guǐ|怎:zěn|么:me|走:zǒu',
+            real:[ {hz:'快轨在哪儿坐？', py:'Kuàiguǐ zài nǎr zuò?', note:'where do I board the express', style:'casual'},
+                   {hz:'多少分钟一趟？', py:'Duōshao fēnzhōng yí tàng?', note:'how often does it run', style:'casual'} ] },
+          { en:'About how much is a taxi?', py:'Dǎchē dàgài duōshao qián?', hz:'打车大概多少钱？',
+            pya:'打:dǎ|车:chē|大:dà|概:gài|多:duō|少:shao|钱:qián',
+            real:[ {hz:'打表走吗？', py:'Dǎbiǎo zǒu ma?', note:'will you use the meter?', style:'casual'},
+                   {hz:'能刷卡吗？', py:'Néng shuākǎ ma?', note:'can I pay by card?', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-bj-arrival', icon:'zone-airport', title:'Landing in Beijing', tag:['travel'],
+          hook:'You land at Capital Airport. A staff member offers help — answer simply.',
+          lines:[
+            {who:'them', hz:'需要帮忙吗？', py:'Xūyào bāngmáng ma?', en:'Need any help?'},
+            {who:'you',  hz:'请问机场快轨在哪儿？', py:'Qǐngwèn jīchǎng kuàiguǐ zài nǎr?', en:'Where is the Airport Express?'},
+            {who:'them', hz:'在地下一层。', py:'Zài dìxià yì céng.', en:'On the basement level.'},
+            {who:'you',  hz:'谢谢，怎么买票？', py:'Xièxie, zěnme mǎi piào?', en:'Thanks — how do I buy a ticket?'}
+          ],
+          flip:{ prompt:'you want to get to Dongzhimen — say:',
+                 hz:'我到东直门。', py:'Wǒ dào Dōngzhímén.', en:"I'm going to Dongzhimen." } } },
+
+      { id:'bj-metro', icon:'zone-metro', title:'2 · Metro & Getting Around',
+        phrases:[
+          { en:"Which line goes to Tian'anmen?", py:"Qù Tiān'ānmén zuò jǐ hào xiàn?", hz:'去天安门坐几号线？',
+            pya:'去:qù|天:tiān|安:ān|门:mén|坐:zuò|几:jǐ|号:hào|线:xiàn',
+            real:[ {hz:'1号线在哪儿？', py:'Yī hào xiàn zài nǎr?', note:'where is Line 1', style:'casual'},
+                   {hz:'换乘要走多久？', py:'Huànchéng yào zǒu duōjiǔ?', note:'how long is the transfer walk', style:'casual'} ] },
+          { en:'I want to buy a transit card.', py:'Wǒ yào mǎi yì zhāng jiāotōng kǎ.', hz:'我要买一张交通卡。',
+            pya:'我:wǒ|要:yào|买:mǎi|一:yì|张:zhāng|交:jiāo|通:tōng|卡:kǎ',
+            real:[ {hz:'这卡能退吗？', py:'Zhè kǎ néng tuì ma?', note:'can I refund this card?', style:'casual'},
+                   {hz:'怎么充值？', py:'Zěnme chōngzhí?', note:'how do I top it up', style:'casual'} ] },
+          { en:'Where do I transfer?', py:'Zài nǎ zhàn huànchéng?', hz:'在哪站换乘？',
+            pya:'在:zài|哪:nǎ|站:zhàn|换:huàn|乘:chéng',
+            real:[ {hz:'同站换乘吗？', py:'Tóng zhàn huànchéng ma?', note:'same-station transfer?', style:'casual'},
+                   {hz:'要走很远吗？', py:'Yào zǒu hěn yuǎn ma?', note:'is it a long walk', style:'casual'} ] },
+          { en:'How many more stops?', py:'Hái yào zuò jǐ zhàn?', hz:'还要坐几站？',
+            pya:'还:hái|要:yào|坐:zuò|几:jǐ|站:zhàn',
+            real:[ {hz:'到站叫我一声。', py:'Dào zhàn jiào wǒ yì shēng.', note:'let me know when to get off', style:'casual'},
+                   {hz:'下一站是哪儿？', py:'Xià yí zhàn shì nǎr?', note:"what's the next stop", style:'casual'} ] }
+        ],
+        dialog:{ id:'g-bj-metro', icon:'zone-metro', title:'Taking the subway', tag:['travel'],
+          hook:"You're at a subway station. Ask a staff member how to reach Tian'anmen.",
+          lines:[
+            {who:'them', hz:'去哪儿？', py:'Qù nǎr?', en:'Where to?'},
+            {who:'you',  hz:'我去天安门。', py:'Wǒ qù Tiān’ānmén.', en:"I'm going to Tian'anmen."},
+            {who:'them', hz:'坐1号线，两站就到。', py:'Zuò yī hào xiàn, liǎng zhàn jiù dào.', en:'Line 1 — two stops.'},
+            {who:'you',  hz:'好的，谢谢！', py:'Hǎo de, xièxie!', en:'OK, thanks!'}
+          ],
+          flip:{ prompt:'you need the right exit — ask:',
+                 hz:'哪个出口出去？', py:'Nǎge chūkǒu chūqù?', en:'Which exit should I take?' } } },
+
+      { id:'bj-food', icon:'zone-food', title:'3 · Beijing Food',
+        phrases:[
+          { en:'One roast duck, please.', py:'Lái yì zhī kǎoyā.', hz:'来一只烤鸭。',
+            pya:'来:lái|一:yì|只:zhī|烤:kǎo|鸭:yā',
+            real:[ {hz:'鸭子要片好的。', py:'Yāzi yào piàn hǎo de.', note:'please slice the duck', style:'casual'},
+                   {hz:'要半只。', py:'Yào bàn zhī.', note:'half a duck', style:'casual'} ] },
+          { en:'Any other recommendations?', py:'Yǒu bié de tuījiàn ma?', hz:'有别的推荐吗？',
+            pya:'有:yǒu|别:bié|的:de|推:tuī|荐:jiàn|吗:ma',
+            real:[ {hz:'招牌菜是哪个？', py:'Zhāopái cài shì nǎge?', note:"which is the signature dish", style:'casual'},
+                   {hz:'有什么小吃？', py:'Yǒu shénme xiǎochī?', note:'what snacks do you have', style:'casual'} ] },
+          { en:'No cilantro, please.', py:'Wǒ bú yào xiāngcài.', hz:'我不要香菜。',
+            pya:'我:wǒ|不:bú|要:yào|香:xiāng|菜:cài',
+            real:[ {hz:'不要葱。', py:'Bú yào cōng.', note:'no scallions', style:'casual'},
+                   {hz:'少放盐。', py:'Shǎo fàng yán.', note:'less salt', style:'casual'} ] },
+          { en:'The bill, please.', py:'Mǎidān, xièxie.', hz:'买单，谢谢。',
+            pya:'买:mǎi|单:dān|谢:xiè|谢:xie',
+            real:[ {hz:'能刷卡吗？', py:'Néng shuākǎ ma?', note:'can I pay by card', style:'casual'},
+                   {hz:'能开发票吗？', py:'Néng kāi fāpiào ma?', note:'can I get a receipt', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-bj-food', icon:'zone-food', title:'Roast duck restaurant', tag:['travel'],
+          hook:"You're at a roast-duck place. The waiter takes your order.",
+          lines:[
+            {who:'them', hz:'几位？', py:'Jǐ wèi?', en:'How many people?'},
+            {who:'you',  hz:'两位。', py:'Liǎng wèi.', en:'Two.'},
+            {who:'them', hz:'要烤鸭吗？', py:'Yào kǎoyā ma?', en:'Would you like roast duck?'},
+            {who:'you',  hz:'要一只，谢谢。', py:'Yào yì zhī, xièxie.', en:'One, please.'}
+          ],
+          flip:{ prompt:"you can't finish it — ask to pack it:",
+                 hz:'剩下的打包。', py:'Shèngxià de dǎbāo.', en:'Please box up the rest.' } } },
+
+      { id:'bj-sight', icon:'zone-ticket', title:'4 · Sights & Tickets',
+        phrases:[
+          { en:'How much is the ticket?', py:'Ménpiào duōshao qián?', hz:'门票多少钱？',
+            pya:'门:mén|票:piào|多:duō|少:shao|钱:qián',
+            real:[ {hz:'有学生票吗？', py:'Yǒu xuéshēng piào ma?', note:'student tickets?', style:'casual'},
+                   {hz:'老人免费吗？', py:'Lǎorén miǎnfèi ma?', note:'free for seniors?', style:'casual'} ] },
+          { en:'Do I need to book ahead?', py:'Xūyào tíqián yùyuē ma?', hz:'需要提前预约吗？',
+            pya:'需:xū|要:yào|提:tí|前:qián|预:yù|约:yuē|吗:ma',
+            real:[ {hz:'当天能进吗？', py:'Dāngtiān néng jìn ma?', note:'can I get in today', style:'casual'},
+                   {hz:'怎么预约？', py:'Zěnme yùyuē?', note:'how do I book', style:'casual'} ] },
+          { en:'What time does it open?', py:'Jǐ diǎn kāimén?', hz:'几点开门？',
+            pya:'几:jǐ|点:diǎn|开:kāi|门:mén',
+            real:[ {hz:'几点停止入场？', py:'Jǐ diǎn tíngzhǐ rùchǎng?', note:'last entry time', style:'casual'},
+                   {hz:'周一开吗？', py:'Zhōuyī kāi ma?', note:'open on Monday?', style:'casual'} ] },
+          { en:'Where is the entrance?', py:'Rùkǒu zài nǎr?', hz:'入口在哪儿？',
+            pya:'入:rù|口:kǒu|在:zài|哪:nǎr',
+            real:[ {hz:'排队在哪边？', py:'Páiduì zài nǎ biān?', note:'which side is the queue', style:'casual'},
+                   {hz:'从哪儿进去？', py:'Cóng nǎr jìnqù?', note:'where do I go in', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-bj-sight', icon:'zone-ticket', title:'At a ticket window', tag:['travel'],
+          hook:"You're at the ticket window of a palace museum. Buy one ticket.",
+          lines:[
+            {who:'them', hz:'门票60，几张？', py:'Ménpiào liùshí, jǐ zhāng?', en:'Tickets are 60 — how many?'},
+            {who:'you',  hz:'一张，谢谢。', py:'Yì zhāng, xièxie.', en:'One, thanks.'},
+            {who:'them', hz:'用护照可以。', py:'Yòng hùzhào kěyǐ.', en:'A passport works.'},
+            {who:'you',  hz:'好的，给你。', py:'Hǎo de, gěi nǐ.', en:'OK, here you go.'}
+          ],
+          flip:{ prompt:'you want an audio guide — ask:',
+                 hz:'有讲解器吗？', py:'Yǒu jiǎngjiě qì ma?', en:'Do you have audio guides?' } } }
+    ]
+  },
+
+  chengdu: {
+    title:'Chengdu Guide · 成都攻略', city:'成都',
+    zones:[
+      { id:'cd-arrival', icon:'zone-airport', title:'1 · Airport Arrival',
+        phrases:[
+          { en:"I'm going to Chunxi Road.", py:'Wǒ yào qù Chūnxīlù.', hz:'我要去春熙路。',
+            pya:'我:wǒ|要:yào|去:qù|春:chūn|熙:xī|路:lù',
+            real:[ {hz:'到市区要多久？', py:'Dào shìqū yào duōjiǔ?', note:'how long to downtown', style:'casual'},
+                   {hz:'走哪条路快？', py:'Zǒu nǎ tiáo lù kuài?', note:'which road is faster', style:'casual'} ] },
+          { en:'Is there a direct metro line?', py:'Yǒu zhídá de dìtiě ma?', hz:'有直达的地铁吗？',
+            pya:'有:yǒu|直:zhí|达:dá|的:de|地:dì|铁:tiě|吗:ma',
+            real:[ {hz:'要换乘吗？', py:'Yào huànchéng ma?', note:'do I need to transfer', style:'casual'},
+                   {hz:'地铁站在哪儿？', py:'Dìtiě zhàn zài nǎr?', note:'where is the metro station', style:'casual'} ] },
+          { en:'How long does a taxi take?', py:'Dǎchē yào duōjiǔ?', hz:'打车要多久？',
+            pya:'打:dǎ|车:chē|要:yào|多:duō|久:jiǔ',
+            real:[ {hz:'大概多少钱？', py:'Dàgài duōshao qián?', note:'about how much', style:'casual'},
+                   {hz:'排队的人多吗？', py:'Páiduì de rén duō ma?', note:'long queue?', style:'casual'} ] },
+          { en:'How do I get to this address?', py:'Zhège dìzhǐ zěnme zǒu?', hz:'这个地址怎么走？',
+            pya:'这:zhè|个:ge|地:dì|址:zhǐ|怎:zěn|么:me|走:zǒu',
+            real:[ {hz:'请写下来。', py:'Qǐng xiě xiàlái.', note:'please write it down', style:'casual'},
+                   {hz:'离这儿远吗？', py:'Lí zhèr yuǎn ma?', note:'is it far from here', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-cd-arrival', icon:'zone-airport', title:'From the airport', tag:['travel'],
+          hook:"You land in Chengdu. Tell the driver where you're going.",
+          lines:[
+            {who:'them', hz:'去哪儿？', py:'Qù nǎr?', en:'Where to?'},
+            {who:'you',  hz:'我去春熙路。', py:'Wǒ qù Chūnxīlù.', en:"I'm going to Chunxi Road."},
+            {who:'them', hz:'走高速，四十分钟。', py:'Zǒu gāosù, sìshí fēnzhōng.', en:'Highway — forty minutes.'},
+            {who:'you',  hz:'好的，谢谢。', py:'Hǎo de, xièxie.', en:'OK, thanks.'}
+          ],
+          flip:{ prompt:'you need a receipt — say:',
+                 hz:'请给我一张发票。', py:'Qǐng gěi wǒ yì zhāng fāpiào.', en:'Please give me a receipt.' } } },
+
+      { id:'cd-food', icon:'zone-food', title:'2 · Hotpot & Skewers',
+        phrases:[
+          { en:'A split hotpot, please.', py:'Lái yí ge yuānyāng guō.', hz:'来一个鸳鸯锅。',
+            pya:'来:lái|一:yí|个:ge|鸳:yuān|鸯:yāng|锅:guō',
+            real:[ {hz:'要清汤的。', py:'Yào qīngtāng de.', note:'clear broth, please', style:'casual'},
+                   {hz:'锅底多少钱？', py:'Guōdǐ duōshao qián?', note:'how much is the base', style:'casual'} ] },
+          { en:'Mild spicy is fine.', py:'Wēilà jiù xíng.', hz:'微辣就行。',
+            pya:'微:wēi|辣:là|就:jiù|行:xíng',
+            real:[ {hz:'不要麻。', py:'Bú yào má.', note:'not numbing', style:'casual'},
+                   {hz:'多放辣椒。', py:'Duō fàng làjiāo.', note:'extra chilli', style:'casual'} ] },
+          { en:'One beef skewer, please.', py:'Wǒ yào yí chuàn niúròu.', hz:'我要一串牛肉。',
+            pya:'我:wǒ|要:yào|一:yí|串:chuàn|牛:niú|肉:ròu',
+            real:[ {hz:'再来十串。', py:'Zài lái shí chuàn.', note:'ten more skewers', style:'casual'},
+                   {hz:'这个多少钱一串？', py:'Zhège duōshao qián yí chuàn?', note:'how much per skewer', style:'casual'} ] },
+          { en:'Add one order of tripe.', py:'Jiā yí fèn máodǔ.', hz:'加一份毛肚。',
+            pya:'加:jiā|一:yí|份:fèn|毛:máo|肚:dǔ',
+            real:[ {hz:'再来一份土豆。', py:'Zài lái yí fèn tǔdòu.', note:'one more potato', style:'casual'},
+                   {hz:'菜够了。', py:'Cài gòu le.', note:"that's enough food", style:'casual'} ] }
+        ],
+        dialog:{ id:'g-cd-food', icon:'zone-food', title:'Ordering hotpot', tag:['travel'],
+          hook:"You're at a hotpot place. The waiter asks how spicy you want it.",
+          lines:[
+            {who:'them', hz:'几位？辣不辣？', py:'Jǐ wèi? Là bú là?', en:'How many? Spicy or not?'},
+            {who:'you',  hz:'两位，微辣。', py:'Liǎng wèi, wēilà.', en:'Two, mild spicy.'},
+            {who:'them', hz:'要鸳鸯锅吗？', py:'Yào yuānyāng guō ma?', en:'A split pot?'},
+            {who:'you',  hz:'要，谢谢。', py:'Yào, xièxie.', en:'Yes, please.'}
+          ],
+          flip:{ prompt:'you want more food — say:',
+                 hz:'再加一份毛肚。', py:'Zài jiā yí fèn máodǔ.', en:'One more order of tripe.' } } },
+
+      { id:'cd-panda', icon:'zone-ticket', title:'3 · Panda Base',
+        phrases:[
+          { en:'How do I get to the Panda Base?', py:'Xióngmāo jīdì zěnme qù?', hz:'熊猫基地怎么去？',
+            pya:'熊:xióng|猫:māo|基:jī|地:dì|怎:zěn|么:me|去:qù',
+            real:[ {hz:'有直达车吗？', py:'Yǒu zhídá chē ma?', note:'is there a direct bus', style:'casual'},
+                   {hz:'打车多少钱？', py:'Dǎchē duōshao qián?', note:'how much by taxi', style:'casual'} ] },
+          { en:'When can I see the pandas?', py:'Jǐ diǎn néng kàndào xióngmāo?', hz:'几点能看到熊猫？',
+            pya:'几:jǐ|点:diǎn|能:néng|看:kàn|到:dào|熊:xióng|猫:māo',
+            real:[ {hz:'早上几点最好？', py:'Zǎoshang jǐ diǎn zuì hǎo?', note:'best time in the morning', style:'casual'},
+                   {hz:'熊猫几点吃饭？', py:'Xióngmāo jǐ diǎn chīfàn?', note:'when do they feed', style:'casual'} ] },
+          { en:'Is there a shuttle bus?', py:'Yǒu guānguāng chē ma?', hz:'有观光车吗？',
+            pya:'有:yǒu|观:guān|光:guāng|车:chē|吗:ma',
+            real:[ {hz:'车票多少钱？', py:'Chēpiào duōshao qián?', note:'how much is the ride', style:'casual'},
+                   {hz:'在哪儿上车？', py:'Zài nǎr shàngchē?', note:'where do I board', style:'casual'} ] },
+          { en:'Can I take photos here?', py:'Zhèlǐ néng pāizhào ma?', hz:'这里能拍照吗？',
+            pya:'这:zhè|里:lǐ|能:néng|拍:pāi|照:zhào|吗:ma',
+            real:[ {hz:'能开闪光灯吗？', py:'Néng kāi shǎnguāngdēng ma?', note:'can I use flash', style:'casual'},
+                   {hz:'帮我拍一张。', py:'Bāng wǒ pāi yì zhāng.', note:'take one for me', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-cd-panda', icon:'zone-ticket', title:'Getting to the pandas', tag:['travel'],
+          hook:"You're asking how to reach the Panda Base.",
+          lines:[
+            {who:'you',  hz:'请问，熊猫基地怎么去？', py:'Qǐngwèn, xióngmāo jīdì zěnme qù?', en:'Excuse me, how do I get to the Panda Base?'},
+            {who:'them', hz:'坐地铁3号线，再转公交。', py:'Zuò dìtiě sān hào xiàn, zài zhuǎn gōngjiāo.', en:'Line 3, then transfer to a bus.'},
+            {who:'you',  hz:'大概要多久？', py:'Dàgài yào duōjiǔ?', en:'About how long?'},
+            {who:'them', hz:'一个多小时。', py:'Yí ge duō xiǎoshí.', en:'A bit over an hour.'}
+          ],
+          flip:{ prompt:'you want tickets — ask:',
+                 hz:'门票在哪儿买？', py:'Ménpiào zài nǎr mǎi?', en:'Where do I buy tickets?' } } },
+
+      { id:'cd-help', icon:'zone-emergency', title:'4 · Directions & Help',
+        phrases:[
+          { en:'Excuse me, how do I get to Kuanzhai Alley?', py:'Qǐngwèn, Kuānzhǎi Xiàngzi zěnme zǒu?', hz:'请问，宽窄巷子怎么走？',
+            pya:'请:qǐng|问:wèn|宽:kuān|窄:zhǎi|巷:xiàng|子:zi|怎:zěn|么:me|走:zǒu',
+            real:[ {hz:'走过去要多久？', py:'Zǒu guòqù yào duōjiǔ?', note:'how long on foot', style:'casual'},
+                   {hz:'坐几路公交？', py:'Zuò jǐ lù gōngjiāo?', note:'which bus number', style:'casual'} ] },
+          { en:"I'm lost.", py:'Wǒ mílù le.', hz:'我迷路了。',
+            pya:'我:wǒ|迷:mí|路:lù|了:le',
+            real:[ {hz:'手机没电了。', py:'Shǒujī méi diàn le.', note:'my phone is dead', style:'casual'},
+                   {hz:'这是什么路？', py:'Zhè shì shénme lù?', note:'which street is this', style:'casual'} ] },
+          { en:'Could you help me?', py:'Néng bāng wǒ yíxià ma?', hz:'能帮我一下吗？',
+            pya:'能:néng|帮:bāng|我:wǒ|一:yí|下:xià|吗:ma',
+            real:[ {hz:'麻烦你了。', py:'Máfan nǐ le.', note:'sorry to trouble you', style:'casual'},
+                   {hz:'我不会说中文。', py:'Wǒ bú huì shuō Zhōngwén.', note:"I don't speak Chinese", style:'casual'} ] },
+          { en:'Is there a pharmacy nearby?', py:'Fùjìn yǒu yàodiàn ma?', hz:'附近有药店吗？',
+            pya:'附:fù|近:jìn|有:yǒu|药:yào|店:diàn|吗:ma',
+            real:[ {hz:'我要去医院。', py:'Wǒ yào qù yīyuàn.', note:'I need a hospital', style:'casual'},
+                   {hz:'感冒药有吗？', py:'Gǎnmào yào yǒu ma?', note:'cold medicine?', style:'casual'} ] }
+        ],
+        dialog:{ id:'g-cd-help', icon:'zone-emergency', title:'Asking for directions', tag:['travel'],
+          hook:"You're near Kuanzhai Alley and want to find a teahouse.",
+          lines:[
+            {who:'you',  hz:'请问，宽窄巷子怎么走？', py:'Qǐngwèn, Kuānzhǎi Xiàngzi zěnme zǒu?', en:'Excuse me, how do I get to Kuanzhai Alley?'},
+            {who:'them', hz:'前面右转，走十分钟。', py:'Qiánmiàn yòu zhuǎn, zǒu shí fēnzhōng.', en:'Turn right ahead, ten minutes on foot.'},
+            {who:'you',  hz:'谢谢！附近有茶馆吗？', py:'Xièxie! Fùjìn yǒu cháguǎn ma?', en:'Thanks! Is there a teahouse nearby?'},
+            {who:'them', hz:'有，就在巷子里。', py:'Yǒu, jiù zài xiàngzi lǐ.', en:'Yes, right in the alley.'}
+          ],
+          flip:{ prompt:'you want a photo together — ask:',
+                 hz:'能帮我们拍张照吗？', py:'Néng bāng wǒmen pāi zhāng zhào ma?', en:'Could you take a photo of us?' } } }
+    ]
   }
 };
 
@@ -4282,6 +4563,177 @@ var RP = (function(){
            isOver:isOver, close:close, get:function(){ return cur; } };
 })();
 
+/* ===== v0.28.0 · M5 Proactive Engine（PRO.）=============================
+   把 v0.24.8 的「广播式推送」改造成「分段决策树 + 行程驱动 + 深链」。
+   方案 §六 的核心一句：**D 其余 → 跳过**。没有分段能力时广播是「有总比没有好」；
+   有了分段能力之后它必须变成「不该推的人不推」——否则卸载率会抵消 D1 留存收益。
+
+   四件事：
+     ① decide()       分段决策树（与 _worker.js 的 /api/push-send **同判据同顺序**，
+                      避免「本地说要推、服务端不推」的双端漂移）
+     ② tripPack()     行程包：「你明天去上海」→「今天练这 10 句」（本方案最高价值项）
+     ③ boot()         深链 ?go=trip|roleplay|review（一次性消费，replaceState 清 query）
+     ④ syncSnapshot() 订阅时把画像退化快照写进 PUSH KV（**事件驱动**，不做每日刷新）
+
+   配额纪律（硬红线 KV 写 1000/天）：
+     · 快照只在「订阅 / goal 变更 / trip 变更」时刷新 → 低频事件驱动
+     · cron 侧的 lastPush 幂等见 _worker.js（1 写/订阅/天）
+     · 本地决策树 / 行程包 / 深链全部纯前端 ⇒ **新增 KV 写 = 0**
+   ======================================================================== */
+var PRO = (function(){
+  var _pending = null;   /* 深链计划（未 onboard 时暂存，走完向导再执行）*/
+
+  /* ---- 城市名 ↔ CITY_GUIDES 键（双向，从数据现场构建，不硬编码城市清单）---- */
+  function cityIdOf(name){
+    if(!name) return '';
+    if(CITY_GUIDES[name]) return name;              /* 传进来已是键 */
+    for(var id in CITY_GUIDES){
+      if(CITY_GUIDES[id] && CITY_GUIDES[id].city === name) return id;
+    }
+    return '';
+  }
+  function cityNameOf(id){ var g = CITY_GUIDES[id]; return (g && g.city) || ''; }
+
+  /* ---- 最近一次开口距今小时数 ----
+     首选 S.lm.buf 的事件时间戳（精确到分钟）；老用户无 buf 时退回 lastDone 日期。*/
+  function hoursSince(){
+    var buf = (LM.get().buf) || [], t = 0;
+    for(var i=0;i<buf.length;i++){ if(buf[i] && buf[i].t > t) t = buf[i].t; }
+    if(t) return (Date.now() - t) / 3600000;
+    if(!S.lastDone) return null;
+    var d0 = Date.parse(S.lastDone + 'T00:00:00');
+    if(isNaN(d0)) return null;
+    return (Date.now() - d0) / 3600000;
+  }
+
+  /* ---- 分段决策树（方案 §6.2）------------------------------------------
+     返回 { kind:'trip'|'streak'|'due'|'skip', ... }；kind==='skip' = 不该打扰。
+     判据顺序 A→B→C→D 与 worker 完全一致（A 最高价值，优先命中）。 */
+  function decide(){
+    var m = LM.get();
+    /* A. 行程临近：有明确 deadline 的场景任务（唯一的「事件触发」类）*/
+    var dt = null; try{ dt = LM.daysToTrip(); }catch(e){}
+    var tripCity = (m.trip && m.trip.city) || '';
+    if(dt !== null && dt >= 0 && dt <= 1 && tripCity && cityIdOf(tripCity)){
+      return { kind:'trip', city:tripCity, cityId:cityIdOf(tripCity), daysToTrip:dt, set:10 };
+    }
+    /* B. 连胜将断：streak ≥ 3 且 20 小时没开口（防「连胜断了就弃用」）*/
+    var h = hoursSince();
+    if((S.streak||0) >= 3 && h !== null && h > 20){
+      return { kind:'streak', streak:S.streak, hours:Math.round(h) };
+    }
+    /* C. 到期复习：有到期句 且 今天还没开口 */
+    var due = 0; try{ due = LM.dueCount() || 0; }catch(e){}
+    if(due > 0 && S.lastDone !== today()) return { kind:'due', due:due };
+    /* D. 其余 → 不推（也没必要在首页占位）*/
+    return { kind:'skip' };
+  }
+
+  /* ---- 行程包：「你明天去 X」→「今天练这 N 句」--------------------------
+     **零新增教学内容**：全部从既有 CITY_GUIDES 的 zones[].phrases 取。
+     取法是**跨 zone 轮转**（zone0 第1句 → zone1 第1句 → … 再回 zone0 第2句），
+     让 N 句尽量覆盖多场景；否则会把第一个 zone 抽干，练完只会「机场那点事」。 */
+  function tripPack(cityId, n){
+    var g = CITY_GUIDES[cityId];
+    if(!g || !g.zones || !g.zones.length) return [];
+    var want = Math.max(1, Math.min(30, n || 10)), out = [], round = 0;
+    while(out.length < want && round < 20){
+      var added = 0;
+      for(var z=0; z<g.zones.length && out.length < want; z++){
+        var p = g.zones[z].phrases[round];
+        if(!p) continue;
+        out.push({ zoneId:g.zones[z].id, zoneTitle:g.zones[z].title, idx:round,
+                   hz:p.hz, py:p.py, en:p.en, pya:p.pya });
+        added++;
+      }
+      if(!added) break;
+      round++;
+    }
+    return out;
+  }
+  function packFor(nameOrId, n){ return tripPack(cityIdOf(nameOrId), n); }
+
+  /* ---- 深链路由（方案 §6.3）--------------------------------------------
+     推送的落地页必须直达练习，否则点击后的路径损耗会把 CTR 吃掉。
+       ./index.html?go=trip&city=shanghai&set=10  → 上海·10 句行程包
+       ./index.html?go=roleplay&task=order-food   → 直达「点餐」扮演
+       ./index.html?go=review&due=1               → 直达到期复习
+     一次性消费语义：读完立刻 replaceState 清掉 query —— 否则用户刷新会重复跳转。 */
+  var ROUTES = ['trip','roleplay','review'];
+  function boot(){
+    var q, g;
+    try{ q = new URLSearchParams(location.search || ''); }catch(e){ return false; }
+    g = q.get('go');
+    if(!g || ROUTES.indexOf(g) < 0) return false;
+    var plan = { go:g, city:q.get('city') || '', set:parseInt(q.get('set'),10) || 10, task:q.get('task') || '' };
+    try{ history.replaceState(null, '', location.pathname + (location.hash || '')); }catch(e){}
+    if(!S.onboarded){ _pending = plan; return true; }        /* 新手先走向导，走完再执行 */
+    setTimeout(function(){ exec(plan); }, 900);               /* 让开屏先渲染完 */
+    return true;
+  }
+  function exec(p){
+    try{
+      if(p.go === 'trip'){
+        var cid = cityIdOf(p.city) || cityIdOf((LM.get().trip && LM.get().trip.city) || '');
+        if(cid && typeof openTrip === 'function') openTrip(cid, p.set);
+      } else if(p.go === 'roleplay'){
+        if(typeof rpStart === 'function') rpStart(p.task || 'order-food');
+      } else if(p.go === 'review'){
+        if(typeof go === 'function') go('review');
+      }
+    }catch(e){ /* 深链绝不能把首屏带崩 */ }
+  }
+  function flush(){
+    if(!_pending) return;
+    var p = _pending; _pending = null;
+    setTimeout(function(){ exec(p); }, 700);
+  }
+
+  /* ---- 画像快照上云（供 cron 分段；事件驱动，不做每日刷新）--------------
+     §5.4 的关键设计：cron **不能**去读 PROFILES 的 p:{uid}（N 次大 payload 读），
+     所以订阅时把退化快照随订阅一并写进 PUSH KV。
+     🔴 相对方案原稿的一处改进：存 `arrive` **原始日期**而不是 `daysToTrip` 差值——
+     快照是事件驱动刷新的，存差值会随天数自然过期，导致 T-1 行程推送漏发；
+     存日期让服务端按用户时区现算，永不过期（这也是 §5.5 选项 B 的落地）。*/
+  function snapshotPlus(){
+    var s = {}, m = LM.get();
+    try{ s = LM.snapshot() || {}; }catch(e){}
+    s.arrive = (m.trip && m.trip.arrive) || m.goal.arrive || '';
+    s.days = m.goal.days || 0;
+    s.cityId = cityIdOf(s.city);        /* cron 侧要靠它拼深链 ?go=trip&city=<id> */
+    /* v0.28.0：英文推送文案里不能出现中文城市名 —— 从 CITY_GUIDES 的 title
+       （'Shanghai Guide · 上海攻略'）现场取罗马化名，不另建一份城市表。 */
+    var g = CITY_GUIDES[s.cityId];
+    s.cityEn = g ? String(g.title || '').split('·')[0].replace(/\bGuide\b/, '').trim() : '';
+    s.lang = S.lang || 'en';            /* 推送文案语言（en/zh，其余回退 en）*/
+    s.at = Date.now();
+    s.lastDone = S.lastDone || '';
+    return s;
+  }
+  function syncSnapshot(){
+    try{
+      if(!S.pushEnabled || !('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.ready.then(function(reg){
+        if(!reg.pushManager) return;
+        return reg.pushManager.getSubscription().then(function(sub){
+          if(!sub) return;
+          return fetch(API_BASE + 'api/push-sub', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ uid: UID, sub: sub.toJSON(), p: snapshotPlus() })
+          }).catch(function(){});
+        });
+      }).catch(function(){});
+    }catch(e){ /* 刷新快照失败不影响任何主流程 */ }
+  }
+  /* 事件驱动的两处挂点：目标/行程变更后刷新一次（低频，不产生每日固定写）*/
+  function onGoalChanged(){ try{ syncSnapshot(); }catch(e){} }
+
+  return { decide:decide, tripPack:tripPack, packFor:packFor, cityIdOf:cityIdOf, cityNameOf:cityNameOf,
+           hoursSince:hoursSince, boot:boot, flush:flush, exec:exec,
+           syncSnapshot:syncSnapshot, snapshotPlus:snapshotPlus, onGoalChanged:onGoalChanged,
+           pending:function(){ return _pending; } };
+})();
+
 /* v0.3.39 写入节流：用户切后台/关页时防抖可能还没触发，强制 flush 一次，
    避免最后几分钟进度/统计丢失（KV 配额够，多这 1 次 flush 无关紧要）。 */
 function flushProfileNow(force){
@@ -5449,6 +5901,7 @@ function renderSettings(){
   try{
     var v=$('set-ver'); if(v) v.textContent = 'v'+APP_VERSION;
     renderLangList();
+    renderTripSetting();          /* v0.28.0：行程录入（城市 + 到达日） */
     applyI18n(document.body);
   }catch(e){}
 }
@@ -7055,6 +7508,208 @@ function rpCardHtml(){
   return h;
 }
 
+/* ===== v0.28.0 · M5 主动引擎 UI 层 =====================================
+   proCardHtml() 把 PRO.decide() 的结果变成首页可见入口；kind==='skip' 时**整卡不渲染**
+   —— 与推送同一条纪律（不该打扰的人，连首页也不占位）。
+   tripPackPanel 是「你明天去上海 → 今天练这 10 句」的落地页：
+   行程包里的句子**全部来自既有 CITY_GUIDES**，评分走 LM.ingestScore（同链原则，
+   与 reader / 会话 / 角色扮演共用一条回流，禁分叉）。 */
+
+function proCardHtml(){
+  var d;
+  try{ d = PRO.decide(); }catch(e){ return ''; }
+  if(!d || d.kind === 'skip') return '';
+  if(d.kind === 'trip'){
+    var nm = PRO.cityNameOf(d.cityId) || d.city;
+    var pack = PRO.tripPack(d.cityId, d.set);
+    if(!pack.length) return '';
+    var when = (d.daysToTrip <= 0) ? T('today') : T('tomorrow');
+    return '<div class="card" style="border-color:rgba(63,185,80,.4)">'+
+      '<div class="top"><h2>🧳 '+T('Trip pack')+'</h2><span class="badge teal">'+esc(when)+'</span></div>'+
+      '<p class="desc">'+T('You go to {city} {when} — practise these {n} lines today.')
+        .replace('{city}',esc(nm)).replace('{when}',esc(when)).replace('{n}',pack.length)+'</p>'+
+      '<button class="btn primary" style="margin-top:8px" onclick="openTrip(\''+d.cityId+'\','+d.set+')">▶ '+
+        T('Start the {n}-line pack').replace('{n}',pack.length)+'</button></div>';
+  }
+  if(d.kind === 'streak'){
+    return '<div class="card">'+
+      '<div class="top"><h2>🔥 '+T('Keep the streak alive')+'</h2><span class="badge">'+d.streak+'</span></div>'+
+      '<p class="desc">'+T('Your {n}-day streak has not moved today — 2 minutes saves it.').replace('{n}',d.streak)+'</p>'+
+      '<button class="btn primary" style="margin-top:8px" onclick="SESSION.start()">▶ '+T('2-minute session')+'</button></div>';
+  }
+  if(d.kind === 'due'){
+    return '<div class="card">'+
+      '<div class="top"><h2>🔁 '+T('Review is due')+'</h2><span class="badge">'+d.due+'</span></div>'+
+      '<p class="desc">'+T('{n} lines have come round for review.').replace('{n}',d.due)+'</p>'+
+      '<button class="btn primary" style="margin-top:8px" onclick="go(\'review\')">▶ '+T('Review now')+'</button></div>';
+  }
+  return '';
+}
+
+/* ---------- 行程包面板（深链 ?go=trip 的落地页）---------- */
+var tripCity = '', tripItems = [], tripDone = {}, tripRec = null;
+function openTrip(cityId, n){
+  var cid = PRO.cityIdOf(cityId) || cityId;
+  var g = CITY_GUIDES[cid];
+  if(!g){ try{ toast(T('No pack for that city yet.')); }catch(e){} return false; }
+  var items = PRO.tripPack(cid, n || 10);
+  if(!items.length){ try{ toast(T('That pack has no lines yet.')); }catch(e){} return false; }
+  tripCity = cid; tripItems = items; tripDone = {};
+  var ov = $('trip'); if(ov) ov.classList.add('on');
+  renderTrip();
+  return true;
+}
+function closeTrip(){
+  var ov = $('trip'); if(ov) ov.classList.remove('on');
+  try{ if(typeof stopRecording === 'function') stopRecording(); }catch(e){}
+  tripItems = []; tripDone = {}; tripCity = '';
+}
+function tripSaidN(){ var n = 0; for(var k in tripDone){ if(tripDone[k]) n++; } return n; }
+function renderTrip(){
+  var ov = $('trip'); if(!ov || !tripItems.length) return;
+  var g = CITY_GUIDES[tripCity] || {};
+  var t = $('trip-t'); if(t) t.textContent = T('Trip pack')+' · '+(g.city || '');
+  var n = tripSaidN();
+  var pr = $('trip-prog'); if(pr) pr.textContent = n+' / '+tripItems.length;
+  var bar = $('trip-bar'); if(bar && bar.firstChild) bar.firstChild.style.width = Math.round(100*n/Math.max(1,tripItems.length))+'%';
+  var body = $('trip-body'); if(!body) return;
+  var h = '<p class="desc" style="margin:2px 0 10px">'+T('Say each line out loud. Tap ✓ once you have said it.')+'</p>';
+  tripItems.forEach(function(it, i){
+    var done = !!tripDone[i];
+    h += '<div class="trip-row'+(done?' done':'')+'">'+
+      '<div class="tr-main"><div class="tr-en">'+escHtml(it.en)+'</div>'+
+        '<div class="tr-hz">'+it.hz+'</div><div class="tr-py">'+toneColorPy(it.py)+'</div></div>'+
+      '<div class="tr-act">'+
+        '<button class="btn ghost" style="padding:6px 10px" onclick="speak(\''+it.hz.replace(/'/g,'')+'\',this)" aria-label="'+T('Listen')+'">🔊</button>'+
+        '<button class="btn record" style="padding:6px 10px" id="tp-btn-'+i+'" onclick="tripScore('+i+')" aria-label="'+T('Score')+'">🎤</button>'+
+        '<button class="btn '+(done?'ghost':'')+'" style="padding:6px 10px" onclick="tripMark('+i+')">'+(done?'✓':'○')+'</button>'+
+      '</div><div class="score-result" id="tp-score-'+i+'"></div></div>';
+  });
+  h += '<div style="display:flex;gap:9px;margin-top:14px">'+
+    '<button class="btn ghost" style="flex:1" onclick="openCityGuide(\''+tripCity+'\');closeTrip()">'+T('Full city guide')+'</button>'+
+    '<button class="btn primary" style="flex:1" onclick="closeTrip()">'+T('Done for today')+'</button></div>';
+  body.innerHTML = h;
+}
+function tripMark(i){
+  if(!tripItems[i]) return;
+  tripDone[i] = !tripDone[i];
+  if(tripDone[i] && tripSaidN() === tripItems.length){
+    try{
+      if(LM.milestone('trip:'+tripCity, { n:tripItems.length })){
+        try{ toast(T('🎉 Whole pack done — {city} is ready for you.').replace('{city}', PRO.cityNameOf(tripCity) || '')); }catch(e){}
+      }
+      LM.save();
+    }catch(e){}
+  }
+  renderTrip();
+}
+async function tripScore(i){
+  var it = tripItems[i]; if(!it) return;
+  var btn = $('tp-btn-'+i), box = $('tp-score-'+i);
+  /* 自愈：重绘后节点会消失（v0.27 踩过的坑：静默 return → 测试全打在第一行）*/
+  if(!box){ renderTrip(); box = $('tp-score-'+i); btn = $('tp-btn-'+i); }
+  if(!btn || !box) return;
+  if(window.SK && SK.quotaBlocked('sentence')){ SK.showLimitWall('sentence'); return; }
+  if(btn.classList.contains('listening')){ stopRecording(); return; }
+  if(scRec && scRec.state !== 'inactive'){ stopRecording(); }
+  var stream = await openMicOrHelp(box);
+  if(!stream) return;
+  var chunks = [];
+  var rec = new MediaRecorder(stream);
+  scRec = rec;
+  rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+  rec.onerror = function(e){
+    btn.classList.remove('listening'); btn.textContent = '🎤';
+    box.style.display = 'block';
+    box.innerHTML = '<div class="score-err">'+T('Recording error: {n}. Try again in a different browser.')
+      .replace('{n}', ((e && e.error && e.error.name) || 'unknown'))+'</div>';
+  };
+  rec.onstop = async function(){
+    if(scRec === rec) scRec = null;
+    btn.classList.remove('listening'); btn.textContent = '🎤';
+    stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} });
+    box.style.display = 'block';
+    box.innerHTML = '<div class="score-load">Recognising…</div>';
+    var blob = new Blob(chunks);
+    if(blob.size < 500){ box.innerHTML = '<div class="score-err">No sound captured. Hold the phone closer to your mouth and try again.</div>'; return; }
+    var result = null;
+    try{ result = await asrText(await blobToWav(blob), it.hz); }
+    catch(e){ try{ result = await asrText(await blob.arrayBuffer(), it.hz); }catch(e2){ result = null; } }
+    if(!result || !result.ok || !result.text){
+      box.innerHTML = '<div class="score-err">'+T('Did not catch that. ({r})').replace('{r}', (result && result.err) || 'no text')+'</div>';
+      return;
+    }
+    await sendTripScore(it, result.text, i, box);
+  };
+  btn.classList.add('listening'); btn.textContent = '⏹';
+  box.style.display = 'block';
+  box.innerHTML = '<div class="score-load">Listening… tap stop when you finish.</div>';
+  try{ rec.start(); }
+  catch(e){
+    btn.classList.remove('listening'); btn.textContent = '🎤';
+    box.innerHTML = '<div class="score-err">'+T('Could not start recording: ')+escHtml(e && e.message || e)+'</div>';
+  }
+}
+async function sendTripScore(it, transcript, i, box){
+  try{
+    var res = await fetch(API_BASE+'api/score', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ target:it.hz, user:transcript })
+    });
+    var data = await res.json();
+    if(data.error){ box.innerHTML = '<div class="score-err">'+escHtml(data.error)+'</div>'; return; }
+    box.innerHTML = renderScore(data);
+    if(window.SK){ try{ SK.quotaInc('score'); }catch(e){} }
+    /* 🔴 同链原则：唯一入口 LM.ingestScore（sceneId 用 'city:<zoneId>' —— 城市句不在
+       SCENES 里，PATH.markSaid 查不到会安全跳过，但 abil/weak/event 仍然回流）。*/
+    try{ LM.ingestScore(data, 'city:'+it.zoneId, i); }catch(e){}
+    if(!tripDone[i] && data.overall >= 60){
+      tripDone[i] = true;
+      /* 保留评分结果 900ms 再整屏重绘，避免用户看不到刚拿到的分数 */
+      setTimeout(function(){ renderTrip(); }, 900);
+    }
+  }catch(err){
+    box.innerHTML = '<div class="score-err">'+T('Scoring failed — ')+humanizeApiErr(err, 0)+'</div>';
+  }
+}
+
+/* ---------- 设置页：行程录入（D2 方案 B：存 KV 私有 + 事件驱动刷新快照）---------- */
+function renderTripSetting(){
+  var sel = $('trip-city'), ai = $('trip-arrive'), hint = $('set-triphint');
+  var m = LM.get(), cur = (m.trip && m.trip.city) || '';
+  if(sel){
+    var opts = '<option value="">— '+T('none')+' —</option>';
+    Object.keys(CITY_GUIDES).forEach(function(id){
+      var g = CITY_GUIDES[id]; if(!g) return;
+      opts += '<option value="'+id+'"'+(g.city === cur ? ' selected' : '')+'>'+escHtml(g.city)+'</option>';
+    });
+    sel.innerHTML = opts;
+  }
+  if(ai) ai.value = (m.trip && m.trip.arrive) || m.goal.arrive || '';
+  if(hint){
+    var dt = null; try{ dt = LM.daysToTrip(); }catch(e){}
+    if(cur && dt !== null && dt >= 0){
+      hint.textContent = T('{city} — {n} days to go. Push reminders will pack the right lines.').replace('{city}',cur).replace('{n}',dt);
+    } else {
+      hint.textContent = T('Tell Sinoky where you are going — it will pack the lines to practise before you land.');
+    }
+  }
+}
+function saveTrip(){
+  var sel = $('trip-city'), ai = $('trip-arrive');
+  var cid = sel ? sel.value : '';
+  var arr = ai ? ai.value : '';
+  if(!cid){
+    LM.setTrip('', '', 0);
+    try{ toast(T('Trip cleared.')); }catch(e){}
+  } else {
+    LM.setTrip(PRO.cityNameOf(cid), arr, 0);
+    try{ toast(T('Trip saved.')); }catch(e){}
+  }
+  PRO.onGoalChanged();     /* 事件驱动刷新 PUSH 快照（低频；不做每日固定写）*/
+  renderTripSetting();
+}
+
  /* v0.25.0 · M2：今日路径卡 —— 把「日计划」从**一次性文本**变成**可追踪对象**。
    闭环第 3 步"制定计划"与第 4 步"每日执行"的可见落点。
    Edify Gate 回答：卡上直接点名今天必须说的那句中文（★）。 */
@@ -7153,7 +7808,7 @@ function renderHome(){
     '<div id="listen-pane-1">'+listenCardHtml()+'</div>'+
     '<div id="listen-pane-2" style="display:none">'+listenCardSHtml()+'</div>';
   /* v0.25.0：今日路径卡置于首屏——它是闭环的入口，不能埋在折叠区里 */
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + pathCardHtml() + rpCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + proCardHtml() + pathCardHtml() + rpCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -8689,6 +9344,9 @@ document.addEventListener('visibilitychange', function(){
 });
 var obStep = 1, obTotal = 8, obGoal = 'travel', obCity = '', obNative = '';
 if(!S.onboarded){ renderOnboard(); go('onboard'); } else { renderHome(); go('home'); }
+/* v0.28.0 深链：推送落地页 ?go=trip|roleplay|review 直达对应练习。
+   一次性消费（replaceState 清 query）；未 onboard 的先走完向导再执行。 */
+try{ PRO.boot(); }catch(e){}
 /* v0.14.0 i18n 启动：首次按系统语言初始化（zh/es→对应语言，其余 en），已选则跟随用户 */
 if (!S.lang) {
   var _nl = (navigator.language || 'en').toLowerCase();
@@ -8795,6 +9453,8 @@ function finishOnboard(){
   LM.compact();
   saveState();
   go('home');
+  try{ PRO.onGoalChanged(); }catch(e){}   /* 向导刚设了行程 → 事件驱动刷新 PUSH 快照 */
+  try{ PRO.flush(); }catch(e){}           /* 若带深链（?go=）→ 走完向导立刻执行，不再让用户手点 */
   /* 首次进入必须做一次水平定位：没有它，路径与难度全是猜（方案 §M1） */
   var m = LM.get();
   if(!m.level || !m.level.band){ setTimeout(function(){ try{ PLACE.start(); }catch(e){} }, 320); }
