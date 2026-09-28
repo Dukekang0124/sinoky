@@ -7,7 +7,11 @@
    ★ v0.29.3 起：download.html 从「真下载页」退休为**零版本跳转壳**（真实下载页 = /landing/download.html，
    运行时读 version.json ⇒ 永久不用手改版本号）⇒ **六处降为五处**：
    WEB 3（顶层 version / APP_VERSION / sw CACHE）+ APK 2（apk 段的 versionCode/version/url；md5/size 由 CI 回写）。
-   第 4/N 步因此**预期 0 命中且判绿**（见该步注释）。
+   第 5/N 步因此**预期 0 命中且判绿**（见该步注释）。
+
+   ★ v0.29.4 起：**再补一处 package.json.version**（见第 4/N 步）。它此前长期飘在版本账之外：
+   写 0.3.59，而其余五处都是 0.29.3 —— 不影响构建产物，但**读产品版本的人会读到错的值**，
+   2026-09-28 的产品审计就因此误判过一次（报告 P2-16）。纳入同步后永远等于顶层 version。
 
    apk 段特别说明：
      - versionCode = MA*10000 + MI*100 + PA（0.28.0 → 2800）
@@ -165,7 +169,28 @@ if(APK_ONLY){
   step('sw.js · CACHE', false, '未找到 var CACHE = ...');
 }
 
-/* ---- 4/N. download.html 硬编码直链 ----
+/* ---- 4/N. package.json version ----
+   🔴 为什么补这一步（2026-09-28 产品审计 P2-16）：
+   它一直写在版本账的"五处"之外 —— package.json 是 0.3.59，而 version.json / index APP_VERSION /
+   sw CACHE / apk.version 全是 0.29.3，相差 28 个版本号。它**不影响构建产物**（build-web.mjs 与
+   gradle 都不读它），所以没人发现；但任何「读 package.json 取产品版本」的人/工具都会拿到错值。
+   用正则做**行内替换**（而不是 JSON.parse→stringify 整文件重写），保证 diff 只有一行。 */
+const pkgPath = path.join(ROOT, 'package.json');
+try {
+  const pkgTxt = fs.readFileSync(pkgPath, 'utf8');
+  const pkgRe = /"version":\s*"[^"]*"/;
+  if (!pkgRe.test(pkgTxt)) {
+    step('package.json · version', false, '未找到 "version": "..." 字段');
+  } else {
+    const oldPkg = (pkgTxt.match(pkgRe) || [''])[0];
+    fs.writeFileSync(pkgPath, pkgTxt.replace(pkgRe, '"version": "' + NEW + '"'), 'utf8');
+    step('package.json · version', true, oldPkg + ' → "version": "' + NEW + '"');
+  }
+} catch (e) {
+  step('package.json · version', false, '读写失败：' + e.message);
+}
+
+/* ---- 5/N. download.html 硬编码直链 ----
    ★ v0.29.3 起：本步**预期 0 命中，且 0 命中判绿**。
    download.html 已从「真下载页」退休为**零版本跳转壳**；真实下载页 = /landing/download.html，
    改为运行时读 version.json ⇒ 永久不再需要手改版本号。版本号因此从六处降为五处。

@@ -71,3 +71,22 @@ _internal/fix-2026-09-28/preview_v2/
 
 # 2026-09-28 界面截图采集的运行报告（产出命令未入库，属一次性运行产物）
 _internal/_cap_report.json
+
+# 2026-09-28 产品全面审计：取证脚本**入库**（可复跑资产），但其运行产物不入库
+# （截图 + report.json 均可由三个脚本重建；`_audit_0928/` 含 ~1MB PNG）
+_internal/_audit_0928/
+
+# 🔴🔴 安全：从 provider API 拉取的**原始配置与数据转储**绝不可入库。
+# 实测教训（2026-09-28）：`GET /accounts/<acc>/pages/projects/sinoky` 的响应里
+# **preview 环境的 VAPID_PRIVATE 是 plain_text** ⇒ 该 JSON 直接含明文私钥。
+# 同类的还有完整 KV 键清单（含 IP 形态的 rl: 键）。用 curl 临时落到 `_internal/` 时，
+# 若忘了删就可能被 commit —— 这两条是**防御性**规则，请保留。
+_internal/_proj.json
+_internal/_kv_fb.json
+_internal/_kv_*.json
+_internal/_dep.json
+_internal/_*.dump.json
+
+# v0.29.4 限流兜底单测的临时 ESM 副本（每次运行由脚本重建、跑完自删，不入库）
+# 注意必须放**仓库根**（_worker.js 有相对 import），所以规则不能带 _internal/ 前缀
+_rl_*.tmp.mjs

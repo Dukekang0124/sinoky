@@ -256,8 +256,9 @@ function purgeTrip(rec){
    两层防护（不改前端调用逻辑，刷新即生效）：
    1) Origin 校验：同源（浏览器通常不发 Origin 头）或同 host → 放行；跨站浏览器调用 → 403。
       挡掉绝大多数跨站盗用（恶意站点嵌脚本调你的端点）。
-   2) 每 IP 60s 窗口限 40 次：首选 Durable Object 强一致计数（见下），兜底 KV / in-isolate。
-   注：/health 与 feedback 读端点已有独立鉴权，此处跳过。
+   2) 每 IP 60s 窗口限 RATE_MAX 次：**唯一正确实现是 Durable Object 强一致计数**（见 rateOk）。
+      🔴 2026-09-28 起兜底改为「纯内存 + 显式告警」—— 原 KV 兜底既不准（边缘缓存）又烧写配额，已删除。
+      注：/health 与 feedback 读端点已有独立鉴权，此处跳过。
 
    ⚠️ 为什么计数必须用 Durable Object（踩坑实录）：
    - 方案一 in-isolate Map：CF 把请求随机分发到大量 isolate，单 isolate 计数永远到不了阈值。废。
@@ -265,7 +266,10 @@ function purgeTrip(rec){
      45 连发实测只累到 10 —— 计数器永远数不准。CF 文档明确不推荐 KV 做限流。废。
    - 方案三 Durable Object（最终方案）：同一 IP 的请求经 idFromName(ip) 路由到同一
      DO 实例，SQLite storage 强一致，计数原子准确。Worker sinoky-rl 部署在
-     kang7108558 账号，namespace sinoky-rl_Counter，通过 API 绑到 Pages 项目（binding=RL）。
+     kang7108558 账号，namespace sinoky-rl_Counter，经 wrangler.toml 的
+     [[durable_objects.bindings]] 声明绑定（binding=RL）。
+     ⚠️ 必须写在 wrangler.toml 里 —— 2026-09-28 实测：只在 Pages 项目上通过 API PATCH
+     绑的 RL 被下一次 `pages deploy` 抹掉，导致限流整体失效且倒烧 KV 写配额（详见 toml 注释）。
      免费额度 100k 请求/天，Sinoky 体量零成本。 */
 /* v0.3.68: 加 Capacitor 原生壳 Origin —— APK WebView 页面源是 https://localhost(Android)
    / capacitor://localhost(iOS)，不加会被 guardApi 403 拒掉 */
@@ -275,11 +279,45 @@ const ALLOWED_ORIGINS = ['https://sinoky.pages.dev', 'https://localhost', 'capac
 const RATE_WINDOW = 60_000;   // 滑动窗口 60 秒
 const RATE_MAX = 120;         // 每 IP 窗口内最多 120 次。v0.23.8（UX 评审 M14）：原为 40 —— 公司/校园网共享出口
                               // 多用户会互相挤掉。防刷仍由 Origin allowlist + DO 强一致计数承担，单用户正常使用远不会到 120。
-const RATE_MAP = new Map();   // 兜底：无 DO/KV 绑定时（本地 dev）用 in-isolate 近似计数
+const RATE_MAP = new Map();   // 兜底：无 DO 绑定时的 in-isolate 近似计数（仅本地 dev / 配置异常）
+let rateDegradeChecked = false;  // 每个 isolate 生命周期只巡检一次，且写前先读做 6h 节流
+let rateDegradeReason = '';      // 便于本地排查时看清降级原因
+
+/* v0.29.4：env.RL 缺失或 DO 调用失败时**显式上报**，取代此前的「静默回落到 KV 写」。
+ *
+ * 🔴 为什么要删掉 KV 兜底（2026-09-28 实测，两条都是实伤）：
+ *   ① 不准：KV 读有约 60s 边缘缓存 + 最终一致，突发下计数器永远累不到阈值
+ *      （早期实测 45 连发只累到 10）⇒ 挂上它等于「假装有限流」。
+ *   ② 有害：它**每次请求都写** `rl:<ip>` 键。实测 FEEDBACK namespace 630 键中 **426 键是 rl:**
+ *      （68%），而 KV 免费额度只有 1000 写/天 ⇒ 限流器把自己的写配额吃掉，最终触发
+ *      _worker.js 里已存在的 `KV put() limit exceeded` 分支 —— 那是「全员进度同步失败」，
+ *      比「限流不准」严重得多。**一个失效的兜底，伤害可以大于它想防的风险。**
+ *   结论：兜底改为**纯内存**（不追求准确，只求不放大伤害），并把「降级」这件事本身
+ *   变成一条可见信号 —— 静默降级才是真正让问题活了几个月的原因。
+ *
+ * 写入节流：先读后写（KV 读免费、写有配额）+ 6 小时内不重复写 ⇒ 全局最坏 4 写/天。 */
+async function rateAlert(env, reason) {
+  if (rateDegradeChecked) return;
+  rateDegradeChecked = true;
+  rateDegradeReason = reason;
+  if (!env || !env.FEEDBACK) return;
+  try {
+    const prev = await env.FEEDBACK.get('alert:rate-degraded');
+    if (prev) {
+      try { const p = JSON.parse(prev); if (Date.now() - (Number(p.ts) || 0) < 6 * 3600e3) return; } catch (e) { /* 解析失败 → 重写 */ }
+    }
+    await env.FEEDBACK.put('alert:rate-degraded', JSON.stringify({
+      ts: Date.now(), reason,
+      note: 'env.RL 未绑定或 DO 调用失败 ⇒ 限流降级为 in-isolate 近似（实际几乎不生效）。' +
+            '检查 wrangler.toml 是否声明 [[durable_objects.bindings]] name="RL"、class_name="Counter"、' +
+            'script_name="sinoky-rl" —— durable_objects 属 non-inheritable key，只写 Dashboard/API 会被下次部署抹掉。'
+    }));
+  } catch (e) { /* 上报失败绝不能影响请求本身 */ }
+}
 
 async function rateOk(ip, env) {
   const now = Date.now();
-  // 首选 Durable Object 计数（强一致、全局准确）：binding=RL，namespace sinoky-rl_Counter
+  // 首选（也是唯一正确）的实现：Durable Object 强一致计数。binding=RL，namespace sinoky-rl_Counter
   if (env && env.RL) {
     try {
       const id = env.RL.idFromName('ip:' + ip);
@@ -289,26 +327,15 @@ async function rateOk(ip, env) {
         const r = await res.json();
         return !!r.allowed;
       }
-    } catch (e) { /* DO 调用失败 → 落到 KV/Map 兜底，不阻塞用户 */ }
+      await rateAlert(env, 'do-http-' + res.status);   // DO 非 2xx → 降级（不阻塞用户）
+    } catch (e) {
+      await rateAlert(env, 'do-error:' + ((e && e.message) || 'unknown'));
+    }
+  } else {
+    await rateAlert(env, 'no-rl-binding');
   }
-  // 兜底一：KV 计数（读有边缘缓存，突发下计数偏少 —— 仅当 DO 不可用时降级用）
-  if (env && env.FEEDBACK) {
-    const key = 'rl:' + ip;
-    let d = { ts: now, count: 0 };
-    try {
-      const raw = await env.FEEDBACK.get(key);
-      if (raw) { const p = JSON.parse(raw); if (now - p.ts <= RATE_WINDOW) d = p; }
-    } catch (e) { /* 忽略读取异常，按新窗口计 */ }
-    d.count++;
-    const allowed = d.count <= RATE_MAX;
-    try {
-      // 注意：此处不放 expirationTtl（与 feedback 写保持一致，避免 options 触发异常被吞）。
-      // 过期由读取侧的 now - p.ts <= RATE_WINDOW 判定；rl: 键已被 feedback 读端点跳过。
-      await env.FEEDBACK.put(key, JSON.stringify(d));
-    } catch (e) { /* 写入失败不阻塞用户，仅失去本次计数 */ }
-    return allowed;
-  }
-  // 兜底二（本地 dev）：in-isolate 近似，跨 isolate 不精确
+  /* 兜底（本地 dev / 配置异常）：in-isolate 近似，跨 isolate 不精确。
+     只求「不放大伤害」——不写任何存储，所以不会烧配额、不会制造虚假计数。 */
   if (RATE_MAP.size > 2000) {
     for (const [k, v] of RATE_MAP) if (now - v.ts > RATE_WINDOW) RATE_MAP.delete(k);
   }
@@ -1087,6 +1114,7 @@ export default {
         for (const k of list.keys) {
           if (k.name.startsWith('rl:')) continue; // 跳过速率限制计数器，不污染反馈视图
           if (k.name.startsWith('chat:')) continue; // 跳过诺诺聊天埋点，不污染反馈视图
+          if (k.name.startsWith('alert:')) continue; // v0.29.4 跳过运维告警键（限流降级等），不污染反馈视图
           const v = await env.FEEDBACK.get(k.name);
           if (v) { try { items.push(JSON.parse(v)); } catch (e) { items.push({ raw: v }); } }
         }

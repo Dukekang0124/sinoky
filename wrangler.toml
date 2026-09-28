@@ -40,3 +40,36 @@ id = "9a54616846814bd6be285971ae604b48"
 #    而 Dashboard 配置活不过下一次部署）。
 [ai]
 binding = "AI"
+
+# Durable Object 绑定 —— 每 IP 限流计数器（_worker.js rateOk 的**首选且唯一正确**实现）。
+#
+# 🔴 2026-09-28 实测事故（**同一机制的第二次发生**）：
+#    此前 RL 只在 Pages 项目上通过 API PATCH 绑过，wrangler.toml 里没有声明 ⇒
+#    每次 `wrangler pages deploy` 都把 deployment_configs.production 的 durable object
+#    绑定重写成空 ⇒ 生产 env.RL === undefined ⇒ rateOk 静默回落到 KV 兜底。后果两条：
+#      ① 限流失效：/* 实测 180 次 POST /api/profile 压在 7 秒内 → 429 个数 = 0 */
+#         （RATE_MAX=120/60s，本应至少拦下约 60 个）⇒ 打 /api/tts /api/asr /api/chat
+#         这些**按次计费**的接口可被脚本无限刷，直接产生费用。
+#      ② 自伤配额：KV 兜底每次请求都写一个 `rl:<ip>` 键，而 KV 免费额度仅 1000 写/天。
+#         实测 FEEDBACK namespace 630 键里 **426 键是 `rl:`**（68%）—— 限流器把自己
+#         的配额吃掉了，极端情况会触发 _worker.js 里已存在的 `KV put() limit exceeded`
+#         分支 ⇒ **全员进度同步失败**。
+#    第一次发生是 AI 绑定被抹（见上方 [ai] 注释，全员 ASR 挂）。
+#
+# 硬事实（CF 官方文档 + 本次实测）：
+#   • `durable_objects` 属于 **non-inheritable keys** —— 与 [ai] 同类，只写 Dashboard/API
+#     活不过下一次部署，必须落在本文件。
+#   • Pages 项目的 DO 绑定 **必须带 `script_name`**（Workers 里该项可选）：
+#     "Durable Object bindings configured in a Pages project's Wrangler configuration file
+#      require the script_name key." —— developers.cloudflare.com/pages/functions/wrangler-configuration/
+#   • Pages 项目**不能自己创建 DO**，只能引用已部署的 Worker；因此这里**不写 [[migrations]]**
+#     （migrations 是定义 DO class 的 Worker 的事，Pages 只做 consumer）。
+#
+# 资源现状（2026-09-28 用 CF API 核实）：
+#   GET /accounts/<acc>/workers/durable_objects/namespaces
+#     → id=c1d9e83dea4d47b29f914b961aeb320e  class=Counter  script=sinoky-rl  name=sinoky-rl_Counter
+#   免费额度 100k 请求/天，Sinoky 体量零成本。
+[[durable_objects.bindings]]
+name = "RL"
+class_name = "Counter"
+script_name = "sinoky-rl"

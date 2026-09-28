@@ -191,6 +191,21 @@ const WATCHDOG = setTimeout(() => {
       .forEach((n) => skip(n, '未执行：④ 前置失败'));
   }
 
+  // ④e 版本账内部一致性：package.json.version 必须 == 顶层 version
+  // 🔴 2026-09-28 产品审计 P2-16 的护栏：它曾长期飘在版本账之外（package.json=0.3.59，
+  //    其余五处=0.29.3，相差 28 个版本号）。因为**不影响构建产物**（build-web.mjs 与 gradle
+  //    都不读它），所以一直没人发现，但任何读 package.json 取产品版本的人/工具都会拿到错值。
+  //    本项是**纯本地文件比对、不依赖网络**，所以刻意放在 ④ 的 try/catch **之外** ——
+  //    不能因为远程读不到就把本地一致性也一起 skip 掉（那正是「断言空转」）。
+  try {
+    const pkg = JSON.parse(require('fs').readFileSync(path.join(APP, 'package.json'), 'utf8'));
+    ok('④e package.json.version = ' + V + '（版本账内部一致）', pkg.version === V,
+      pkg.version === V ? '' : 'got ' + pkg.version + ' —— 应与 version.json 的 ' + V +
+        ' 一致（由 _internal/bump_version.cjs 第 4/N 步同步）');
+  } catch (e) {
+    ok('④e package.json.version 可读', false, String(e.message));
+  }
+
   // ⑤ APK 实体可下 + 字节与 md5 复算
   try {
     const url = (live && live.apk && live.apk.url) || (BASE + '/apk/Sinoky-v' + AV + '-release.apk');
