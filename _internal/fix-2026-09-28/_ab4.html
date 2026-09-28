@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-ab="1">
+<head>
+<meta charset="utf-8">
+<title>AB4 — onboard 抠图 v3(现上线) vs v4(本次) vs 原版</title>
+<link rel="stylesheet" href="../../landing/site.css">
+<link rel="icon" href="../../icons/favicon-32.png" sizes="32x32">
+<style>
+  body{background:var(--bg); margin:0; padding:24px; font-family:system-ui,sans-serif}
+  .row{display:flex; gap:22px; align-items:flex-start; margin-bottom:26px; padding:16px; border-radius:12px}
+  .row.alt{background:var(--bg2)}
+  .row>figure{margin:0; width:340px; flex:0 0 340px}
+  .row .shot{max-width:340px; margin:0 auto}
+  .cap{font:12px/1.6 ui-monospace,monospace; color:var(--txt-3); margin-top:8px; text-align:center}
+</style>
+</head>
+<body>
+<!-- 每行三栏：原版(_backup) / v3(现上线 assets/onboard) / v4(preview4) -->
+<div id="stage"></div>
+
+<script>
+const ROWS = [
+  { name:'step4-score', alt:true  },
+  { name:'step1-pinyin',alt:true  },
+  { name:'main',        alt:false },
+  { name:'step2-listen',alt:false },
+];
+const stage = document.getElementById('stage');
+for (const r of ROWS) {
+  const row = document.createElement('div');
+  row.className = 'row' + (r.alt ? ' alt' : '');
+  row.dataset.name = r.name;
+  row.innerHTML =
+    `<figure><div class="shot"><img src="_backup/${r.name}.webp" alt=""></div><div class="cap">原版（v0.23）</div></figure>` +
+    `<figure><div class="shot"><img src="../../assets/onboard/${r.name}.webp" alt=""></div><div class="cap">v3（现上线）</div></figure>` +
+    `<figure><div class="shot"><img src="preview4/${r.name}.webp" alt=""></div><div class="cap">v4（本次）</div></figure>`;
+  stage.appendChild(row);
+}
+window.__ready = false;
+const wait = () => {
+  const bad = [...document.images].filter(i => !(i.complete && i.naturalWidth > 0));
+  if (bad.length === 0 && document.fonts.status === 'loaded') { window.__ready = true; return; }
+  setTimeout(wait, 60);
+};
+wait();
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+[
+ {
+  "name": "main",
+  "pose": "wave",
+  "added_px(修补)": 616,
+  "boundary": {
+   "fill": 132,
+   "cut": 202
+  },
+  "bottom": {
+   "yb": 500,
+   "span": [
+    421,
+    590
+   ]
+  }
+ },
+ {
+  "name": "step1-pinyin",
+  "pose": "point",
+  "added_px(修补)": 1289,
+  "boundary": {
+   "fill": 174,
+   "cut": 177
+  },
+  "bottom": {
+   "yb": 441,
+   "span": [
+    80,
+    346
+   ]
+  }
+ },
+ {
+  "name": "step2-listen",
+  "pose": "listen",
+  "added_px(修补)": 740,
+  "boundary": {
+   "fill": 285,
+   "cut": 265
+  },
+  "bottom": {
+   "yb": 489,
+   "span": [
+    116,
+    354
+   ]
+  }
+ },
+ {
+  "name": "step3-speak",
+  "pose": "cheer",
+  "added_px(修补)": 1352,
+  "boundary": {
+   "fill": 121,
+   "cut": 46
+  },
+  "bottom": {
+   "yb": 430,
+   "span": [
+    137,
+    375
+   ]
+  }
+ },
+ {
+  "name": "step4-score",
+  "pose": "like",
+  "added_px(修补)": 1002,
+  "boundary": {
+   "fill": 127,
+   "cut": 221
+  },
+  "bottom": {
+   "yb": 407,
+   "span": [
+    202,
+    384
+   ]
+  }
+ }
+]

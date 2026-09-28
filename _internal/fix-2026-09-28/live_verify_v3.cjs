@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { chromium } = require('playwright');
 
-const OUT = path.join(__dirname, 'live-after-v3');
+const OUT = path.join(__dirname, 'live-after-v4');
 const URL = 'https://sinoky.pages.dev/landing/features.html?cb=' + Date.now();
 
 (async () => {

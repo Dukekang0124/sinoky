@@ -1,0 +1,30 @@
+{
+  "url": "https://sinoky.pages.dev/landing/features.html?cb=1790595895812",
+  "info": [
+    {
+      "i": 0,
+      "src": "../assets/onboard/step4-score.webp",
+      "nw": 512,
+      "nh": 512
+    },
+    {
+      "i": 1,
+      "src": "../assets/onboard/step1-pinyin.webp",
+      "nw": 512,
+      "nh": 512
+    },
+    {
+      "i": 2,
+      "src": "../assets/onboard/main.webp",
+      "nw": 800,
+      "nh": 600
+    },
+    {
+      "i": 3,
+      "src": "../assets/onboard/step2-listen.webp",
+      "nw": 512,
+      "nh": 512
+    }
+  ],
+  "errors": []
+}
