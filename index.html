@@ -6348,7 +6348,8 @@ async function checkUpdate(){
       hint.textContent=T('New app version v{v} available — download & install.').replace('{v}',(apk.version||apk.versionCode));
       if(btn){ btn.style.display='inline-block'; btn.onclick=function(){ startApkUpdate(apk); }; }
       toast(T('⬆️ New app v{v} — tap Download to update').replace('{v}',(apk.version||apk.versionCode)));
-    } else if(latest!==APP_VERSION){
+    } else if(latest!==APP_VERSION && !(typeof Capacitor!=='undefined' && Capacitor.isNativePlatform())){
+      /* App 内：无 APK 更新即「已是最新」——网页版领先与 App 无关（红线①），不提示 reload */
       hint.textContent=T('New version available: v{v} — reload the page to update.').replace('{v}',latest);
       toast(T('New web version v{v} — reload the page to update').replace('{v}',latest));
     } else {
@@ -9591,7 +9592,11 @@ fetch((API_BASE||'')+'version.json?t='+Date.now()).then(function(r){ return r.js
      旧实现是 2.2 秒就消失且不可点的 toast，用户根本不知道"refresh"该怎么操作
      （PWA 里既不能下拉刷新也没人知道要重装）→ 长期停留在旧版。 */
   if(typeof Capacitor!=='undefined' && Capacitor.isNativePlatform()){
-    try{ var apk=await checkApkUpdate(); if(apk){ showApkUpdateDialog(apk); return; } }catch(e){}
+    /* v0.29.4 红线①落地：APK 加载的是包内本地页，网页版（j.version）领先对 App 用户＝没发生
+       —— reload 只会重载本地旧页 ⇒ 横幅死循环（实测 0.29.3 App 被「网页 0.29.4」横幅缠住，
+       刷新一万次也没用）。App 内只认 apk 段：有更新弹原生更新框，没有就完全静默。 */
+    try{ var apk=await checkApkUpdate(); if(apk){ showApkUpdateDialog(apk); } }catch(e){}
+    return;
   }
   if(j.version && j.version !== APP_VERSION){
     /* v0.12.0：网页刷新横幅带关闭记忆——关过的版本不再弹 */
