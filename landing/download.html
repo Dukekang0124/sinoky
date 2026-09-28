@@ -7,17 +7,29 @@
 <meta name="description" content="Download the Sinoky Android APK (23 MB, Android 7.0+), or add it to your iPhone Home Screen. Version, size and MD5 hash shown, with install steps and troubleshooting." data-zh-content="下载 Sinoky 安卓安装包（约 23 MB，Android 7.0 以上），或添加到 iPhone 主屏幕。页面显示真实版本号、体积与 MD5 校验值，附安装步骤与疑难排查。">
 <meta name="theme-color" content="#141a24">
 <meta name="color-scheme" content="dark">
-<link rel="canonical" href="https://sinoky.pages.dev/landing/download.html">
+<link rel="canonical" href="https://sinoky.pages.dev/landing/download">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Download — Sinoky">
 <meta property="og:description" content="Android APK, or add to Home Screen on iOS. Free, no account.">
-<meta property="og:url" content="https://sinoky.pages.dev/landing/download.html">
+<meta property="og:url" content="https://sinoky.pages.dev/landing/download">
 <meta property="og:image" content="https://sinoky.pages.dev/assets/brand/nono-hero.webp">
 <link rel="icon" href="../icons/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="../icons/icon-192.png">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="stylesheet" href="site.css">
 <script>document.documentElement.classList.add('js');</script>
+<script>
+/* 首屏占位窗口优化（2026-09-28 实测：用户会看到 730ms 的「—」占位符）。
+   原因：version.json 的请求原先要等 download.js **下载 + 执行完**才发起，
+   于是「解析 → 拿 JS → 执行 → 才发请求」这段全算在占位窗口里。
+   这里在 head 解析期就把请求发出去，download.js 复用同一个 Promise
+   —— 既把发起时间提前了整整一个 JS 往返，又不会产生第二次请求。
+   错误刻意在此吞掉：降级分支全在 download.js（#load-fail），这里只需要不抛
+   unhandledrejection 把控制台弄脏。 */
+window.__VER_P = fetch('../version.json?t=' + Date.now(), { cache: 'no-store' })
+  .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+window.__VER_P.catch(function () {});
+</script>
 </head>
 <body>
 <a class="skip" href="#main" data-zh="跳到主内容">Skip to content</a>
@@ -62,13 +74,19 @@
         back to this page.
       </div>
 
-      <!-- ── 版本卡：数据全部来自线上 version.json，不写死 ── -->
-      <div class="dl-card fade">
+      <!-- ── 版本卡：数据全部来自线上 version.json，不写死 ──
+           aria-busy 在 version.json 回填完成（成功或失败）后由 download.js 摘掉，
+           配合 #dl-loading 给屏幕阅读器与视觉用户同一个信号：这块还在取数。 ── -->
+      <div class="dl-card fade" id="dl-card" aria-busy="true">
         <div class="dl-ver">
           <b id="apk-ver" data-live>—</b>
           <span class="pill" data-zh="Android 安装包 · APK">Android package · APK</span>
           <span class="pill" id="force-badge" hidden data-zh="重要更新">Important update</span>
         </div>
+        <!-- ⚠️ 三条状态必须互斥（A7 守）：加载中 / 完整 / 待回写 / 读失败。
+             这条「加载中」是**默认可见**的（不靠 JS 显示，红线㊱）：
+             JS 万一没跑，用户看到的是一条解释，而不是一个没有下文的「—」。 -->
+        <p class="dl-loading" id="dl-loading" data-zh="正在读取版本信息…">Reading version info…</p>
         <!-- ⚠️ 不变量（check_site.cjs 的 A7 守）：带 data-live 的动态值节点必须与文案节点**平级**，
              绝不能嵌在 data-zh / data-zh-html 里面。嵌进去的话，语言切换会把整块 innerHTML
              重置成静态模板，把 JS 回填的真值冲掉 —— 曾经的症状就是「切一次语言，版本号变回 —」。 -->

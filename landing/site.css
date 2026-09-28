@@ -335,6 +335,17 @@ pre.code b{color:var(--ok); font-weight:400}
 .dl-ver{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
 .dl-ver b{font-size:22px; font-weight:800}
 .dl-ver .pill{font-size:11.4px; font-weight:800; padding:3px 9px; border-radius:var(--r-pill); background:var(--card-hi); color:var(--sub); letter-spacing:.04em}
+/* 首屏加载态：version.json 往返期间（2026-09-28 实测 730ms，弱网更久）给一个明确的
+   「正在读取」，而不是把「—」留给用户猜。回填完成后由 download.js 隐藏
+   —— check_site 的 A8 把守「回填结束必须撤掉」，否则它会永远挂在页面上。
+   ⚠️ 默认**可见**、不依赖 JS 显示（红线㊱）：JS 万一没跑，用户看到的是一条解释，而不是空白。 */
+.dl-loading{display:flex; align-items:center; gap:9px; color:var(--sub); font-size:13.4px; margin:12px 0 0}
+.dl-loading::before{content:''; width:12px; height:12px; flex:0 0 auto; border-radius:50%;
+  border:2px solid var(--line-strong); border-top-color:var(--red-text); animation:dlspin .85s linear infinite}
+@keyframes dlspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  .dl-loading::before{animation:none; border-top-color:var(--line-strong)}
+}
 .dl-meta{margin-top:6px; color:var(--sub); font-size:13.6px}
 /* 分隔符由 CSS 生成，不写成字面量文本 —— 某一项在「APK 元数据待回写」态被 hidden 时，
    若分隔符是字面量就会留下悬空的「 · 」。hidden 项 display:none，其 ::after 也不渲染。 */

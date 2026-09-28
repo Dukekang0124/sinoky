@@ -52,5 +52,5 @@
 # 本规则把两条旧路径一律 301 收口；页面本体退化为「零版本跳转壳」保留在仓库里作兜底
 #   —— 边缘规则与 CF clean-URL 的处理顺序不由我们控制，下载入口不能有单点失败。
 # ⚠️ 仍须独占行、三段式（from to status），行内 # 会让整行静默失效。
-/download.html        /landing/download.html  301
-/download             /landing/download.html  301
+/download.html        /landing/download  301
+/download             /landing/download  301

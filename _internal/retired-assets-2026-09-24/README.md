@@ -34,11 +34,22 @@
 
 | 文件 | 保留理由 |
 |---|---|
-| `assets/tones/tone{1,2,3,4}.mp3` | `index.html:6089` 注释明确：「新组可以用 assets/tones/*.mp3 文件（v0.22.0 就在那了，只是没人引用）」→ **有意预留**，非废弃 |
-| `assets/cities/thumb_*.webp`（18 个） | **动态拼接**：`index.html:3468,3486` `'assets/cities/thumb_' + sc.id + '.webp'` |
-| `assets/scenes/thumbs/intro_1x1_1024.webp` | **动态拼接**：`index.html:5529` `SCENE_THUMB[sc.id]==='intro' ? '1024' : '512'`，而 `SCENE_THUMB`(L1411-1417) 含 `'self-intro':'intro'` |
+| `assets/tones/tone{1,2,3,4}.mp3` | `index.html:8662` 注释明确：「这样新组可以用 `assets/tones/*.mp3` 文件（v0.22.0 就在那了，只是没人引用）」→ **有意预留**，非废弃 |
+| `assets/cities/thumb_*.webp`（18 个） | **动态拼接**：`index.html:5314,5332` `'assets/cities/thumb_' + sc.id + '.webp'` |
+| `assets/scenes/thumbs/intro_1x1_1024.webp` | **动态拼接**：`index.html:8069` `SCENE_THUMB[sc.id]==='intro' ? '1024' : '512'`，而 `SCENE_THUMB`(L1601-1611) 含 `'self-intro':'intro'` |
 | `assets/icons/home.svg` | 零引用但体积极小（3 KB），且是 `assets/icons/` 下唯一未被引用的 v0.23.x 图标；未纳入本次清理以控制变更面 |
-| `assets/badges/map_master_*.webp` | **不是母版**：`map_master` 是勋章 ID（`index.html:3514`），`':3525'` 动态拼 `assets/badges/' + d.id + '_256.webp'` |
+| `assets/badges/map_master_*.webp` | **不是母版**：`map_master` 是勋章 ID，代码里 `'assets/badges/' + d.id + '_256.webp'` 动态拼 |
+
+> ⚠️ **行号会随版本漂移**（本表 2026-09-28 已校订一次：原记 `3468,3486 / 5529 / 6089` 全部过时）。
+> 定位请用关键词而非行号：`grep -n "cities/thumb_" index.html`。
+>
+> ✅ **2026-09-28：上表前三条的判据已固化进 `_internal/tools/audit_assets_refs.cjs`**，
+> 不必再靠这张表人工判断。改动见该脚本文件头的「2026-09-28 修正」：
+> ① 形态判断补上**前缀式拼接**（`'assets/cities/thumb_' + id`，原先只查末段 ⇒ 18 个缩略图被误报零引用）；
+> ② 注释里被点名（含通配 `*`）的资产单列 **NOTE** 档（`tones/*.mp3` 从此不再混进 ZERO）。
+> 复跑结果：`REF 75 / DYN 84 / NOTE 4 / ZERO 0`。
+> **教训**：判断写进文档、却没进工具 ⇒ 警报照旧，下次还得人工重新判一遍。文档腐化 + 工具不承载判断，
+> 是同一件事的两面。
 
 ## 回滚方式
 

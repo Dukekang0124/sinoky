@@ -59,6 +59,15 @@ const CRITICAL = [
   'langs/zh.json', 'langs/es.json', 'langs/ru.json', 'langs/vi.json', 'langs/id.json', 'langs/th.json',
   'download.html', 'privacy.html', 'stats.html', 'credits.html',
   'robots.txt', 'sitemap.xml',
+  /* 官网 5 页 + 3 个资源（2026-09-28 补）。
+     原因：官网已经成了产品的主入口 —— 产品页脚、旧下载入口、限额墙的安装按钮都指过来，
+     但它此前**不在**内容比对清单里 ⇒ 某次部署若漏传 landing 的文件，这里一声不响
+     （键集合只比「文件名集合」，可比不出「文件传上去了但内容是旧的/漏了」）。
+     注：landing/*.html 按**文件路径**比对，CF clean-URL 会给 /landing/x.html 一个 308，
+     req() 跟随重定向后拿到的仍是同一份字节，逐字节比对依然成立。 */
+  'landing/index.html', 'landing/features.html', 'landing/how.html',
+  'landing/download.html', 'landing/contact.html',
+  'landing/site.css', 'landing/site.js', 'landing/download.js',
 ];
 
 const md5 = (b) => crypto.createHash('md5').update(b).digest('hex');

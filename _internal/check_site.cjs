@@ -214,8 +214,20 @@ function staticChecks() {
   for (const p of PAGES) {
     const miss = need.filter(([n, re]) => !re.test(src[p])).map(([n]) => n);
     if (miss.length) ng('A4', `${p} 缺：${miss.join(', ')}`);
+    /* 🔴 规范 URL 不得以 .html 结尾。CF Pages 的 clean-URL 会把 /x.html **308** 到 /x，
+       所以写 .html 的 canonical / og:url 声明的是一条**永不 200** 的地址。
+       实测（2026-09-28）：官网五页的 canonical 与 og:url、产品跳转壳的 canonical 全中
+       —— 页面能开、306 后也正常，静态检查看不出任何异样，只有对着「最终地址」比才发现。
+       在此把守，防以后写回。 */
+    [['canonical', /<link[^>]*rel="canonical"[^>]*href="([^"]+)"/i],
+     ['og:url', /<meta[^>]*property="og:url"[^>]*content="([^"]+)"/i]].forEach(([n, re]) => {
+      const m = src[p].match(re);
+      if (m && /\.html$/i.test(m[1].trim())) {
+        ng('A4', `${p} 的 ${n} 指向 .html（会被 308）→ 应写无扩展名 clean URL：${m[1].trim()}`);
+      }
+    });
   }
-  if (!fail.some((f) => f.includes('[A4]'))) ok('A4', `canonical / og:title / og:image / og:description 五页齐`);
+  if (!fail.some((f) => f.includes('[A4]'))) ok('A4', `canonical / og:title / og:image / og:description 五页齐，且规范 URL 均为 clean URL（不以 .html 结尾）`);
 
   /* A5 站内链接全部落到真实文件 */
   const bad = [];
@@ -601,6 +613,11 @@ function staticChecks() {
       href: a ? a.getAttribute('href') : null,
       sizeVis: vis('#apk-size'), md5Vis: vis('#apk-md5'),
       pendingVis: vis('#apk-pending'), failVis: vis('#load-fail'),
+      /* 首屏加载态（2026-09-28 新增）。注意**两条方向相反**的断言都要有：
+         回填「之前」它必须可见（否则「—」又被裸留给用户 —— C8 守），
+         回填「之后」它必须不可见（否则页面永远在说「正在读取」—— 下面守）。 */
+      loadingVis: vis('#dl-loading'),
+      busy: (() => { const c = document.querySelector('#dl-card'); return c ? c.getAttribute('aria-busy') : null; })(),
     };
   };
   const CASES = [
@@ -629,7 +646,16 @@ function staticChecks() {
       }));
     }
     await p3.goto(`${base}/landing/download.html?lang=en`, { waitUntil: 'load' });
-    await p3.waitForTimeout(500);
+    /* 🔴 等**条件**而不是等固定时间。定长等待会制造假阴性：本地 500ms 够、弱网不够，
+       那时探针会把「还在进行」判成「没回填」，逼人去改本来正确的东西
+       （线上版 shot_landing_live 正是这么翻过一次车）。顺带把回填耗时量出来
+       —— 它就是「首屏占位窗口」这个指标本身，每跑一次都有数。 */
+    const tFill = Date.now();
+    await p3.waitForFunction(
+      () => { const e = document.querySelector('#apk-ver'); return !!(e && e.textContent.trim() !== '—'); },
+      null, { timeout: 10000 },
+    ).catch(() => {});
+    const fillMs = Date.now() - tFill;
 
     const eff = payload ? payload.apk : apk;        // 本用例的期望值
     const pendingMeta = !eff.md5 || !eff.size;
@@ -651,6 +677,11 @@ function staticChecks() {
       if (!bind.md5Vis) bad('完整态下 #apk-md5 被隐藏了（有值就该显示）');
       if (bind.pendingVis) bad('完整态下不该出现 #apk-pending（元数据是齐的）');
     }
+    /* ── A8 首屏加载态必须已被撤掉 ──
+       「正在读取版本信息…」只有在**还在读**的时候才该出现。回填结束后它若还在，
+       用户已经拿到结果、页面却还在说在读取 —— 比不给状态更坏。 */
+    if (bind.loadingVis) bad('回填完成后 #dl-loading 仍可见 —— 加载态没撤，页面会一直说「正在读取」');
+    if (bind.busy) bad(`回填完成后 #dl-card 的 aria-busy 仍是「${bind.busy}」—— 该摘掉`);
 
     /* 切语言不得清空（含「不得把已隐藏的待回写字段复活」） */
     await p3.evaluate(() => window.SinokySite && window.SinokySite.applyLang('zh'));
@@ -680,10 +711,40 @@ function staticChecks() {
 
     if (fail.length === before) {
       ok(code, cs.label + '：版本绑定全等（' + eff.version
-        + (pendingMeta ? ' · 体积/校验值已隐藏并有显式说明，无裸「—」' : ` / ${String(eff.md5).slice(0, 12)}… / ${eff.size}B`) + '）');
+        + (pendingMeta ? ' · 体积/校验值已隐藏并有显式说明，无裸「—」' : ` / ${String(eff.md5).slice(0, 12)}… / ${eff.size}B`)
+        + ' · 回填 ' + fillMs + 'ms）');
     }
     await p3.screenshot({ path: path.join(SHOTS, cs.shot), fullPage: true });
     await p3.close();
+  }
+  /* ── C8 首屏加载态：**反向验证**「它真的出现过」 ──
+     ⚠️ 只在回填后断言「#dl-loading 已隐藏」是不够的：如果它压根没渲染过，
+     那条断言同样恒真（「空断言恒真」的老坑）。所以这里把 version.json 人为延迟 900ms，
+     在**等待窗口内**采样 —— 这才分得清「加载态生效」和「加载态不存在」。
+     另外它顺手量出「首屏占位窗口」的真实长度：延迟多久，就该看到多久的加载态。 */
+  {
+    const p8 = await ctx2.newPage();
+    await p8.route('**/version.json*', async (route) => {
+      await new Promise((r) => setTimeout(r, 900));
+      await route.continue();
+    });
+    await p8.goto(`${base}/landing/download.html?lang=en`, { waitUntil: 'domcontentloaded' });
+    await p8.waitForTimeout(350);            // 仍在 900ms 延迟窗口内
+    const during = await p8.evaluate(VPROBE);
+    if (!during.loadingVis) ng('C8', '延迟窗口内 #dl-loading 不可见 —— 加载态没生效，用户看到的仍是裸「—」');
+    if (during.busy !== 'true') ng('C8', `延迟窗口内 #dl-card 的 aria-busy = ${JSON.stringify(during.busy)}（应为 "true"）`);
+    await p8.waitForFunction(
+      () => { const e = document.querySelector('#dl-loading'); return !!(e && !e.getClientRects().length); },
+      null, { timeout: 10000 },
+    ).catch(() => {});
+    const after8 = await p8.evaluate(VPROBE);
+    if (after8.loadingVis) ng('C8', '回填结束后 #dl-loading 仍在（加载态没撤）');
+    if (after8.busy) ng('C8', `回填结束后 aria-busy 仍在（${JSON.stringify(after8.busy)}）`);
+    if (!fail.some((f) => f.includes('[C8]'))) {
+      ok('C8', '首屏加载态：延迟窗口内可见且 aria-busy=true · 回填结束后自动撤掉（证明它不是「从没出现过」）');
+    }
+    await p8.screenshot({ path: path.join(SHOTS, 'site-download-loading.png') }).catch(() => {});
+    await p8.close();
   }
   await ctx2.close();
   await browser.close();

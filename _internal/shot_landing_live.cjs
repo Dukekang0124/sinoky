@@ -94,7 +94,7 @@ const ok = (n, c, x) => { if (c) { pass++; console.log('  ✅ ' + n); } else { f
   const vnorm = (s) => String(s || '').trim().replace(/^v/i, '');
   ok('L2 下载页版本号已被真实回填', filled && vnorm(r1.ver) === vnorm(apk.version),
     filled ? `页面 "${String(r1.ver).trim()}" vs 线上 "${apk.version}"` : '10s 内 #apk-ver 始终是占位「—」');
-  console.log(`  ℹ️  回填耗时 ${fillMs} ms（首屏这段窗口内用户看到的是占位符）`);
+  console.log(`  ℹ️  回填耗时 ${fillMs} ms（这段窗口内用户看到的是 #dl-loading「正在读取版本信息…」，不是裸「—」）`);
   ok('L2 主按钮 href === 线上 version.json 的 apk.url', String(r1.href).trim() === apk.url, `页面 "${r1.href}"`);
   ok('L2 文件名含版本号', String(r1.file).indexOf(String(apk.version)) >= 0, String(r1.file).trim());
   if (apk.md5 && apk.size) {

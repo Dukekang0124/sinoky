@@ -113,11 +113,26 @@
     state.ok = !!(url && apk.md5 && apk.size);
   }
 
+  /* 回填结束（成功或失败都算）必须撤掉加载态。
+     ⚠️ 少了这一步，「正在读取版本信息…」会永远挂在页面上 —— 用户已经拿到结果，
+     页面却还在说在读取，比不给状态更坏。这条由 check_site 的 A8 把守。 */
+  function settle() {
+    var el = $('#dl-loading');
+    if (el) el.hidden = true;
+    var card = $('#dl-card');
+    if (card) card.removeAttribute('aria-busy');
+  }
+
   function load() {
-    var url = '../version.json?t=' + Date.now();
-    fetch(url, { cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(function (v) { state.failed = false; fill(v); })
+    /* 🔴 复用 head 里**提前发起**的同一个请求（见 download.html head 的预热脚本）。
+       原来要等本文件下载 + 执行完才开始拉 version.json，实测那 730ms 用户看到的是占位符；
+       复用同一个 Promise 既把发起时间提前了整整一个 JS 往返，又不会产生第二次请求。 */
+    var p = window.__VER_P;
+    if (!p) {
+      p = fetch('../version.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    }
+    p.then(function (v) { state.failed = false; fill(v); settle(); })
       .catch(function () {
         // 降级：不留空白，把按钮指向 Release 页，并明确告诉用户发生了什么
         state.failed = true;
@@ -136,6 +151,7 @@
         ['#apk-ver', '#apk-build', '#apk-updated', '#web-ver'].forEach(function (s) {
           var el = $(s); if (el) el.textContent = '—';
         });
+        settle();
       });
   }
 
