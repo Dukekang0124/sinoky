@@ -10,6 +10,8 @@
  *      与本地 www 逐路径比「多 / 少」——抓漏文件与残余文件；
  *   ② 内容：~20 个「体积小但致命」的文本文件逐个 GET 比 md5
  *      —— 抓 version.json / sw.js / langs 这类会静默咬人的差异。
+ *      ⚠️ 例外：被 `_redirects` **精确收口**的路径（v0.29.3 起 `/download.html`）不做字节比对，
+ *         改断言「线上真 3xx + Location == 声明目标 + 目标存活」。见下方 REDIRECTS 处注释。
  *
  * 用法：
  *   NODE_TLS_REJECT_UNAUTHORIZED=0 node _internal/verify_www_vs_live.cjs
@@ -62,6 +64,34 @@ const CRITICAL = [
 const md5 = (b) => crypto.createHash('md5').update(b).digest('hex');
 const clip = (s, n = 160) => (s.length > n ? s.slice(0, n) + '…' : s);
 
+/* 🔴 v0.29.3 新增：`_redirects` 里被**精确收口**的路径不能做字节比对。
+ *
+ * 根因（2026-09-28 实测假阳性）：`req()` 默认跟随重定向，于是线上 `/download.html`
+ *   被 301 → `/landing/download.html` → 308 → `/landing/download`，脚本拿到的其实是
+ *   **landing 页的字节**（27298 B），再与本地兜底壳 `www/download.html`（2042 B）比 ⇒ 报「不一致」。
+ *   两边都没错，是**闸门没跟着「入口收敛」升级**：`www/download.html` 在线上本就不通过该 URL 提供内容。
+ *
+ * 处理：命中精确收口映射的文件 → 改成**收口断言**（仍带判别力，不是白名单）：
+ *   ① 线上必须 3xx，且 Location（去 query）== `_redirects` 声明的目标；返回 200 ⇒ 收口失效，硬失败；
+ *   ② 收口目标本身必须活着（跟随重定向后 200）。
+ *   通配规则（含 `*`）与带占位符的目标不参与，避免误判。 */
+function parseRedirects() {
+  const p = path.join(__dirname, '..', '_redirects');
+  const m = new Map();
+  if (!fs.existsSync(p)) return m;
+  fs.readFileSync(p, 'utf8').split(/\r?\n/).forEach((line) => {
+    const s = line.trim();
+    if (!s || s.startsWith('#')) return;
+    const parts = s.split(/\s+/);
+    if (parts.length < 2) return;
+    const [from, to, code] = parts;
+    if (from.includes('*') || to.includes(':') || to.includes('*')) return;
+    m.set(from.replace(/^\/+/, ''), { to, code: code || '302' });
+  });
+  return m;
+}
+const REDIRECTS = parseRedirects();
+
 function walk(dir, rel = '') {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -76,17 +106,19 @@ function req(url, opts = {}, tries = 3) {
   return new Promise((resolve, reject) => {
     const goWithUrl = (n, u) => {
       const r = https.get(u || url, { headers: Object.assign({ 'User-Agent': 'node', 'Cache-Control': 'no-cache' }, opts.headers || {}) }, (res) => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && n > 0) {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && n > 0 && !opts.noRedirect) {
           res.resume();
           return goWithUrl(n - 1, new URL(res.headers.location, u || url).href);
         }
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
         res.on('end', () => {
+          /* noRedirect：保留 3xx 原样返回（收口断言必须看到「跳没跳、跳到哪」，跟随会把 301 洗成 200 的目标页字节） */
+          if (opts.noRedirect) { resolve({ s: res.statusCode, buf: Buffer.concat(chunks), u: u || url, loc: res.headers.location || '' }); return; }
           // 高频限流会返回统一短页（实测 52 bytes）；不当作内容，直接重试
           if (n > 0 && res.statusCode !== 200) { setTimeout(() => goWithUrl(n - 1, u || url), 900); return; }
           if (n > 0 && Buffer.concat(chunks).length === 52 && opts.guardShort) { setTimeout(() => goWithUrl(n - 1, u || url), 900); return; }
-          resolve({ s: res.statusCode, buf: Buffer.concat(chunks), u: u || url });
+          resolve({ s: res.statusCode, buf: Buffer.concat(chunks), u: u || url, loc: '' });
         });
       });
       r.setTimeout(25000, () => r.destroy(new Error('timeout')));
@@ -149,6 +181,29 @@ function api(p) {
     if (!fs.existsSync(lp)) { console.log('❌ ' + f + '：本地不存在'); fails++; continue; }
     const lb = fs.readFileSync(lp);
     const url = BASE + '/' + (f === 'index.html' ? '' : f);
+
+    /* 被 `_redirects` 精确收口的路径：不做字节比对，改断言「真跳了、跳对了、目标活着」 */
+    const rd = REDIRECTS.get(f);
+    if (rd) {
+      try {
+        const r = await req(url, { noRedirect: true });
+        const loc = String(r.loc || '').split('?')[0];
+        if (r.s >= 300 && r.s < 400 && loc === rd.to) {
+          console.log('↪ ' + f + '：已按 _redirects 收口 → ' + rd.to + '（HTTP ' + r.s + '；本地文件作兜底保留 ' + lb.length + ' bytes，不做字节比对）');
+          const t = await req(BASE + rd.to, { guardShort: true });
+          if (t.s === 200) console.log('   └ 收口目标存活 ✅ ' + rd.to + '（' + t.buf.length + ' bytes）');
+          else { console.log('   └ ❌ 收口目标不可达：' + rd.to + ' HTTP ' + t.s); fails++; }
+        } else if (r.s === 200) {
+          console.log('❌ ' + f + '：_redirects 声明收口到 ' + rd.to + '，但线上直接 200 ⇒ **收口失效**（本地文件已与线上分叉，双轨复活）');
+          fails++;
+        } else {
+          console.log('❌ ' + f + '：收口目标与声明不符 — 线上 HTTP ' + r.s + ' Location=' + (r.loc || '(无)') + '，_redirects 声明 ' + rd.to);
+          fails++;
+        }
+      } catch (e) { console.log('⚠️ ' + f + '：取回失败 ' + e.message); fails++; }
+      continue;
+    }
+
     try {
       const r = await req(url, { guardShort: true });
       if (r.s !== 200) { console.log('❌ ' + f + '：线上 HTTP ' + r.s + ' ' + clip(r.buf.toString('utf8'), 80)); fails++; continue; }
