@@ -43,3 +43,14 @@
 /assets/share/dark-vertical.webp   /  302
 /assets/share/light-vertical.webp  /  302
 /assets/brand/dragon-nono.svg      /  302
+
+# v0.29.3：下载页收敛为**单一事实源** /landing/download.html。
+# 背景：根目录 download.html 此前是**真下载页**，含**两处硬编码 APK 直链**
+#   （Sinoky-vX.Y.Z-release.apk），每次发版都要手改 —— 历史上漏改过至少三次
+#   （v0.21.2 / v0.23.3 / v0.23.9 各一次，每次都靠生产验证脚本咬出来）。
+#   新的 /landing/download.html 改为**运行时读 version.json**，永久不再需要手改版本号。
+# 本规则把两条旧路径一律 301 收口；页面本体退化为「零版本跳转壳」保留在仓库里作兜底
+#   —— 边缘规则与 CF clean-URL 的处理顺序不由我们控制，下载入口不能有单点失败。
+# ⚠️ 仍须独占行、三段式（from to status），行内 # 会让整行静默失效。
+/download.html        /landing/download.html  301
+/download             /landing/download.html  301

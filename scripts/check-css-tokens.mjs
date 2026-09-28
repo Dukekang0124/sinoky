@@ -61,8 +61,12 @@ const ROOT = argRoot ? path.resolve(argRoot.slice(7)) : path.resolve(HERE, '..')
 
 /* 被内联进 index.html 的片段 —— 变量定义域 = index.html 的 */
 const FRAGMENTS = ['_internal/nono-ip-v1/patch.css', '_internal/nono-ip-v1/patch.js'];
-/* 独立页面 —— 自带 :root，自成定义域 */
-const PAGES = ['index.html', 'stats.html', 'download.html', 'credits.html'];
+/* 独立页面 —— 自带 :root，自成定义域
+   ⚠️ v0.29.3：`download.html` 已退休为**零版本跳转壳**（真实下载页 = /landing/download.html）。
+   它不再定义/使用任何设计令牌（A 段会报「定义 0 个变量」，属正常），**但它仍是一个深色页面
+   且带一个裸 <a>** —— 那正是 C 段要守的东西（深色页不许让链接掉到 UA 默认色），
+   所以**保留在列表里**，不当「空页面」跳过。 */
+const PAGES = ['index.html', 'stats.html', 'credits.html', 'download.html'];
 const HOST = 'index.html';
 
 let pass = 0, fail = 0;

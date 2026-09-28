@@ -1,132 +1,38 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>下载 Sinoky — Android / iOS</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download Sinoky — 下载 Sinoky</title>
+<!-- ⚠️ 本页自 v0.29.3 起**只是一个跳转壳**，不再是下载页本体。真实下载页 = /landing/download.html。
+     存在的唯一理由：下载入口不能有单点失败。边缘 301（见 _redirects）与 CF 的 clean-URL 处理
+     顺序不由我们控制，万一规则没被命中，用户仍会被这层壳带走，而不是停在旧页或吃 404。
+
+     🔴 硬约束：本页**不得**再出现任何 `Sinoky-vX.Y.Z-release.apk` 字样的硬编码直链。
+     旧版本这里是**真下载页**，含两处硬编码 APK 直链，每次发版都要手改、历史上漏改过至少三次。
+     现在它不含任何版本号 ⇒ `bump_version.cjs` 第 4/N 步对它 0 命中是**预期结果**（该步已改成 0 命中判绿）。
+     真下载页改为运行时读 version.json，因此永久不再需要手改版本号。 -->
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://sinoky.pages.dev/landing/download.html">
+<meta http-equiv="refresh" content="0; url=landing/download.html">
 <style>
-  :root{ --bg:#0d0d10; --card:#17171c; --text:#f2f2f2; --sec:#9a9aa3; --accent:#e63946; --border:#2a2a31; }
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  body{ background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
-        min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px 16px calc(24px + env(safe-area-inset-bottom)); }
-  .box{ max-width:440px; width:100%; }
-  .logo{ font-size:2rem; font-weight:800; letter-spacing:.5px; }
-  .logo span{ color:var(--accent); }
-  .tag{ color:var(--sec); font-size:.9rem; margin:6px 0 22px; line-height:1.5; }
-  .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
-  .ver{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
-  .ver b{ font-size:1.15rem; }
-  .ver small{ color:var(--sec); }
-  .note{ color:var(--sec); font-size:.82rem; line-height:1.55; margin-top:8px; }
-  .dl{ display:block; text-align:center; background:var(--accent); color:#fff; text-decoration:none; font-weight:700;
-       font-size:1.05rem; padding:16px; border-radius:12px; margin:4px 0 14px; }
-  .dl:active{ filter:brightness(.9); }
-  .dl small{ display:block; font-weight:400; font-size:.75rem; opacity:.85; margin-top:2px; }
-  .steps{ margin:10px 0 0; padding-left:18px; color:var(--sec); font-size:.85rem; line-height:1.85; }
-  .steps b{ color:var(--text); }
-  .warn{ background:rgba(230,57,70,.1); border:1px solid rgba(230,57,70,.35); color:#ffb3b9; border-radius:10px;
-         padding:10px 12px; font-size:.8rem; line-height:1.6; margin-top:12px; }
-  .wechat{ display:none; background:rgba(217,136,0,.12); border:1px solid rgba(217,136,0,.4); color:#f0c060;
-           border-radius:10px; padding:10px 12px; font-size:.82rem; line-height:1.6; margin-bottom:16px; }
-  .desktop-url{ display:flex; gap:8px; margin-top:10px; }
-  .desktop-url input{ flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:#0d0d10; color:#fff; font-size:.85rem; }
-  .desktop-url button{ padding:0 14px; border:none; border-radius:10px; background:var(--accent); color:#fff; font-weight:700; }
-  .foot{ color:var(--sec); font-size:.72rem; text-align:center; margin-top:18px; line-height:1.6; }
-  .pill{ display:inline-block; font-size:.7rem; padding:2px 8px; border-radius:999px; background:rgba(127,127,127,.18); color:var(--sec); margin-bottom:8px; }
+  :root{ color-scheme:dark }
+  body{ margin:0; min-height:100dvh; display:flex; align-items:center; justify-content:center;
+        background:#141a24; color:#eef2f7; padding:24px 16px;
+        font-family:-apple-system,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif; }
+  .box{ max-width:420px; text-align:center; line-height:1.65 }
+  a{ color:#ff6b75 }
+  p{ margin:0 0 14px; font-size:15px }
+  .sub{ color:#9aa7b8; font-size:13.5px }
 </style>
 </head>
 <body>
 <div class="box">
-  <div class="logo">Sinoky<span>.</span></div>
-  <div class="tag" id="tag">开口说真正用得上的中文。选你的设备安装方式。</div>
-
-  <div class="wechat" id="wechatTip">
-    ⚠️ 你正在微信 / QQ 等内置浏览器里。点右上角 ⋯ → <b>在浏览器中打开</b>，再继续下面的步骤。
-  </div>
-
-  <div class="card" id="mainCard">
-    <div class="ver"><b id="v">Sinoky</b><small id="sz"></small></div>
-    <div class="note" id="note">正在获取最新版本…</div>
-  </div>
-
-  <div class="foot">© 2026 Sinoky · 数据只存在你的设备上</div>
+  <p>Taking you to the download page…</p>
+  <p class="sub">正在带你去下载页…</p>
+  <p><a href="landing/download.html">Continue / 点这里继续</a></p>
+  <p class="sub">If nothing happens, tap the link above.</p>
 </div>
-<script>
-/* v0.21.0 download 四段链路：微信/QQ / Android / iOS(PWA) / 桌面 分流 */
-function T2(zh, en){ return (navigator.language||'en').toLowerCase().indexOf('zh')===0 ? zh : en; }
-var UA = navigator.userAgent || '';
-var isWeChat = /MicroMessenger/i.test(UA);
-var isQQ = /QQ\//i.test(UA);
-var isInApp = isWeChat || isQQ || /MiuiBrowser|HeyTapBrowser|VivoBrowser|HuaweiBrowser|Weibo/i.test(UA);
-var isIOS = /iPhone|iPad|iPod/i.test(UA);
-var isAndroid = /Android/i.test(UA);
-var isMobile = isIOS || isAndroid || /Mobile/i.test(UA);
-
-if(isInApp) document.getElementById('wechatTip').style.display = 'block';
-
-fetch('version.json?t=' + Date.now(), { cache:'no-store' })
-  .then(function(r){ return r.json(); })
-  .then(function(j){
-    var a = j.apk || {};
-    var ver = a.version || j.version || '';
-    var url = a.url || 'https://sinoky.pages.dev/apk/Sinoky-v0.29.1-release.apk';
-    var size = a.size || 0;
-    document.getElementById('v').textContent = 'Sinoky v' + ver;
-    if(size) document.getElementById('sz').textContent = (size>=1048576 ? (size/1048576).toFixed(1)+' MB' : Math.round(size/1024)+' KB');
-    renderPath(url, ver, size, a.note || j.note || '');
-  })
-  .catch(function(){
-    renderPath('https://sinoky.pages.dev/apk/Sinoky-v0.29.1-release.apk', '', 0, '');
-    document.getElementById('note').textContent = '版本信息加载失败，下载按钮仍指向最新构建。';
-  });
-
-function fmtUrl(u){ return u; }
-function renderPath(url, ver, size, note){
-  var card = document.getElementById('mainCard');
-  var noteHtml = note ? '<div class="note">'+esc(note)+'</div>' : '';
-
-  if(isIOS){
-    card.innerHTML =
-      '<span class="pill">iPhone / iPad</span>'+
-      '<div class="note">'+T2('iPhone 装不了 APK，但可以用 Safari 把 Sinoky 存成「主屏幕 App」，体验和安装版几乎一样（离线可用、一键打开）。',
-                                'iPhone can’t install APK, but you can add Sinoky to your Home Screen from Safari — works offline, opens in one tap.')+'</div>'+
-      '<div class="steps">'+
-      '<li>'+T2('用 <b>Safari</b> 打开本页面（不要用微信/QQ 内置浏览器）','Open this page in <b>Safari</b> (not WeChat/QQ)')+'</li>'+
-      '<li>'+T2('点底部工具栏的「分享」图标（方框+箭头）','Tap the <b>Share</b> icon at the bottom (square with arrow)')+'</li>'+
-      '<li>'+T2('下滑找到并点「<b>添加到主屏幕</b>」','Scroll down and tap <b>Add to Home Screen</b>')+'</li>'+
-      '<li>'+T2('点「添加」，Sinoky 就出现在本机了','Tap <b>Add</b> — Sinoky is now on your Home Screen')+'</li>'+
-      '</div>'+
-      noteHtml;
-    return;
-  }
-
-  if(!isMobile){
-    /* 桌面：给出可复制链接，手机扫码/输入打开 */
-    var here = location.origin + location.pathname;
-    card.innerHTML =
-      '<span class="pill">桌面浏览器</span>'+
-      '<div class="note">'+T2('在手机浏览器打开下面的链接即可安装 / 添加到主屏幕：','Open the link below on your phone’s browser to install / add to Home Screen:')+'</div>'+
-      '<div class="desktop-url"><input id="du" readonly value="'+esc(here)+'"><button onclick="copyLink()">复制</button></div>'+
-      '<div class="note" style="margin-top:10px">'+T2('或手机扫码：用微信「扫一扫」/ 相机扫这个页面地址也行。','Or scan: use WeChat “Scan” / camera on this page URL.')+'</div>'+
-      noteHtml;
-    return;
-  }
-
-  /* Android / 其它移动端：APK 直链 + 安装授权图文 */
-  var szTxt = size ? (size>=1048576 ? (size/1048576).toFixed(1)+' MB' : Math.round(size/1024)+' KB') : '';
-  card.innerHTML =
-    '<a class="dl" id="dl" href="'+esc(url)+'" download><span>⬇️ '+T2('下载最新 APK','Download latest APK')+'</span><small>'+(szTxt?('APK · '+szTxt):T2('点按开始下载','tap to start'))+'</small></a>'+
-    '<div class="steps">'+
-    '<li>'+T2('点上面的「下载」，等文件下完','Tap <b>Download</b> above and wait for the file')+'</li>'+
-    '<li>'+T2('打开下载的文件。若提示「禁止安装未知应用」→ 点「设置」→ 开启「允许来自此来源」→ 返回','Open the file. If asked to allow <b>unknown apps</b>, tap <b>Settings</b> → enable the toggle → go back')+'</li>'+
-    '<li>'+T2('点「安装」，你的学习数据会保留','Tap <b>Install</b> — your learning data is kept')+'</li>'+
-    '</div>'+
-    '<div class="warn">'+T2('若浏览器下到 0 字节 / 打不开：请换 Chrome，或把链接复制到 Chrome 打开（部分国产浏览器对 APK 直链支持不好）。','If the download is 0 bytes / won’t open: use Chrome, or paste the link into Chrome (some built-in browsers mishandle APK links).')+'</div>'+
-    noteHtml;
-}
-function copyLink(){ var i=document.getElementById('du'); if(i){ i.select(); try{ document.execCommand('copy'); }catch(e){} navigator.clipboard && navigator.clipboard.writeText(i.value).catch(function(){}); toast('链接已复制'); } }
-function toast(m){ var t=document.createElement('div'); t.textContent=m; t.style.cssText='position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#000;color:#fff;padding:8px 14px;border-radius:10px;font-size:.82rem;z-index:9999'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 1600); }
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-</script>
+<script>location.replace('landing/download.html');</script>
 </body>
 </html>

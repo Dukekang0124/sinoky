@@ -16,7 +16,8 @@ const FILES = [
   'ARPHICPL.TXT', 'privacy.html', 'stats.html', 'credits.html', 'robots.txt', 'sitemap.xml',
   '_headers',
   '_redirects',        // ⚠️ 部署配置：承载边缘 302 收口（/www/*、/_internal/*、/badge-backend.mjs…）。漏带 → tag CI 部署后收口规则整体失效
-  'download.html',     // ⚠️ 线上 /download 下载引导页。漏带 → tag CI 部署后下载页退化成 SPA 兜底
+  'download.html',     // v0.29.3 起 = **零版本跳转壳**（真实下载页 = landing/download.html，走 _redirects 301）。
+                       // 仍必须进包：边缘 301 与 CF clean-URL 的处理顺序不由我们控制 ⇒ 留一层兜底，下载入口不能有单点失败
   '_worker.js',        // ⚠️ 必须进包：Pages Functions(TTS/ASR/chat/score/feedback) 靠它。漏掉会导致 CI 末段 `wrangler pages deploy www` 把函数全覆盖掉（v0.21.0 踩过）
   'badge-backend.mjs', // ⚠️ _worker.js:29 `import { handleBadgeApi } from './badge-backend.mjs'` 的依赖。漏掉 → wrangler 打包 worker 报 Could not resolve → APK 发布链整体失败（v0.21.2 踩过）
   '.assetsignore'      // ⚠️ 使 badge-backend.mjs 不作为静态资源上传（防公网直接下载），但保留在磁盘上供 worker bundler 解析 import
@@ -29,6 +30,9 @@ const EXCLUDE = new Set([
   'package.json', 'package-lock.json', 'capacitor.config.json',
   '_audit_i18n.txt',
   'wrangler.toml',     // v0.24.8 新增：Pages 部署配置（KV 绑定/兼容标记）。属构建配置，**不上线**（上线等于把部署配置公开可下载）
+  '.workbuddy',        // v0.29.3 新增：AI 协作工具的会话/自动化数据目录。非源码、非产品资源，**不上线**
+                       // （2026-09-28 被本闸门当场拦下：它在仓库根出现却未归类 ⇒ build:web 直接失败。
+                       //  这正是归类断言的价值 —— 漏归类会导致「该上线的没上线 / 内部文件被上线」。）
   'nul',               // Windows 保留设备名的 0 字节残留（环境产物）。归类为排除，避免每次构建硬失败
 ]);
 
@@ -170,14 +174,23 @@ await walkHtml(out);
 for (const f of htmlFiles) {
   const html = readFileSync(f, 'utf8');
   const rel = path.relative(out, f).replace(/\\/g, '/');
+  const dir = path.dirname(f);
   const local = (u) => u && !/^(https?:|\/\/|data:|mailto:|#)/.test(u);
+  /* 🔴 相对依赖必须相对**本文件所在目录**解析，不能相对包根。
+     v0.29.3：本项目第一次出现位于子目录的 HTML（landing/*.html），
+     旧代码用 path.join(out, m[1]) ⇒ 把 landing/site.css 当成包根的 site.css 去找，
+     一次报出 11 条「缺失」，全是假阳性（文件好好地在 www/landing/ 里）。
+     JS import 分支本来就写对了（用了 path.dirname）—— HTML 分支漏了这步。
+     根绝对路径（/x）仍按包根解析，那正是 CF Pages 的语义。
+     ⚠️ 假阳性比没检查更危险：它逼人往「缺失」方向修，容易把对的改成错的。 */
+  const resolveLocal = (u) => (u.startsWith('/') ? path.join(out, u) : path.join(dir, u));
   for (const m of html.matchAll(/<script[^>]+src=["']([^"'#:?]+)["']/g)) {
-    if (local(m[1]) && !existsSync(path.join(out, m[1]))) missing.push(`${rel} → ${m[1]}`);
+    if (local(m[1]) && !existsSync(resolveLocal(m[1]))) missing.push(`${rel} → ${m[1]}`);
   }
   for (const tag of html.match(/<link[^>]*>/g) || []) {
     if (!/rel=["']stylesheet["']/i.test(tag)) continue;
     const h = tag.match(/href=["']([^"'#:?]+)["']/);
-    if (h && local(h[1]) && !existsSync(path.join(out, h[1]))) missing.push(`${rel} → ${h[1]}`);
+    if (h && local(h[1]) && !existsSync(resolveLocal(h[1]))) missing.push(`${rel} → ${h[1]}`);
   }
 }
 

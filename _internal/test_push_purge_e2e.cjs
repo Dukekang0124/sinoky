@@ -7,7 +7,10 @@
  * 这里把 `_worker.js` 当**真 ESM import** 进来，喂内存 KV + 假 fetch，
  * **真跑一次 GET /api/push-send**，然后查 KV 的真实字节。
  *
- * 干预式因果（铁律）：同一份夹具跑两版 —— 当前源码 vs `git show HEAD:_worker.js` 的旧版。
+ * 干预式因果（铁律）：同一份夹具跑两版 —— 当前源码 vs 固定 commit 的旧版
+ *         （`_worker.js`（当前）对照 `OLD_REF` 那个 commit 的 `_worker.js`）。
+ *         ⚠️ 锚点**不能是 HEAD**：功能一提交，HEAD 就含它，控制组变成对照组自己，
+ *            断言恒真而静默失去判别力（v0.29.3 实测撞上，详见 main() 内注释）。
  * 旧版必须**做不到**（无 tripPurged 字段、arrive 原封不动），否则说明这组断言是假的。
  *
  * 用法：node _internal/test_push_purge_e2e.cjs   （零网络、零生产写入）
@@ -88,10 +91,27 @@ async function run(workerFile, KV, query) {
 
 (async function main() {
   const CUR = stage(fs.readFileSync(path.join(ROOT, '_worker.js'), 'utf8'), '_worker.cur.tmp.mjs');
+  /* 🔴 A/B 的「旧版」锚点必须是**固定 commit，绝不能是浮动的 HEAD**。
+     原因：本功能一旦提交，HEAD 本身就含它 ⇒ 控制组变成对照组自己，
+     断言**恒真**且毫无判别力 —— 而且失败方式是**静默**的：测试照跑、A/B 段照打，
+     只是再也证明不了任何事。
+     （v0.29.3 实测撞上：v0.29.2 提交后本测试从 27/27 掉到 24/27，
+      报「旧版响应有 tripPurged 字段」——看着像产品回归，其实是锚点腐化。）
+     锚点 = 引入行程清理（v0.29.2）之前的最后一个提交。 */
+  const OLD_REF = 'cde3e32';
   let OLD = null;
   try {
-    OLD = stage(cp.execSync('git show HEAD:_worker.js', { cwd: ROOT, encoding: 'utf8' }), '_worker.old.tmp.mjs');
-  } catch (e) { console.log('⚠️ 取不到旧版（git show 失败），跳过 A/B：' + String(e.message || e).slice(0, 80)); }
+    const oldSrc = cp.execSync('git show ' + OLD_REF + ':_worker.js', { cwd: ROOT, encoding: 'utf8' });
+    /* 守卫：夹具本身也要断言。若锚点已含清理代码，A/B 就失去判别力 ——
+       这种情况必须**硬失败**，不能静默跳过（否则等于一道永远为真的假闸门）。 */
+    if (/tripPurged|purgeTrip/.test(oldSrc)) {
+      fail++;
+      console.log('  ❌ A/B 锚点 ' + OLD_REF + ' 已包含行程清理代码 ⇒ 控制组失效，'
+        + '本组断言不再有判别力。请把 OLD_REF 换到更早的提交。');
+    } else {
+      OLD = stage(oldSrc, '_worker.old.tmp.mjs');
+    }
+  } catch (e) { console.log('⚠️ 取不到旧版（git show ' + OLD_REF + ' 失败），跳过 A/B：' + String(e.message || e).slice(0, 80)); }
 
   /* 假推送端点：一律 201，绝不发真实请求 */
   let pushHits = 0;

@@ -1007,7 +1007,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <div class="q">&ldquo;Playing it slower for people who don't understand normal speed is amazing. And covering the answer is good for studying.&rdquo;</div>
       <div class="q-by">&mdash; anonymous beta testers, shared with permission</div>
     </div>
-    <div class="foot">Sinoky v<span class="v-txt"></span> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="#" onclick="openShare();return false;">Share</a> · Speak Chinese where it matters</div>
+    <div class="foot">Sinoky v<span class="v-txt"></span> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="#" onclick="openShare();return false;">Share</a> · <a href="landing/index.html" target="_blank" rel="noopener">Website</a> · Speak Chinese where it matters</div>
   </section>
 
   <!-- SCENE -->
@@ -1465,7 +1465,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.29.2';
+var APP_VERSION = '0.29.3';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -10717,7 +10717,7 @@ SHARE.playDeepLink = function(){
      ③ 诺诺面板「–」收起键 20x24（宽不足）
    做法：**扩盒不改版式** —— 内联链接用「padding + 等量负 margin」把可点区撑到 24px，
    文字位置/行高完全不动（inline-block 的负 margin 会参与行盒计算）；chip 与圆钮直接补 min-*。 */
-a[href="privacy.html"],a[href="credits.html"],a[href="ARPHICPL.TXT"],a[onclick^="openShare"]{
+a[href="privacy.html"],a[href="credits.html"],a[href="ARPHICPL.TXT"],a[href="landing/index.html"],a[onclick^="openShare"]{
   display:inline-block;padding:5px 3px;margin:-5px -3px}
 button[onclick^="switchListen"]{min-height:26px}      /* 23 -> 26 */
 button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 */
@@ -10853,7 +10853,7 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
       p.innerHTML = '<h3>'+T('Free uses are used up for today')+'</h3>'+
         '<p>'+sub+'</p>'+
         '<div class="two">'+
-        '<button class="btn primary" onclick="location.href=\'download.html\'">📱 '+T('Install App · Unlimited')+'</button>'+
+        '<button class="btn primary" onclick="location.href=\'landing/download.html\'">📱 '+T('Install App · Unlimited')+'</button>'+
         '<button class="btn" onclick="go(\'review\')">🔁 '+T('Practise review for today')+'</button>'+
         '</div>'+
         '<button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeOvl(\'limitWall\')">'+T('Later')+'</button>';

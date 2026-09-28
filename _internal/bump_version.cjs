@@ -4,6 +4,11 @@
    六处 = WEB 3 处（version.json 顶层 / index.html APP_VERSION / sw.js CACHE）
         + APK 3 处（version.json 的 apk 段 / apk.url 直链 / download.html 两处兜底直链）。
 
+   ★ v0.29.3 起：download.html 从「真下载页」退休为**零版本跳转壳**（真实下载页 = /landing/download.html，
+   运行时读 version.json ⇒ 永久不用手改版本号）⇒ **六处降为五处**：
+   WEB 3（顶层 version / APP_VERSION / sw CACHE）+ APK 2（apk 段的 versionCode/version/url；md5/size 由 CI 回写）。
+   第 4/N 步因此**预期 0 命中且判绿**（见该步注释）。
+
    apk 段特别说明：
      - versionCode = MA*10000 + MI*100 + PA（0.28.0 → 2800）
      - md5 / size **故意清空**（md5:"" size:0），由 CI（apk.yml）出包后回写真实值。
@@ -15,13 +20,13 @@
      node _internal/bump_version.cjs 0.28.0 _internal/notes/v0.28.0.json
         （notes 文件形如 {"note":"中文说明","noteEn":"英文说明"}；noteEn 会插到数组最前）
      node _internal/bump_version.cjs 0.28.1 _internal/notes/v0.28.1.json --web-only
-        （**只发网页线**：apk 段与 download.html 兜底直链**一律不动**，只改 WEB 三处 ——
+        （**只发网页线**：apk 段与 download.html **一律不动**，只改 WEB 三处 ——
           纯网页/CSS/文案修复的既有权衡，见 skill `sinoky-release-sop` §1.1。
           ⚠️ 此时 apk.version 会比顶层 version 旧一档，这是**预期落差不是缺陷**，交付文档必须写明。）
      node _internal/bump_version.cjs 0.28.1 _internal/notes/v0.29.1.json --apk-only
         （**补出 APK（网页线转正式发版）**：顶层 version 已由 --web-only 就位，本模式**只改 APK 线**
           —— version.json 的 apk 段 4 字段（versionCode / version / url / md5+size 清空待 CI 回写）
-             + download.html 兜底直链；WEB 三处与顶层 version 保持不变。
+             + download.html 的无硬编码校验；WEB 三处与顶层 version 保持不变。
           用途：某版先按「只发网页线」发了（APK 段故意落后一档），之后决定**正式发版**让 App 用户
           也拿到 —— 直接打 tag 会因 apk 段指向旧版本而语义错乱，本模式把六处补齐后 tag 才干净。
           note 走**替换**而非插入（同一次发版的 note 已在 --web-only 时写过，插入会重复）。
@@ -160,10 +165,15 @@ if(APK_ONLY){
   step('sw.js · CACHE', false, '未找到 var CACHE = ...');
 }
 
-/* ---- 4/N. download.html 兜底直链（两处，历史上漏过 → 用正则全覆盖） ----
-   注意：兜底直链指向的是 **APK**，所以 --web-only 时必须跳过。 */
+/* ---- 4/N. download.html 硬编码直链 ----
+   ★ v0.29.3 起：本步**预期 0 命中，且 0 命中判绿**。
+   download.html 已从「真下载页」退休为**零版本跳转壳**；真实下载页 = /landing/download.html，
+   改为运行时读 version.json ⇒ 永久不再需要手改版本号。版本号因此从六处降为五处。
+   保留本步**唯一目的是防回归**：万一有人把 `Sinoky-vX.Y.Z-release.apk` 又写回 download.html，
+   这里会命中并照改（不让它把发版卡死），同时打印 ⚠️ 提醒把那行删掉。
+   注意：兜底直链指向的是 **APK**，所以 --web-only 时无需处理。 */
 if(WEB_ONLY){
-  step('download.html · 兜底直链保持不变（--web-only）', true, '指向仍在线的那版 APK');
+  step('download.html · 零硬编码版本（--web-only 无需处理）', true, '已退休为跳转壳');
 } else {
   const dlPath = path.join(ROOT, 'download.html');
   let dl = fs.readFileSync(dlPath, 'utf8');
@@ -172,9 +182,9 @@ if(WEB_ONLY){
   if(hits.length){
     dl = dl.replace(dlRe, 'Sinoky-v' + NEW + '-release.apk');
     fs.writeFileSync(dlPath, dl, 'utf8');
-    step('download.html · 兜底直链 ×' + hits.length, true, hits.join(' , ') + ' → v' + NEW);
+    step('download.html · 命中 ×' + hits.length + '（⚠️ 该页本应零硬编码，请删掉这些行）', true, hits.join(' , ') + ' → v' + NEW);
   } else {
-    step('download.html · 兜底直链', false, '未找到 Sinoky-vX.Y.Z-release.apk');
+    step('download.html · 零硬编码版本（预期：已退休为跳转壳）', true, '0 命中 = 正确');
   }
 }
 

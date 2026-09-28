@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en" data-title-zh="下载 Sinoky — Android APK 与 iOS 安装说明">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download — Sinoky (Android APK &amp; iOS)</title>
+<meta name="description" content="Download the Sinoky Android APK (23 MB, Android 7.0+), or add it to your iPhone Home Screen. Version, size and MD5 hash shown, with install steps and troubleshooting." data-zh-content="下载 Sinoky 安卓安装包（约 23 MB，Android 7.0 以上），或添加到 iPhone 主屏幕。页面显示真实版本号、体积与 MD5 校验值，附安装步骤与疑难排查。">
+<meta name="theme-color" content="#141a24">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://sinoky.pages.dev/landing/download.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Download — Sinoky">
+<meta property="og:description" content="Android APK, or add to Home Screen on iOS. Free, no account.">
+<meta property="og:url" content="https://sinoky.pages.dev/landing/download.html">
+<meta property="og:image" content="https://sinoky.pages.dev/assets/brand/nono-hero.webp">
+<link rel="icon" href="../icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="site.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main" data-zh="跳到主内容">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="./"><span class="dot"></span>Sinoky</a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="features.html" data-zh="功能亮点">Features</a>
+      <a href="how.html" data-zh="怎么用">How it works</a>
+      <a href="download.html" aria-current="page" data-zh="下载 App">Download</a>
+      <a href="contact.html" data-zh="联系我们">Contact</a>
+    </nav>
+    <div class="langsw" role="group" aria-label="Language">
+      <button type="button" data-setlang="en" aria-pressed="true">EN</button>
+      <button type="button" data-setlang="zh" aria-pressed="false">中文</button>
+    </div>
+    <a class="btn btn-p nav-cta" href="https://sinoky.pages.dev/" data-zh="免费开始">Open Sinoky</a>
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false"><span></span></button>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow" data-zh="下载与安装">Download &amp; install</span>
+      <h1 data-zh="把 Sinoky 装到手机上">Put Sinoky on your phone</h1>
+      <p class="lede" data-zh="三条路都写在下面，不管你现在用的是手机还是电脑。没有任何一条需要注册账号。">
+        All three routes are on this page, whatever device you're on right now. None of them require an account.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+
+      <!-- 应用内浏览器警告：微信/QQ 等打开 APK 直链会失败 -->
+      <div class="note red warn-box" data-zh-html="⚠️ <b>你现在是在微信 / QQ 这类内置浏览器里。</b>这类浏览器常常下不了 APK（下到 0 字节或直接打不开）。请点右上角 <b>⋯</b> →「在浏览器中打开」，回到本页再继续。">
+        ⚠️ <b>You're inside an in-app browser (WeChat / QQ and similar).</b> These often fail to download APKs
+        (you get a 0-byte file, or it simply won't open). Tap <b>⋯</b> at the top right → “Open in browser”, then come
+        back to this page.
+      </div>
+
+      <!-- ── 版本卡：数据全部来自线上 version.json，不写死 ── -->
+      <div class="dl-card fade">
+        <div class="dl-ver">
+          <b id="apk-ver" data-live>—</b>
+          <span class="pill" data-zh="Android 安装包 · APK">Android package · APK</span>
+          <span class="pill" id="force-badge" hidden data-zh="重要更新">Important update</span>
+        </div>
+        <!-- ⚠️ 不变量（check_site.cjs 的 A7 守）：带 data-live 的动态值节点必须与文案节点**平级**，
+             绝不能嵌在 data-zh / data-zh-html 里面。嵌进去的话，语言切换会把整块 innerHTML
+             重置成静态模板，把 JS 回填的真值冲掉 —— 曾经的症状就是「切一次语言，版本号变回 —」。 -->
+        <!-- ⚠️ 每一项各自包一层 <span>，分隔符改由 CSS 的 ::after 生成（不再写字面量「·」）。
+             原因：APK 的「体积 / 校验值」在 CI 回写完成前是**合法缺失**的，那时要把整项隐藏；
+             若分隔符是字面量文本，隐藏后会在行里留下一个悬空的「 · 」。
+             hidden 的元素 display:none，它的 ::after 同样不渲染 ⇒ 不必额外擦分隔符。 -->
+        <p class="dl-meta">
+          <span class="mi" id="mi-size"><span data-zh="体积">Size</span> <b id="apk-size" data-live>—</b></span>
+          <span class="mi" id="mi-build"><span data-zh="构建号">build</span> <b id="apk-build" data-live>—</b></span>
+          <span class="mi" id="mi-updated"><span data-zh="发布于">published</span> <b id="apk-updated" data-live>—</b></span>
+          <span class="mi" id="mi-web"><span data-zh="网页版">web version</span> <span id="web-ver" data-live>—</span></span>
+        </p>
+
+        <a class="dl-btn" data-apk-link href="https://github.com/Dukekang0124/sinoky/releases/latest" rel="noopener">
+          <span data-zh="⬇️ 下载最新 APK">⬇️ Download the latest APK</span>
+          <small data-zh="Android 7.0 以上 · 点按开始下载">Android 7.0+ · tap to start</small>
+        </a>
+        <p class="dl-alt" id="primary-hint" hidden data-zh-html="你现在在电脑上。把这个页面的地址发到手机上打开，就能直接下载 —— 或者用下面「<a href=&quot;#path-desktop&quot;>桌面浏览器</a>」那条路。">
+          You're on a desktop right now. Send this page's address to your phone and open it there to download —
+          or use the <a href="#path-desktop">desktop route</a> below.
+        </p>
+
+        <dl class="hash">
+          <dt data-zh="文件名">File name</dt><dd id="apk-filename" data-live>—</dd>
+          <dt id="apk-md5-dt" data-zh="MD5 校验值">MD5 checksum</dt><dd id="apk-md5" data-live>—</dd>
+          <dt data-zh="直接下载地址">Direct download URL</dt><dd data-zh="见下方按钮；镜像与历史版本见 GitHub Releases">Use the button above; mirrors and older builds are on GitHub Releases</dd>
+        </dl>
+        <p class="note" id="load-fail" hidden style="margin-top:16px" data-zh="版本信息暂时读取失败。下载按钮已改为指向官方发布页，你可以从那里拿到最新安装包。">
+          We couldn't read the version information just now. The download button has been pointed at the official release
+          page instead, where you can get the latest package.
+        </p>
+        <!-- ⚠️ 第三种状态：version.json 读到了，但 apk 段还没被构建回写（md5 空 / size 0）。
+             这是**合法中间态**（发版到出包之间），不是故障。此时体积与校验值整项隐藏，
+             由这一条明确说明顶替 —— 绝不把「—」留在页面上让用户以为坏了。 -->
+        <p class="note" id="apk-pending" hidden style="margin-top:16px" data-zh="本次构建的安装包还在产出中，所以这里暂时不显示体积与校验值（显示「—」只会让人以为页面坏了）。构建完成后这两个值会自动写入。在那之前，请以官方发布页上列出的校验值为准。">
+          This build's package is still being produced, so its size and checksum are not shown here yet (an empty
+          &ldquo;&mdash;&rdquo; would only look broken). Both values are written in automatically once the build
+          finishes. Until then, use the checksum listed on the official release page.
+        </p>
+        <p style="margin-top:14px; color:var(--txt-3); font-size:12.6px" data-zh="这一张卡上的版本号、体积、构建号与校验值，都是从服务器上的 version.json 实时读取的，和 App 自己检查更新时用的是同一份数据。">
+          Every value on this card — version, size, build number, checksum — is read live from version.json on the
+          server. It's the same file the app itself uses when it checks for updates.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 三条路径 ── -->
+  <section class="alt" id="paths">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="三条下载路径，选你手上这台设备">Three download routes — pick the one that matches your device</h2>
+        <p data-zh="我们把三条路全部列出来，而不是藏起不适用的那两条 —— 因为很多人是「先在电脑上看到，再回到手机上装」。">
+          We list all three rather than hiding the ones that don't apply — plenty of people read this on a computer and
+          then install on their phone.
+        </p>
+      </div>
+
+      <!-- 路径 A：Android -->
+      <div class="path fade" data-for="android" id="path-android" style="margin-bottom:18px">
+        <span class="you-badge" hidden data-zh="看起来就是你这台设备">This looks like your device</span>
+        <h3 data-zh="① Android 手机 / 平板 —— 直接装 APK">① Android phone or tablet — install the APK</h3>
+        <p data-zh="这是唯一需要下载文件的路径。装完之后，Sinoky 会像普通 App 一样出现在你的应用列表里，可以离线使用。">
+          This is the only route that downloads a file. Once installed, Sinoky sits in your app drawer like any other
+          app and works offline.
+        </p>
+        <div class="req">
+          <span data-zh-html="系统要求：<b>Android 7.0 或更新</b>（API 24+）">Requires: <b>Android 7.0 or newer</b> (API 24+)</span>
+          <span id="size-inline-wrap"><span data-zh="安装包：">Package size: </span><b id="apk-size-inline" data-live>—</b></span>
+          <span data-zh-html="权限：只需要<b>麦克风</b>（且仅在你开口练时）">Permissions: <b>microphone</b> only, and only while you practise</span>
+        </div>
+        <ol class="steps-list">
+          <li>
+            <span data-zh-html="点上面的<b>下载</b>按钮，等文件下完（文件名形如">Tap <b>Download</b> above and wait for the file — it will be named something like</span>
+            <span class="mono" data-apk-filename data-live>Sinoky-release.apk</span><span data-zh="）。">.</span>
+          </li>
+          <li data-zh-html="打开下载好的文件。系统可能提示「禁止安装未知应用」→ 点<b>设置</b> → 打开「允许来自此来源」→ 返回。">
+            Open the downloaded file. Android may say installing from unknown sources is blocked → tap <b>Settings</b> →
+            enable <b>Allow from this source</b> → go back.
+          </li>
+          <li data-zh-html="点<b>安装</b>。已经在用旧版本的话，直接覆盖安装即可，<b>学习进度会保留</b>。">
+            Tap <b>Install</b>. If you already have an older version, installing over it is fine — <b>your progress is kept</b>.
+          </li>
+        </ol>
+        <div class="note" style="margin-top:16px" data-zh-html="下到 0 字节或者打不开？先换用 <b>Chrome</b> 打开本页重试 —— 部分手机自带浏览器对 APK 直链支持不好。装不上还有一条应急路：直接用网页版并「添加到主屏幕」，功能完全一样。">
+          Got a 0-byte file, or it won't open? Try this page in <b>Chrome</b> instead — some built-in browsers handle
+          APK links badly. And if it still won't install, there's a fallback: just use the web version and
+          “Add to Home Screen”. It's the same product.
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- 路径 B：iOS -->
+        <div class="path fade" data-for="ios" id="path-ios">
+          <span class="you-badge" hidden data-zh="看起来就是你这台设备">This looks like your device</span>
+          <h3 data-zh="② iPhone / iPad —— 添加到主屏幕">② iPhone / iPad — add to Home Screen</h3>
+          <p data-zh="iOS 装不了 APK。但用 Safari 把它存成「主屏幕 App」之后，体验和装机版几乎没区别：离线可用、一键打开、全屏没有地址栏。">
+            iOS can't install APKs. But once you add Sinoky to your Home Screen from Safari, it's near-identical to an
+            installed app: works offline, opens in one tap, full screen with no address bar.
+          </p>
+          <ol class="steps-list">
+            <li data-zh-html="用 <b>Safari</b> 打开本页（不要用微信 / QQ / Chrome 的内置内核）。">
+              Open this page in <b>Safari</b> (not an in-app browser).
+            </li>
+            <li data-zh-html="点底部工具栏中间的<b>分享</b>图标（方框 + 向上的箭头）。">
+              Tap the <b>Share</b> icon in the bottom toolbar (a square with an arrow).
+            </li>
+            <li data-zh-html="往下滑，找到并点「<b>添加到主屏幕</b>」。">
+              Scroll down and tap <b>Add to Home Screen</b>.
+            </li>
+            <li data-zh-html="点「<b>添加</b>」—— 图标就出现在你桌面上了。">
+              Tap <b>Add</b> — the icon appears on your Home Screen.
+            </li>
+          </ol>
+          <div class="req">
+            <span data-zh-html="系统要求：<b>iOS 16.4 或更新</b>（更旧的版本也能用，只是收不到后台提醒）">Requires: <b>iOS 16.4 or newer</b> for background reminders — older versions work without them</span>
+          </div>
+        </div>
+
+        <!-- 路径 C：桌面 -->
+        <div class="path fade" data-for="desktop" id="path-desktop">
+          <span class="you-badge" hidden data-zh="看起来就是你这台设备">This looks like your device</span>
+          <h3 data-zh="③ 电脑 —— 把链接发到手机上">③ Computer — send the link to your phone</h3>
+          <p data-zh="电脑上装不了手机应用。最省事的做法是把这个页面的地址复制下来，发到手机（微信文件传输助手、邮件、备忘录都行），然后在手机浏览器里打开。">
+            You can't install a phone app on a desktop. The quickest route: copy this page's address, send it to your
+            phone (WeChat file transfer, email, a note to yourself — anything), and open it in your phone's browser.
+          </p>
+          <div class="copyline">
+            <input id="page-url" type="text" readonly value="" data-zh-placeholder="本页地址">
+            <button type="button" id="copy-link" data-zh="复制链接">Copy link</button>
+          </div>
+          <p style="margin-top:12px; color:var(--sub); font-size:14px" data-zh-html="或者现在就直接用电脑浏览器打开网页版 —— 它同样能练，数据也在你账号之外的本机。<a href=&quot;https://sinoky.pages.dev/&quot; style=&quot;color:var(--red-text)&quot;>打开网页版</a>">
+            Or just use the web version in your desktop browser right now — it practises the same way, and your data
+            stays on your machine either way. <a href="https://sinoky.pages.dev/" style="color:var(--red-text)">Open the web app</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 完整性校验 ── -->
+  <section id="integrity">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="怎么确认你下到的包是完整的">How to confirm the file you downloaded is intact</h2>
+        <p data-zh="安装包有 20 多 MB，下载过程中断掉不会报错，只会给你一个装不上的文件。对一下校验值，两秒钟的事。">
+          The package is over 20 MB. An interrupted download gives you no error — just a file that won't install.
+          Comparing checksums takes two seconds.
+        </p>
+      </div>
+      <div class="grid2 fade" id="integrity-grid">
+        <div class="card" id="md5-card">
+          <h3 data-zh="你应该得到这个值">You should get this value</h3>
+          <p data-zh="MD5 校验值（与页面顶部那张版本卡来自同一份数据）：">MD5 checksum, read from the same source as the version card above:</p>
+          <pre class="code" id="apk-md5-block" data-live>—</pre>
+        </div>
+        <div class="card">
+          <h3 data-zh="怎么算你手上这个文件">How to compute yours</h3>
+          <pre class="code"><b>Windows</b>
+certutil -hashfile <span data-apk-filename-cmd data-live>Sinoky-release.apk</span> MD5
+
+<b>macOS</b>
+md5 <span data-apk-filename-cmd data-live>Sinoky-release.apk</span>
+
+<b>Linux</b>
+md5sum <span data-apk-filename-cmd data-live>Sinoky-release.apk</span></pre>
+          <p data-zh="两个值一致，说明文件完整；不一致就删掉重下一次。签名方面：所有版本都用同一把密钥签名，所以新版本可以直接覆盖旧版本安装，不会被系统拒绝。">
+            If the two match, the file is intact. If they don't, delete it and download again. On signing: every release
+            is signed with the same key, so a newer version always installs over an older one without the system
+            refusing it.
+          </p>
+        </div>
+      </div>
+      <!-- ⚠️ 属性值里要给「字面量 <」必须写 &amp;lt;（两层转义）。
+           只写 &lt; 的话：dataset 读出来是裸的 `<!DOCTYPE`，回填 innerHTML 时会被 HTML
+           解析器当成 bogus comment ⇒ 中文版这一句里的 `<!DOCTYPE` 会凭空消失。
+           check_site.cjs 的 B4 就是靠「回填后 innerHTML 是否仍等于 data-zh-html」抓到它的。 -->
+      <div class="note fade" style="margin-top:18px" data-zh-html="另一个快速的完整性判据：APK 本质上是个 zip 包，<b>文件开头四个字节应该是 <span class=&quot;mono&quot;>PK</span></b>。如果开头是 <span class=&quot;mono&quot;>&amp;lt;!DOCTYPE</span> 之类的东西，说明你下到的是一个 HTML 错误页 —— 常见于网络受限或应用内浏览器。">
+        Another quick check: an APK is a zip archive, so <b>the first two bytes of the file should be
+        <span class="mono">PK</span></b>. If it starts with <span class="mono">&lt;!DOCTYPE</span> or similar, you
+        actually downloaded an HTML error page — common on restricted networks or in-app browsers.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 更新与镜像 ── -->
+  <section class="alt">
+    <div class="wrap">
+      <div class="grid2 fade">
+        <div class="card">
+          <h3 data-zh="以后怎么更新">How updates work from here</h3>
+          <p data-zh="你不用记得回这个页面。App 每次打开会自己检查有没有新版本，有就提示你；重要版本会给出不可跳过的提示，并引导你下载安装。多数改动会在你下次打开时自动生效，偶尔才需要装一个新包。">
+            You never have to come back to this page. The app checks for a newer version each time it opens and prompts
+            you if there is one — important releases get a prompt you can't dismiss, with a direct link to the download.
+            Most changes take effect the next time you open Sinoky; occasionally a new package is needed.
+          </p>
+        </div>
+        <div class="card">
+          <h3 data-zh="镜像与历史版本">Mirrors and older builds</h3>
+          <p data-zh-html="如果直链在你的网络下不通，可以从 GitHub Releases 下载同一个包（那里也留着历史版本）。">
+            If the direct link doesn't work on your network, the same package is available from GitHub Releases, where
+            older builds are kept too.
+          </p>
+          <p style="margin-top:14px">
+            <a class="btn btn-g btn-sm" id="releases-link" href="https://github.com/Dukekang0124/sinoky/releases/latest" rel="noopener" data-zh="在 GitHub 上查看发布页">See releases on GitHub</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 疑难排查 ── -->
+  <section id="trouble">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="失败了怎么办">If it doesn't work</h2>
+        <p data-zh="下面这几条覆盖了绝大多数情况。都不是你的错，是各家浏览器和系统的差别。">
+          These cover almost every case we've seen. None of it is your fault — it's browser and OS differences.
+        </p>
+      </div>
+      <div class="fade" style="overflow-x:auto">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th data-zh="现象">What you see</th>
+              <th data-zh="原因">Why</th>
+              <th data-zh="怎么做">What to do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-zh="下到的文件是 0 字节">The file downloads as 0 bytes</td>
+              <td data-zh="浏览器拦截了 APK 直链，常见于手机自带浏览器">The browser blocked the direct APK link — common in built-in browsers</td>
+              <td data-zh="改用 Chrome 打开本页，或用下面那条兜底方案">Open this page in Chrome, or use the fallback below</td>
+            </tr>
+            <tr>
+              <td data-zh="提示「禁止安装未知应用」">“Installing from unknown sources is blocked”</td>
+              <td data-zh="安卓的默认安全设置，不是文件有问题">Android's default safety setting — not a problem with the file</td>
+              <td data-zh="弹窗里点「设置」→ 打开「允许来自此来源」→ 返回再装">In that dialog tap Settings → allow from this source → come back and install</td>
+            </tr>
+            <tr>
+              <td data-zh="在微信 / QQ 里点下载没反应">Nothing happens when tapping download inside WeChat / QQ</td>
+              <td data-zh="内置浏览器不支持下载安装包">In-app browsers don't handle package downloads</td>
+              <td data-zh="点右上角 ⋯ →「在浏览器中打开」">Tap ⋯ at the top right → “Open in browser”</td>
+            </tr>
+            <tr>
+              <td data-zh="打开后是乱码或者一段 HTML">The file opens as garbled text or raw HTML</td>
+              <td data-zh="你下到的其实是错误页，不是安装包">You actually downloaded an error page, not a package</td>
+              <td data-zh="核对开头是不是 PK 两个字母（见上一节）">Check whether it starts with the letters PK (see above)</td>
+            </tr>
+            <tr>
+              <td data-zh="装完打开是全白屏">The app opens to a blank screen</td>
+              <td data-zh="极少见，通常是系统 WebView 太旧">Rare — usually an outdated system WebView</td>
+              <td data-zh-html="把 Android System WebView 更新到最新；同时可以直接用网页版，功能一样。还不行就<a href=&quot;contact.html&quot; style=&quot;color:var(--red-text)&quot;>告诉我们</a>">Update Android System WebView. Meanwhile the web version is the same product. If it persists, <a href="contact.html" style="color:var(--red-text)">tell us</a></td>
+            </tr>
+            <tr>
+              <td data-zh="iPhone 找不到「添加到主屏幕」">Can't find “Add to Home Screen” on iPhone</td>
+              <td data-zh="只有 Safari 有这个选项，Chrome 等没有">Only Safari offers it — Chrome and others don't</td>
+              <td data-zh="改用 Safari 打开本页">Open this page in Safari instead</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fade" style="margin-top:20px; text-align:center; color:var(--sub); font-size:14.4px" data-zh-html="上面都没有解决？<a href=&quot;contact.html&quot; style=&quot;color:var(--red-text)&quot;>告诉我们你用的是哪台手机、哪个浏览器</a> —— 这比什么都管用。">
+        None of these fix it? <a href="contact.html" style="color:var(--red-text)">Tell us which phone and which browser</a>
+        — that's the single most useful thing you can send.
+      </p>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap fade">
+      <h2 data-zh="不想装东西？那就什么也别装。">Don't want to install anything? Then don't.</h2>
+      <p data-zh="网页版功能完全一样，打开就用，数据存在你自己设备上。">
+        The web version is the same product. Open it and go; your data stays on your own device.
+      </p>
+      <div class="cta btn-row center" style="margin-top:26px">
+        <a class="btn btn-p" href="https://sinoky.pages.dev/" data-zh="打开网页版 · 免费">Open the web version — free</a>
+        <a class="btn btn-g" data-apk-link href="https://github.com/Dukekang0124/sinoky/releases/latest" rel="noopener" data-zh="还是要下载 APK">I still want the APK</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div>
+        <div class="f-brand"><span class="dot"></span>Sinoky</div>
+        <p class="tagline" data-zh="在真正用得上的地方说中文。免费、无需注册、可离线。">Speak Chinese where it matters. Free, no account, works offline.</p>
+      </div>
+      <div>
+        <h4 data-zh="产品">Product</h4>
+        <ul>
+          <li><a href="features.html" data-zh="功能亮点">Features</a></li>
+          <li><a href="how.html" data-zh="怎么用">How it works</a></li>
+          <li><a href="download.html" data-zh="下载 App">Download</a></li>
+          <li><a href="https://sinoky.pages.dev/" data-zh="打开网页版">Open the web app</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-zh="支持">Support</h4>
+        <ul>
+          <li><a href="contact.html" data-zh="联系我们">Contact</a></li>
+          <li><a href="index.html#faq" data-zh="常见问题">FAQ</a></li>
+          <li><a href="https://sinoky.pages.dev/privacy.html" data-zh="隐私政策">Privacy</a></li>
+          <li><a href="https://sinoky.pages.dev/credits.html" data-zh="鸣谢与许可">Credits</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-zh="界面语言">Interface languages</h4>
+        <ul>
+          <li>English</li><li>中文</li><li>Español</li><li>Русский</li>
+          <li>Tiếng Việt</li><li>Bahasa Indonesia</li><li>ไทย</li>
+        </ul>
+      </div>
+    </div>
+    <div class="f-bottom">
+      <span data-zh="© 2026 Sinoky · 独立开发者的个人项目">© 2026 Sinoky · an independent project</span>
+      <span data-zh="内容版权与素材许可见 credits 页">Content credits and licences are listed on the credits page</span>
+    </div>
+  </div>
+</footer>
+
+<script src="site.js"></script>
+<script src="download.js"></script>
+</body>
+</html>

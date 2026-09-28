@@ -1,227 +1,191 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-title-zh="Sinoky — 别再背了，开始说中文">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sinoky — Stop memorizing. Start speaking Chinese.</title>
-<meta name="description" content="Speak Chinese where it matters. 30 days of real-life lines — ordering food, taking taxis, small talk at work. Pinyin first, tones by ear, no textbooks.">
-<meta name="theme-color" content="#0d0f12">
-<style>
-:root{
-  --bg:#0d0f12; --card:#14171c; --card2:#191d23; --line:#242a32;
-  --tx:#e8eaed; --sub:#9aa3ad; --red:#e63946; --red-dim:rgba(230,57,70,.14);
-  --teal:#7fb3b0; --ok:#0a8f6e;
-  --r:14px; --maxw:1080px;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0; background:var(--bg); color:var(--tx);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
-  line-height:1.6; -webkit-font-smoothing:antialiased;
-}
-a{color:inherit; text-decoration:none}
-.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px}
-h1,h2,h3{margin:0; line-height:1.22; letter-spacing:-.02em}
-p{margin:0}
-.red{color:var(--red)}
-
-/* ---------- nav ---------- */
-.nav{position:sticky; top:0; z-index:20; background:rgba(13,15,18,.86); backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
-.nav .wrap{display:flex; align-items:center; justify-content:space-between; height:60px}
-.logo{display:flex; align-items:center; gap:9px; font-weight:800; letter-spacing:-.03em; font-size:17px}
-.logo .dot{width:9px;height:9px;border-radius:50%;background:var(--red)}
-.nav nav{display:flex; gap:24px; font-size:14.5px; color:var(--sub)}
-.nav nav a:hover{color:var(--tx)}
-@media(max-width:760px){.nav nav{display:none}}
-
-/* ---------- hero ---------- */
-.hero{padding:76px 0 30px; text-align:center}
-.eyebrow{display:inline-block; font-size:12.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
-  color:var(--red); background:var(--red-dim); padding:6px 13px; border-radius:99px; margin-bottom:22px}
-h1{font-size:clamp(34px,6vw,62px); font-weight:800}
-h1 .strike{position:relative; color:var(--sub)}
-h1 .strike::after{content:""; position:absolute; left:0; right:0; top:52%; height:3px; background:var(--red); border-radius:2px; transform:rotate(-1.2deg)}
-.sub{margin:20px auto 0; max-width:600px; font-size:clamp(16px,2.1vw,19px); color:var(--sub)}
-.cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:32px}
-.btn{display:inline-flex; align-items:center; gap:8px; padding:14px 24px; border-radius:var(--r);
-  font-weight:700; font-size:15.5px; border:1px solid transparent; cursor:pointer; transition:transform .16s, box-shadow .16s, background .16s}
-.btn:hover{transform:translateY(-2px)}
-.btn-p{background:var(--red); color:#fff; box-shadow:0 8px 26px rgba(230,57,70,.3)}
-.btn-g{background:transparent; color:var(--tx); border-color:var(--line)}
-.btn-g:hover{border-color:var(--sub)}
-.trust{margin-top:24px; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; color:var(--sub); font-size:13.5px}
-.avatars{display:flex}
-.avatars i{width:29px;height:29px;border-radius:50%;border:2px solid var(--bg);margin-left:-9px;display:grid;place-items:center;
-  font-style:normal;font-size:12px;font-weight:700;color:#0d0f12}
-.avatars i:first-child{margin-left:0}
-.stars{color:#f5b544; letter-spacing:1px}
-
-/* ---------- phone mock ---------- */
-.phone-stage{display:flex; justify-content:center; margin-top:52px}
-.phone{width:300px; border-radius:38px; background:linear-gradient(180deg,#22262e,#15181d);
-  padding:11px; box-shadow:0 34px 80px rgba(0,0,0,.6), 0 0 0 1px var(--line) inset}
-.screen{background:#0b0d10; border-radius:29px; padding:16px 14px; text-align:left}
-.s-head{display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:var(--sub); margin-bottom:14px}
-.s-head b{color:var(--tx); font-size:13px}
-.bub{max-width:88%; border-radius:14px; padding:10px 12px; margin-bottom:10px; font-size:13.5px}
-.bub .py{font-size:15px; font-weight:600; letter-spacing:.01em; margin-bottom:3px}
-.bub .hz{font-size:12.5px; color:var(--sub)}
-.bub.them{background:var(--card2); border-bottom-left-radius:4px}
-.bub.you{background:var(--red-dim); margin-left:auto; border-bottom-right-radius:4px; position:relative}
-.bub.you .py{color:#ffd9dd}
-.bub .tag{display:inline-block; margin-top:6px; font-size:10.5px; font-weight:800; letter-spacing:.06em; color:var(--ok)}
-.s-bar{margin-top:16px; background:var(--card2); border-radius:99px; padding:8px 12px; display:flex; align-items:center; gap:9px; font-size:12px; color:var(--sub)}
-.s-bar .grow{flex:1; height:5px; background:#242a32; border-radius:99px; overflow:hidden}
-.s-bar .grow i{display:block; height:100%; width:64%; background:var(--red); border-radius:99px}
-
-/* ---------- sections ---------- */
-section{padding:82px 0}
-.sec-h{text-align:center; margin-bottom:44px}
-.sec-h h2{font-size:clamp(25px,3.6vw,36px); font-weight:800}
-.sec-h p{margin-top:13px; color:var(--sub); font-size:16px; max-width:560px; margin-left:auto; margin-right:auto}
-
-.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
-@media(max-width:860px){.grid3{grid-template-columns:1fr}}
-.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:26px}
-.card .ico{width:42px; height:42px; border-radius:11px; display:grid; place-items:center; font-size:21px; background:var(--red-dim); margin-bottom:16px}
-.card h3{font-size:18.5px; font-weight:750}
-.card p{margin-top:9px; color:var(--sub); font-size:14.8px}
-.card .cn{margin-top:12px; font-size:13.5px; color:#c8d0d8; border-left:2px solid var(--red); padding-left:10px}
-
-/* steps */
-.steps{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; counter-reset:s}
-@media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.steps{grid-template-columns:1fr}}
-.step{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:22px; position:relative}
-.step::before{counter-increment:s; content:counter(s); position:absolute; top:16px; right:18px;
-  font-size:26px; font-weight:800; color:#262c34}
-.step h3{font-size:16.5px; margin-top:6px}
-.step p{margin-top:8px; color:var(--sub); font-size:14px}
-
-/* journey */
-.journey{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
-@media(max-width:860px){.journey{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.journey{grid-template-columns:1fr}}
-.ph{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:20px; border-top:3px solid var(--red)}
-.ph:nth-child(2){border-top-color:#e2725b}
-.ph:nth-child(3){border-top-color:var(--teal)}
-.ph:nth-child(4){border-top-color:#8b8ff0}
-.ph .wk{font-size:11.5px; font-weight:800; letter-spacing:.08em; color:var(--sub); text-transform:uppercase}
-.ph h3{margin-top:7px; font-size:17.5px}
-.ph p{margin-top:8px; color:var(--sub); font-size:14px}
-.ph ul{margin:12px 0 0; padding-left:17px; color:#c8d0d8; font-size:13.5px}
-.rev{margin-top:20px; text-align:center; color:var(--sub); font-size:14px;
-  background:var(--card); border:1px dashed var(--line); border-radius:var(--r); padding:16px}
-
-/* final */
-.final{text-align:center; padding:86px 0}
-.final h2{font-size:clamp(26px,4vw,40px); font-weight:800}
-.final p{margin-top:14px; color:var(--sub)}
-
-footer{border-top:1px solid var(--line); padding:30px 0; color:var(--sub); font-size:13.5px}
-footer .wrap{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center}
-footer a:hover{color:var(--tx)}
-
-/* fade-in */
-.fade{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease}
-.fade.in{opacity:1; transform:none}
-@media(prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .fade{opacity:1; transform:none; transition:none}
-  .btn:hover{transform:none}
-}
-
-/* ---------- hero: Nono（v0.22.0）----------
-   Edify Gate：诺诺每多出场一次，就要多换来一句中文 —— 这里换的是「你好」。 */
-.nono-hero{display:flex; align-items:center; justify-content:center; gap:clamp(10px,3vw,32px);
-  margin:28px auto 0; max-width:680px; flex-wrap:wrap}
-.nono-hero-fig{width:clamp(148px,25vw,224px); height:auto; display:block;
-  filter:drop-shadow(0 18px 34px rgba(0,0,0,.55))}
-.nono-say{text-align:left; min-width:196px}
-.ns-lb{display:block; font-size:11.5px; font-weight:700; letter-spacing:.09em;
-  text-transform:uppercase; color:var(--teal); margin-bottom:7px}
-.ns-hz{display:block; font-size:clamp(30px,5.2vw,44px); font-weight:800; line-height:1.1}
-.ns-py{display:block; font-size:15px; font-weight:700; color:var(--red); margin-top:3px; letter-spacing:.02em}
-.ns-en{display:block; font-size:13.5px; color:var(--sub); margin-top:7px}
-@media(max-width:560px){.nono-say{text-align:center}.nono-hero{gap:4px; margin-top:22px}}
-</style>
+<meta name="description" content="Speak Chinese where it matters. 137 must-say lines, 54 scenes, 18 Chinese cities. Free, no account, works offline." data-zh-content="在真正用得上的地方说中文。137 句必说句、54 个场景、18 座中国城市。免费、无需注册、可离线。">
+<meta name="theme-color" content="#141a24">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://sinoky.pages.dev/landing/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sinoky — Stop memorizing. Start speaking Chinese.">
+<meta property="og:description" content="137 must-say lines, 54 scenes, 18 Chinese cities. Free, no account, works offline.">
+<meta property="og:url" content="https://sinoky.pages.dev/landing/">
+<meta property="og:image" content="https://sinoky.pages.dev/assets/brand/nono-hero.webp">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="site.css">
+<!-- 必须在第一帧之前打上 html.js —— .fade 的「隐藏待入场」规则只对 html.js 生效，
+     所以脚本没跑时内容是默认可见的（内容不依赖 JS 才可读）。用外部脚本会「先亮后隐」闪一下。 -->
+<script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
+<a class="skip" href="#main" data-zh="跳到主内容">Skip to content</a>
+
+<!-- ───────────────── NAV（五个页面完全一致：归一化行尾符 + 剔除当前页标记后逐字节相同。
+     改一处必须同步五处；`_internal/check_site.cjs` 的 A1/A1b 会校验一致性与 aria-current 的正确性。
+     注意「完全一致」不等于「裸字节相同」—— 行尾符由 core.autocrlf 决定、aria-current 本就该逐页不同。 -->
 
 <header class="nav">
   <div class="wrap">
-    <a class="logo" href="#top"><span class="dot"></span>Sinoky</a>
-    <nav>
-      <a href="#why">Why it works</a>
-      <a href="#how">How it works</a>
-      <a href="#journey">30-day path</a>
-      <a href="#start">Get the app</a>
+    <a class="brand" href="./"><span class="dot"></span>Sinoky</a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="features.html" data-zh="功能亮点">Features</a>
+      <a href="how.html" data-zh="怎么用">How it works</a>
+      <a href="download.html" data-zh="下载 App">Download</a>
+      <a href="contact.html" data-zh="联系我们">Contact</a>
     </nav>
-    <a class="btn btn-p" href="#start" style="padding:9px 16px; font-size:14px">Start free</a>
+    <div class="langsw" role="group" aria-label="Language">
+      <button type="button" data-setlang="en" aria-pressed="true">EN</button>
+      <button type="button" data-setlang="zh" aria-pressed="false">中文</button>
+    </div>
+    <a class="btn btn-p nav-cta" href="https://sinoky.pages.dev/" data-zh="免费开始">Open Sinoky</a>
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false"><span></span></button>
   </div>
 </header>
 
-<main id="top">
+<main id="main">
 
-  <!-- HERO -->
+  <!-- ───────────────── HERO ───────────────── -->
   <section class="hero">
     <div class="wrap">
-      <span class="eyebrow">For people who actually need to speak</span>
-      <h1><span class="strike">Stop memorizing.</span><br>Start <span class="red">speaking.</span></h1>
-      <p class="sub">
-        You don't need more vocabulary lists. You need the 30 lines that get you fed, home, and through Monday small talk —
-        said out loud, with your voice, until your mouth knows them.
+      <span class="eyebrow" data-zh="给真正需要开口的人">For people who actually need to speak</span>
+      <h1>
+        <span class="strike" data-zh="别再背了。">Stop memorizing.</span><br>
+        <span data-zh="开始">Start</span> <span class="red" data-zh="开口说。">speaking.</span>
+      </h1>
+      <p class="lede" data-zh="你不需要更多词汇表。你需要的是那 137 句能让你吃上饭、回到家、周一跟同事寒暄的话 —— 用自己的声音说出来，说到嘴记住为止。">
+        You don't need more vocabulary lists. You need the lines that get you fed, get you home, and get you through
+        Monday small talk — said out loud, in your own voice, until your mouth knows them.
       </p>
 
-      <!-- v0.22.0 诺诺 IP：hero 角色 + 一句可跟读中文 -->
       <div class="nono-hero">
         <img class="nono-hero-fig" src="../assets/brand/nono-hero.webp" width="480" height="600"
-             alt="Nono, the Sinoky panda, in a cream hoodie" loading="eager" decoding="async">
+             alt="Nono, the Sinoky panda" loading="eager" decoding="async">
         <div class="nono-say">
-          <span class="ns-lb">Nono says</span>
+          <span class="ns-lb" data-zh="诺诺说">Nono says</span>
           <span class="ns-hz">你好</span>
           <span class="ns-py">nǐ hǎo</span>
-          <span class="ns-en">= hello. Now say it out loud.</span>
+          <span class="ns-en" data-zh="＝你好。现在大声说出来。">= hello. Now say it out loud.</span>
         </div>
       </div>
-      <div class="cta">
-        <a class="btn btn-p" href="#start">Start free — no account</a>
-        <a class="btn btn-g" href="#journey">See the 30-day path</a>
+
+      <div class="cta btn-row center" style="margin-top:32px">
+        <a class="btn btn-p" href="https://sinoky.pages.dev/" data-zh="免费开始 · 无需注册">Start free — no account</a>
+        <a class="btn btn-g" href="download.html" data-zh="下载 Android 版">Get the Android app</a>
       </div>
 
-      <div class="trust">
-        <span class="avatars"><i style="background:#e63946">A</i><i style="background:#7fb3b0">M</i><i style="background:#f5b544">J</i><i style="background:#8b8ff0">L</i></span>
-        <span class="stars">★★★★★</span>
-        <span>"I ordered dinner in Mandarin on day 3. Badly. But I did it." — beta tester, Berlin</span>
-      </div>
+      <ul class="facts">
+        <li data-zh="免费使用">Free to use</li>
+        <li data-zh="无需注册、不收邮箱">No account, no email</li>
+        <li data-zh="加载一次后可离线">Works offline</li>
+        <li data-zh="7 种界面语言">7 interface languages</li>
+        <li><a href="download.html" data-zh="Android 7.0 以上">Android 7.0+</a></li>
+      </ul>
+    </div>
+  </section>
 
-      <!-- 手机拟真：拼音优先 + THEM→YOU -->
-      <div class="phone-stage">
+  <!-- ───────────────── 为什么不一样 ───────────────── -->
+  <section id="why" class="alt">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="为「你张嘴那一刻」而做">Built for the moment you open your mouth</h2>
+        <p data-zh="三件我们死磕的事 —— 也是教材从不给你的三样东西。">
+          Three things we obsess over — and three things textbooks never give you.
+        </p>
+      </div>
+      <div class="grid3">
+        <div class="card fade">
+          <div class="ico">💬</div>
+          <h3 data-zh="是回答，不是背诵">Answer, don't recite</h3>
+          <p data-zh="每一句的起点都是别人真的会问你的问题。你回答 —— 用嘴回答 —— 而不是把纸上的字念一遍。">
+            Every line starts as a question someone really asks you. You answer it — out loud — not read it off a page.
+          </p>
+          <p class="cn" data-zh="先有人问你，你再开口答。">Ask first, answer out loud.</p>
+        </div>
+        <div class="card fade">
+          <div class="ico">📍</div>
+          <h3 data-zh="在你真会去的地方学">Learn where it matters</h3>
+          <p data-zh="场景就是你真会站的地方：面馆、出租车、第一天见同事。没有「猫在桌子上」这种句子。">
+            Scenes are the places you will actually be: a noodle shop, a taxi, a first-day hello at the office.
+            No “the cat is on the table.”
+          </p>
+          <p class="cn" data-zh="面馆、出租车、第一天见同事。">The noodle shop. The taxi. Day one at the office.</p>
+        </div>
+        <div class="card fade">
+          <div class="ico">🎧</div>
+          <h3 data-zh="先用耳朵拿下声调">Master tones by ear</h3>
+          <p data-zh="声调先练耳朵：先听得出「妈麻马骂」的区别，再说到别人听得对。" data-keep>
+            Tone Gym trains the hard part first: hearing 妈 / 麻 / 马 / 骂 apart, then saying them until they land.
+          </p>
+          <p class="cn" data-zh="听得出，才说得出。">You can't say what you can't hear.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────── 里面有什么（每个数字都能在产品内核对） ───────────────── -->
+  <section id="inside">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="里面到底有什么">What's actually inside</h2>
+        <p data-zh-html="没有虚数。下面每一个数字都可以在产品里一条条数出来 —— 也能在<a href=&quot;features.html&quot;>功能页</a>看到它的出处。">
+          No rounded-up marketing numbers. Every figure below can be counted inside the product.
+        </p>
+      </div>
+      <div class="grid3 fade">
+        <div class="stat red"><b>137</b><span data-zh="句必说句（每句都有真人发音）">must-say lines, every one with recorded audio</span></div>
+        <div class="stat"><b>409</b><span data-zh="条录音语句（含随口说与客气说法两种变体）">recorded lines — core plus the casual and polite ways people really say them</span></div>
+        <div class="stat"><b>54</b><span data-zh="个场景：13 个常用话题 + 23 天进阶 + 18 座城市">scenes: 13 everyday topics, 23 day-by-day, 18 city sets</span></div>
+        <div class="stat cy"><b>18</b><span data-zh="座城市的场景图（北京、上海、成都等）">city sets with local flavour and lines</span></div>
+        <div class="stat ok"><b>585</b><span data-zh="张 HSK 1–3 分级字卡">graded flashcards (HSK 1–3)</span></div>
+        <div class="stat"><b>7</b><span data-zh="种界面语言：英、中、西、俄、越、印尼、泰" data-keep>interface languages: EN, 中文, ES, RU, VI, ID, TH</span></div>
+      </div>
+      <p style="margin-top:18px; text-align:center; color:var(--txt-3); font-size:12.6px" data-zh="另外还有 417 条音频、6 篇分级阅读、4 声调专项、30 天路径。">
+        Plus 417 audio clips, 6 graded reading passages, a four-tone trainer and a 30-day path.
+      </p>
+    </div>
+  </section>
+
+  <!-- ───────────────── 四步 ───────────────── -->
+  <section id="how" class="alt">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="四步，一天约五分钟">Four steps. About five minutes a day.</h2>
+        <p data-zh="没有要设的账号，没有让你愧疚的打卡。只有下一句你马上要用的话。">
+          No accounts to set up, no streaks to feel guilty about. Just the line you'll need next.
+        </p>
+      </div>
+      <div class="steps">
+        <div class="step fade"><h3 data-zh="选场景">Pick a scene</h3><p data-zh="选你接下来真会去的地方：吃饭、打车、上班、旅行。">Choose where you'll be — food, transport, work, travel.</p></div>
+        <div class="step fade"><h3 data-zh="先听真的">Hear it real</h3><p data-zh="真人语速的发音，需要时切慢速（0.5–1.3× 四档）。">Native audio at real speed, with a slow mode when you need it.</p></div>
+        <div class="step fade"><h3 data-zh="盖住中文，说三遍">Say it out loud</h3><p data-zh="盖住中文，凭记忆说三遍；录音后拿到发音与声调评分。">Cover the text and say it three times from memory — then get scored on pronunciation and tones.</p></div>
+        <div class="step fade"><h3 data-zh="拿出去用">Use it for real</h3><p data-zh="明天在街上用掉它，它会在你快忘的时候自己回来复习。">Take it outside. Log the win. The line comes back for review right before you'd forget it.</p></div>
+      </div>
+      <div style="margin-top:34px" class="phone-stage fade">
         <div class="phone">
           <div class="screen">
-            <div class="s-head"><b>🍜 Ordering food</b><span>Day 4 · 1/8</span></div>
-
+            <div class="s-head"><b data-zh="🍜 点餐">🍜 Ordering food</b><span data-zh="第 4 天 · 1/8">Day 4 · 1/8</span></div>
             <div class="bub them">
               <div class="py">nǐ hǎo, xiǎng chī shén me?</div>
               <div class="hz">你好，想吃什么？</div>
             </div>
-
             <div class="bub you">
               <div class="py">wǒ yào yí fèn jī ròu fàn</div>
               <div class="hz">我要一份鸡肉饭</div>
-              <span class="tag">✓ 92 · TONES CLEAR</span>
+              <span class="tag" data-zh="✓ 92 · 声调清楚">✓ 92 · TONES CLEAR</span>
             </div>
-
             <div class="bub them">
               <div class="py">hǎo de, shāo děng yí xià</div>
               <div class="hz">好的，稍等一下</div>
             </div>
-
             <div class="s-bar">
               <span>🔥 4</span>
               <span class="grow"><i></i></span>
-              <span>Day 4/30</span>
+              <span data-zh="第 4/30 天">Day 4/30</span>
             </div>
           </div>
         </div>
@@ -229,133 +193,223 @@ footer a:hover{color:var(--tx)}
     </div>
   </section>
 
-  <!-- WHY -->
-  <section id="why">
+  <!-- ───────────────── 城市场景 ───────────────── -->
+  <section id="cities">
     <div class="wrap">
       <div class="sec-h fade">
-        <h2>Built for the moment you open your mouth</h2>
-        <p>Three things we obsess over — and three things textbooks never give you.</p>
+        <h2 data-zh="18 座城市，中国不止一个样子">18 cities — China isn't one place</h2>
+        <p data-zh="北京、上海、成都、西安、重庆、广州、深圳、厦门、青岛、桂林、大理、香港……每座城市有它自己的地标、吃法和该说的话。">
+          Beijing, Shanghai, Chengdu, Xi'an, Chongqing, Guangzhou, Shenzhen, Xiamen, Qingdao, Guilin, Dali,
+          Hong Kong and more — each with its own landmarks, food and lines.
+        </p>
       </div>
+      <div class="city-grid fade">
+        <figure class="city deep"><img src="../assets/cities/beijing_landmark.webp" alt="Beijing" loading="lazy" decoding="async"><figcaption data-zh="北京">Beijing</figcaption></figure>
+        <figure class="city deep"><img src="../assets/cities/shanghai_landmark.webp" alt="Shanghai" loading="lazy" decoding="async"><figcaption data-zh="上海">Shanghai</figcaption></figure>
+        <figure class="city deep"><img src="../assets/cities/chengdu_landmark.webp" alt="Chengdu" loading="lazy" decoding="async"><figcaption data-zh="成都">Chengdu</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/xian_landmark.webp" alt="Xi'an" loading="lazy" decoding="async"><figcaption data-zh="西安">Xi'an</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/chongqing_landmark.webp" alt="Chongqing" loading="lazy" decoding="async"><figcaption data-zh="重庆">Chongqing</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/guangzhou_landmark.webp" alt="Guangzhou" loading="lazy" decoding="async"><figcaption data-zh="广州">Guangzhou</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/shenzhen_landmark.webp" alt="Shenzhen" loading="lazy" decoding="async"><figcaption data-zh="深圳">Shenzhen</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/xiamen_landmark.webp" alt="Xiamen" loading="lazy" decoding="async"><figcaption data-zh="厦门">Xiamen</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/qingdao_landmark.webp" alt="Qingdao" loading="lazy" decoding="async"><figcaption data-zh="青岛">Qingdao</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/guilin_landmark.webp" alt="Guilin" loading="lazy" decoding="async"><figcaption data-zh="桂林">Guilin</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/dali_landmark.webp" alt="Dali" loading="lazy" decoding="async"><figcaption data-zh="大理">Dali</figcaption></figure>
+        <figure class="city"><img src="../assets/cities/hongkong_landmark.webp" alt="Hong Kong, China" loading="lazy" decoding="async"><figcaption data-zh="中国香港">Hong Kong, China</figcaption></figure>
+      </div>
+      <p style="margin-top:20px; text-align:center; color:var(--sub); font-size:14.4px" data-zh-html="其中<b>北京、上海、成都</b>有完整的城市指南：9 个真实任务区（落地、地铁、打车、点餐、住宿、求助……），每区配关键词、情境对话与「说三遍」打卡。">
+        <b>Beijing, Shanghai and Chengdu</b> also have full city guides: nine real-world zones each — landing, metro,
+        taxis, ordering, hotels, asking for help — with key phrases, a situation dialogue and “say it 3×” tracking.
+      </p>
+    </div>
+  </section>
 
-      <div class="grid3">
-        <div class="card fade">
-          <div class="ico">💬</div>
-          <h3>Answer, don't recite</h3>
-          <p>Every line starts as a question someone really asks you. You answer it — out loud — not read it off a page.</p>
-          <p class="cn">不是背课文：先有人问你，你再开口答。</p>
+  <!-- ───────────────── 主动提醒 ───────────────── -->
+  <section id="nudges" class="alt">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="你不打开它，它也知道什么时候该出现">It knows when to show up — and when to stay quiet</h2>
+        <p data-zh="提醒分四档，其中「什么都不做」永远是次数最多的一档。我们宁可少打扰，也不让提醒变成噪音。">
+          Reminders are graded into four tiers — and staying silent is by far the most common outcome.
+          We would rather under-notify than turn practice into noise.
+        </p>
+      </div>
+      <div class="grid4 fade">
+        <div class="card"><div class="ico">✈️</div><h3 data-zh="行程临近">Your trip is close</h3><p data-zh="填好去哪座城、哪天到，出发前一天和当天，首页会给你一份 10 句行程包：落地、地铁、点餐、问路。全部来自你正在学的城市指南，没有新内容要背。">Tell it which city and which day you arrive: the day before and the day of, you get a 10-line trip pack — landing, metro, ordering, directions — all drawn from the city guide you're already studying.</p></div>
+        <div class="card"><div class="ico">🔥</div><h3 data-zh="连胜快断了">Your streak is about to break</h3><p data-zh="连续 3 天以上、且超过 20 小时没开口，才会提示一次。">Three days or more in a row, and nothing spoken for over 20 hours.</p></div>
+        <div class="card"><div class="ico">🔁</div><h3 data-zh="有句子到期">Lines are due</h3><p data-zh="到了遗忘曲线该复习的时候，提醒你回来过一遍。">When the spaced-repetition ladder says it's time to review.</p></div>
+        <div class="card"><div class="ico">🤫</div><h3 data-zh="其余一律不打扰">Everything else: silent</h3><p data-zh="第四档是刻意的。没有「签到有奖」，也没有制造焦虑的通知。">The fourth tier is deliberate. No reward-for-checking-in, no anxiety notifications.</p></div>
+      </div>
+      <p style="margin-top:22px; text-align:center; color:var(--sub); font-size:14.2px" data-zh-html="提醒是可选的：不打开通知，就完全不会联网上传任何东西。详见<a href=&quot;how.html#data&quot; style=&quot;color:var(--red-text)&quot;>你的数据</a>一节。">
+        Reminders are strictly optional. If you never turn notifications on, nothing related is ever uploaded —
+        see <a href="how.html#data" style="color:var(--red-text)">the data section</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ───────────────── 30 天路径 ───────────────── -->
+  <section id="path">
+    <div class="wrap">
+      <div class="sec-h fade">
+        <h2 data-zh="你的 30 天路径">Your 30-day path</h2>
+        <p data-zh="四个阶段、30 天，复习日自动插在你快忘掉的位置。">
+          Four phases, 30 days, with review days spaced in right before you'd forget.
+        </p>
+      </div>
+      <div class="phases fade">
+        <div class="ph">
+          <div class="wk" data-zh="阶段 1 · 第 1–6 天">Phase 1 · Days 1–6</div>
+          <h3 data-zh="活下来">Survive</h3>
+          <p data-zh="解锁一切的最基本那几句。">The absolute basics that unlock everything else.</p>
+          <ul><li data-zh="你好、谢谢、对不起">Hello, thanks, sorry</li><li data-zh="数字与价格">Numbers &amp; prices</li><li data-zh="「我听不懂」">“I don't understand”</li></ul>
         </div>
-        <div class="card fade">
-          <div class="ico">📍</div>
-          <h3>Learn where it matters</h3>
-          <p>Scenes are the places you'll actually be: a noodle shop, a taxi, a first-day office hello. No "the cat is on the table."</p>
-          <p class="cn">学你真会用上的场景：面馆、出租车、第一天见同事。</p>
+        <div class="ph">
+          <div class="wk" data-zh="阶段 2 · 第 7–12 天">Phase 2 · Days 7–12</div>
+          <h3 data-zh="吃饭与走路">Eat &amp; move</h3>
+          <p data-zh="每天都要发生的交易：吃饭、打车、问路。">Food, taxis, directions — the daily transactions.</p>
+          <ul><li data-zh="点餐与买单">Ordering &amp; paying</li><li data-zh="去到你要去的地方">Getting somewhere</li><li data-zh="问「多少钱」">Asking “how much?”</li></ul>
         </div>
-        <div class="card fade">
-          <div class="ico">🎧</div>
-          <h3>Master tones by ear</h3>
-          <p>Tone Gym trains the hard part first: hearing 妈 / 麻 / 马 / 骂 apart, then saying them until they land.</p>
-          <p class="cn">声调先练耳朵：听得出，才说得出。</p>
+        <div class="ph">
+          <div class="wk" data-zh="阶段 3 · 第 13–19 天">Phase 3 · Days 13–19</div>
+          <h3 data-zh="工作与人">Work &amp; people</h3>
+          <p data-zh="让同事把你当同事，而不是陌生人的那些寒暄。">Small talk that makes you a colleague, not a stranger.</p>
+          <ul><li data-zh="自我介绍">Introducing yourself</li><li data-zh="周一寒暄">Monday small talk</li><li data-zh="客气地拒绝">Polite refusals</li></ul>
         </div>
+        <div class="ph">
+          <div class="wk" data-zh="阶段 4 · 第 20–30 天">Phase 4 · Days 20–30</div>
+          <h3 data-zh="走得更远">Go further</h3>
+          <p data-zh="更长的往来，真正的对话，属于你自己的句子。">Longer exchanges, real conversations, your own sentences.</p>
+          <ul><li data-zh="一来一回">Back-and-forth</li><li data-zh="把误会说清楚">Fixing misunderstandings</li><li data-zh="说出你自己的语气">Sounding like you</li></ul>
+        </div>
+      </div>
+      <div class="rev fade" data-zh="🔁 复习日会自动插进来 —— 间隔重复，但你完全不用管它。">
+        🔁 Review days are spaced in automatically — spaced repetition without you managing anything.
       </div>
     </div>
   </section>
 
-  <!-- HOW -->
-  <section id="how">
+  <!-- ───────────────── FAQ ───────────────── -->
+  <section id="faq" class="alt">
     <div class="wrap">
       <div class="sec-h fade">
-        <h2>Four steps. About five minutes a day.</h2>
-        <p>No accounts to set up, no streaks to feel guilty about. Just the line you'll need next.</p>
+        <h2 data-zh="常见问题">Questions people actually ask</h2>
       </div>
-      <div class="steps">
-        <div class="step fade"><span class="ico">1️⃣</span><h3>Pick a scene</h3><p>Choose where you'll be — food, transport, work, travel.</p></div>
-        <div class="step fade"><span class="ico">2️⃣</span><h3>Hear it real</h3><p>Native audio at real speed, plus slow mode when you need it.</p></div>
-        <div class="step fade"><span class="ico">3️⃣</span><h3>Say it out loud</h3><p>Record yourself; get a score on pronunciation and tones. No judgement.</p></div>
-        <div class="step fade"><span class="ico">4️⃣</span><h3>Use it for real</h3><p>Take it outside. Log the win. The line moves to review before you forget it.</p></div>
+      <div class="faq fade">
+        <details open>
+          <summary data-zh="真的免费吗？">Is it really free?</summary>
+          <div class="a" data-zh="是。没有订阅、没有内购、没有试用期。网站和 Android 版都免费。AI 功能（诺诺对话、AI 点评）有每日次数上限，这个上限是为了控住服务成本，不是用来催你付费的 —— 核心的「听、说、评分、复习」不消耗任何额度。">
+            Yes. No subscription, no in-app purchases, no trial. Both the web app and the Android app are free.
+            The AI features (Nono chat, AI feedback) have a daily cap — that cap exists to control server cost,
+            not to push you into paying. The core loop — listen, speak, get scored, review — uses none of it.
+          </div>
+        </details>
+        <details>
+          <summary data-zh="我要注册账号吗？">Do I need an account?</summary>
+          <div class="a" data-zh-html="不用。不填邮箱、不设密码、不绑手机。打开就能用。你的学习记录存在你自己的设备上；换设备想接着练，才会用到匿名设备 ID 做一次同步。详见<a href=&quot;how.html#data&quot;>你的数据</a>。">
+            No. No email, no password, no phone number. Open it and go. Your progress is stored on your own device;
+            only if you want to continue on a second device does an anonymous device ID come into play.
+            See <a href="how.html#data">your data</a>.
+          </div>
+        </details>
+        <details>
+          <summary data-zh="完全零基础能用吗？">Can I use it if I know nothing at all?</summary>
+          <div class="a" data-zh="可以，而且它就是为零基础设计的。全程拼音优先：每个汉字上面都有拼音，点任何一个字都能听发音。30 天路径第一天教的是「你好」和「多少钱」。" data-keep>
+            Yes — it's designed for it. Pinyin comes first everywhere: every character has pinyin above it, and tapping
+            any character plays its sound. Day one of the 30-day path teaches 你好 and 多少钱.
+          </div>
+        </details>
+        <details>
+          <summary data-zh="安卓和 iPhone 都能用吗？">Does it work on Android and iPhone?</summary>
+          <div class="a" data-zh-html="都能。<b>Android</b> 可以直接下载安装包（APK）；<b>iPhone / iPad</b> 用 Safari 打开后「添加到主屏幕」，体验和装机版几乎一样（离线可用、一键打开、全屏无地址栏）。两条路都在<a href=&quot;download.html&quot;>下载页</a>写清了步骤。">
+            Both. On <b>Android</b> you can install the APK directly. On <b>iPhone / iPad</b>, open it in Safari and
+            “Add to Home Screen” — offline, one tap, no address bar, essentially indistinguishable from an installed app.
+            Both paths are spelled out on the <a href="download.html">download page</a>.
+          </div>
+        </details>
+        <details>
+          <summary data-zh="没网能用吗？">Does it work offline?</summary>
+          <div class="a" data-zh="打开过一次之后可以：句子、拼音、文字和音频都会缓存到本机，飞机上也能练。需要联网的是语音识别评分和诺诺 AI —— 离线时这两项会走降级分支，不会卡住你。">
+            After one visit, yes: lines, pinyin, characters and audio are cached on the device, so it works on a plane.
+            What needs the network is speech scoring and Nono AI — offline, those fall back gracefully instead of blocking you.
+          </div>
+        </details>
+        <details>
+          <summary data-zh="我的录音会被上传吗？">Are my recordings uploaded?</summary>
+          <div class="a" data-zh-html="只有你按下麦克风的那一刻：录音会送到语音识别服务转成文字并评分，用完即弃，不存原始音频。不发消息、不分享、不用于训练。你也可以完全不用录音，只用「听 + 跟读」。详见<a href=&quot;https://sinoky.pages.dev/privacy.html&quot;>隐私政策</a>。">
+            Only when you tap the mic: the audio goes to a speech-recognition service to be transcribed and scored,
+            then it's discarded — the raw audio is not stored. It is never messaged, shared or used for training.
+            You can also skip recording entirely and just listen and shadow. See the
+            <a href="https://sinoky.pages.dev/privacy.html">privacy policy</a>.
+          </div>
+        </details>
+        <details>
+          <summary data-zh="这是教材还是词典？">Is this a textbook? A dictionary?</summary>
+          <div class="a" data-zh="都不是。它不教语法体系，也不查词。它只做一件事：让你在真实场景里，把该说的那句话说出来 —— 然后记住它。">
+            Neither. It doesn't teach a grammar system and it isn't a dictionary. It does one thing: get you to say
+            the right line in a real situation, out loud — and then remember it.
+          </div>
+        </details>
       </div>
     </div>
   </section>
 
-  <!-- JOURNEY -->
-  <section id="journey">
-    <div class="wrap">
-      <div class="sec-h fade">
-        <h2>Your 30-day path</h2>
-        <p>Four phases, 19 learning days, and 11 review days that come back right before you'd forget.</p>
-      </div>
-      <div class="journey">
-        <div class="ph fade">
-          <div class="wk">Phase 1 · Days 1–6</div>
-          <h3>Survive</h3>
-          <p>The absolute basics that unlock everything else.</p>
-          <ul><li>Hello, thanks, sorry</li><li>Numbers &amp; prices</li><li>"I don't understand"</li></ul>
-        </div>
-        <div class="ph fade">
-          <div class="wk">Phase 2 · Days 7–12</div>
-          <h3>Eat &amp; move</h3>
-          <p>Food, taxis, directions — the daily transactions.</p>
-          <ul><li>Ordering &amp; paying</li><li>Getting somewhere</li><li>Asking "how much?"</li></ul>
-        </div>
-        <div class="ph fade">
-          <div class="wk">Phase 3 · Days 13–19</div>
-          <h3>Work &amp; people</h3>
-          <p>Small talk that makes you a colleague, not a stranger.</p>
-          <ul><li>Introducing yourself</li><li>Monday small talk</li><li>Polite refusals</li></ul>
-        </div>
-        <div class="ph fade">
-          <div class="wk">Phase 4 · Days 20–30</div>
-          <h3>Go further</h3>
-          <p>Longer exchanges, real conversations, your own sentences.</p>
-          <ul><li>Back-and-forth</li><li>Fixing misunderstandings</li><li>Sounding like you</li></ul>
-        </div>
-      </div>
-      <div class="rev fade">
-        🔁 <b>11 review days</b> are spaced in automatically — spaced repetition without you managing a thing.
-      </div>
-    </div>
-  </section>
-
-  <!-- FINAL CTA -->
-  <section class="final" id="start">
+  <!-- ───────────────── 收尾 CTA ───────────────── -->
+  <section class="final">
     <div class="wrap fade">
-      <h2>Your first line is five minutes away.</h2>
-      <p>Free in the browser, no sign-up. Android app if you want it in your pocket.</p>
-      <div class="cta" style="margin-top:26px">
-        <a class="btn btn-p" href="https://sinoky.pages.dev/" target="_blank" rel="noopener">Open Sinoky — it's free</a>
-        <a class="btn btn-g" href="https://sinoky.pages.dev/download" target="_blank" rel="noopener">Get the Android app</a>
+      <h2 data-zh="你的第一句话，五分钟之后就能说出口。">Your first line is five minutes away.</h2>
+      <p data-zh="网页版免费、免注册；想一直带在身上，就装 Android 版。">
+        Free in the browser, no sign-up. Android app if you want it in your pocket.
+      </p>
+      <div class="cta btn-row center" style="margin-top:26px">
+        <a class="btn btn-p" href="https://sinoky.pages.dev/" data-zh="打开 Sinoky · 免费">Open Sinoky — it's free</a>
+        <a class="btn btn-g" href="download.html" data-zh="下载 Android 版">Get the Android app</a>
       </div>
     </div>
   </section>
 
 </main>
 
+<!-- ───────────────── FOOTER（五个页面完全一致；A2 校验） ───────────────── -->
 <footer>
   <div class="wrap">
-    <span>© 2026 Sinoky · Speak Chinese where it matters</span>
-    <span>
-      <a href="#why">Why</a> · <a href="#how">How</a> ·
-      <a href="#journey">Path</a> ·
-      <a href="https://sinoky.pages.dev/privacy.html" target="_blank" rel="noopener">Privacy</a>
-    </span>
+    <div class="f-grid">
+      <div>
+        <div class="f-brand"><span class="dot"></span>Sinoky</div>
+        <p class="tagline" data-zh="在真正用得上的地方说中文。免费、无需注册、可离线。">Speak Chinese where it matters. Free, no account, works offline.</p>
+      </div>
+      <div>
+        <h4 data-zh="产品">Product</h4>
+        <ul>
+          <li><a href="features.html" data-zh="功能亮点">Features</a></li>
+          <li><a href="how.html" data-zh="怎么用">How it works</a></li>
+          <li><a href="download.html" data-zh="下载 App">Download</a></li>
+          <li><a href="https://sinoky.pages.dev/" data-zh="打开网页版">Open the web app</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-zh="支持">Support</h4>
+        <ul>
+          <li><a href="contact.html" data-zh="联系我们">Contact</a></li>
+          <li><a href="index.html#faq" data-zh="常见问题">FAQ</a></li>
+          <li><a href="https://sinoky.pages.dev/privacy.html" data-zh="隐私政策">Privacy</a></li>
+          <li><a href="https://sinoky.pages.dev/credits.html" data-zh="鸣谢与许可">Credits</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-zh="界面语言">Interface languages</h4>
+        <ul>
+          <li>English</li><li>中文</li><li>Español</li><li>Русский</li>
+          <li>Tiếng Việt</li><li>Bahasa Indonesia</li><li>ไทย</li>
+        </ul>
+      </div>
+    </div>
+    <div class="f-bottom">
+      <span data-zh="© 2026 Sinoky · 独立开发者的个人项目">© 2026 Sinoky · an independent project</span>
+      <span data-zh="内容版权与素材许可见 credits 页">Content credits and licences are listed on the credits page</span>
+    </div>
   </div>
 </footer>
 
-<script>
-/* 滚动淡入；尊重 prefers-reduced-motion（CSS 已兜底，这里再关掉 JS 侧） */
-(function () {
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var els = document.querySelectorAll('.fade');
-  if (reduce || !('IntersectionObserver' in window)) {
-    els.forEach(function (e) { e.classList.add('in'); });
-    return;
-  }
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
-    });
-  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-  els.forEach(function (e) { io.observe(e); });
-})();
-</script>
+<script src="site.js"></script>
 </body>
 </html>
