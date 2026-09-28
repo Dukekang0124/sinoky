@@ -90,3 +90,4 @@ _internal/_*.dump.json
 # v0.29.4 限流兜底单测的临时 ESM 副本（每次运行由脚本重建、跑完自删，不入库）
 # 注意必须放**仓库根**（_worker.js 有相对 import），所以规则不能带 _internal/ 前缀
 _rl_*.tmp.mjs
+_internal/apk-cache/

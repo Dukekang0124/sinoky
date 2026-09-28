@@ -147,6 +147,35 @@ function api(p) {
   const local = walk(OUT);
   let fails = 0;
 
+  /* ── ⓪ APK 实体防呆（2026-09-28 实证新增，部署前硬闸）──────────────
+     version.json.apk.url 指向的 APK **必须在本地 www/ 里**且 md5/size 一致。
+     背景：build-web 清空重建 www ⇒ 忘跑 fetch_apk 就部署 ⇒ 线上 APK 被整包替换删掉
+     ⇒ App 内更新下到 SPA 兜底 index.html ⇒ 「magic mismatch」。
+     键集合比对（①）虽然也能抓，但只在跑完网络段后报；这道闸在 0 网络依赖下先死。 */
+  {
+    const vj = JSON.parse(fs.readFileSync(path.join(OUT, 'version.json'), 'utf8'));
+    const apkUrl = vj.apk && vj.apk.url;
+    if (apkUrl) {
+      const apkName = apkUrl.split('/').pop();
+      const apkPath = path.join(OUT, 'apk', apkName);
+      if (!fs.existsSync(apkPath)) {
+        console.error('✗【APK 防呆】version.json 指向 apk/' + apkName + '，但本地 www/ 里没有它！');
+        console.error('  ⇒ 直接部署会把线上 APK 删掉（App 更新将下到 SPA 兜底页）。');
+        console.error('  ⇒ 先跑：node _internal/fetch_apk.cjs');
+        process.exit(1);
+      }
+      const b = fs.readFileSync(apkPath);
+      const md5 = crypto.createHash('md5').update(b).digest('hex');
+      if (md5 !== vj.apk.md5 || b.length !== vj.apk.size) {
+        console.error('✗【APK 防呆】www/apk/' + apkName + ' 与 version.json 登记不符');
+        console.error('  size ' + b.length + '/' + vj.apk.size + '  md5 ' + md5.slice(0, 8) + '/' + String(vj.apk.md5).slice(0, 8));
+        console.error('  ⇒ 先跑：node _internal/fetch_apk.cjs');
+        process.exit(1);
+      }
+      console.log('=== ⓪ APK 防呆：www/apk/' + apkName + ' 在位，md5/size 与 version.json 一致 ✅ ===');
+    }
+  }
+
   /* ── ① 键集合比对（CF API，零下载）────────────────────────────── */
   console.log('=== ① 键集合比对（CF API 权威清单）===');
   try {
