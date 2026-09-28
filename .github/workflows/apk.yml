@@ -488,7 +488,7 @@ jobs:
           SIZE=$(stat -c%s "www/apk/Sinoky-v${V}-release.apk")
           node -e "const fs=require('fs');const p=process.argv[5];const j=JSON.parse(fs.readFileSync(p,'utf8'));var f=(j.apk&&j.apk.force)||false;j.apk={versionCode:Number(process.argv[1]),version:process.argv[2],url:'https://sinoky.pages.dev/apk/Sinoky-v'+process.argv[2]+'-release.apk',md5:process.argv[3],size:Number(process.argv[4]),force:f};fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');console.log('injected apk (md5+size) into',p,JSON.stringify(j.apk))" "$CODE" "$V" "$MD5" "$SIZE" www/version.json
           node -e "const fs=require('fs');const p=process.argv[5];const j=JSON.parse(fs.readFileSync(p,'utf8'));var f=(j.apk&&j.apk.force)||false;j.apk={versionCode:Number(process.argv[1]),version:process.argv[2],url:'https://sinoky.pages.dev/apk/Sinoky-v'+process.argv[2]+'-release.apk',md5:process.argv[3],size:Number(process.argv[4]),force:f};fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');console.log('injected apk (md5+size) into',p,JSON.stringify(j.apk))" "$CODE" "$V" "$MD5" "$SIZE" version.json
-          npx --yes wrangler@3 pages deploy www --project-name=sinoky --branch=main
+          npx --yes wrangler@4 pages deploy www --project-name=sinoky --branch=main
           echo "published https://sinoky.pages.dev/apk/Sinoky-v${V}-release.apk (md5=${MD5:0:8}... size=$SIZE)"
           # v0.12.0 治本：md5/size 回写仓库根 version.json——此后 push main 的 deploy
           # 永远携带完整 apk 元数据，不再覆盖掉 CI 注入结果；发布窗口期由前端
@@ -517,8 +517,22 @@ jobs:
               echo "::error::CI could not push version.json sync to main after 3 attempts (branch protection? GH_PAT expired/revoked?) — RECONCILE MANUALLY: local version.json is still correct and live; set root version.json apk segment to the deployed md5/size and push main by hand"
             fi
           fi
-          npx --yes wrangler@3 pages deploy www --project-name=sinoky --branch=main
-          echo "published https://sinoky.pages.dev/apk/Sinoky-v${V}-release.apk"
+          # v0.29.3：此处原有一次**重复部署**，已删除。
+          # 历史顺序是「deploy → 回写 main → 再 deploy 一次」，但 version.json 的
+          # md5/size 注入发生在**第一次部署之前**（见上方两个 node -e 注入），
+          # 两次部署的内容完全相同 ⇒ 第二次纯冗余：白耗一次 Pages 部署额度与约 40s CI 时间。
+          # 删掉后「部署成功才回写 main」的安全顺序不变（回写仍在部署之后）。
+          echo "single deploy done; skip the redundant second deploy"
+
+      # v0.29.3 新增：部署后配置自检。
+      # 2026-09-28 实测发现生产后端处于**静默故障**：env.AI 未绑定（ASR 全挂）、
+      # STATS_TOKEN/FEEDBACK_TOKEN 运行时空值（定时推送与反馈读取失效），而线上
+      # 表面完全正常、没有任何报错信号。根因是「只在 Dashboard 配过的绑定/密钥
+      # 活不过下一次 wrangler 部署」—— 这种故障必须由 CI 主动探测，否则只有用户投诉才知道。
+      # 探针不需要任何 secret（靠「未配置」与「鉴权失败」的文案差异判定），见脚本头注释。
+      - name: Deploy config probe — Function bindings & secrets present
+        if: env.BUILD_TYPE == 'release'
+        run: node _internal/probe_deploy_config.cjs
 
       - name: Push APK to dist branch (git-protocol reachable copy)
         env:

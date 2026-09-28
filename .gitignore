@@ -54,3 +54,6 @@ _internal/fix-2026-09-23/_ai_block.js
 _internal/_shots/
 # Windows 设备名残留（无法删除，恒为未跟踪）
 nul
+
+# v0.29.3：AI 协作工具的会话/自动化数据目录（非源码，不应进产品仓库）
+.workbuddy/

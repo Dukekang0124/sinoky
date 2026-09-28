@@ -7,6 +7,11 @@ compatibility_flags = ["nodejs_compat"]
 # Declared here (not via Dashboard/API alone) so that `wrangler pages deploy`
 # carries them on every deployment — including CI runs. KV namespace IDs are
 # non-secret and safe to commit. (v0.24.8: added PUSH for Web Push subscriptions)
+#
+# 🔴 铁律：本文件是「非继承键（non-inheritable keys）」的唯一事实源。
+#    `wrangler pages deploy` 每次都会按它重写项目配置 —— 只写在 Dashboard / 只用
+#    API PATCH 的绑定，会被下一次部署抹掉。CF 官方文档：
+#    developers.cloudflare.com/pages/functions/wrangler-configuration/（Non-inheritable keys）
 [[kv_namespaces]]
 binding = "FEEDBACK"
 id = "3e8bfa1dd43c49e1a9b77c336ded54df"
@@ -18,3 +23,20 @@ id = "f68d5aa1d20c4d2abe7fae62685f2fa4"
 [[kv_namespaces]]
 binding = "PUSH"
 id = "9a54616846814bd6be285971ae604b48"
+
+# Workers AI 绑定 —— ASR 语音识别（@cf/openai/whisper-large-v3-turbo）的唯一依赖。
+#
+# 🔴 2026-09-28 实测事故：此前该绑定只在 Cloudflare Dashboard 配置过，
+#    wrangler.toml 里没有声明 ⇒ 每次 `wrangler pages deploy`（CI 每次发版都跑）
+#    都会把项目级 ai_bindings 重写成 null ⇒ 生产环境 env.AI 变成 undefined。
+#    表现：POST /api/asr 直接 500「Cannot read properties of undefined (reading 'run')」，
+#    即**所有用户的语音识别全挂**，而线上表面一切正常、日志里也没有明显报错信号
+#    （/api/chat 会静默降级到 degraded 分支，用户看到的是「没反应」而不是「报错」）。
+#    同一时刻 /api/profile 等走 KV 的接口全部正常 —— 因为 KV 早已在 toml 里声明，
+#    所以只有 AI 这一条腿断掉。诊断依据：
+#      GET /accounts/<acc>/pages/projects/sinoky
+#        → deployment_configs.production.ai_bindings == null （而 preview 是 {"AI":{}}）
+#    修法：写进本文件（AI 是 non-inheritable key，只能走 wrangler 配置或 Dashboard，
+#    而 Dashboard 配置活不过下一次部署）。
+[ai]
+binding = "AI"

@@ -1,7 +1,15 @@
-# ⚠️ 重要事实（2026-09-22 实测）：Cloudflare Pages 的「直接上传」路径（wrangler pages deploy / cloudflare/pages-action）
-#    不读取本文件——实测会把 _internal/ scripts/ .github/ 全部原样上传。本项目走直接上传，真正生效的排除在
-#    scripts/build-deploy-dir.sh（先构建精简 dist/ 再部署该目录）。本 .assetsignore 只对「Git 集成自动构建」部署生效，
-#    保留它与 build-deploy-dir.sh 的 EXCLUDES 对齐，作为双保险与文档。
+# ⚠️ 重要事实（2026-09-22 实测，2026-09-28 更正）：Cloudflare Pages 的「直接上传」路径
+#    （wrangler pages deploy）**不读取本文件** —— 实测会把 _internal/ scripts/ .github/ 原样上传。
+#
+#    本项目现行部署走的是「先构建白名单 www/、再部署该目录」，真正生效的排除机制是：
+#      ① scripts/build-web.mjs 的 DIRS / FILES 白名单（只 cp 该进包的，根目录出现未归类条目即构建失败）
+#      ② _redirects 的边缘 302 收口（挡历史遗留与 immutable deployment 残留）
+#    ❌ 此处原写「真正生效的排除在 scripts/build-deploy-dir.sh」—— **该判断有误**：
+#       那个脚本只服务已废弃的 deploy-to-cloudflare-pages.yml（部署 dist/），而 dist/ 与
+#       现行 www/ 路径冲突（修好它会用旧产物覆盖线上），两者已于 2026-09-28 一并删除。
+#
+#    本文件因此只对「Git 集成自动构建」这一**本项目未启用**的部署方式生效，
+#    保留仅为意图文档，不再是任何生效机制的一部分。
 #
 # 列出的文件/目录「绝不上线」（仅影响部署产物，不影响 git 跟踪）。
 # 目的：仓库根全量部署时，剔除一切「开发期/构建期」资源，避免内部脚本与文档公网可直下（static-asset-leak-audit）。
