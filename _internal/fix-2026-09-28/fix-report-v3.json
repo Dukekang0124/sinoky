@@ -1,0 +1,52 @@
+[
+ {
+  "name": "main",
+  "pose": "wave",
+  "added_px(修补)": 505,
+  "fade": [
+   446,
+   502,
+   56
+  ]
+ },
+ {
+  "name": "step1-pinyin",
+  "pose": "point",
+  "added_px(修补)": 1136,
+  "fade": [
+   388,
+   444,
+   56
+  ]
+ },
+ {
+  "name": "step2-listen",
+  "pose": "listen",
+  "added_px(修补)": 465,
+  "fade": [
+   436,
+   492,
+   56
+  ]
+ },
+ {
+  "name": "step3-speak",
+  "pose": "cheer",
+  "added_px(修补)": 1236,
+  "fade": [
+   377,
+   433,
+   56
+  ]
+ },
+ {
+  "name": "step4-score",
+  "pose": "like",
+  "added_px(修补)": 899,
+  "fade": [
+   354,
+   410,
+   56
+  ]
+ }
+]

@@ -1,0 +1,70 @@
+{
+  "url": "http://127.0.0.1:8790/_internal/fix-2026-09-28/_ab3.html",
+  "info": [
+    {
+      "name": "step4-score",
+      "before": {
+        "nw": 512,
+        "nh": 512,
+        "w": 338,
+        "h": 338
+      },
+      "after": {
+        "nw": 512,
+        "nh": 512,
+        "w": 338,
+        "h": 338
+      },
+      "sameBox": true
+    },
+    {
+      "name": "step1-pinyin",
+      "before": {
+        "nw": 512,
+        "nh": 512,
+        "w": 338,
+        "h": 338
+      },
+      "after": {
+        "nw": 512,
+        "nh": 512,
+        "w": 338,
+        "h": 338
+      },
+      "sameBox": true
+    },
+    {
+      "name": "main",
+      "before": {
+        "nw": 800,
+        "nh": 600,
+        "w": 338,
+        "h": 253.5
+      },
+      "after": {
+        "nw": 800,
+        "nh": 600,
+        "w": 338,
+        "h": 253.5
+      },
+      "sameBox": true
+    },
+    {
+      "name": "step2-listen",
+      "before": {
+        "nw": 512,
+        "nh": 512,
+        "w": 338,
+        "h": 338
+      },
+      "after": {
+        "nw": 512,
+        "nh": 512,
+        "w": 338,
+        "h": 338
+      },
+      "sameBox": true
+    }
+  ],
+  "errors": []
+}
