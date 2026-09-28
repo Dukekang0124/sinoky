@@ -57,3 +57,17 @@ nul
 
 # v0.29.3：AI 协作工具的会话/自动化数据目录（非源码，不应进产品仓库）
 .workbuddy/
+
+# 2026-09-28 官网诺诺抠图修复（fix-2026-09-28）的**一次性产物**：诊断图、强度试验、
+# 本机 A/B 与线上验收截图 —— 均可由 fix_nono_cutout_v2.py / capture_ab.cjs /
+# live_verify_onboard.cjs 重建（结论与指标已写进该目录 README.md 与 fix-report-v2.json）。
+# 入库只留：脚本 + README + 报告 + _backup/（原始线上图基线，不可由仓库重建）。
+_internal/fix-2026-09-28/_diag/
+_internal/fix-2026-09-28/_live/
+_internal/fix-2026-09-28/ab/
+_internal/fix-2026-09-28/cards-before/
+_internal/fix-2026-09-28/cards-after/
+_internal/fix-2026-09-28/preview_v2/
+
+# 2026-09-28 界面截图采集的运行报告（产出命令未入库，属一次性运行产物）
+_internal/_cap_report.json

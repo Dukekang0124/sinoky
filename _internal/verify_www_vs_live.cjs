@@ -231,11 +231,43 @@ function api(p) {
       else console.log('✅ ' + f);
     } catch (e) { console.log('⚠️ ' + f + '：取回失败 ' + e.message); fails++; }
   }
-  /* 白名单必须「声明了且真的变了」—— 多声明/过期声明也要提示（说明白名单该更新了） */
+  /* ── ②b 白名单条目必须**自己真比对一遍**（2026-09-28 修，原为假绿）──────
+     🔴 缺陷：② 只遍历 CRITICAL，`changed` 也只在 CRITICAL 循环与 `--full` 里写入。
+        于是**不在 CRITICAL 的白名单条目压根没被取回、没被比对**，
+        而下面那句汇总却把它算进「线上与本地一致」——把「没检查」写成了「一致」。
+        实测触发（2026-09-28）：`--expect=assets/onboard/{main,step1-pinyin,step2-listen,
+        step3-speak,step4-score}.webp,landing/…` 时，5 张图全被报「一致」；
+        真相是它们与线上**逐字节不同**（线上 = git HEAD 原图 29b54f1a…，本地 = v2 5bee50ff…），
+        只是当时既不在 CRITICAL 也没加 --full ⇒ 一个断言都没跑。
+     ⇒ 白名单要自证：**声明了要变更的文件，闸门必须亲自去看一眼**。
+        这条修的是「断言空转」，比漏检更坏 —— 它会输出一个看起来可信的结论。 */
+  const expectOnly = [...EXPECT].filter(
+    (f) => !CRITICAL.includes(f) && !SPECIAL.has(f) && !/^apk\//.test(f)
+  );
+  for (const f of expectOnly) {
+    const lp = path.join(OUT, f);
+    if (!fs.existsSync(lp)) { console.log('❌ ' + f + '：白名单声明了变更，但本地不存在'); fails++; continue; }
+    const lb = fs.readFileSync(lp);
+    try {
+      const r = await req(BASE + '/' + f, { guardShort: true });
+      if (r.s !== 200) { console.log('❌ ' + f + '：线上 HTTP ' + r.s + ' ' + clip(r.buf.toString('utf8'), 60)); fails++; continue; }
+      if (md5(r.buf) === md5(lb)) {
+        console.log('✅ ' + f + '（白名单条目，已比对：线上已与本地一致）');
+      } else {
+        changed.add(f);
+        console.log('🔄 ' + f + '：本版有意变更（线上 ' + md5(r.buf).slice(0, 10) + ' → 本地 ' + md5(lb).slice(0, 10) +
+                    '，' + r.buf.length + ' → ' + lb.length + ' bytes）');
+      }
+    } catch (e) { console.log('⚠️ ' + f + '：取回失败 ' + e.message); fails++; }
+  }
+
+  /* 白名单必须「声明了且真的变了」—— 多声明/过期声明也要提示（说明白名单该更新了）。
+     ⚠️ 本提示的前提是上面 ② 与 ②b **确实比对过**；`changed` 里没有的条目才算「一致」。
+     `apk/*` 不做内容比对（体积大）⇒ 排除，否则又会造一个假的「一致」。 */
   if (!strict) {
-    const claimedButSame = [...EXPECT].filter((f) => !changed.has(f));
+    const claimedButSame = [...EXPECT].filter((f) => !changed.has(f) && !/^apk\//.test(f));
     if (claimedButSame.length) {
-      console.log('⚠️ 白名单里声明了变更、但线上与本地一致（多声明或已部署过）：' + claimedButSame.join(', '));
+      console.log('⚠️ 白名单里声明了变更、但**已比对**且线上与本地一致（多声明或已部署过）：' + claimedButSame.join(', '));
     }
   }
 
