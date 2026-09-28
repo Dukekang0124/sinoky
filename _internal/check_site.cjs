@@ -15,6 +15,13 @@
  *      A4 canonical + og:title + og:image 齐（官网要被分享，缺则分享卡片是白的）。
  *      A5 站内 href/src 全部解析到真实文件（不存在 = 上线即 404）。
  *      A6 data-zh 与 data-zh-html 互斥（同一元素既给纯文本又给富文本，行为未定义）。
+ *      A7 城市任务区数字**逐城真值校验**（不是句式黑名单）：任何「城市 × 数字 ×
+ *         任务区/zones」子句，数字必须等于该城现算值（上海 9 / 北京 4 / 成都 4 /
+ *         合计 17）。判据自带 8 反例 + 8 正例自测（含 HTML 层用例），配对数按
+ *         **来源分账**（可见文本 / data-zh 属性），任一来源 0 配对 ⇒ 判失败（防空转）。
+ *         为什么需要：官网曾写「北京、上海、成都各 9 个真实任务区」而没人发现 ——
+ *         该数字当时不被 count_corpus 任何字段覆盖。数字没出处 = 没人看守。
+ *         外部干预验证（真改坏文件再验）用 `_internal/probe_a7_zones.cjs`，三步见其文档头。
  *
  *   B. 真跑渲染（Playwright + 本机 Chrome，5 页 × 3 视口）
  *      B1 页面与全部子资源 HTTP 全 200；无 requestfailed。
@@ -57,6 +64,7 @@
  *   NODE_OPTIONS= NODE_PATH=<workbuddy node workspace>/node_modules \
  *     node _internal/check_site.cjs [--quick]
  *   --quick 跳过 3 视口矩阵，只跑 md（迭代文案时用）。
+ *   --static-only 只跑 A 组、不启浏览器（约 1 秒；改文案后先跑这个再跑全量）。
  */
 const { chromium } = require('playwright');
 const http = require('http');
@@ -69,6 +77,10 @@ const LAND = path.join(ROOT, 'landing');
 const SHOTS = path.join(__dirname, '_shots');
 const PAGES = ['index.html', 'features.html', 'how.html', 'download.html', 'contact.html'];
 const QUICK = process.argv.includes('--quick');
+/* --static-only：只跑 A 组（读文件 + 真值对账），不启浏览器。约 1 秒。
+   存在理由：改一句文案后要验 A7 得等 40 秒渲染，人就会不想跑 ⇒ 闸门被绕过。
+   它与 --quick 是**互补**的（quick 跑渲染不跑静态），不是替代。 */
+const STATIC_ONLY = process.argv.includes('--static-only');
 const VIEWPORTS = QUICK
   ? [{ name: 'md', w: 768, h: 1024 }]
   : [{ name: 'sm', w: 360, h: 740 }, { name: 'md', w: 768, h: 1024 }, { name: 'lg', w: 1440, h: 900 }];
@@ -129,6 +141,223 @@ function block(src, tagName) {
   return null;
 }
 function eol(s) { return s.replace(/\r\n/g, '\n'); }
+
+/* ══════════════════ A7 判据：城市 × 任务区数字 真值校验 ══════════════════
+   两个入口分开，是为了让「判据」本身可以被**单独自测**（见 auditZoneSelfTest）——
+   判据和被测对象混在一起时，唯一能证明判据有效的方法就是去改页面，那代价太大，
+   于是人就懒得证，闸门就永远处于「不知道有没有用」的状态。 */
+
+/* 可见文本：**先挖空属性值**再剥标签。
+   顺序不能反 —— 反了会把 data-zh-html 里的 `<b>` 当标签处理并把中文夹断成碎片，
+   碎片可能拼出假的城市×数字组合。属性值里的中文由 zhAttrs 单独收。
+
+   🔴 剥标签要**区分块级 / 行内**，不能一律换成空格：
+     一律换空格时，表格里相邻的两个 <td> 会被连成**同一句**——
+     `…(Shanghai 9 zones; Beijing and Chengdu 4 each)  The Beijing / Shanghai / Chengdu guide entries`
+     于是「4」和后面单元格里的「Shanghai」落进同一子句，判据把 4 判给上海（真值 9）⇒ 假阳性。
+     实测就是这么被抓的。块级标签换成换行（真的断句），行内标签换成空串（不断句）。
+     注意也不能一律换换行：`<b>Shanghai</b> has 9 zones` 会被切成「Shanghai」+「has 9 zones」，
+     城市与数字分离 ⇒ **漏检**（更隐蔽）。两边都要照顾，所以必须分类处理。 */
+const INLINE_TAG = /^(a|b|i|em|strong|span|small|sup|sub|u|s|code|abbr|mark|cite|q|time|wbr|img|svg|use|path)$/i;
+function visibleText(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/="[^"]*"/g, ' ')          /* 挖空属性值（中文文案由 zhAttrs 单独收） */
+    .replace(/<(\/?)([a-zA-Z][a-zA-Z0-9-]*)\b[^>]*>/g, (m, slash, tag) => {
+      const t = tag.toLowerCase();
+      if (t === 'br') return '\n';
+      return INLINE_TAG.test(t) ? '' : '\n';
+    });
+}
+function zhAttrs(html) {
+  return [...html.matchAll(/data-zh(?:-html)?="([^"]*)"/g)].map((m) => m[1]);
+}
+
+/* 数字：阿拉伯 + 英文（one…twenty）+ 中文（一…二十）。三种都要，因为文案里三处写法都用过
+   （`9 zones` / `nine real-world zones` / `9 个任务区`）。漏掉任一形态 = 该处数字无人看守。 */
+const NUM_W = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
+  eighteen: 18, nineteen: 19, twenty: 20,
+};
+const NUM_C = { 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 };
+function numOf(s) {
+  const t = String(s).trim().toLowerCase();
+  if (/^\d+$/.test(t)) return +t;
+  if (NUM_W[t] != null) return NUM_W[t];
+  if (NUM_C[t] != null) return NUM_C[t];
+  const m = /^([一二三四五六七八九])?十([一二三四五六七八九])?$/.exec(t);   /* 十一…九十九 */
+  if (m) return (m[1] ? NUM_C[m[1]] : 1) * 10 + (m[2] ? NUM_C[m[2]] : 0);
+  return null;
+}
+const NUM_ALT = '\\d{1,3}|[a-zA-Z]+|[一二三四五六七八九十]+';
+/* ── 两种「数量短语」形态 ──────────────────────────────────────────────
+   ① 严格形态：数字**自带单位**（`9 个任务区`、`9-zone`、`9 real-world zones`、
+      `nine real-world zones`）。数字与单位之间只允许修饰词，不许跨标点。
+   ② 宽松形态：只有分配词，没有单位（`各 4 个`、`4 each`）。单看它无法确定在谈任务区，
+      所以**必须由同一大句里出现的严格形态来开门**（见 hasUnitAnchor）——
+      否则「北京与成都各有 3 个机场」会被误判成任务区数（假阳性）。
+   为什么要 ②：官网表格里就写着 `Shanghai 9 zones; Beijing and Chengdu 4 each` ——
+   后半句没有 `zones` 字样。若只认 ①，那么「有人把 4 改成 9」这种最典型的改错
+   （只改一处）会无人看守。这是「漏检边界要能说清并补上」的实例。 */
+const STRICT_PAT = new RegExp(
+  '(' + NUM_ALT + ')\\s*(?:[-–]|个)?\\s*(?:(?:真实|完整|个真实|个完整)\\s*)?'
+  + '(?:(?:real[- ]world|real|world)\\s*)?(?:任务区|任务点|zones?)', 'gi');
+/* 明文列入「不是任务区」的常见量词名词，降低 ② 的误报面。这是个不完美的手段
+   （清单不可能穷尽），但方向正确：宁可窄一点、把边界写清，也不要宽到抓正确文案。
+   🔴 它**不能写成正则里的否定前瞻**（`(?!机场)`）—— 第一版就是这么写的，被自测当场
+   证伪：`各有 3 个机场` 中 `个` 是可选的，正则引擎会**退回去不吃「个」**，让前瞻落在
+   「个机场」之前而通过（前瞻看到的是「个」而不是「机场」）。回溯能骗过前瞻，但骗不过
+   「匹配之后再取后缀字符串来看」—— 所以排除判断挪到 looseNums 里做。 */
+const NOT_ZONE = '机场|车站|地铁|城市|语言|天|周|分钟|小时|人|店|句|地铁线|选项|阶段';
+/* `(?:有|have)?` 是必需的，且**又是被自测抓出来的**：中文写作「北京与成都**各有** 4 个」、
+   英文写作「… have 4 each」，分配词与数字之间会夹一个动词。第一版只写 `各\s*(数字)`，
+   于是「各有 9 个」这种真实改错形态被抓不到（反例空转），而正例「各有 4 个」也没被核验
+   （看似通过、实则没查）—— 后者比前者更危险，因为它给出的是「已核对」的假象。 */
+const LOOSE_PAT = new RegExp(
+  '(?:(?:\\beach\\b|各)\\s*(?:有|have)?\\s*(' + NUM_ALT + ')'
+  + '|(' + NUM_ALT + ')\\s*\\beach\\b)', 'gi');
+const TOTAL_RE = /(合计|总计|总共|一共|总数|in total|\btotal\b)/i;
+
+/* 大句：句读 + 英文句号（后跟空白/行尾才算，见下）。
+   🔴 英文句号这个 lookahead 是必须的，且**第一版漏掉它时被自测当场抓住**：
+   `...nine real-world zones. Beijing and Chengdu have four zones each.` 若不切英文句号，
+   两个主语不同的数量会落进同一大句，把上海的 nine 判给北京（假阳性）。
+   而放宽成「见点就切」又会把 `0.29.3` 这类版本号切碎，故用 `\.(?=\s|$)`。 */
+const SENT_SPLIT = /[。！!？?\n]|\.(?=\s|$)/;
+/* 子句：分号 + 逗号 + 顿号。切它们是必要的 —— `Beijing, Shanghai and Chengdu each have
+   9 zones` 要能按并列成分切开；也把 `上海 9 个任务区，北京与成都各有 4 个` 分开，
+   避免两段不同主语的数量互相污染。 */
+const CLAUSE_SPLIT = /[；;，,、]/;
+function citiesIn(cl, DEF) {
+  const l = cl.toLowerCase();
+  return DEF.filter((c) => l.includes(c.en) || cl.includes(c.zh));
+}
+function strictNums(cl) {
+  return [...cl.matchAll(STRICT_PAT)].map((m) => ({ w: m[1], n: numOf(m[1]), i: m.index, l: m[0].length }))
+    .filter((x) => x.n != null);
+}
+function looseNums(cl) {
+  const out = [];
+  const notZone = new RegExp('^\\s*个?\\s*(?:' + NOT_ZONE + ')');
+  for (const m of cl.matchAll(LOOSE_PAT)) {
+    const w = m[1] || m[2];
+    const n = numOf(w);
+    if (n == null) continue;
+    /* 匹配之后再取后缀判断（回溯骗不过字符串切片，见 NOT_ZONE 上方注释） */
+    if (notZone.test(cl.slice(m.index + m[0].length))) continue;
+    out.push({ w, n, i: m.index, l: m[0].length });
+  }
+  return out;
+}
+/* 同一子句里严格与宽松可能命中同一个数量（`各 4 个任务区`：宽松抓「各 4」，严格抓「4 个任务区」），
+   按**位置重叠**去重，避免同一个事实被数两遍、把 pairs 计数灌水。 */
+function dedupeByPos(list) {
+  const out = [];
+  for (const x of list.slice().sort((a, b) => a.i - b.i)) {
+    if (!out.some((y) => x.i < y.i + y.l && y.i < x.i + x.l)) out.push(x);
+  }
+  return out;
+}
+function auditZoneNumbers(texts, DEF, total) {
+  const fails = [];
+  let pairs = 0;
+  for (const raw of texts) {
+    /* 入参必须是字符串。🔴 这行是踩坑换来的：调用点曾写 `[...visibleText(p), ...zhAttrs(p)]`，
+       而 visibleText 返回的是**字符串**不是一个数组 ⇒ spread 把整站英文文案拆成**单个字符**，
+       于是英文侧一个配对都没有，判据却因为另一半来源（data-zh 属性）有配对而"看起来正常"。
+       后果：只改英文那处时闸门放行（实测确认）。教训：**多来源断言必须逐来源记账**，
+       否则一个来源静默失效会被另一个来源的配对掩盖，连"空转"都报不出来。 */
+    if (typeof raw !== 'string') {
+      throw new Error(`A7 入参非法：收到 ${typeof raw}（是不是把返回字符串的函数 spread 成了字符数组？）`);
+    }
+    for (const sent of raw.split(SENT_SPLIT)) {
+      if (!sent.trim()) continue;
+      const clauses = sent.split(CLAUSE_SPLIT).map((s) => s.trim()).filter(Boolean);
+      /* 门控：本大句里是否出现过「城市 + 带单位的数量」。只有出现过，宽松形态才可信。 */
+      const gate = clauses.some((cl) => citiesIn(cl, DEF).length && strictNums(cl).length);
+      for (const cl of clauses) {
+        const cities = citiesIn(cl, DEF);
+        const nums = dedupeByPos(gate ? [...strictNums(cl), ...looseNums(cl)] : strictNums(cl));
+        if (!nums.length) continue;
+        if (cities.length) {
+          for (const { w, n } of nums) {
+            for (const c of cities) {
+              pairs++;
+              if (n !== c.n) {
+                fails.push(`「${cl.slice(0, 72)}」→ 把 ${w}（=${n}）套给「${c.zh}」，现算真值 ${c.n}`);
+              }
+            }
+          }
+        } else if (TOTAL_RE.test(cl)) {
+          for (const { w, n } of nums) {
+            pairs++;
+            if (n !== total) fails.push(`「${cl.slice(0, 72)}」→ 合计写作 ${w}（=${n}），现算合计 ${total}`);
+          }
+        }
+      }
+    }
+  }
+  return { pairs, fails };
+}
+/* 干预式验证 + 误报验证，内建在判据里（不是跑一次就丢的临时脚本）：
+   反例必须全被抓、正例必须全放行。任一条不成立 ⇒ 判据整体作废，页面结果不予采信。
+   每一条用例都对应一次真实的判据缺陷或一次真实的漏检边界（见注释）。 */
+function auditZoneSelfTest(DEF, total) {
+  const BAD = [
+    ['三城各 9（中文）', '上海有一份完整的城市指南：9 个真实任务区。北京与成都各有 9 个任务区。'],
+    ['三城 each（英文）', 'Beijing, Shanghai and Chengdu each have 9 real-world zones.'],
+    ['「各 N 个任务区」', '北京、上海、成都各 9 个真实任务区'],
+    ['英文拼写数字', 'Beijing, Shanghai and Chengdu each have nine zones.'],
+    /* ↓ 这两条是「只改一处」的典型改错形态，也是**宽松形态**存在的唯一理由。
+       `4 each` 没有 `zones` 单位词，靠同大句里的 `9 zones` 开门才纳入核验。 */
+    ['表格后半句无单位（英文）', 'Shanghai 9 zones; Beijing and Chengdu 9 each.'],
+    ['正文后半句无单位（中文）', '其中上海有完整的 9 个任务区，北京与成都各有 9 个。'],
+  ];
+  const GOOD = [
+    ['改正后的中文', '其中上海有完整的 9 个任务区（落地、手机支付），北京与成都各有 4 个；'],
+    ['改正后的英文', 'Shanghai has a full guide: nine real-world zones. Beijing and Chengdu have four zones each.'],
+    ['表格简写', 'Shanghai 9 zones; Beijing and Chengdu 4 each.'],
+    ['合法的合计', `三城合计 ${total} 个任务区。`],
+    ['单城陈述', '上海有一份完整的城市指南：9 个真实任务区。'],
+    /* ↓ 证明宽松形态的**门控真的在起作用**（不是无差别扫描）：本句没有任务区单位，
+       讨论的是机场数，绝不能让「各 3 个」被判成把 3 套给北京。 */
+    ['非任务区的量词（无门控）', '北京与成都各有 3 个机场。'],
+    ['非任务区的量词（有门控）', '上海有 9 个任务区；北京与成都各有 3 个机场。'],
+  ];
+  /* HTML 层用例：测的是 visibleText 的结构处理，不是数字解析。
+     形状抄自 features.html 真表格行 —— `<td>` 相邻单元格若被连成一句，就会出现
+     「4 判给 Shanghai」的假阳性（实测过）。加进来防回归。 */
+  const HTML = [
+    ['表格行 · 数字错（应抓）', true,
+      '<tr><td>3</td><td data-zh="有完整指南的城市（上海 9 个任务区，北京与成都各 4 个）">Cities with full guides (Shanghai 9 zones; Beijing and Chengdu 9 each)</td><td data-zh="北京 / 上海 / 成都的城市指南入口">The Beijing / Shanghai / Chengdu guide entries</td></tr>'],
+    ['表格行 · 数字对（应放行）', false,
+      '<tr><td>3</td><td data-zh="有完整指南的城市（上海 9 个任务区，北京与成都各 4 个）">Cities with full guides (Shanghai 9 zones; Beijing and Chengdu 4 each)</td><td data-zh="北京 / 上海 / 成都的城市指南入口">The Beijing / Shanghai / Chengdu guide entries</td></tr>'],
+    /* 行内标签不得断句：`<b>Shanghai</b> has 9 zones` 若被切成两段，城市与数字分离 ⇒ 漏检 */
+    ['行内标签不断句（应抓）', true,
+      '<p><b>Shanghai</b> has 9 zones while <b>Beijing and Chengdu</b> have 9 zones each.</p>'],
+  ];
+  const bad = [];
+  for (const [name, t] of BAD) {
+    const r = auditZoneNumbers([t], DEF, total);
+    if (!r.fails.length) bad.push(`反例未被抓住（判据空转）：${name} —— ${t.slice(0, 60)}`);
+  }
+  for (const [name, t] of GOOD) {
+    const r = auditZoneNumbers([t], DEF, total);
+    if (r.fails.length) bad.push(`正例被误判（假阳性）：${name} —— ${r.fails[0]}`);
+  }
+  for (const [name, expectFail, html] of HTML) {
+    const r = auditZoneNumbers([visibleText(html), ...zhAttrs(html)], DEF, total);
+    const hit = r.fails.length > 0;
+    if (hit !== expectFail) {
+      bad.push(`${expectFail ? 'HTML 反例未被抓住' : 'HTML 正例被误判'}：${name}`
+        + ` —— ${expectFail ? '0 处失败' : r.fails[0]}`);
+    }
+  }
+  return { bad, badN: BAD.length + HTML.filter((h) => h[1]).length, goodN: GOOD.length + HTML.filter((h) => !h[1]).length };
+}
 
 /* 滚动遍历：触发所有 IntersectionObserver 驱动的入场动效，然后回到顶部。
    取巧做法（直接改 CSS 强制 opacity:1）不行 —— 那会掩盖「观察器根本没触发」这类真问题。 */
@@ -257,6 +486,72 @@ function staticChecks() {
   }
   if (!fail.some((f) => f.includes('[A6]'))) ok('A6', `data-zh / data-zh-html 互斥（无重叠元素）`);
 
+  /* A7 城市任务区数：**逐城真值校验**（不是句式黑名单）
+     2026-09-28 在线上抓到真实错误：官网写「北京、上海、成都各 9 个真实任务区 /
+     nine real-world zones each」—— 实际只有上海是 9，北京与成都各 4（合计 17）。
+     这个数字此前**不被任何字段覆盖**（count_corpus 当时未导出 zones），于是没人看守、
+     静静挂在官网上。现在两处都补齐：count_corpus 导出 guideZones，这里做数字校验。
+
+     🔴 为什么不用「各 / each」句式黑名单（第一版就是这么写的，当场被自己抓到）：
+        正确表述「北京与成都**各**有 4 个」「Beijing and Chengdu have 4 zones **each**」
+        本身就带「各/each」。句式黑名单会把**改对了的文案**判失败 —— 那是逼着人删掉
+        正确写法的假阳性，比没检查更危险（审计纪律：假阳性比漏检更坏，因为它会
+        训练人无视闸门）。错误的本质不是句式，是**数字**：把单城数字套给了多城。
+        所以判据改为：任何「城市 × 数字 × 任务区/zones」共现的**子句**，该数字必须
+        等于子句内每座城市的现算真值；相符就放行，不符才失败。
+     另：判据自带 SELFTEST（见 auditZoneSelfTest）—— 必须先证明它能抓住已知错误、
+     且不误伤已知正确表述，才会去判页面。否则判据本身失效时闸门会静默放行。 */
+  {
+    const C = countCorpus(), ZG = C.guideZones || {};
+    const DEF = [
+      { zh: '上海', en: 'shanghai' }, { zh: '北京', en: 'beijing' }, { zh: '成都', en: 'chengdu' },
+    ].map((c) => ({ ...c, n: ZG[c.zh] }));
+    const miss = DEF.filter((c) => typeof c.n !== 'number');
+    if (miss.length || typeof C.guideZonesTotal !== 'number') {
+      ng('A7', `**无法执行**：count_corpus 未给出 ${miss.map((c) => c.zh).join('/') || 'guideZonesTotal'} 的真值`
+        + ` ⇒ 本判据会空转（静默放行）。先修 count_corpus 再谈页面。`);
+    } else {
+      const st = auditZoneSelfTest(DEF, C.guideZonesTotal);
+      if (st.bad.length) {
+        ng('A7', `**判据自测未通过** ⇒ 下面的页面结果不可信：\n      ` + st.bad.join('\n      '));
+      } else {
+        const bad = [];
+        /* 两个来源**分别记账**（可见文本 / data-zh 属性文案），不合并成一个总数。
+           原因见 auditZoneNumbers 里那段注释：曾因 spread 字符串导致英文侧整体失明，
+           而合计数仍 > 0 ⇒ 空转检测也报不出来。逐来源记账能把这种失明直接暴露成
+           「某来源 0 配对」。两侧都要求 > 0 也不是新假设：B4「双语闭合」本就要求
+           中英双写，任务区文案两侧都在。 */
+        const SRC = {
+          '可见文本': PAGES.map((p) => visibleText(src[p])),
+          'data-zh 属性': PAGES.flatMap((p) => zhAttrs(src[p])),
+        };
+        const counts = {};
+        for (const [name, texts] of Object.entries(SRC)) {
+          const r = auditZoneNumbers(texts, DEF, C.guideZonesTotal);
+          counts[name] = r.pairs;
+          if (r.pairs === 0) bad.push(`**来源失明**：${name} 侧 0 处配对（该来源整体没被扫到，或文案已不含城市名）`);
+        }
+        for (const p of PAGES) {
+          const r = auditZoneNumbers([visibleText(src[p]), ...zhAttrs(src[p])], DEF, C.guideZonesTotal);
+          for (const f of r.fails) bad.push(`${p} → ${f}`);
+        }
+        const pairs = Object.values(counts).reduce((a, b) => a + b, 0);
+        if (bad.some((x) => x.startsWith('**来源失明**'))) {
+          ng('A7', '断言覆盖不完整（未证明数字正确，判为失败）：\n      ' + bad.join('\n      '));
+        } else if (pairs === 0) {
+          ng('A7', '**断言空转**：全站未找到任何「城市 × 数字 × 任务区/zones」配对'
+            + '（文案被改写成不含城市名？）⇒ 无法证明数字正确，判为失败而非放行。');
+        } else if (bad.length) {
+          ng('A7', `城市任务区数字与现算口径不符（真值：上海 ${DEF[0].n} / 北京 ${DEF[1].n} / 成都 ${DEF[2].n}，合计 ${C.guideZonesTotal}）：\n      ` + bad.join('\n      '));
+        } else {
+          ok('A7', `城市任务区数字逐城对账通过（核对 ${pairs} 处配对 = 可见文本 ${counts['可见文本']} + data-zh 属性 ${counts['data-zh 属性']}；`
+            + `真值 上海 ${DEF[0].n} / 北京 ${DEF[1].n} / 成都 ${DEF[2].n}，合计 ${C.guideZonesTotal}；`
+            + `判据自测 ${st.badN} 反例全抓 / ${st.goodN} 正例全放行）`);
+        }
+      }
+    }
+  }
+
   return { badLinks: bad.length };
 }
 
@@ -269,6 +564,7 @@ function staticChecks() {
 
   if (!QUICK) staticChecks();
   else { G('A 静态一致性'); ok('A*', '--quick：跳过静态组'); }
+  if (STATIC_ONLY) report();
 
   const srv = await serve();
   const base = 'http://127.0.0.1:' + srv.address().port;
@@ -751,6 +1047,12 @@ function staticChecks() {
   srv.close();
 
   /* ── 汇总 ── */
+  report();
+})().catch((e) => { console.error('✗ 验收脚本自身异常：' + (e && e.stack || e)); process.exit(2); });
+
+/* 汇总与退出码（抽成函数是为了 --static-only 能走同一条收尾路径 —— 两份收尾代码
+   迟早会分叉，然后「静态组失败但退出码 0」这种事就会悄悄发生）。 */
+function report() {
   console.log('\n════════ 官网真跑验收 ════════');
   pass.forEach((l) => console.log('  ✓ ' + l));
   if (fail.length) {
@@ -759,7 +1061,8 @@ function staticChecks() {
   }
   console.log('─────────────────────────────');
   console.log(`通过 ${pass.length} 项，失败 ${fail.length} 项`);
-  console.log('截图：_internal/_shots/site-*.png');
+  if (STATIC_ONLY) console.log('（--static-only：仅 A 组，未启浏览器）');
+  else console.log('截图：_internal/_shots/site-*.png');
   console.log('口径：node _internal/count_corpus.cjs（改文案后必须重跑）');
   process.exit(fail.length ? 1 : 0);
-})().catch((e) => { console.error('✗ 验收脚本自身异常：' + (e && e.stack || e)); process.exit(2); });
+}

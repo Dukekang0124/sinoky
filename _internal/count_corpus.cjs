@@ -106,11 +106,26 @@ function countCorpus() {
 
   /* 城市：CITY_LIST（有场景图的）与 CITY_GUIDES（有完整攻略的）是两个不同口径，
      官网文案必须分开说 —— 混为一谈就是虚高陈述。 */
+  /* 任务区数：**必须逐城分开数，不能取一个城的数当全城口径**。
+     线上曾写「北京、上海、成都各 9 个任务区」—— 实际只有上海是 9，北京与成都各 4。
+     该数字此前不被任何字段覆盖（本脚本当时未导出 zones），于是静静挂在官网上：
+     「数字唯一出处」一旦缺字段，那个数字就是**无人看守的黑洞**。 */
+  const guideZones = {};
+  let guideZonesTotal = 0;
+  for (const id of Object.keys(CITY_GUIDES)) {
+    const g = CITY_GUIDES[id] || {};
+    const n = Array.isArray(g.zones) ? g.zones.length : 0;
+    guideZones[g.city || id] = n;
+    guideZonesTotal += n;
+  }
+
   return {
     scenes: SCENES.length,
     cities: CITY_LIST.length,
     cityGuides: Object.keys(CITY_GUIDES).length,
     cityGuideIds: Object.keys(CITY_GUIDES),
+    guideZones,
+    guideZonesTotal,
     sentAudio: Object.keys(SENT_AUDIO).length,
     readItems: READ_ITEMS.length,
     tones: TONES.length,
@@ -146,6 +161,9 @@ if (require.main === module) {
     console.log('场景总数            ' + c.scenes + '   （日常话题 + 逐日 + 城市）');
     console.log('城市（有场景图）    ' + c.cities);
     console.log('城市（有完整攻略）  ' + c.cityGuides + '   ' + c.cityGuideIds.join(' / '));
+    console.log('城市攻略任务区      ' + c.guideZonesTotal + '   ' +
+      Object.entries(c.guideZones).map(([k, v]) => k + '=' + v).join(' ') +
+      '   ← 逐城不同，禁止用「各 N 个」表述');
     console.log('录音语句（唯一句）  ' + c.sentAudio + '   总音频 ' + c.audioTotal +
       ' = 主句 ' + c.audioMain + ' + 语气变体 ' + c.audioVariant + ' + 覆盖 ' + c.audioOverride);
     console.log('阅读篇目            ' + c.readItems);
