@@ -14,7 +14,7 @@ const src = fs.readFileSync(WORKER, 'utf8');
 const A = src.indexOf('const PUSH_TXT = {');
 const B = src.indexOf('/* ===== v0.3.23 安全加固');
 if (A < 0 || B < 0 || B <= A) { console.error('❌ 抽不出决策树代码段（锚点变了？）'); process.exit(1); }
-const mod = new Function(src.slice(A, B) + '\nreturn { PUSH_TXT, decidePush, pushDay, dateIdx, dayIdx };')();
+const mod = new Function(src.slice(A, B) + '\nreturn { PUSH_TXT, decidePush, pushDay, dateIdx, dayIdx, TRIP_KEEP_DAYS, tripEndIdx, tripStale, purgeTrip };')();
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra) => {
@@ -124,6 +124,49 @@ ok('dateIdx 跨年正确', mod.dateIdx('2027-01-01') - mod.dateIdx('2026-12-31')
 ok('dateIdx 非法输入返回 null', mod.dateIdx('not-a-date') === null);
 ok('dayIdx(tz=8) 与 dayIdx(tz=-8) 同日可差 1 以内（不越界）',
    Math.abs(mod.dayIdx(undefined, 8) - mod.dayIdx(undefined, -8)) <= 1);
+
+console.log('\n=== ⑫ 行程隐私清理（v0.29.2 · 方案 §5.5 选项 B 严格对齐）===');
+/* 口径自证：localDay(0) 的 dateIdx 恰等于 dayIdx(now, 8) —— 与 snap() 默认 tz=8 同源，
+   所以下面这些「距今天数」的断言是**确定**的，不随运行时刻漂移。 */
+ok('口径自证：dateIdx(localDay(0)) === dayIdx(now, 8)',
+   mod.dateIdx(localDay(0)) === mod.dayIdx(Date.now(), TZ));
+ok('TRIP_KEEP_DAYS = 7（方案原文「行程结束后 7 天」）', mod.TRIP_KEEP_DAYS === 7);
+
+/* —— 不该清的：行程期间 + 结束后 7 天内（清早了 = 用户行程还没走完就丢数据）—— */
+const stale = (over) => mod.tripStale(rec(over), Date.now());
+eq('今天出发、停留 6 天 → 不清', stale({ arrive: localDay(0), days: 6 }), false);
+eq('行程最后一天（到访 5 天前、停留 6 天）→ 不清', stale({ arrive: localDay(-5), days: 6 }), false);
+eq('行程结束当天 → 不清', stale({ arrive: localDay(-6), days: 6 }), false);
+eq('行程结束第 6 天 → 不清（差 1 天）', stale({ arrive: localDay(-12), days: 6 }), false);
+eq('已清过（arrive 为空）→ 不清（幂等）', stale({ arrive: '' }), false);
+eq('老客户端（无 p 快照）→ 不清', mod.tripStale(bare(), Date.now()), false);
+eq('days 缺失按 1 天算：离开日 +6 天 → 不清', stale({ arrive: localDay(-7), days: 0 }), false);
+
+/* —— 该清的：行程结束后 ≥ 7 天 —— */
+eq('行程结束第 7 天 → 清', stale({ arrive: localDay(-13), days: 6 }), true);
+eq('行程结束第 30 天 → 清', stale({ arrive: localDay(-36), days: 6 }), true);
+eq('days 缺失按 1 天算：离开日 +7 天 → 清', stale({ arrive: localDay(-8), days: 0 }), true);
+eq('日期串不可解析 → 清（无保留价值）', stale({ arrive: 'not-a-date' }), true);
+
+/* —— tz 参与计算：+14 与 -12 的「本地今天」最多差 1 天 ⇒ 翻转点最多差 1 —— */
+const flipOf = (tz) => { for (let k = 0; k < 40; k++) { if (mod.tripStale(rec({ tz: tz, arrive: localDay(-k), days: 6 }), Date.now())) return k; } return -1; };
+const fA = flipOf(14), fB = flipOf(-12);
+ok('tz 参与判定（+14 / -12 的翻转点相差 ≤ 1 天）', fA > 0 && fB > 0 && Math.abs(fA - fB) <= 1, 'flip +14=' + fA + ' / -12=' + fB);
+
+/* —— purgeTrip：只清行程五字段，别的都不许动 —— */
+const r1 = rec({ arrive: localDay(-30), days: 6, streak: 9, due: 4 });
+eq('purgeTrip 返回 true（确实有变更）', mod.purgeTrip(r1), true);
+ok('行程五字段全被抹掉',
+   !r1.p.arrive && !r1.p.city && !r1.p.cityId && !r1.p.cityEn && !r1.p.days,
+   JSON.stringify(r1.p));
+ok('订阅本体与 B/C 所需字段原封不动',
+   !!(r1.sub && r1.sub.endpoint) && r1.p.streak === 9 && r1.p.due === 4 && r1.p.tz === TZ && !!(r1.p.lang && r1.p.pur));
+eq('purgeTrip 二次调用返回 false（幂等，不会反复写 KV）', mod.purgeTrip(r1), false);
+eq('清理后 tripStale 恒 false（该条记录不会再触发写）', mod.tripStale(r1, Date.now()), false);
+eq('清理后决策树照常走 B（连胜不受影响）', mod.decidePush(r1).kind, 'streak');
+const r1c = rec({ arrive: localDay(-30), days: 6, due: 4 }); mod.purgeTrip(r1c);
+eq('清理后（无行程）due=4 → C(due)', mod.decidePush(r1c).kind, 'due');
+eq('老客户端（无 p）purgeTrip 返回 false', mod.purgeTrip(bare()), false);
 
 console.log('\n──────────────────────────────────────────────');
 console.log((fail === 0 ? '✅ 决策树单测全绿' : '❌ 决策树单测有失败') + ' — ' + pass + ' 通过 / ' + fail + ' 失败');

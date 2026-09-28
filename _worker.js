@@ -136,7 +136,8 @@ async function vapidAuth(endpoint){
      「本地说要推、服务端不推」这种最难查的 bug。
 
    配额纪律（硬红线 KV 写 1000/天）：
-     · 只读 PUSH KV（读不计配额）；写只有两处：lastPush 幂等（1/订阅/天）与 404/410 清理
+     · 只读 PUSH KV（读不计配额）；写只有三处：lastPush 幂等（1/订阅/天）、404/410 清理、
+       行程过期清理（v0.29.2，**一次性**：清空后 arrive 为空、条件不再成立，见 tripStale）
      · **绝不读 PROFILES 的 p:{uid}**（cron 为 N 个用户读 N 次大 payload）
      · 订阅数 > 800 时自动降级为「不写 lastPush」（方案 §5.4 的降级阈值）
 
@@ -209,6 +210,44 @@ function decidePush(rec){
   }
   /* D. 其余 → SKIP（关键：宁可不推）*/
   return { kind: 'skip', why: 'no-trigger' };
+}
+
+/* ===== v0.29.2 · 行程隐私清理（方案 §5.5 选项 B 的严格对齐）=================
+   方案原话：「存入 PUSH KV（CF 私有 KV，非公开），行程结束后 7 天自动删」。
+   v0.28.0 的落地只给了**整条订阅** 180 天粗粒度 TTL —— 行程数据实际被多留了 ~173 天，
+   这是本轮唯一未对齐的偏差，此处补齐。
+
+   🔴 为什么**不是**直接给整条订阅记一个「行程结束 + 7 天」的 expirationTtl：
+      订阅记录被删后前端**不会重发** —— `enablePush()` 只在 `getSubscription()` 返回空时才 POST，
+      而浏览器侧的 PushSubscription 对象仍在 ⇒ 记录没了但 sub 还在 = **永久静默失联**。
+      行程用户是本产品**最高价值**的一群（推送点击价值最高），删订阅等于对这群人反向惩罚。
+   ✅ 所以做法是「**只清行程字段、保留订阅**」：
+      arrive / city / cityId / cityEn / days 一并抹掉 ⇒ 决策树 A 分支自然不再命中
+      （它要求 arrive + cityId + city 三者齐备），B（连胜）/ C（到期复习）继续正常工作。
+      清理是**一次性**的：清空后 `p.arrive` 为空，`tripStale()` 恒 false，永不再写。
+   ======================================================================== */
+const TRIP_KEEP_DAYS = 7;                     /* 「行程结束后 7 天」——方案 §5.5 原文 */
+/* 行程**结束（离开）日**的本地日序号：arrive 是首日，停留 days 天 ⇒ 末日 +1 天为离开日。
+   days 缺失/为 0 时按 1 天算（保守：宁可多留几天也不在行程期间误清）。 */
+function tripEndIdx(p){
+  const ai = dateIdx(p && p.arrive);
+  if (ai === null) return null;
+  return ai + Math.max(1, Number(p && p.days) || 1);
+}
+/* true = 该记录里的行程数据已可清理。无 arrive（老客户端 / 已清过）→ false（幂等） */
+function tripStale(rec, nowMs){
+  const p = (rec && rec.p) || {};
+  if (!p.arrive) return false;
+  const end = tripEndIdx(p);
+  if (end === null) return true;              /* 日期串不可解析 → 无保留价值，一并清掉 */
+  return dayIdx(nowMs, Number(p.tz) || 0) - end >= TRIP_KEEP_DAYS;
+}
+/* 抹掉行程字段，返回是否真的发生了变更（供调用方决定要不要写回） */
+function purgeTrip(rec){
+  const p = rec && rec.p;
+  if (!p || !p.arrive) return false;
+  delete p.arrive; delete p.city; delete p.cityId; delete p.cityEn; delete p.days;
+  return true;
 }
 
 /* ===== v0.3.23 安全加固：公开 API 滥用防护 =====
@@ -1118,7 +1157,9 @@ export default {
     }
 
     /* v0.24.8 Web Push：订阅存储 + 发送。
-       /api/push-sub POST 存订阅(KEY push:<uid>:<hash>，180天 TTL)；DELETE 退订。
+       /api/push-sub POST 存订阅(KEY push:<uid>:<hash>，订阅本身 180 天 TTL)；DELETE 退订。
+       v0.29.2：快照里的**行程字段**（arrive/city/cityId/cityEn/days）在行程结束后 7 天由
+       /api/push-send 的 tripStale/purgeTrip 清理（方案 §5.5 选项 B），订阅不删。
        /api/push-send（STATS_TOKEN 鉴权）VAPID 签名逐个推送；404/410 清理过期订阅。
        依赖 KV binding=PUSH（康哥在 Pages 项目绑一个 KV namespace 命名为 PUSH）。 */
     if (url.pathname === '/api/push-sub') {
@@ -1192,7 +1233,7 @@ export default {
         /* 🔴 阈值保护（方案 §5.4）：订阅数 > 800 时 lastPush 不再落 KV，
            改用「cron 单次 + 客户端侧 24h 去重」——否则 1 写/订阅/天会打爆 1000/天红线。 */
         const writeLast = !dry && keys.length <= 800;
-        let sent = 0, failed = 0, skipped = 0, picked = 0;
+        let sent = 0, failed = 0, skipped = 0, picked = 0, tripPurged = 0;
         const detail = [];
         for (const k of keys) {
           if (only && k.name.slice(-(only.length + 1)) !== ':' + only) continue;
@@ -1204,6 +1245,17 @@ export default {
             const sub = rec.sub;
             if (!sub || !sub.endpoint) { if (!dry) await env.PUSH.delete(k.name); failed++; continue; }
             const today = pushDay();
+            /* v0.29.2 行程隐私清理（一次性；放在幂等判断**之前**，
+               这样「今天已推过 → 跳过」的订阅也会被清理到）。
+               独立于 writeLast 节流：隐私动作不能因为「订阅数 > 800 就不写 lastPush」而被跳过。 */
+            if (!dry) {
+              try {
+                if (tripStale(rec, Date.now()) && purgeTrip(rec)) {
+                  await env.PUSH.put(k.name, JSON.stringify(rec), { expirationTtl: 180 * 86400 });
+                  tripPurged++;
+                }
+              } catch (e) { /* 清理写失败不阻塞本次推送 */ }
+            }
             /* 幂等：同一天（与前端 today() 同口径的 UTC 日）已经推过 → 跳过 */
             if (!force && rec.lastPush === today) { skipped++; detail.push({ k: k.name.slice(-6), kind: 'dup' }); continue; }
             const d = decidePush(rec);
@@ -1231,7 +1283,7 @@ export default {
             }
           } catch (e) { failed++; }
         }
-        return json({ ok: true, dry, force, picked, sent, failed, skipped, total: keys.length, writeLast, detail: detail.slice(0, 30) });
+        return json({ ok: true, dry, force, picked, sent, failed, skipped, tripPurged, total: keys.length, writeLast, detail: detail.slice(0, 30) });
       } catch (e) { return json({ ok: false, error: String((e && e.message) || e) }, 500); }
     }
 

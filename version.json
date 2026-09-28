@@ -1,7 +1,7 @@
 {
-  "version": "0.29.1",
-  "updated": "2026-09-27",
-  "note": "v0.29.1 复盘卡视觉修正\n\n· 复盘卡排版：修掉「正文压过品牌分隔线、拼音被二维码盖住」—— 收紧块间距并加入「正文优先」的自动收高，正文再也不会顶穿品牌线。\n· 复盘卡文案：弱点行改为纯英文，不再出现「Most often tricky: 4 声字」这种中英夹生。\n· 路径卡：旅程结束后的复盘节点下，也能看到「这句连错 3 次 ⇒ 换个做法」的出口。",
+  "version": "0.29.2",
+  "updated": "2026-09-28",
+  "note": "v0.29.2 行程隐私清理 + 隐私披露补齐\n\n· 行程数据不再长期保留：你填的计划到访城市与日期，会在行程结束后 7 天从服务端抹掉（此前是跟着订阅记录一起留 180 天）。订阅本身保留，连胜与到期复习提醒照常工作。\n· 隐私政策补齐：新增「通知与行程提醒」整节，逐项写明服务端实际存了什么、存多久、怎么删，并明确写出「行程三项在行程结束后 7 天即删」。\n· 本次为服务端与政策口径修正，界面无变化，你打开时无需做任何事。",
   "apk": {
     "versionCode": 2901,
     "version": "0.29.1",
@@ -11,6 +11,7 @@
     "force": false
   },
   "noteEn": [
+    "v0.29.2 Trip data cleanup + clearer privacy disclosure\n\n· Trip data no longer lingers: the city and dates you enter are now wiped from our servers 7 days after your trip ends (previously they stayed with the subscription record for 180 days). Your subscription stays active, so streak and review reminders keep working.\n· Privacy policy updated: a new \"Notifications and trip reminders\" section spells out exactly what is stored, for how long, and how to delete it — including the 7-day trip cleanup.\n· This release is a server-side and policy correction only. Nothing changes on screen and you do not need to do anything.",
     "v0.29.1 Trip-card visual fixes\n\n· Trip card layout: fixed text pushing past the brand rule and the pinyin sliding under the QR card — tighter spacing plus \"content-first\" auto-fit, so text can never cross the brand line again.\n· Trip card copy: the tricky-sounds line is now English-only (no more mixed-language line).\n· Path card: the \"missed this 3x — change the approach\" shortcut now also shows on the retro node after a trip ends.",
     "v0.29.0 Closing the loop: trip retro, memory compaction, strategy switching\n\n· Trip retro: an end-of-trip card you can share — how many lines you said, your average score, what tripped you up most, plus the first line to say on your next trip.\n· Memory compaction: past-day events roll up into daily digests (30-day cap); raw events are consumed. No extra requests, no extra KV writes.\n· Strategy switching: miss the same line 3 times and Sinoky stops repeating it — switching to sound-by-sound practice or another way to say it. Cleared the moment you break through.",
     "v0.28.1: fixes the Listen and Record buttons on the right of each trip-pack line being clipped by their container (most visible on narrow phones, where the buttons ran past the right edge). Web-side only: app users pick up the fix automatically the next time they open Sinoky, with no reinstall needed. No behaviour changed.",

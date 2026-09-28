@@ -1,0 +1,4 @@
+{
+  "note": "v0.29.2 行程隐私清理 + 隐私披露补齐\n\n· 行程数据不再长期保留：你填的计划到访城市与日期，会在行程结束后 7 天从服务端抹掉（此前是跟着订阅记录一起留 180 天）。订阅本身保留，连胜与到期复习提醒照常工作。\n· 隐私政策补齐：新增「通知与行程提醒」整节，逐项写明服务端实际存了什么、存多久、怎么删，并明确写出「行程三项在行程结束后 7 天即删」。\n· 本次为服务端与政策口径修正，界面无变化，你打开时无需做任何事。",
+  "noteEn": "v0.29.2 Trip data cleanup + clearer privacy disclosure\n\n· Trip data no longer lingers: the city and dates you enter are now wiped from our servers 7 days after your trip ends (previously they stayed with the subscription record for 180 days). Your subscription stays active, so streak and review reminders keep working.\n· Privacy policy updated: a new \"Notifications and trip reminders\" section spells out exactly what is stored, for how long, and how to delete it \u2014 including the 7-day trip cleanup.\n· This release is a server-side and policy correction only. Nothing changes on screen and you do not need to do anything."
+}
