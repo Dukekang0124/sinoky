@@ -1,6 +1,6 @@
 {
   "name": "sinoky",
-  "version": "0.29.5",
+  "version": "0.29.4",
   "description": "Sinoky - Speak Chinese where it matters. (single-file PWA + Capacitor APK)",
   "scripts": {
     "build:web": "node scripts/build-web.mjs",
