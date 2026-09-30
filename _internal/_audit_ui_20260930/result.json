@@ -1,0 +1,387 @@
+{
+  "startedAt": "2026-09-30T12:56:59.032Z",
+  "tests": [
+    {
+      "name": "S1 启动直达首页（跳过语言门/引导）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S2 语言门未弹出",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "N1 点击 nav-home → 视图+底栏高亮 home",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "N1 点击 nav-practice → 视图+底栏高亮 practice",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "N1 点击 nav-explore → 视图+底栏高亮 explore",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "N1 点击 nav-prog → 视图+底栏高亮 prog",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "N1 点击 nav-me → 视图+底栏高亮 me",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "N2 openScene(arrival) → v-scene 显示",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "N3 场景句子卡渲染",
+      "ok": true,
+      "detail": "phrases=5"
+    },
+    {
+      "name": "N4 goBack() → 回到 home（sceneFrom）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "R0 第1句 Score 按钮存在",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "R1 点 Score → 进入录音态（Stop + Listening）",
+      "ok": true,
+      "detail": "{\"btn\":\"⏹ Stop\",\"listening\":true,\"box\":\"Listening… tap stop when you finish.\"}"
+    },
+    {
+      "name": "R2 停止 → ASR(mock)→评分(mock)→渲染 score-card=100",
+      "ok": true,
+      "detail": "{\"hasCard\":true,\"overall\":\"100Great ✅\",\"box\":\"100Great ✅nǐhǎo9 Read & score left today\"}"
+    },
+    {
+      "name": "R3 录音经 ASR 上传（/api/asr 被调）",
+      "ok": true,
+      "detail": "asr calls=1 (postData len=91697)"
+    },
+    {
+      "name": "R4 /api/score 收到 {target,user} 且 user=ASR 文本",
+      "ok": true,
+      "detail": "{\"target\":\"你好\",\"user\":\"你好\"}"
+    },
+    {
+      "name": "R5 麦克风被拒 → 显示 \"Microphone blocked\" + 修复指引",
+      "ok": true,
+      "detail": "🎤 Microphone blocked.Tap the 🔒 lock icon in the address bar → Site s"
+    },
+    {
+      "name": "R6 ASR 失败 → 显式透出原因（Did not catch that…）",
+      "ok": true,
+      "detail": "Did not catch that. (whisper returned no text)Tap Score and hold the phone closer to your "
+    },
+    {
+      "name": "R7 评分请求失败 → \"Scoring failed\" 而非静默/空白",
+      "ok": true,
+      "detail": "Scoring failed — 网络异常，请检查连接Tap Score and hold the phone closer to your mouth, then tap Sto"
+    },
+    {
+      "name": "R8 评分返回 {error} → 展示后端口径错误",
+      "ok": true,
+      "detail": "target and user are required"
+    },
+    {
+      "name": "R10 非满分评分 → 渲染 overall(50) + 错因块(.score-fix) + 应为X声",
+      "ok": true,
+      "detail": "{\"overall\":\"50Retry ❌\",\"hasFix\":true,\"text\":\"50Retry ❌nǐshould be 3rd tonehǎonǐ → you said ní · the tone was off · tone should be 3rd tone8 Read & score left today\"}"
+    },
+    {
+      "name": "R9 无 MediaRecorder → \"not supported in this browser\"",
+      "ok": true,
+      "detail": "Recording is not supported in this browser. Use Chrome or Edge to practise with "
+    },
+    {
+      "name": "P0 场景卡片存在播放按钮(.spk)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "P1 点播放 → 有音频元素被赋值并播放（本地或TTS）",
+      "ok": true,
+      "detail": "\"http://127.0.0.1:56896/audio/s00p00_main.mp3\""
+    },
+    {
+      "name": "P2 本地无音源时 → 回退请求 /api/tts",
+      "ok": true,
+      "detail": "tts calls=2"
+    },
+    {
+      "name": "P3 TTS 全失败 → 降级不抛未捕获异常",
+      "ok": true,
+      "detail": "pageErrors+0"
+    },
+    {
+      "name": "B home         按钮  81 个，点击  40 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B practice     按钮   6 个，点击   6 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B explore      按钮   5 个，点击   5 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B prog         按钮   4 个，点击   4 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B me           按钮   7 个，点击   7 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B settings     按钮  12 个，点击  12 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B cities       按钮  19 个，点击  19 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B days         按钮  33 个，点击  33 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B dialog       按钮   5 个，点击   5 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B review       按钮   1 个，点击   1 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B cards        按钮   9 个，点击   9 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B sentences    按钮   6 个，点击   6 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B reading      按钮   3 个，点击   3 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B scenes-read  按钮  13 个，点击  13 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B cityguide    按钮   7 个，点击   7 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B tone         按钮   8 个，点击   8 个，抛错 0",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "notes": [
+    {
+      "k": "browser-back",
+      "v": {
+        "url": "about:blank",
+        "scene": false,
+        "home": null,
+        "alive": false
+      }
+    },
+    {
+      "k": "modal-after-score",
+      "v": true
+    },
+    {
+      "k": "button-sweep",
+      "v": [
+        {
+          "view": "home",
+          "reachable": true,
+          "n": 81,
+          "clicked": 40,
+          "errs": []
+        },
+        {
+          "view": "practice",
+          "reachable": true,
+          "n": 6,
+          "clicked": 6,
+          "errs": []
+        },
+        {
+          "view": "explore",
+          "reachable": true,
+          "n": 5,
+          "clicked": 5,
+          "errs": []
+        },
+        {
+          "view": "prog",
+          "reachable": true,
+          "n": 4,
+          "clicked": 4,
+          "errs": []
+        },
+        {
+          "view": "me",
+          "reachable": true,
+          "n": 7,
+          "clicked": 7,
+          "errs": []
+        },
+        {
+          "view": "settings",
+          "reachable": true,
+          "n": 12,
+          "clicked": 12,
+          "errs": []
+        },
+        {
+          "view": "cities",
+          "reachable": true,
+          "n": 19,
+          "clicked": 19,
+          "errs": []
+        },
+        {
+          "view": "days",
+          "reachable": true,
+          "n": 33,
+          "clicked": 33,
+          "errs": []
+        },
+        {
+          "view": "dialog",
+          "reachable": true,
+          "n": 5,
+          "clicked": 5,
+          "errs": []
+        },
+        {
+          "view": "review",
+          "reachable": true,
+          "n": 1,
+          "clicked": 1,
+          "errs": []
+        },
+        {
+          "view": "cards",
+          "reachable": true,
+          "n": 9,
+          "clicked": 9,
+          "errs": []
+        },
+        {
+          "view": "sentences",
+          "reachable": true,
+          "n": 6,
+          "clicked": 6,
+          "errs": []
+        },
+        {
+          "view": "reading",
+          "reachable": true,
+          "n": 3,
+          "clicked": 3,
+          "errs": []
+        },
+        {
+          "view": "scenes-read",
+          "reachable": true,
+          "n": 13,
+          "clicked": 13,
+          "errs": []
+        },
+        {
+          "view": "cityguide",
+          "reachable": true,
+          "n": 7,
+          "clicked": 7,
+          "errs": []
+        },
+        {
+          "view": "tone",
+          "reachable": true,
+          "n": 8,
+          "clicked": 8,
+          "errs": []
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "badResponses": [
+    "500 http://127.0.0.1:56896/api/tts?text=%E4%BD%A0%E5%A5%BD&voice=zh-CN-XiaoxiaoNeural&engine=edge",
+    "500 http://127.0.0.1:56896/api/tts?text=%E4%BD%A0%E5%A5%BD&voice=zh-CN-XiaoxiaoNeural&engine=edge"
+  ],
+  "failCount": 0,
+  "diag": [
+    "[REC] stopped, chunks= 1 total bytes= 38734",
+    "[ASR] sending 92204 bytes, target= 你好",
+    "[ASR] http 200",
+    "[ASR] body {\"ok\":true,\"text\":\"你好\"}",
+    "[SCORE] → /score {\"target\":\"你好\",\"user\":\"你好\"}",
+    "[SCORE] http 200",
+    "[SCORE] body {\"overall\":100,\"verdict\":\"Great ✅\",\"perSyll\":[{\"target\":\"nǐ\",\"user\":\"nǐ\",\"score\":1,\"errs\":[],\"tExp\":3,\"tGot\":3,\"toneOk\":true},{\"target\":\"hǎo\",\"user\":\"hǎo\",\"score\":1,\"errs\":[],\"tExp\":3,\"tG",
+    "[REC] stopped, chunks= 1 total bytes= 33904",
+    "[ASR] sending 82604 bytes, target= 你好",
+    "[ASR] http 200",
+    "[ASR] body {\"ok\":false,\"error\":\"whisper returned no text\"}",
+    "[REC] ASR failed: whisper returned no text",
+    "[REC] stopped, chunks= 1 total bytes= 33904",
+    "[ASR] sending 82604 bytes, target= 你好",
+    "[ASR] http 200",
+    "[ASR] body {\"ok\":true,\"text\":\"你好\"}",
+    "[SCORE] → /score {\"target\":\"你好\",\"user\":\"你好\"}",
+    "[SCORE] error Failed to fetch",
+    "[REC] stopped, chunks= 1 total bytes= 33904",
+    "[ASR] sending 82604 bytes, target= 你好",
+    "[ASR] http 200",
+    "[ASR] body {\"ok\":true,\"text\":\"你好\"}",
+    "[SCORE] → /score {\"target\":\"你好\",\"user\":\"你好\"}",
+    "[SCORE] http 200",
+    "[SCORE] body {\"error\":\"target and user are required\"}",
+    "[REC] stopped, chunks= 1 total bytes= 33904",
+    "[ASR] sending 82604 bytes, target= 你好",
+    "[ASR] http 200",
+    "[ASR] body {\"ok\":true,\"text\":\"你好\"}",
+    "[SCORE] → /score {\"target\":\"你好\",\"user\":\"你好\"}",
+    "[SCORE] http 200",
+    "[SCORE] body {\"overall\":50,\"verdict\":\"Retry ❌\",\"perSyll\":[{\"target\":\"nǐ\",\"user\":\"ní\",\"score\":0.5,\"errs\":[\"tone\"],\"tExp\":3,\"tGot\":2,\"toneOk\":false},{\"target\":\"hǎo\",\"user\":\"hǎo\",\"score\":1,\"errs\":[],\"tEx"
+  ]
+}
