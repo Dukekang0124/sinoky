@@ -1,16 +1,17 @@
 {
-  "version": "0.29.4",
-  "updated": "2026-09-28",
-  "note": "v0.29.4 更新提示修复 + 界面插画优化\n\n· 修复应用内更新提示误报：此前 App 会提示「有新版——刷新页面更新」，但在 App 里刷新页面并不会带来任何变化，提示反复出现、无法真正更新。现在 App 只在真正有新安装包时才提示，并直接给出「下载并安装」按钮，点一下即可完成更新。\n· 插画优化：引导页与介绍页的熊猫插画（诺诺）边缘更干净，与深色背景融合更自然。\n· 本次网页版与 App 版本号重新对齐（均为 0.29.4），之后两边将保持同步发版。学习进度、连胜、复习计划与今日路径全部保留，无需重新设置。",
+  "version": "0.29.5",
+  "updated": "2026-10-05",
+  "note": "v0.29.5 宣窑夜视觉提质\n\n· 全站材质升级：卡片、统计块与主按钮在发丝高光之上叠加克制的落影（新增 --sh-1/2/3 三级投影令牌），界面从「平涂」变为有厚度的釉面质感。\n· 主按钮增加品牌红辉光与按压反馈（新增弹簧缓动 --ease-spring），点按手感更跟手。\n· 顶部发丝高光略微增强（3% → 5%），深色底上卡片边缘更清晰。\n· 纯 CSS 视觉打磨：不改任何功能、不改品牌色（#141a24 + #e63946）、不改声调四色，学习进度与数据完全不受影响。",
   "apk": {
-    "versionCode": 2904,
-    "version": "0.29.4",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.29.4-release.apk",
-    "md5": "47a01fae7669dd61bb85e44907a8cf86",
-    "size": 24243300,
+    "versionCode": 2905,
+    "version": "0.29.5",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.29.5-release.apk",
+    "md5": "",
+    "size": 0,
     "force": false
   },
   "noteEn": [
+    "v0.29.5 Visual material polish (Xuanyao Night)\n\n· Site-wide material upgrade: cards, stat tiles and the primary button now carry a restrained drop shadow on top of the hairline top-light (three new shadow tokens --sh-1/2/3), lifting the interface from flat fills to a glazed-porcelain depth.\n· The primary button gains a brand-red glow plus a spring-eased press response (new --ease-spring token) for a more tactile tap.\n· The top hairline highlight is slightly strengthened (3% to 5%) so card edges read more clearly on the dark base.\n· Pure CSS polish: no functional changes, no brand-colour changes (#141a24 + #e63946), tone colours untouched. All progress and data are unaffected.",
     "v0.29.4 Update-prompt fix + illustration polish\n\n· Fixed a false update prompt inside the app: the app used to say \"New version available — reload the page to update\", but reloading inside the app never changed anything, so the prompt kept coming back and no real update was possible. The app now only prompts when a genuine new installer exists, with a direct \"Download & install\" button — one tap and you are updated.\n· Illustration polish: the panda mascot (Nono) on the onboarding and intro screens now has cleaner edges that blend naturally with the dark background.\n· The web and app version numbers are aligned again (both 0.29.4) and will now be released in sync. Your progress, streak, review schedule and today's path are all preserved; nothing needs setting up again.",
     "v0.29.3 Official website + one place to download (web and app ship together)\n\n· The official website is live (5 pages, English and Chinese): home, features in detail, how it works, download, and contact. It reuses the same visual language as the app itself (graphite base, a single signal red) rather than looking like a different product.\n· Every number has a source: each figure on the site (137 model-audio lines / 409 lines you can read after / 54 scenes / 585 flashcards / 7 interface languages / 30-day path) is computed by a script straight from the product source, and the build fails if a page disagrees — none of them are estimates.\n· One place to download: the footer of the app's Me screen now carries a permanent link to the site, and both the \"Install App · Unlimited\" button on the free-limit wall and the in-app update prompt now point at the new download page. The old /download.html and /download addresses redirect automatically, so older links keep working.\n· The download page reads the version, file size, build number and MD5 live each time it opens instead of hard-coding them — no more cases where the page names one version while the button fetches another.\n· Web and app are released together this time (update the app to get the new download entry). Your progress, streak, review schedule and today's path are all preserved; nothing needs setting up again.",
     "v0.29.2 Trip data cleanup + clearer privacy disclosure\n\n· Trip data no longer lingers: the city and dates you enter are now wiped from our servers 7 days after your trip ends (previously they stayed with the subscription record for 180 days). Your subscription stays active, so streak and review reminders keep working.\n· Privacy policy updated: a new \"Notifications and trip reminders\" section spells out exactly what is stored, for how long, and how to delete it — including the 7-day trip cleanup.\n· This release is a server-side and policy correction only. Nothing changes on screen and you do not need to do anything.",

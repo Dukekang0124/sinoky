@@ -1,0 +1,4 @@
+{
+  "note": "v0.29.5 宣窑夜视觉提质\n\n· 全站材质升级：卡片、统计块与主按钮在发丝高光之上叠加克制的落影（新增 --sh-1/2/3 三级投影令牌），界面从「平涂」变为有厚度的釉面质感。\n· 主按钮增加品牌红辉光与按压反馈（新增弹簧缓动 --ease-spring），点按手感更跟手。\n· 顶部发丝高光略微增强（3% → 5%），深色底上卡片边缘更清晰。\n· 纯 CSS 视觉打磨：不改任何功能、不改品牌色（#141a24 + #e63946）、不改声调四色，学习进度与数据完全不受影响。",
+  "noteEn": "v0.29.5 Visual material polish (Xuanyao Night)\n\n· Site-wide material upgrade: cards, stat tiles and the primary button now carry a restrained drop shadow on top of the hairline top-light (three new shadow tokens --sh-1/2/3), lifting the interface from flat fills to a glazed-porcelain depth.\n· The primary button gains a brand-red glow plus a spring-eased press response (new --ease-spring token) for a more tactile tap.\n· The top hairline highlight is slightly strengthened (3% to 5%) so card edges read more clearly on the dark base.\n· Pure CSS polish: no functional changes, no brand-colour changes (#141a24 + #e63946), tone colours untouched. All progress and data are unaffected."
+}

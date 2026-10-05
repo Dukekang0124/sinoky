@@ -72,7 +72,7 @@
   /* 圆角 */
   --r-xs:6px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-pill:999px;
   /* 深色层次：不靠大投影，靠发丝边框 + 顶部微高光 + 极浅投影 */
-  --hairline:inset 0 1px 0 rgba(255,255,255,.03);
+  --hairline:inset 0 1px 0 rgba(255,255,255,.05);
   --elev-1:0 1px 2px rgba(0,0,0,.35); --elev-2:0 12px 32px rgba(0,0,0,.5);
   /* z-index 栈序（v0.24.0：全站单一事实源；改层级先改这里，禁止再写裸数字）
      nav(9) < 页内小浮层(19/20) < 功能件(58，反馈钮) < 诺诺胶囊(59) < 浮标层(60，诺诺坞)
@@ -87,6 +87,11 @@
   /* 动效 */
   --dur-1:120ms; --dur-2:200ms; --dur-3:320ms;
   --ease-out:cubic-bezier(.2,.8,.2,1); --ease-io:cubic-bezier(.4,0,.2,1);
+  /* 宣窑夜 v0.29.5：材质层次（落影 + 弹簧缓动）。深底不靠大投影，靠发丝高光 + 克制落影营造釉面厚度 */
+  --sh-1:0 1px 3px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.28);
+  --sh-2:0 8px 24px rgba(0,0,0,.5);
+  --sh-3:0 16px 48px rgba(0,0,0,.62);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* v0.23.9：裸 <a> 的作者色。不写的话 Privacy / Share 会落到 UA 默认 #0000EE，
@@ -108,7 +113,7 @@ header img{width:34px;height:34px;border-radius:9px}
 .hero h1 em{color:var(--red);font-style:normal}
 .hero p{color:var(--sub);font-size:13px;margin-top:4px}
 .streakrow{display:flex;gap:8px;margin:14px 0}
-.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--hairline),var(--sh-1)}
 .stat .n{font-size:20px;font-weight:800}
 .stat .l{font-size:11px;color:var(--sub);margin-top:2px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
@@ -118,8 +123,9 @@ header img{width:34px;height:34px;border-radius:9px}
 .badge.teal{background:rgba(76,201,240,.18);color:var(--teal);border:1px solid var(--line)}
 .noscore{color:var(--sub);font-size:11px;margin-top:8px;line-height:1.45;border-left:2px solid var(--teal);padding-left:8px}
 .card p.desc{color:var(--sub);font-size:12.5px;margin-top:6px;line-height:1.5}
-.btn{display:block;width:100%;border:none;border-radius:99px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit}
-.btn.primary{background:var(--red);color:#fff}
+.btn{display:block;width:100%;border:none;border-radius:99px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit;transition:transform var(--dur-2) var(--ease-spring),box-shadow var(--dur-2) var(--ease-spring)}
+.btn.primary{background:var(--red);color:#fff;box-shadow:var(--sh-1),0 4px 14px rgba(230,57,70,.3)}
+.btn.primary:active{transform:scale(.97);box-shadow:0 2px 8px rgba(230,57,70,.32)}
 .btn.ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
 .btn:active{transform:scale(.98)}
 .pbar{height:7px;background:var(--bg2);border-radius:99px;margin-top:12px;overflow:hidden}
@@ -1465,7 +1471,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.29.4';
+var APP_VERSION = '0.29.5';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -9856,7 +9862,7 @@ function replayDialog(id){
 :root{--gold-dim:#8a7448;--paper:#f5f1e8}
 
 /* 卡片：表面 + 发丝边框 + 顶部微高光（深色层次不靠大投影） */
-.hub,.card{position:relative;background-color:var(--card);border-color:var(--line);box-shadow:var(--hairline)}
+.hub,.card{position:relative;background-color:var(--card);border-color:var(--line);box-shadow:var(--hairline),var(--sh-1)}
 
 /* 按钮：去掉内嵌金环 —— 主按钮靠实心红，次按钮靠发丝描边 */
 .btn{box-shadow:none}
