@@ -1,16 +1,18 @@
 {
-  "version": "0.29.5",
-  "updated": "2026-10-05",
-  "note": "v0.29.5 宣窑夜视觉提质\n\n· 全站材质升级：卡片、统计块与主按钮在发丝高光之上叠加克制的落影（新增 --sh-1/2/3 三级投影令牌），界面从「平涂」变为有厚度的釉面质感。\n· 主按钮增加品牌红辉光与按压反馈（新增弹簧缓动 --ease-spring），点按手感更跟手。\n· 顶部发丝高光略微增强（3% → 5%），深色底上卡片边缘更清晰。\n· 纯 CSS 视觉打磨：不改任何功能、不改品牌色（#141a24 + #e63946）、不改声调四色，学习进度与数据完全不受影响。",
+  "version": "0.30.0",
+  "updated": "2026-10-15",
+  "note": "v0.30.0 · 定位收敛为「去中国前30天生存口语」：Practice 页移除字卡/查拼音入口；首页强化 City Map 大卡片；新增 Nono 首启引导与场景页 ? 帮助 + 进度零数据引导；徽章重写为 9 枚（6 场景 + 3 连续）并分两组展示，legacy 保留不计入分母；Unlock 接入 PayPal 手动收款（SINOKY- 解锁码 + 已付款邮箱表单）；全局文案统一为生存叙事。",
   "apk": {
-    "versionCode": 2905,
-    "version": "0.29.5",
-    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.29.5-release.apk",
-    "md5": "fb0a27d76f716c0116c02ea7249be8fb",
-    "size": 24243300,
+
+    "versionCode": 3000,
+    "version": "0.30.0",
+    "url": "https://sinoky.pages.dev/apk/Sinoky-v0.30.0-release.apk",
+    "md5": "",
+    "size": 0,
     "force": false
   },
   "noteEn": [
+    "v0.30.0 · Refocused to '30-day survival Chinese before China': removed char-card/pinyin-lookup entries on Practice; City Map hero card on Home; added Nono first-launch onboarding + scene ? help + zero-data progress guide; rewrote badges to 9 (6 scene + 3 streak) in two grouped sections with legacy kept out of the denominator; wired Unlock to PayPal manual collection (SINOKY- unlock codes + paid-email form); unified global copy to the survival narrative.",
     "v0.29.5 Visual material polish (Xuanyao Night)\n\n· Site-wide material upgrade: cards, stat tiles and the primary button now carry a restrained drop shadow on top of the hairline top-light (three new shadow tokens --sh-1/2/3), lifting the interface from flat fills to a glazed-porcelain depth.\n· The primary button gains a brand-red glow plus a spring-eased press response (new --ease-spring token) for a more tactile tap.\n· The top hairline highlight is slightly strengthened (3% to 5%) so card edges read more clearly on the dark base.\n· Pure CSS polish: no functional changes, no brand-colour changes (#141a24 + #e63946), tone colours untouched. All progress and data are unaffected.",
     "v0.29.4 Update-prompt fix + illustration polish\n\n· Fixed a false update prompt inside the app: the app used to say \"New version available — reload the page to update\", but reloading inside the app never changed anything, so the prompt kept coming back and no real update was possible. The app now only prompts when a genuine new installer exists, with a direct \"Download & install\" button — one tap and you are updated.\n· Illustration polish: the panda mascot (Nono) on the onboarding and intro screens now has cleaner edges that blend naturally with the dark background.\n· The web and app version numbers are aligned again (both 0.29.4) and will now be released in sync. Your progress, streak, review schedule and today's path are all preserved; nothing needs setting up again.",
     "v0.29.3 Official website + one place to download (web and app ship together)\n\n· The official website is live (5 pages, English and Chinese): home, features in detail, how it works, download, and contact. It reuses the same visual language as the app itself (graphite base, a single signal red) rather than looking like a different product.\n· Every number has a source: each figure on the site (137 model-audio lines / 409 lines you can read after / 54 scenes / 585 flashcards / 7 interface languages / 30-day path) is computed by a script straight from the product source, and the build fails if a page disagrees — none of them are estimates.\n· One place to download: the footer of the app's Me screen now carries a permanent link to the site, and both the \"Install App · Unlimited\" button on the free-limit wall and the in-app update prompt now point at the new download page. The old /download.html and /download addresses redirect automatically, so older links keep working.\n· The download page reads the version, file size, build number and MD5 live each time it opens instead of hard-coding them — no more cases where the page names one version while the button fetches another.\n· Web and app are released together this time (update the app to get the new download entry). Your progress, streak, review schedule and today's path are all preserved; nothing needs setting up again.",

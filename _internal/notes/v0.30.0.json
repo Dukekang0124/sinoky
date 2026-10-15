@@ -1,0 +1,4 @@
+{
+  "note": "v0.30.0 · 定位收敛为「去中国前30天生存口语」：Practice 页移除字卡/查拼音入口；首页强化 City Map 大卡片；新增 Nono 首启引导与场景页 ? 帮助 + 进度零数据引导；徽章重写为 9 枚（6 场景 + 3 连续）并分两组展示，legacy 保留不计入分母；Unlock 接入 PayPal 手动收款（SINOKY- 解锁码 + 已付款邮箱表单）；全局文案统一为生存叙事。",
+  "noteEn": "v0.30.0 · Refocused to '30-day survival Chinese before China': removed char-card/pinyin-lookup entries on Practice; City Map hero card on Home; added Nono first-launch onboarding + scene ? help + zero-data progress guide; rewrote badges to 9 (6 scene + 3 streak) in two grouped sections with legacy kept out of the denominator; wired Unlock to PayPal manual collection (SINOKY- unlock codes + paid-email form); unified global copy to the survival narrative."
+}

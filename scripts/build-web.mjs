@@ -28,7 +28,6 @@ const EXCLUDE = new Set([
   '.git', '.github', '.gitignore', '.wrangler', '.dev.vars', '.env',
   'node_modules', 'android', 'www', 'apk', 'apk-icons', 'scripts', 'voice', '_internal',
   'package.json', 'package-lock.json', 'capacitor.config.json',
-  '_audit_i18n.txt',
   'wrangler.toml',     // v0.24.8 新增：Pages 部署配置（KV 绑定/兼容标记）。属构建配置，**不上线**（上线等于把部署配置公开可下载）
   '.workbuddy',        // v0.29.3 新增：AI 协作工具的会话/自动化数据目录。非源码、非产品资源，**不上线**
                        // （2026-09-28 被本闸门当场拦下：它在仓库根出现却未归类 ⇒ build:web 直接失败。

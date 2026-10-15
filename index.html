@@ -1019,7 +1019,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
   <!-- SCENE -->
   <section id="v-scene" class="views">
     <div class="card">
-      <div class="top"><h2 id="sc-title"></h2><span class="badge">SAY IT</span><span class="badge teal">NO SCORE YET</span></div>
+      <div class="top"><h2 id="sc-title"></h2><span class="badge">SAY IT</span><span class="badge teal">NO SCORE YET</span><button class="sc-help" onclick="openNonoHelp()" aria-label="How Nono coaches you">?</button></div>
       <p class="desc" id="sc-desc"></p>
       <div class="scene-hero" id="sc-hero"></div>
       <div class="pbar"><i id="sc-bar" style="width:0%"></i></div>
@@ -1040,6 +1040,17 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     .badge-cell.on{opacity:1;filter:none}
     .badge-cell img{width:62px;height:62px;object-fit:contain}
     .badge-cell span{display:block;font-size:11px;color:var(--sub);margin-top:4px}
+    .badge-cell{position:relative}
+    .badge-cell .badge-emoji{font-size:32px;line-height:1;display:block;margin:2px auto 0}
+    .badge-cell:not(.on) .badge-emoji{filter:grayscale(1);opacity:.35}
+    .badge-cell .b-lock{position:absolute;top:0;right:3px;font-size:12px;display:none}
+    .badge-cell:not(.on) .b-lock{display:block}
+    .badge-sech{margin-top:12px}
+    .badge-sech h3{font-size:13px;color:var(--sub);margin:0 0 6px;font-weight:600;letter-spacing:.02em}
+    .sc-help{margin-left:auto;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--sub);font-weight:700;cursor:pointer;flex:0 0 auto;font-size:15px;line-height:1}
+    .sc-help:hover{color:var(--txt);border-color:var(--red)}
+    .help-steps{margin:8px 0 0;padding-left:20px;line-height:1.7}
+    .help-steps li{margin:3px 0}
     .banner-card{padding:0;overflow:hidden;cursor:pointer}
     .banner-card img{width:100%;display:block;border-radius:14px}
   </style>
@@ -1102,7 +1113,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 
   <section id="v-days" class="views">
     <div class="card">
-      <div class="top"><h2>📅 14-day path</h2><span class="badge" id="days-count"></span></div>
+      <div class="top"><h2>📅 14-day survival path</h2><span class="badge" id="days-count"></span></div>
       <p class="desc">Fourteen days, five minutes each. Finish them and you can survive in China.</p>
       <div class="daytabs">
         <button class="daytab" id="dtab-time" onclick="setDayMode('timeline')">Timeline</button>
@@ -1151,13 +1162,15 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 
 <section id="v-practice" class="views">
     <div class="card"><div class="top"><h2>🎯 Practice</h2><span class="badge">pick a skill</span></div>
-      <p class="desc">Train one skill at a time. Everything you say is scored.</p>
+      <p class="desc">Practice one skill at a time. Everything you say is scored.</p>
       <div class="hub-grid">
+        <!-- @deprecated v0.30: Character cards & Read & lookup hidden from Practice hub; underlying features retained 
         <button class="hub" onclick="go('cards')"><img class="ic-img" src="assets/icons/cards.svg" alt=""><b>Character cards</b><i>HSK1–HSK3 decks · tap to hear</i></button>
         <button class="hub" onclick="go('reading')"><img class="ic-img" src="assets/icons/read.svg" alt=""><b>Read &amp; lookup</b><i>Paste text, get pinyin</i></button>
-        <button class="hub" onclick="go('sentences')"><img class="ic-img" src="assets/icons/sentences.svg" alt=""><b>Sentences</b><i>Saved lines for review</i></button>
+        -->
+        <button class="hub" onclick="go('sentences')"><img class="ic-img" src="assets/icons/sentences.svg" alt=""><b>My Phrases</b><i>Your saved survival phrases</i></button>
         <button class="hub" onclick="startTone()"><img class="ic-img" src="assets/icons/tones.svg" alt=""><b>Tone training</b><i>See your tone curve</i></button>
-        <button class="hub" onclick="go('scenes-read')"><img class="ic-img" src="assets/icons/read.svg" alt=""><b>Scene reading</b><i>Learn from pictures</i></button>
+        <button class="hub" onclick="go('scenes-read')"><img class="ic-img" src="assets/icons/read.svg" alt=""><b>Visual Scenes</b><i>Practice with real-life images</i></button>
       </div></div>
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
@@ -1166,16 +1179,16 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div class="card"><div class="top"><h2>🧭 Explore</h2><span class="badge">content library</span></div>
       <p class="desc">All the places and situations you can practise.</p>
       <div class="hub-grid">
-        <button class="hub" onclick="go('days')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-days.svg);mask-image:url(assets/icons/ui/icon-days.svg)" aria-hidden="true"></span></span><b>14-day path</b><i>Scenes by day</i></button>
-        <button class="hub" onclick="go('cities')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-pin.svg);mask-image:url(assets/icons/ui/icon-pin.svg)" aria-hidden="true"></span></span><b>Cities</b><i>Lines by destination</i></button>
-        <button class="hub" onclick="go('dialog')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-dialog.svg);mask-image:url(assets/icons/ui/icon-dialog.svg)" aria-hidden="true"></span></span><b>Conversations</b><i>Full back-and-forth</i></button>
-        <button class="hub" onclick="go('review')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-review.svg);mask-image:url(assets/icons/ui/icon-review.svg)" aria-hidden="true"></span></span><b>Smart review</b><i>Spaced repetition</i></button>
+        <button class="hub" onclick="go('days')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-days.svg);mask-image:url(assets/icons/ui/icon-days.svg)" aria-hidden="true"></span></span><b>14-day survival path</b><i>Scenes by day</i></button>
+        <button class="hub" onclick="go('cities')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-pin.svg);mask-image:url(assets/icons/ui/icon-pin.svg)" aria-hidden="true"></span></span><b>Cities</b><i>Survival phrases by city</i></button>
+        <button class="hub" onclick="go('dialog')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-dialog.svg);mask-image:url(assets/icons/ui/icon-dialog.svg)" aria-hidden="true"></span></span><b>Conversations</b><i>Real conversations with Nono</i></button>
+        <button class="hub" onclick="go('review')"><span class="ic"><span class="uico uico-lg" style="-webkit-mask-image:url(assets/icons/ui/icon-review.svg);mask-image:url(assets/icons/ui/icon-review.svg)" aria-hidden="true"></span></span><b>Smart review</b><i>Smart review (never forget)</i></button>
       </div></div>
     <button class="btn ghost" onclick="go('home')">← Back</button>
   </section>
 
   <section id="v-scenes-read" class="views">
-    <div class="card"><div class="top"><h2>📖 Scene reading</h2><span class="badge">A3</span></div>
+    <div class="card"><div class="top"><h2>📖 Visual Scenes</h2><span class="badge">A3</span></div>
       <p class="desc">Read real-life Chinese from pictures. Tap a card to enlarge and hear it.</p>
       <div class="sr-grid" id="sr-grid"></div>
     </div>
@@ -1246,7 +1259,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
       <p class="desc">Your profile, streaks and settings.</p>
       <div class="streakrow" id="me-stats"></div>
       <div class="hub-grid" style="margin-top:12px">
-        <button class="hub" onclick="go('settings')"><span class="ic">⚙️</span><b>Settings</b><i>Language · voice · updates</i></button>
+        <button class="hub" onclick="go('settings')"><span class="ic">⚙️</span><b>Settings</b><i>Language · voice · quota</i></button>
         <button class="hub" onclick="go('prog')"><img class="ic-img" src="assets/icons/progress.svg" alt=""><b>Badges &amp; progress</b><i>What you have earned</i></button>
         <button class="hub" onclick="nonoOpen()"><span class="ic">🐼</span><b>Bring Nono back</b><i>Your panda companion</i></button>
       </div>
@@ -1290,6 +1303,10 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
         <input type="date" id="trip-arrive" class="rd-input" style="padding:6px 8px">
         <button class="btn ghost" onclick="saveTrip()">Save</button></span></div>
       <div class="rd-hint" id="set-triphint">Tell Sinoky where you are going — it will pack the lines to practise before you land.</div>
+      <div class="setrow"><span>🔧 Tools</span></div>
+      <div class="hub-grid" style="margin-top:8px;margin-bottom:4px">
+        <button class="hub" onclick="go('reading')"><span class="ic">🔍</span><b>Read &amp; lookup</b><i>Paste Chinese text, get pinyin</i></button>
+      </div>
     </div>
     <button class="btn ghost" onclick="go('me')">← Back</button>
   </section>
@@ -1299,7 +1316,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
     <div id="prog-weak"></div>
     <div id="prog-aiweak"></div>
     <div class="card">
-      <div class="top"><h2>Your progress</h2></div>
+      <div class="top"><h2>Your survival progress</h2></div>
       <p class="desc">Last 14 days — red means you completed a challenge.</p>
       <div class="cal" id="cal"></div>
     </div>
@@ -1471,7 +1488,7 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 var LS_OK = true;
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ LS_OK = false; return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, v); return true; }catch(e){ LS_OK = false; return false; } }
-var APP_VERSION = '0.29.5';
+var APP_VERSION = '0.30.0';
 var VAPID_PUBLIC = 'BKTM58m1NKL_FfTpbkfUex6SPcIRkAcvn7Z9XFsRd8JnxIlurfO13155jctyA0J1j4YsRu7nDEhyTwJkmjA0-2k';
 /* v0.24.8：Web Push 每日召回（直接攻击 D1 留存 4.2%）。
    用户授权后订阅 pushManager，订阅体 POST /api/push-sub（存 KV PUSH）；
@@ -5346,38 +5363,100 @@ function sceneHeroHtml(sc){
   if(!SCENE_IMG_ON || !SCENE_HERO[sc.id]) return '';
   return '<img class="scene-hero-img" src="assets/scenes/' + sc.id + '_hero.webp" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
 }
+var BADGE_COND = {
+  'dim_sum_master':    { e:'🍜', n:'Dim Sum Master',    t:'Finish the Ordering Food scene (all lines, tone >= 80%)' },
+  'beijing_navigator': { e:'🚕', n:'Beijing Navigator', t:'Finish the Taking a Taxi scene' },
+  'hotel_pro':         { e:'🏨', n:'Hotel Pro',         t:'Finish the Hotel Check-in scene' },
+  'market_negotiator': { e:'💰', n:'Market Negotiator', t:'Finish the Bargaining scene' },
+  'city_explorer':     { e:'🗺️', n:'City Explorer', t:'Light up your first city landmark' },
+  'survival_ready':    { e:'🎯', n:'Survival Ready',    t:'Complete Day 30 of the survival path' },
+  'streak_3':          { e:'🔥', n:'3-Day Streak',      t:'Practice 3 days in a row' },
+  'streak_7':          { e:'🔥', n:'7-Day Streak',      t:'Practice 7 days in a row' },
+  'streak_30':         { e:'🔥', n:'30-Day Streak',     t:'Practice 30 days in a row' }
+};
+function sceneDoneById(id){
+  if(S.dialogs && S.dialogs[id]) return true;
+  var list = (typeof SCENES !== 'undefined') ? SCENES : [];
+  for(var i=0;i<list.length;i++){
+    if(list[i].id===id && list[i].phrases && list[i].phrases.length){
+      return (S.phrases[id]||[]).length >= list[i].phrases.length;
+    }
+  }
+  return false;
+}
+function showBadgeCond(id){
+  var info = BADGE_COND[id]; if(!info) return;
+  try{ var ex=document.getElementById('badgeCond'); if(ex) ex.remove(); }catch(e){}
+  var on = !!document.querySelector('.badge-cell[data-badge="'+id+'"].on');
+  var o=document.createElement('div'); o.className='ovl'; o.id='badgeCond';
+  var p=document.createElement('div'); p.className='panel';
+  p.innerHTML='<div style="font-size:34px;line-height:1;margin-bottom:6px">'+info.e+'</div>'
+    + '<h3>'+info.n+'</h3>'
+    + '<p style="color:var(--sub);margin:6px 0 14px">'+info.t+'</p>'
+    + '<p style="margin:0 0 14px;font-weight:600">'+(on?'✅ ':'🔒 ')+T(on?'Unlocked':'Locked')+'</p>'
+    + '<button class="btn primary" style="width:100%" onclick="closeOvl(\'badgeCond\')">'+T('Got it')+'</button>';
+  o.appendChild(p); document.body.appendChild(o);
+  o.addEventListener('click', function(e){ if(e.target===o) closeOvl('badgeCond'); });
+}
 function badgeGalleryHtml(){
+  var toneRatio = (S.tone && S.tone.total>0) ? (S.tone.right / S.tone.total) : 0;
+  var NEW = [
+    { id:'dim_sum_master',    sec:'scene',  on: sceneDoneById('d-food') && toneRatio>=0.8 },
+    { id:'beijing_navigator', sec:'scene',  on: sceneDoneById('d-taxi') },
+    { id:'hotel_pro',         sec:'scene',  on: sceneDoneById('hotel') },
+    { id:'market_negotiator', sec:'scene',  on: sceneDoneById('scene_day12_bargaining') },
+    { id:'city_explorer',     sec:'scene',  on: litCount()>=1 },
+    { id:'survival_ready',    sec:'scene',  on: isDayDone(30) },
+    { id:'streak_3',          sec:'streak', on: (S.streak||0)>=3 },
+    { id:'streak_7',          sec:'streak', on: (S.streak||0)>=7 },
+    { id:'streak_30',         sec:'streak', on: (S.streak||0)>=30 }
+  ];
   var said = 0; Object.keys(S.phrases||{}).forEach(function(k){ said += (S.phrases[k]||[]).length; });
   var tonePerfect = (S.tone && S.tone.total>0 && S.tone.right===S.tone.total);
-  var defs = [
-    { id:'first-speak', t:'First speak',  on: said>0 },
-    { id:'streak3',     t:'3-day streak', on: (S.streak||0)>=3 },
-    { id:'streak7',     t:'7-day streak', on: (S.streak||0)>=7 },
-    { id:'streak14',    t:'14-day streak',on: (S.streak||0)>=14 },
-    { id:'perfect',     t:'Perfect tone', on: tonePerfect },
-    /* v0.13.0 gamification 扩展（DevKit gamification.json 口径）：判定读现有 S，图片未到位自动隐藏 */
-    { id:'survivor',    t:'Survivor · Day 6',  on: isDayDone(6) },
-    { id:'tone-master', t:'Tone master',       on: (S.tone && S.tone.total >= 20 && S.tone.right / S.tone.total >= 0.9) },
-    { id:'graduate',    t:'Graduate · Day 30', on: isDayDone(30) },
-    { id:'centurion',   t:'100-day streak',    on: (S.streak || 0) >= 100 },
-    /* v0.14.6 F：徽章绑定「场景通关」——城市=地标，点亮即解锁，而非纯装饰 */
-    { id:'first_city',  t:'First landmark', on: litCount() >= 1 },
-    { id:'explorer',    t:'5 landmarks',   on: litCount() >= 5 },
-    { id:'map_master',  t:'All landmarks', on: litCount() >= cityList().length && cityList().length > 0 },
-    /* v0.14.4：服务端解锁的高级勋章（本地无对应判定，依赖 badgeSync 点亮） */
-    { id:'reversal-king', t:'Reversal king',   on: false },
-    { id:'real-world',    t:'In the wild',     on: false },
-    { id:'polyglot-path', t:'All paths',       on: false }
+  var LEGACY = [
+    { id:'first-speak', name:'First speak',    on: said>0 },
+    { id:'streak3',     name:'3-day streak',  on: (S.streak||0)>=3 },
+    { id:'streak7',     name:'7-day streak',  on: (S.streak||0)>=7 },
+    { id:'streak14',    name:'14-day streak', on: (S.streak||0)>=14 },
+    { id:'perfect',     name:'Perfect tone',  on: tonePerfect },
+    { id:'survivor',    name:'Survivor · Day 6', on: isDayDone(6) },
+    { id:'tone-master', name:'Tone master',   on: (S.tone && S.tone.total>=20 && S.tone.right/S.tone.total>=0.9) },
+    { id:'graduate',    name:'Graduate · Day 30', on: isDayDone(30) },
+    { id:'centurion',   name:'100-day streak', on: (S.streak||0)>=100 },
+    { id:'first_city',  name:'First landmark', on: litCount()>=1 },
+    { id:'explorer',    name:'5 landmarks',    on: litCount()>=5 },
+    { id:'map_master',  name:'All landmarks',  on: litCount()>=cityList().length && cityList().length>0 },
+    { id:'reversal-king', name:'Reversal king', on:false },
+    { id:'real-world',    name:'In the wild',   on:false },
+    { id:'polyglot-path', name:'All paths',     on:false }
   ];
-  /* v0.14.4：并上服务端已解锁（badgeSync 写入），本地没算出来也算数 */
   var _on = {};
   try{ _on = JSON.parse(localStorage.getItem('sinoky_badges_on') || '{}') || {}; }catch(e){}
-  defs.forEach(function(d){ if(_on[d.id]) d.on = true; });
-  var cards = defs.map(function(d){
-    return '<div class="badge-cell'+(d.on?' on':'')+'" data-badge="'+d.id+'"><img src="assets/badges/'+d.id+'_256.webp" alt="'+d.t+'" loading="lazy" onerror="this.style.display=\'none\'"><span>'+d.t+'</span></div>';
-  }).join('');
-  return '<div class="card badge-card"><div class="top"><h2>🏅 Your badges</h2><span class="badge">collect them all</span></div><div class="badge-row">'+cards+'</div></div>';
+  NEW.forEach(function(d){ if(_on[d.id]) d.on = true; });
+  LEGACY.forEach(function(d){ if(_on[d.id]) d.on = true; });
+  function cell(d){
+    var isNew = !!BADGE_COND[d.id];
+    var vis = isNew
+      ? '<span class="badge-emoji">'+BADGE_COND[d.id].e+'</span>'
+      : '<img src="assets/badges/'+d.id+'_256.webp" alt="'+d.name+'" loading="lazy" onerror="this.style.display=\'none\'">';
+    var lock = (d.on||!isNew) ? '' : '<span class="b-lock">🔒</span>';
+    var act = isNew ? ' onclick="showBadgeCond(\''+d.id+'\')"' : '';
+    var label = isNew ? BADGE_COND[d.id].n : d.name;
+    return '<div class="badge-cell'+(d.on?' on':'')+'" data-badge="'+d.id+'"'+act+'>'+lock+vis+'<span>'+label+'</span></div>';
+  }
+  function section(title, list){
+    if(!list.length) return '';
+    return '<div class="badge-sech"><h3>'+T(title)+'</h3><div class="badge-row">'+list.map(cell).join('')+'</div></div>';
+  }
+  var got = NEW.filter(function(d){ return d.on; }).length;
+  var h = '<div class="card badge-card"><div class="top"><h2>🏅 '+T('Your achievements')+' · '+got+'/9 '+T('unlocked')+'</h2></div>';
+  h += section('Scene Badges', NEW.filter(function(d){ return d.sec==='scene'; }));
+  h += section('Streak Badges', NEW.filter(function(d){ return d.sec==='streak'; }));
+  h += section('Legacy Badges', LEGACY);
+  h += '</div>';
+  return h;
 }
+
 function bannerHtml(){
   return '<div class="card banner-card" onclick="go(\'home\')"><img src="assets/banner/square.webp" alt="Sinoky" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>';
 }
@@ -5400,7 +5479,7 @@ function cityRowHtml(sc, from){
 function cityBlockHtml(){
   var all = cityList();
   if(!all.length) return '';
-  var hot = all.filter(function(sc){ return sc.hot; });
+  var hot = all.filter(function(sc){ return sc.id==='beijing'||sc.id==='shanghai'; });
   if(!hot.length) hot = all.slice(0,6);
   var litN = all.reduce(function(a,sc){ return a + (cityDoneN(sc) >= sc.phrases.length ? 1 : 0); }, 0);
   var h = '<div class="card"><div class="top"><h2>\ud83d\udccd City map</h2>'+
@@ -8089,13 +8168,14 @@ function renderHome(){
   }
   /* v0.5.1：两张听力卡合并为一张 + 分段 Tab（内容都保留，只是同一位置切换） */
   var listenTabs = '<div class="seg" id="listen-tabs">'+
-    '<button class="on" onclick="switchListen(1,this)">Sentences</button>'+
+    '<button class="on" onclick="switchListen(1,this)">My Phrases</button>'+
     '<button onclick="switchListen(2,this)">Scenes</button></div>';
   var listenBlock = listenTabs +
     '<div id="listen-pane-1">'+listenCardHtml()+'</div>'+
     '<div id="listen-pane-2" style="display:none">'+listenCardSHtml()+'</div>';
   /* v0.25.0：今日路径卡置于首屏——它是闭环的入口，不能埋在折叠区里 */
-  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + proCardHtml() + retroCardHtml() + pathCardHtml() + rpCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
+  function whereCardHtml(){ return '<div class="card where-go" style="cursor:pointer;border-color:rgba(230,57,70,.4);background:linear-gradient(135deg,rgba(230,57,70,.12),rgba(76,201,240,.07))" onclick="go(\'cities\')"><div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><div style="flex:1 1 200px"><h2 style="margin:0 0 6px;font-size:1.22rem">Where are you going?</h2><p class="desc" style="margin:0 0 12px">Pick your city, get your survival phrases.</p><button class="btn primary" onclick="event.stopPropagation();go(\'cities\')">Open City Map →</button></div><div style="font-size:52px;line-height:1" aria-hidden="true">🌏</div></div></div>'; }
+  $('home-scenes').innerHTML = (tourNeeded() ? tourHtml() : '') + proCardHtml() + retroCardHtml() + pathCardHtml() + whereCardHtml() + rpCardHtml() + d1 + reviewCardHtml() + listenBlock + html + cityBlockHtml() + dialogBlockHtml();
 }
 
 /* ---------- scene flow ---------- */
@@ -8123,6 +8203,16 @@ function openScene(id, idx, from){
       }
     }, 140);
   }
+}
+function openNonoHelp(){
+  try{ var ex=document.getElementById('nonoHelp'); if(ex) ex.remove(); }catch(e){}
+  var o=document.createElement('div'); o.className='ovl'; o.id='nonoHelp';
+  var p=document.createElement('div'); p.className='panel';
+  p.innerHTML='<h3>'+T('How Nono coaches you')+'</h3>'
+    + '<ol class="help-steps"><li>'+T('Tap Start →')+'</li><li>'+T('Speak your line out loud')+'</li><li>'+T('Nono scores your tone')+'</li><li>'+T('Retry until you nail it')+'</li></ol>'
+    + '<button class="btn primary" style="width:100%;margin-top:12px" onclick="closeOvl(\'nonoHelp\')">'+T('Got it')+'</button>';
+  o.appendChild(p); document.body.appendChild(o);
+  o.addEventListener('click', function(e){ if(e.target===o) closeOvl('nonoHelp'); });
 }
 /* v0.3.55 零基础拼读脚手架（D）：句卡把句子拆成可点音节，点一下只听这一个字。
    实测铁律：TTS 只能念汉字 —— 传带调拼音（"Nǐ"）返回静音，见 _internal/verify_syllable_tts.cjs。
@@ -8760,7 +8850,7 @@ function renderProgress(){
   }
   $('cal').innerHTML = html;
   var said = 0; Object.keys(S.phrases).forEach(function(k){ said += S.phrases[k].length; });
-  $('prog-detail').textContent = T('Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}').replace('{a}',S.streak).replace('{b}',said)
+  $('prog-detail').textContent = T('Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID (keep this safe for backup): {e}').replace('{a}',S.streak).replace('{b}',said)
     .replace('{c}',S.tone.right).replace('{d}',S.tone.total).replace('{e}',UID.slice(0,8)+'…');
 }
 
@@ -10795,6 +10885,10 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
   var WECHAT_ID = 'Skkhaha456';
   var UNLOCK_CODE = 'sinuoqi66';
   var UNLOCK_KEY = 'sinoky_unlocked';
+  /* v0.30 P5: PayPal manual payment. REPLACE these two placeholders before launch. */
+  var K_PAYPAL_LINK = 'https://www.paypal.com/ncp/payment/TODO_REPLACE_WITH_YOUR_LINK';
+  var K_SUPPORT_EMAIL = 'TODO_REPLACE_WITH_YOUR_EMAIL';
+  var UNLOCK_EMAIL_KEY = 'sinoky_unlock_email';
   var QUOTA_KEY = 'sinoky_quota';
   // 限额表：web 数值；app 为该值的倍率（mult:0 = 不限）
   var QCFG = { sentence:{web:5,mult:3}, score:{web:10,mult:3}, chat:{web:5,mult:3}, tone:{web:10,mult:0} };
@@ -10880,8 +10974,10 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
     renderQuotaUI();
   }
   function tryUnlockCode(code){
-    if((code||'').trim() === UNLOCK_CODE){ doUnlock(); }
-    else { toast(T('That code is not right — get one from WeChat {wx}').replace('{wx}',WECHAT_ID)); }
+    var c = (code||'').trim().toUpperCase();
+    if(/^SINOKY-\d{8}$/.test(c)){ doUnlock(); return; }
+    if(c === UNLOCK_CODE){ doUnlock(); return; }
+    toast(T('That code is not right — check it or email me your receipt.'));
   }
 
   // E2「我」页额度卡 + 解锁状态行
@@ -10900,17 +10996,54 @@ button[onclick="nonoMin()"]{min-width:26px;min-height:26px}   /* 20x24 -> 26x26 
       unlockRow = '<div class="unl-row"><span>✅ '+T('Unlocked · thanks for the support')+'</span><button class="btn ghost" onclick="SK.resetUnlock()">'+T('Undo')+'</button></div>';
     } else {
       var appNote = isApp() ? T(' (App gets 3× quota)') : '';
-      unlockRow = '<div class="unl-row"><span>🔓 '+T('Unlock features')+appNote+'</span><button class="btn ghost" onclick="SK.showLimitWall(\'chat\')">'+T('Unlock')+'</button></div>';
+      unlockRow = '<div class="unl-row"><span>🔓 '+T('Unlock features')+ '</span><button class="btn ghost" onclick="SK.openPayPal()">💳 PayPal</button><button class="btn ghost" onclick="SK.showLimitWall(\'chat\')">'+T('Unlock')+'</button></div>';
     }
     card.innerHTML = '<div class="top"><h2>📊 '+T('Today\'s quota')+'</h2>'+(isUnlocked()?'<span class="badge teal">UNLOCKED</span>':'<span class="badge">'+T('Free version')+'</span>')+'</div>'+
       '<p class="desc">'+T('Review, flashcards, badges and progress are never limited — only "production" features count against the quota.')+'</p>'+ rows + unlockRow;
     var first = me.querySelector('.card');
     if(first && first.parentNode===me) me.insertBefore(card, first.nextSibling);
+    renderUnlockExtraCards(me, card);
+  }
+  function renderUnlockExtraCards(me, after){
+    try{
+      var ap = document.getElementById('alreadyPaidCard'); if(ap) ap.remove();
+      var uc = document.getElementById('unlockCodeCard'); if(uc) uc.remove();
+      if(isUnlocked()) return;
+      var apc = document.createElement('div'); apc.className='card'; apc.id='alreadyPaidCard';
+      apc.innerHTML = '<div class="top"><h2>💳 '+T('Already paid?')+'</h2></div>'
+        + '<p class="desc">'+T('If you have paid via PayPal, enter the email you used and I will unlock full access within 24 hours. Or email me your receipt at {email}.').replace('{email}', K_SUPPORT_EMAIL)+'</p>'
+        + '<input class="rd-input" id="paidEmail" placeholder="'+T('Email address')+'" style="width:100%;margin-top:8px">'
+        + '<button class="btn primary" id="paidSubmit" style="width:100%;margin-top:8px">'+T('Submit')+'</button>';
+      var ps = apc.querySelector('#paidSubmit');
+      if(ps) ps.addEventListener('click', function(){ SK.submitPaidEmail(apc.querySelector('#paidEmail').value); });
+      var ucc = document.createElement('div'); ucc.className='card'; ucc.id='unlockCodeCard';
+      ucc.innerHTML = '<div class="top"><h2>🔑 '+T('Have an unlock code?')+'</h2></div>'
+        + '<p class="desc">'+T('Enter your code to unlock full access instantly.')+'</p>'
+        + '<input class="rd-input" id="ucode2" placeholder="SINOKY-XXXXXXXX" style="width:100%;margin-top:8px;text-transform:uppercase">'
+        + '<button class="btn primary" id="ucodeBtn" style="width:100%;margin-top:8px">'+T('Unlock')+'</button>';
+      var ub = ucc.querySelector('#ucodeBtn');
+      if(ub) ub.addEventListener('click', function(){ SK.tryUnlockCode(ucc.querySelector('#ucode2').value); });
+      if(after && after.parentNode===me){ me.insertBefore(apc, after.nextSibling); me.insertBefore(ucc, apc.nextSibling); }
+    }catch(e){}
+  }
+  function openPayPal(){ try{ window.open(K_PAYPAL_LINK, '_blank'); }catch(e){} }
+  function submitPaidEmail(email){
+    var e=(email||'').trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ toast(T('Please enter a valid email.')); return; }
+    try{ localStorage.setItem(UNLOCK_EMAIL_KEY, e); }catch(err){}
+    var o = buildOvl('paidThanks'); var p=document.createElement('div'); p.className='panel';
+    p.innerHTML = '<h3>'+T('Thanks')+'</h3>'
+      + '<p>'+T('I will verify your payment and unlock your account within 24h.')+'</p>'
+      + '<button class="btn primary" style="width:100%" onclick="location.href=\'mailto:'+K_SUPPORT_EMAIL+'?subject='+encodeURIComponent('Sinoky Unlock')+'&body='+encodeURIComponent('My PayPal email is: '+e)+'\'">'+T('Send me an email reminder')+'</button>'
+      + '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="closeOvl(\'paidThanks\')">'+T('Done')+'</button>';
+    o.appendChild(p); document.body.appendChild(o);
+    o.addEventListener('click', function(ev){ if(ev.target===o) closeOvl('paidThanks'); });
   }
   window.SK = {
     isApp:isApp, isUnlocked:isUnlocked, quotaLeft:quotaLeft, quotaBlocked:quotaBlocked,
     quotaInc:quotaInc, quotaBadge:quotaBadge, showLimitWall:showLimitWall,
     copyWechat:copyWechat, doUnlock:doUnlock, tryUnlockCode:tryUnlockCode, renderQuotaUI:renderQuotaUI,
+    openPayPal:openPayPal, submitPaidEmail:submitPaidEmail,
     maybeExtendSentence:maybeExtendSentence
   };
   window.SK.resetUnlock = function(){ try{ localStorage.removeItem(UNLOCK_KEY); }catch(e){} renderQuotaUI(); toast(T('Unlock removed')); };
@@ -14665,7 +14798,10 @@ function ensureAiFunnel(){ S.aiFunnel = S.aiFunnel || { hit:0, miss:0, loop:0, p
 function recordAiFunnel(act){ try{ var f=ensureAiFunnel(); if(act==='hit') f.hit=(f.hit||0)+1; else if(act==='miss') f.miss=(f.miss||0)+1; f.updated=new Date().toISOString().slice(0,10); saveState(); }catch(e){} }
 function seedAiLoop(line, fixes, flu){ try{ var f=ensureAiFunnel(); var dims=[]; (fixes||[]).forEach(function(x){ if(x.toneOk===false&&x.tExp) dims.push('tone'+x.tExp); var e=(x.errs||[]).join(''); if(e.indexOf('声母')>=0) dims.push('initial'); if(e.indexOf('韵母')>=0) dims.push('final'); }); if(flu<60) dims.push('fluency'); if(!dims.length) return; f.pending=f.pending||[]; f.pending.push({ date:new Date().toISOString().slice(0,10), dims:dims, key:(line&&line.key)||'', closed:false }); if(f.pending.length>20) f.pending=f.pending.slice(-20); saveState(); }catch(e){} }
 function checkAiLoop(){ try{ var f=ensureAiFunnel(); if(!f.pending||!f.pending.length) return; var any=false; f.pending.forEach(function(s){ if(!s.closed){ any=true; s.closed=true; } }); if(any){ f.loop=(f.loop||0)+1; f.pending=f.pending.filter(function(s){ return !s.closed; }); f.updated=new Date().toISOString().slice(0,10); saveState(); } }catch(e){} }
-function aiFunnelHtml(){ try{ var f=(S.aiFunnel)||{}; var hit=(f.hit||0), miss=(f.miss||0), loop=(f.loop||0); var total=hit+miss; var rate = total>0 ? Math.round(100*loop/total) : 0; var card='<div class="card"><div class="top"><h2>📊 '+T("AI effect self-check")+'</h2><span class="badge">L3</span></div>'
+function aiFunnelHtml(){ try{ var f=(S.aiFunnel)||{}; var hit=(f.hit||0), miss=(f.miss||0), loop=(f.loop||0);
+  if(hit===0 && miss===0 && loop===0){ return '<div class="card"><div class="top"><h2>🐼 '+T('Nono is waiting for you!')+'</h2></div>'
+    + '<p class="desc">'+T('Complete your first scenario to see your coaching stats here.')+'</p>'
+    + '<button class="btn primary" style="width:100%" onclick="go(\'home\')">'+T('Try a scenario →')+'</button></div>'; } var total=hit+miss; var rate = total>0 ? Math.round(100*loop/total) : 0; var card='<div class="card"><div class="top"><h2>📊 '+T("AI effect self-check")+'</h2><span class="badge">L3</span></div>'
   + '<p class="desc">'+T("Does Nono's AI coaching make you speak more? Here is the loop.")+'</p>'
   + '<div class="weak-row"><div class="wr-txt"><b>'+T("AI coached you")+'</b><span>'+T("times Nono gave a tailored tip")+'</span></div><span class="wr-n">'+hit+'×</span></div>'
   + '<div class="weak-row"><div class="wr-txt"><b>'+T("You came back to drill")+'</b><span>'+T("times you practiced after a tip")+'</span></div><span class="wr-n">'+loop+'×</span></div>'
