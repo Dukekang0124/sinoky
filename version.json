@@ -3,12 +3,11 @@
   "updated": "2026-10-15",
   "note": "v0.30.0 · 定位收敛为「去中国前30天生存口语」：Practice 页移除字卡/查拼音入口；首页强化 City Map 大卡片；新增 Nono 首启引导与场景页 ? 帮助 + 进度零数据引导；徽章重写为 9 枚（6 场景 + 3 连续）并分两组展示，legacy 保留不计入分母；Unlock 接入 PayPal 手动收款（SINOKY- 解锁码 + 已付款邮箱表单）；全局文案统一为生存叙事。",
   "apk": {
-
     "versionCode": 3000,
     "version": "0.30.0",
     "url": "https://sinoky.pages.dev/apk/Sinoky-v0.30.0-release.apk",
-    "md5": "",
-    "size": 0,
+    "md5": "2c5bc0ce640a127233dadff99061c265",
+    "size": 24251492,
     "force": false
   },
   "noteEn": [
