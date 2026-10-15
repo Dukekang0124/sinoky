@@ -223,7 +223,7 @@
   "Could not start recording: ": "Không thể bắt đầu ghi âm: ",
   "SCORED · {s}": "ĐÃ CHẤM · {s}",
   "Scoring failed — ": "Chấm điểm thất bại — ",
-  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}": "Chuỗi: {a} ngày · Đã nói: {b} câu · Luyện thanh điệu: {c}/{d} đúng · ID: {e}",
+  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID (keep this safe for backup): {e}": "Chuỗi: {a} ngày · Đã nói: {b} câu · Luyện thanh điệu: {c}/{d} đúng · ID (giữ lại để khôi phục): {e}",
   "🔥 {a} day streak · 🗣️ {b} phrases said": "🔥 Chuỗi {a} ngày · 🗣️ Đã nói {b} câu",
   "🔥 {s}-day streak! Speak it out there.": "🔥 Chuỗi {s} ngày! Hãy nói to ở bên ngoài.",
   "Card {i} / {n}": "Thẻ {i} / {n}",

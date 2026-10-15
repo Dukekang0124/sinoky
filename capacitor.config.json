@@ -2,7 +2,6 @@
   "appId": "app.sinoky.pwa",
   "appName": "Sinoky",
   "webDir": "www",
-  "bundledWebRuntime": false,
   "loggingBehavior": "none",
   "android": {
     "allowMixedContent": true,

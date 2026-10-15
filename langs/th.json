@@ -223,7 +223,7 @@
   "Could not start recording: ": "ไม่สามารถเริ่มบันทึก: ",
   "SCORED · {s}": "ให้คะแนนแล้ว · {s}",
   "Scoring failed — ": "ให้คะแนนไม่สำเร็จ — ",
-  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}": "ต่อเนื่อง: {a} วัน · พูดแล้ว: {b} ประโยค · ฝึกเสียงวรรณยุกต์: {c}/{d} ถูก · รหัสอุปกรณ์: {e}",
+  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID (keep this safe for backup): {e}": "ต่อเนื่อง: {a} วัน · พูดแล้ว: {b} ประโยค · ฝึกเสียงวรรณยุกต์: {c}/{d} ถูก · รหัสอุปกรณ์ (เก็บไว้สำหรับกู้คืน): {e}",
   "🔥 {a} day streak · 🗣️ {b} phrases said": "🔥 ต่อเนื่อง {a} วัน · 🗣️ พูดแล้ว {b} ประโยค",
   "🔥 {s}-day streak! Speak it out there.": "🔥 ต่อเนื่อง {s} วัน! ลองพูดออกไปข้างนอก",
   "Card {i} / {n}": "การ์ด {i} / {n}",

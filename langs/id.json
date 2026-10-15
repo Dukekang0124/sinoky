@@ -223,7 +223,7 @@
   "Could not start recording: ": "Tidak dapat memulai perekaman: ",
   "SCORED · {s}": "DINILAI · {s}",
   "Scoring failed — ": "Penilaian gagal — ",
-  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}": "Rangkaian: {a} hari · Frasa diucapkan: {b} · Latihan nada: {c}/{d} benar · ID: {e}",
+  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID (keep this safe for backup): {e}": "Rangkaian: {a} hari · Frasa diucapkan: {b} · Latihan nada: {c}/{d} benar · ID (simpan untuk memulihkan): {e}",
   "🔥 {a} day streak · 🗣️ {b} phrases said": "🔥 Rangkaian {a} hari · 🗣️ {b} frasa diucapkan",
   "🔥 {s}-day streak! Speak it out there.": "🔥 Rangkaian {s} hari! Coba ucapkan di luar.",
   "Card {i} / {n}": "Kartu {i} / {n}",

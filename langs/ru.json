@@ -223,7 +223,7 @@
   "Could not start recording: ": "Не удалось начать запись: ",
   "SCORED · {s}": "ОЦЕНКА · {s}",
   "Scoring failed — ": "Не удалось оценить — ",
-  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}": "Серия: {a} дн. · Сказано фраз: {b} · Тоны: {c}/{d} верно · ID: {e}",
+  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID (keep this safe for backup): {e}": "Серия: {a} дн. · Сказано фраз: {b} · Тоны: {c}/{d} верно · ID (сохраните для восстановления): {e}",
   "🔥 {a} day streak · 🗣️ {b} phrases said": "🔥 Серия {a} дн. · 🗣️ Сказано фраз: {b}",
   "🔥 {s}-day streak! Speak it out there.": "🔥 Серия {s} дней! Поговорите вслух там.",
   "Card {i} / {n}": "Карточка {i} / {n}",

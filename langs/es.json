@@ -207,7 +207,7 @@
   "Could not start recording: ": "No se pudo iniciar la grabación: ",
   "SCORED · {s}": "PUNTUADO · {s}",
   "Scoring failed — ": "Error al puntuar: ",
-  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}": "Racha: {a} día(s) · Frases dichas: {b} · Tonos: {c}/{d} correctos · ID: {e}",
+  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID (keep this safe for backup): {e}": "Racha: {a} día(s) · Frases dichas: {b} · Tonos: {c}/{d} correctos · ID (guárdalo para restaurar tu copia): {e}",
   "🔥 {a} day streak · 🗣️ {b} phrases said": "🔥 Racha de {a} día(s) · 🗣️ {b} frases dichas",
   "🔥 {s}-day streak! Speak it out there.": "¡🔥 Racha de {s} días! Sal y practica en voz alta.",
   "Card {i} / {n}": "Tarjeta {i} / {n}",

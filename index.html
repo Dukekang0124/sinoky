@@ -5823,27 +5823,7 @@ function tourHtml(){
     '<p class="desc" style="font-size:11.5px;color:var(--sub);margin:10px 0 0">'+T('\u{1F512} Recordings are never saved \u00B7 \u{1F4AC} Feedback (bottom-left) any time')+'</p>'+
     '<button class="btn primary" onclick="endTour()">'+T('Got it \u2014 let\'s speak')+'</button></div>';
 }
-/* ---------- v0.3.48 每日复习卡（Daily Phase 3 复习循环）----------
-   Edify Gate：让用户「重说」已学过的句子 —— 实打实的开口增量，不是再看一遍。
-   三步：回忆（中文默认 blur，逼用户看着英文先想）→ 开口（Play & say 3×，
-   复用现有 openScene 流程，跟主路径完全一致）→ 验证（Show Chinese 对答案）。
-   状态只记 S.review={d,n}：体积恒定，跨天自动重置，不记历史。 */
-function reviewPool(){
-  var out = [];
-  SCENES.forEach(function(sc){
-    (S.phrases[sc.id]||[]).forEach(function(i){
-      if(sc.phrases[i]) out.push({ scene:sc, idx:i, p:sc.phrases[i] });
-    });
-  });
-  return out;
-}
-function reviewToday(){
-  if(!S.review || S.review.d !== today()) return 0;
-  return S.review.n || 0;
-}
-/* 稳定随机（FNV-1a）：同一天同一序号 → 同一条，刷新不换题（防止用户刷到会说的那句）。
-   点 next 序号 +1 → 换下一条。 */
-/* FNV-1a + avalanche finalizer（全局唯一的稳定随机实现，复习卡与听辨卡共用）。
+/* FNV-1a + avalanche finalizer（全局唯一的稳定随机实现，听辨/听写卡共用）。
    ★ 必须带 finalizer：FNV-1a 原始值【低位熵极差】，直接 %N 会严重倾斜——
      v0.3.49 实测：12 道听辨题里 1 声占 10 道、3 声占 2 道，2/4 声一次没出。
      加完 finalizer 后 4 种声调均匀。finalizer 是确定性函数，不影响「同序号同一条」的稳定性。 */
@@ -5854,50 +5834,6 @@ function fnv(s){
   h ^= h >>> 13; h = (h * 3266489909) >>> 0;
   h ^= h >>> 16;
   return h >>> 0;
-}
-/* v0.3.58 SRS-lite：到期优先。间隔阶梯 [1,2,4,8,16] 天（SM-2 式简化，零依赖，纯前端算）。
-   历史句子无 S.rv 记录 -> 视为到期（老用户自动进池，无需迁移）。无到期句 -> 退回全池稳定随机（旧行为）。 */
-var RV_GAP = [1,2,4,8,16];
-function dayDiff(a,b){ return Math.round((new Date(b) - new Date(a)) / 864e5); }
-function rvDue(it){
-  var m = (S.rv||{})[it.scene.id+':'+it.idx];
-  if(!m || !m.d) return true;
-  return dayDiff(m.d, today()) >= RV_GAP[Math.min(m.b||0, RV_GAP.length-1)];
-}
-function pickReview(k){
-  var pool = reviewPool();
-  if(!pool.length) return null;
-  var due = pool.filter(rvDue);
-  var base = due.length ? due : pool;   /* 到期优先：复习"要忘的"，而不是随机复读 */
-  return base[fnv(today() + '#' + k) % base.length];
-}
-var rvShown = false;   /* UI 游标：中文是否已揭示，纯内存，永不上云 */
-function reviewPeek(){ rvShown = !rvShown; renderHome(); }
-function reviewNext(){
-  var d = today();
-  if(!S.review || S.review.d !== d) S.review = { d:d, n:0 };
-  /* v0.3.58 SRS-lite：说完点 next -> 本条晋升一档（bucket+1，上限 16 天档），重记 lastSaid。
-     「说了」由用户自证——与旧行为一致（点 next 即计开口证据）。 */
-  var cur = pickReview(S.review.n||0);
-  if(cur){
-    S.rv = S.rv || {};
-    var key = cur.scene.id+':'+cur.idx;
-    var m = S.rv[key] || { b:0, d:d };
-    m.b = Math.min((m.b||0)+1, RV_GAP.length-1);
-    m.d = d;
-    S.rv[key] = m;
-  }
-  S.review.n = (S.review.n||0) + 1;
-  rvShown = false;
-  saveState();          /* 复习计数 = 开口证据（真实学习行为），随进度上云 */
-  /* 诺诺场景钩子：当日复习满 5 张 -> 里程碑鼓励（每天一次） */
-  try{
-    if(S.review.n === 5){
-      nonoShow(T('5 cards reviewed today — 复习让你真的记住。 Keep going or rest, both are wins.'),
-        { pose:'cheer', priority:'result', actions:[{ t:'Keep reviewing', fn:'nonoMin()' }, { t:'Done for now', fn:'nonoMin()', ghost:true }] });
-    }
-  }catch(e){}
-  renderHome();
 }
 function reviewCardHtml(){
   var q = revQueue();

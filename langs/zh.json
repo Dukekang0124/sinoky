@@ -318,7 +318,7 @@
   "Could not start recording: ": "无法开始录音：",
   "SCORED · {s}": "已打分 · {s}",
   "Scoring failed — ": "打分失败——",
-  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID: {e}": "连续：{a} 天 · 开口说过：{b} 句 · 声调练习：{c}/{d} 正确 · 设备号：{e}",
+  "Streak: {a} day(s) · Phrases said aloud: {b} · Tone Gym: {c}/{d} correct · Device ID (keep this safe for backup): {e}": "连续：{a} 天 · 开口说过：{b} 句 · 声调练习：{c}/{d} 正确 · 设备号（请存好，用于恢复备份）：{e}",
   "🔥 {a} day streak · 🗣️ {b} phrases said": "🔥 连续 {a} 天 · 🗣️ 开口 {b} 句",
   "🔥 {s}-day streak! Speak it out there.": "🔥 连续 {s} 天！到外面开口用起来。",
   "Card {i} / {n}": "第 {i} / {n} 张",

@@ -28,6 +28,14 @@
  *   前缀命中即算 DYN。取向仍是「宁可漏报」—— 对「删除」这个动作而言，
  *   误报（说它被引用）远比漏报（说它零引用）安全。
  *
+ * ⚠️ 已知局限（2026-10-15）：形态判据取「末段」并用 `blob.includes(tail + ext)`，
+ *   对 `assets/badges/<id>_512.webp` 与 `assets/scenes/thumbs/<名>_1x1_512.webp` 会**假绿**：
+ *   ① 它们与 `manifest.webmanifest` / `sw.js` 里的 `icons/icon-512.webp` 共享 `512.webp` 子串；
+ *   ② 目录前缀 `assets/badges/`、`assets/scenes/thumbs/` 又被前缀规则命中。
+ *   ⇒ 实际零引用的 `_512` 文件落进 DYN 而非 ZERO（本次 15 徽章 + 2 缩略图即此例）。
+ *   此类必须人工按「代码实际能拼出的取值集合」复核，不能只信 ZERO 档。
+ *   明细见 _internal/retired-assets-2026-10-15/README.md。
+ *
  * 注意：本脚本只读，不改动任何文件。
  */
 const fs = require('fs');
